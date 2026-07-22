@@ -1,6 +1,6 @@
 # Chrono Notes
 
-Chrono Notes is an Obsidian calendar workspace for periodic notes, Chinese lunar dates, regional holidays, tasks, statistics, and time-range notes.
+Chrono Notes is an Obsidian calendar workspace for periodic notes, optional calendar extensions, regional holidays, tasks, statistics, and time-range notes.
 
 > Current release: 0.1.1. Periodic-note opening now synchronizes the calendar's semantic selection without changing the chosen Week, Month, or Year view, and mobile range lanes remain contained inside their week rows. The current artifact passes the automated release gates and has been verified in isolated desktop and Android-emulator Vaults. Physical-device verification remains outstanding. The official Mainland China 2027 holiday schedule is not yet published, so the gate preserves `unavailable`, emits a warning, and never substitutes predicted data.
 
@@ -25,7 +25,7 @@ Chrono Notes is an Obsidian calendar workspace for periodic notes, Chinese lunar
 
 - Year, month, and week views.
 - Daily, weekly, monthly, quarterly, and yearly notes.
-- Chinese lunar calendar overlay with solar terms and traditional festivals.
+- Chinese lunar and Ganzhi calendar extensions, including lunar dates, solar terms, traditional festivals, and Ganzhi dates.
 - Mainland China and Singapore holiday extensions.
 - Tasks, note statistics, heatmaps, range notes, templates, previews, and local read-only ICS files.
 - English, Simplified Chinese, and Traditional Chinese UI.

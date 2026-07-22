@@ -1,7 +1,7 @@
 {
   "name": "obsidian-chrono-notes",
   "version": "0.1.1",
-  "description": "A calendar workspace for periodic notes, lunar dates, tasks, and time ranges.",
+  "description": "A calendar workspace for periodic notes, calendar extensions, regional holidays, tasks, and time ranges.",
   "type": "module",
   "main": "dist/chrono-notes/main.js",
   "scripts": {
