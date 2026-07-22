@@ -1,0 +1,238 @@
+.chrono-notes-navbar-container {
+  background: var(--background-primary);
+  border-bottom: 1px solid var(--background-modifier-border);
+  container-type: inline-size;
+  flex: 0 0 auto;
+  padding: 5px 10px;
+}
+
+.chrono-notes-navbar-container + .view-content {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.chrono-notes-navbar {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.chrono-notes-navbar-controls {
+  align-items: center;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  min-width: 0;
+}
+
+.chrono-notes-navbar-navigation,
+.chrono-notes-navbar-primary,
+.chrono-notes-navbar-actions {
+  align-items: center;
+  display: flex;
+  gap: 3px;
+  min-width: 0;
+}
+
+.chrono-notes-navbar-navigation {
+  grid-column: 2;
+  gap: 9px;
+  justify-self: center;
+}
+
+.chrono-notes-navbar-actions {
+  grid-column: 3;
+  justify-self: end;
+}
+
+.chrono-notes-navbar-primary {
+  gap: 3px;
+}
+
+.chrono-notes-navbar-controls button {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  box-shadow: none !important;
+  display: inline-flex;
+  flex: 0 0 auto;
+  height: 28px;
+  justify-content: center;
+  padding: 4px;
+  width: 28px;
+}
+
+.chrono-notes-navbar-controls button:hover,
+.chrono-notes-navbar-related button:hover {
+  background: var(--background-modifier-hover);
+}
+
+.chrono-notes-navbar-label {
+  align-items: center;
+  color: var(--text-normal);
+  display: inline-flex;
+  font-size: var(--font-ui-small);
+  font-weight: var(--font-semibold);
+  gap: 4px;
+  justify-content: center;
+  min-width: 56px;
+  overflow: hidden;
+  padding-inline: 6px;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chrono-notes-navbar-controls button.chrono-notes-navbar-label {
+  flex: 0 1 auto;
+  min-width: 0;
+  width: auto;
+}
+
+.chrono-notes-navbar-label span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.chrono-notes-navbar-controls .chrono-notes-navbar-higher {
+  gap: 4px;
+  padding-inline: 6px;
+  width: auto;
+}
+
+.chrono-notes-navbar-higher span {
+  font-size: var(--font-ui-smaller);
+  text-transform: capitalize;
+}
+
+.chrono-notes-navbar-related {
+  border-top: 1px solid var(--background-modifier-border);
+  padding-top: 3px;
+}
+
+.chrono-notes-navbar-related-toggle {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  box-shadow: none !important;
+  color: var(--text-muted);
+  display: grid;
+  font-size: var(--font-ui-smaller);
+  gap: 5px;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  min-height: 26px;
+  padding: 3px 4px;
+  text-align: left;
+  width: 100%;
+}
+
+.chrono-notes-navbar-related-toggle svg {
+  transition: transform 120ms ease;
+}
+
+.chrono-notes-navbar-related-toggle[aria-expanded="false"] svg {
+  transform: rotate(-90deg);
+}
+
+.chrono-notes-navbar-related-toggle small {
+  color: var(--text-faint);
+}
+
+.chrono-notes-navbar-related-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.chrono-notes-navbar-related-list button {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  border-radius: 3px;
+  box-shadow: none !important;
+  color: var(--text-normal);
+  display: grid;
+  gap: 6px;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  min-height: 27px;
+  padding: 3px 5px 3px 20px;
+  text-align: left;
+  width: 100%;
+}
+
+.chrono-notes-navbar-related-list button span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chrono-notes-navbar-related-list button small,
+.chrono-notes-navbar-related-more {
+  color: var(--text-muted);
+  font-size: var(--font-ui-smaller);
+  white-space: nowrap;
+}
+
+.chrono-notes-navbar-related-more {
+  padding: 3px 5px 3px 40px;
+}
+
+@container (max-width: 480px) {
+  .chrono-notes-navbar-container {
+    padding-inline: 5px;
+  }
+
+  .chrono-notes-navbar-higher span,
+  .chrono-notes-navbar-related-list button small {
+    display: none;
+  }
+
+  .chrono-notes-navbar-related-list button {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+}
+
+body.is-phone:is(.is-floating-nav, .auto-full-screen)
+  .chrono-notes-navbar-container
+  + .view-content {
+  --view-top-fade-mask: linear-gradient(to bottom, #000 0%, #000 1px);
+  --view-top-spacing: 0;
+  --view-top-spacing-markdown: var(--size-4-2);
+}
+
+body.is-phone:is(.is-floating-nav, .auto-full-screen)
+  .chrono-notes-navbar-container {
+  margin-block-start: calc(
+    var(--view-header-top-offset, env(safe-area-inset-top, 0px)) +
+      var(--view-header-height, 0px)
+  );
+}
+
+body.is-phone.is-hidden-nav .chrono-notes-navbar-container {
+  margin-block-start: var(
+    --safe-area-inset-top,
+    env(safe-area-inset-top, 0px)
+  );
+}
+
+body.is-mobile .chrono-notes-navbar-container {
+  padding-block: 2px;
+}
+
+body.is-mobile .chrono-notes-navbar-controls button {
+  height: 44px;
+  min-width: 44px;
+  width: 44px;
+}
+
+body.is-mobile
+  .chrono-notes-navbar-controls
+  button:is(.chrono-notes-navbar-label, .chrono-notes-navbar-higher) {
+  width: auto;
+}
+
+body.is-mobile :is(
+  .chrono-notes-navbar-related-toggle,
+  .chrono-notes-navbar-related-list button
+) {
+  min-height: 44px;
+}

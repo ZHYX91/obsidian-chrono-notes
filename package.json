@@ -1,0 +1,57 @@
+{
+  "name": "obsidian-chrono-notes",
+  "version": "0.1.0",
+  "description": "A calendar workspace for periodic notes, lunar dates, tasks, and time ranges.",
+  "type": "module",
+  "main": "dist/chrono-notes/main.js",
+  "scripts": {
+    "dev": "node esbuild.config.mjs",
+    "build": "pnpm typecheck && pnpm build:bundle && pnpm artifact:check",
+    "build:bundle": "node esbuild.config.mjs production",
+    "artifact:check": "node scripts/check-production-bundle.mjs",
+    "size": "pnpm build:bundle && node scripts/check-production-bundle.mjs --details",
+    "bench:quick": "vitest run --config vitest.performance.config.ts --mode quick --reporter=verbose",
+    "bench:large": "vitest run --config vitest.performance.config.ts --mode large --reporter=verbose",
+    "holiday:check": "node scripts/check-holiday-coverage.mjs",
+    "format:check": "node scripts/check-source-style.mjs",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "test:timezones": "node scripts/run-tests-in-timezones.mjs",
+    "check": "pnpm format:check && pnpm typecheck && pnpm test && pnpm build:bundle && pnpm artifact:check",
+    "release:check": "pnpm check && pnpm test:timezones && pnpm bench:quick && pnpm holiday:check"
+  },
+  "keywords": [
+    "obsidian",
+    "calendar",
+    "periodic-notes",
+    "lunar-calendar"
+  ],
+  "author": "ZhengYX",
+  "license": "MIT",
+  "packageManager": "pnpm@11.7.0",
+  "engines": {
+    "node": "^20.0.0 || ^22.0.0 || >=24.0.0"
+  },
+  "devDependencies": {
+    "@types/luxon": "^3.7.2",
+    "@types/node": "^20.11.0",
+    "@types/react": "^18.3.31",
+    "@types/react-dom": "^18.3.7",
+    "@vitest/coverage-v8": "4.1.10",
+    "esbuild": "^0.27.0",
+    "happy-dom": "20.10.6",
+    "obsidian": "1.12.3",
+    "typescript": "^6.0.2",
+    "vitest": "4.1.10"
+  },
+  "dependencies": {
+    "ical.js": "2.2.1",
+    "lucide-react": "0.468.0",
+    "lunar-typescript": "1.8.6",
+    "luxon": "^3.7.2",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "yaml": "^2.9.0"
+  }
+}

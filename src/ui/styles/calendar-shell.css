@@ -1,0 +1,549 @@
+.chrono-notes-view {
+  container-type: inline-size;
+  height: 100%;
+  overflow: auto;
+  padding: 0;
+}
+
+.chrono-notes-calendar {
+  --chrono-notes-cell-gap: 6px;
+  --chrono-notes-current-period-ring: color-mix(in srgb, var(--text-normal) 60%, transparent);
+  --chrono-notes-current-period-ring-on-accent: color-mix(in srgb, var(--text-on-accent) 75%, transparent);
+  --chrono-notes-font-header: var(--font-ui-medium);
+  --chrono-notes-font-normal: var(--font-ui-small);
+  --chrono-notes-font-small: var(--font-ui-smaller);
+  --chrono-notes-font-micro: 9px;
+  --chrono-notes-heatmap-cell-gap: 4px;
+  color: var(--text-normal);
+  min-width: 240px;
+  padding: 8px;
+  position: relative;
+}
+
+.chrono-notes-calendar[data-font-size-mode="follow-obsidian"] {
+  --chrono-notes-font-header: var(--font-ui-medium);
+  --chrono-notes-font-normal: var(--font-ui-small);
+  --chrono-notes-font-small: var(--font-ui-smaller);
+  --chrono-notes-font-micro: 9px;
+}
+
+.chrono-notes-calendar[data-font-size-mode="follow-widget"] {
+  --chrono-notes-font-header: 15px;
+  --chrono-notes-font-normal: 13px;
+  --chrono-notes-font-small: 10px;
+  --chrono-notes-font-micro: 8.5px;
+}
+
+.chrono-notes-calendar-header,
+.chrono-notes-mini-calendar-header {
+  align-items: center;
+  display: flex;
+  gap: 12px;
+  min-width: 0;
+}
+
+.chrono-notes-calendar-header {
+  margin-bottom: 8px;
+}
+
+.chrono-notes-calendar-navigation,
+.chrono-notes-mini-calendar-navigation {
+  align-items: center;
+  display: flex;
+  flex: 0 1 auto;
+  gap: 6px;
+  min-width: 0;
+}
+
+.chrono-notes-calendar-navigation > :first-child,
+.chrono-notes-calendar-navigation > :last-child {
+  flex: none;
+}
+
+.chrono-notes-calendar-period-anchor {
+  align-items: stretch;
+  display: flex;
+  gap: 2px;
+  justify-content: center;
+  min-width: 0;
+}
+
+.chrono-notes-calendar-picker-trigger {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  border-radius: 4px;
+  color: var(--text-normal);
+  display: inline-flex;
+  font-size: var(--font-ui-small);
+  font-weight: var(--font-semibold);
+  gap: 2px;
+  justify-content: center;
+  min-width: 0;
+  padding-inline: 5px !important;
+}
+
+.chrono-notes-calendar-picker-trigger span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chrono-notes-period-picker {
+  background: var(--background-primary);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 6px;
+  box-shadow: var(--shadow-s);
+  left: 8px;
+  padding: 8px;
+  position: absolute;
+  right: 8px;
+  top: 44px;
+  z-index: var(--layer-popover, 100);
+}
+
+.chrono-notes-calendar-picker-modal {
+  max-width: min(420px, calc(100vw - 24px));
+  width: 100%;
+}
+
+.chrono-notes-calendar-picker-modal .chrono-notes-period-picker {
+  box-shadow: none;
+  left: auto;
+  max-height: min(520px, calc(100dvh - 128px));
+  position: relative;
+  right: auto;
+  top: auto;
+  transform: none;
+  width: 100%;
+}
+
+.chrono-notes-calendar-picker-modal .chrono-notes-week-picker-grid {
+  max-height: min(440px, calc(100dvh - 188px));
+}
+
+.chrono-notes-calendar-picker-modal
+  .chrono-notes-mini-calendar-period-picker {
+  box-shadow: none;
+  inset: auto;
+  position: relative;
+  top: auto;
+}
+
+.chrono-notes-period-picker button {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  border-radius: 4px;
+  box-shadow: none !important;
+  color: var(--text-normal);
+  display: inline-flex;
+  font-size: var(--font-ui-smaller);
+  justify-content: center;
+  min-height: 30px;
+  min-width: 0;
+  padding: 3px 4px;
+}
+
+.chrono-notes-period-picker button:focus-visible {
+  outline: 2px solid var(--interactive-accent);
+  outline-offset: 1px;
+}
+
+.chrono-notes-period-picker button:hover {
+  background: var(--background-modifier-hover);
+}
+
+.chrono-notes-period-picker button.is-current {
+  color: var(--text-accent);
+}
+
+.chrono-notes-period-picker button.is-selected {
+  box-shadow: inset 0 0 0 2px var(--interactive-accent) !important;
+}
+
+.chrono-notes-period-picker-nav {
+  align-items: center;
+  display: grid;
+  gap: 4px;
+  grid-template-columns: 30px minmax(0, 1fr) 30px;
+  margin-bottom: 6px;
+  text-align: center;
+}
+
+.chrono-notes-period-picker-nav strong {
+  font-size: var(--font-ui-small);
+}
+
+.chrono-notes-year-picker-grid {
+  display: grid;
+  gap: 3px;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.chrono-notes-month-picker-grid {
+  display: grid;
+  gap: 3px;
+}
+
+.chrono-notes-month-picker-row {
+  display: grid;
+  gap: 3px;
+  grid-template-columns: minmax(58px, 0.9fr) repeat(3, minmax(0, 1fr));
+}
+
+.chrono-notes-week-picker {
+  box-sizing: border-box;
+  container-type: inline-size;
+  left: 50%;
+  max-height: min(520px, calc(100vh - 72px));
+  right: auto;
+  transform: translateX(-50%);
+  width: min(420px, calc(100% - 16px));
+}
+
+.chrono-notes-week-picker-grid {
+  display: grid;
+  gap: 4px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  max-height: min(440px, calc(100vh - 132px));
+  overflow-y: auto;
+  padding-right: 2px;
+  scrollbar-gutter: stable;
+}
+
+.chrono-notes-period-picker .chrono-notes-week-picker-grid > button {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  justify-content: stretch;
+  min-height: 44px;
+  padding: 4px 6px;
+  position: relative;
+  width: 100%;
+}
+
+.chrono-notes-week-picker-number {
+  border-right: 1px solid var(--background-modifier-border);
+  font-weight: var(--font-semibold);
+  padding-right: 5px;
+  white-space: nowrap;
+}
+
+.chrono-notes-week-picker-range {
+  padding-left: 5px;
+  white-space: nowrap;
+}
+
+@container (max-width: 359px) {
+  .chrono-notes-week-picker-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.chrono-notes-quarter-picker-button {
+  font-weight: var(--font-semibold);
+}
+
+.chrono-notes-calendar-header button {
+  box-shadow: none;
+  min-height: 30px;
+  padding: 4px 8px;
+}
+
+.chrono-notes-calendar-header .chrono-notes-today,
+.chrono-notes-mini-calendar-header .chrono-notes-mini-calendar-today {
+  flex: none;
+  margin-left: auto;
+}
+
+.chrono-notes-mini-calendar-modal-container {
+  max-width: min(340px, calc(100vw - 24px));
+  width: 100%;
+}
+
+.chrono-notes-date-input-hint {
+  color: var(--text-muted);
+  font-size: var(--font-ui-smaller);
+  margin: 6px 0 2px;
+}
+
+.chrono-notes-mini-calendar {
+  min-width: 0;
+  position: relative;
+}
+
+.chrono-notes-mini-calendar-header {
+  margin-bottom: 10px;
+}
+
+.chrono-notes-mini-calendar-header button,
+.chrono-notes-mini-calendar-period-picker button {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  box-shadow: none !important;
+  color: var(--text-normal);
+  display: inline-flex;
+  height: 34px;
+  justify-content: center;
+  min-width: 34px;
+  padding: 4px;
+}
+
+.chrono-notes-mini-calendar-navigation > button:not(.chrono-notes-mini-calendar-period-trigger),
+.chrono-notes-mini-calendar-year-navigation button {
+  border-radius: 50%;
+}
+
+.chrono-notes-mini-calendar-header button:hover,
+.chrono-notes-mini-calendar-period-picker button:hover {
+  background: var(--background-modifier-hover);
+}
+
+.chrono-notes-mini-calendar-header button:focus-visible,
+.chrono-notes-mini-calendar-period-picker button:focus-visible {
+  outline: 2px solid var(--interactive-accent);
+  outline-offset: 1px;
+}
+
+.chrono-notes-mini-calendar-period-trigger {
+  border-radius: 6px;
+  flex: 0 1 132px;
+  gap: 3px;
+  min-width: 0;
+}
+
+.chrono-notes-mini-calendar-period-trigger strong {
+  font-size: var(--font-ui-small);
+  overflow: hidden;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chrono-notes-mini-calendar-header .chrono-notes-mini-calendar-today {
+  border-radius: 6px;
+  color: var(--text-accent);
+  padding-inline: 10px;
+  width: auto;
+}
+
+.chrono-notes-mini-calendar-period-picker {
+  background: var(--background-primary);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 8px;
+  box-shadow: var(--shadow-s);
+  inset-inline: 20px;
+  padding: 8px;
+  position: absolute;
+  top: 38px;
+  z-index: var(--layer-popover, 100);
+}
+
+.chrono-notes-mini-calendar-year-navigation {
+  align-items: center;
+  display: grid;
+  gap: 4px;
+  grid-template-columns: 34px minmax(0, 1fr) 34px;
+  margin-bottom: 6px;
+  text-align: center;
+}
+
+.chrono-notes-mini-calendar-year-navigation strong {
+  font-size: var(--font-ui-small);
+}
+
+.chrono-notes-mini-calendar-month-grid {
+  display: grid;
+  gap: 3px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.chrono-notes-mini-calendar-month-grid button {
+  border-radius: 5px;
+  font-size: var(--font-ui-smaller);
+  min-width: 0;
+}
+
+.chrono-notes-mini-calendar-month-grid button.is-selected {
+  box-shadow: inset 0 0 0 1px var(--interactive-accent) !important;
+  color: var(--text-accent);
+  font-weight: var(--font-semibold);
+}
+
+.chrono-notes-mini-calendar-grid {
+  display: grid;
+  gap: 2px;
+  grid-template-rows: auto repeat(6, 34px);
+}
+
+.chrono-notes-mini-calendar-row {
+  display: grid;
+  gap: 2px;
+  grid-template-columns: repeat(7, minmax(32px, 1fr));
+}
+
+.chrono-notes-mini-calendar-weekday {
+  color: var(--text-muted);
+  font-size: var(--font-ui-smaller);
+  padding: 2px 0 5px;
+  text-align: center;
+}
+
+.chrono-notes-mini-calendar-day {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  border-radius: 50%;
+  box-shadow: none !important;
+  color: var(--text-normal);
+  display: inline-flex;
+  font-size: var(--font-ui-small);
+  height: 34px;
+  justify-content: center;
+  justify-self: center;
+  min-height: 34px;
+  min-width: 34px;
+  padding: 0;
+  width: 34px;
+}
+
+.chrono-notes-mini-calendar-day:hover {
+  background: var(--background-modifier-hover);
+}
+
+.chrono-notes-mini-calendar-day:focus-visible {
+  outline: 2px solid var(--interactive-accent);
+  outline-offset: 2px;
+}
+
+.chrono-notes-mini-calendar-day.is-outside-month:not(.is-selected):not(.is-today) {
+  color: var(--text-faint);
+}
+
+.chrono-notes-mini-calendar-day.is-today {
+  color: var(--text-accent);
+  font-weight: var(--font-semibold);
+}
+
+.chrono-notes-mini-calendar-day.is-selected {
+  box-shadow: inset 0 0 0 2px var(--interactive-accent) !important;
+}
+
+.chrono-notes-calendar-toolbar {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: space-between;
+  margin: -4px 0 4px;
+}
+
+.chrono-notes-calendar-toolbar[data-view-mode="week"],
+.chrono-notes-calendar-toolbar[data-view-mode="year"] {
+  margin-bottom: 8px;
+}
+
+.chrono-notes-view-mode {
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 5px;
+  display: inline-flex;
+  overflow: hidden;
+}
+
+.chrono-notes-view-mode button {
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none !important;
+  font-size: var(--font-ui-smaller);
+  height: 26px;
+  padding: 2px 8px;
+}
+
+.chrono-notes-view-mode button + button {
+  border-left: 1px solid var(--background-modifier-border);
+}
+
+.chrono-notes-view-mode button.is-active {
+  background: var(--background-modifier-hover);
+  color: var(--text-accent);
+}
+
+.chrono-notes-heatmap-tools {
+  align-items: center;
+  display: flex;
+  flex: none;
+  gap: 5px;
+  margin-left: auto;
+}
+
+.chrono-notes-heatmap-dimension select {
+  font-size: var(--font-ui-smaller);
+  height: 26px;
+  max-width: 86px;
+  padding-block: 1px;
+}
+
+.chrono-notes-heatmap-legend {
+  align-items: center;
+  display: flex;
+  gap: 2px;
+}
+
+.chrono-notes-heatmap-legend span {
+  background: var(--background-modifier-border);
+  border-radius: 2px;
+  display: block;
+  height: 9px;
+  width: 9px;
+}
+
+.chrono-notes-heatmap-tools[data-view-mode="year"]
+  .chrono-notes-heatmap-legend span[data-heatmap-level="1"],
+.chrono-notes-year-heatmap-day[data-heatmap-level="1"] {
+  background: color-mix(in srgb, var(--color-green) 20%, var(--background-primary));
+}
+
+.chrono-notes-heatmap-tools[data-view-mode="year"]
+  .chrono-notes-heatmap-legend span[data-heatmap-level="2"],
+.chrono-notes-year-heatmap-day[data-heatmap-level="2"] {
+  background: color-mix(in srgb, var(--color-green) 40%, var(--background-primary));
+}
+
+.chrono-notes-heatmap-tools[data-view-mode="year"]
+  .chrono-notes-heatmap-legend span[data-heatmap-level="3"],
+.chrono-notes-year-heatmap-day[data-heatmap-level="3"] {
+  background: color-mix(in srgb, var(--color-green) 65%, var(--background-primary));
+}
+
+.chrono-notes-heatmap-tools[data-view-mode="year"]
+  .chrono-notes-heatmap-legend span[data-heatmap-level="4"],
+.chrono-notes-year-heatmap-day[data-heatmap-level="4"] {
+  background: color-mix(in srgb, var(--color-green) 90%, var(--background-primary));
+}
+
+.chrono-notes-visually-hidden {
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  height: 1px;
+  overflow: hidden;
+  position: absolute;
+  white-space: nowrap;
+  width: 1px;
+}
+
+.chrono-notes-heatmap-toggle {
+  align-items: center;
+  box-shadow: none !important;
+  display: inline-flex;
+  height: 26px;
+  justify-content: center;
+  padding: 3px;
+  width: 26px;
+}
+
+.chrono-notes-heatmap-toggle.is-active {
+  background: var(--background-modifier-hover);
+  color: var(--text-accent);
+}

@@ -1,0 +1,869 @@
+.chrono-notes-year-view {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.chrono-notes-year-quarter-section {
+  min-width: 0;
+}
+
+.chrono-notes-year-summary-row {
+  display: grid;
+  gap: var(--chrono-notes-cell-gap);
+  grid-template-columns: minmax(44px, 0.65fr) repeat(3, minmax(0, 1fr));
+}
+
+.chrono-notes-year-period {
+  align-items: center;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 5px;
+  box-shadow: none !important;
+  color: var(--text-normal);
+  display: flex;
+  flex-direction: column;
+  font-size: var(--font-ui-smaller);
+  isolation: isolate;
+  justify-content: center;
+  min-height: 42px;
+  min-width: 0;
+  overflow: hidden;
+  padding: 5px 7px;
+  position: relative;
+}
+
+.chrono-notes-year-period-status {
+  align-items: center;
+  display: flex;
+  inset-inline: 7px;
+  justify-content: center;
+  min-height: 0;
+  min-width: 0;
+  position: absolute;
+  top: 4px;
+  z-index: 1;
+}
+
+.chrono-notes-year-period-label {
+  max-width: 100%;
+  overflow: hidden;
+  position: relative;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  z-index: 1;
+}
+
+.chrono-notes-year-period-status > .chrono-notes-calendar-indicator.is-top {
+  flex: 0 1 auto;
+}
+
+.chrono-notes-year-period:hover {
+  background: var(--background-modifier-hover);
+}
+
+.chrono-notes-year-period:focus-visible {
+  outline: 2px solid var(--interactive-accent);
+  outline-offset: 3px;
+}
+
+.chrono-notes-year-heatmap-quarter {
+  border-top: 1px solid var(--background-modifier-border);
+  padding-top: 5px;
+}
+
+.chrono-notes-year-heatmap-quarter > .chrono-notes-year-period {
+  min-height: 28px;
+  width: 100%;
+}
+
+.chrono-notes-year-heatmap-months {
+  display: grid;
+  gap: 6px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin-top: 3px;
+}
+
+.chrono-notes-year-heatmap-month {
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.chrono-notes-year-heatmap-month > .chrono-notes-year-period {
+  min-height: 26px;
+  padding-block: 2px;
+  width: 100%;
+}
+
+.chrono-notes-year-heatmap-grid {
+  display: grid;
+  gap: var(--chrono-notes-heatmap-cell-gap);
+  grid-auto-flow: column;
+  grid-template-rows: repeat(7, 11px);
+  justify-content: center;
+}
+
+.chrono-notes-year-heatmap-row {
+  display: contents;
+}
+
+.chrono-notes-year-heatmap-day,
+.chrono-notes-year-heatmap-gap {
+  border-radius: 2px;
+  height: 11px;
+  width: 11px;
+}
+
+.chrono-notes-year-heatmap-day {
+  background: var(--background-modifier-border);
+  border: 0;
+  box-shadow: none !important;
+  isolation: isolate;
+  min-height: 0;
+  padding: 0;
+  position: relative;
+}
+
+.chrono-notes-year-heatmap-day:hover {
+  outline: 1px solid var(--text-muted);
+  outline-offset: 3px;
+}
+
+.chrono-notes-year-heatmap-day:focus-visible {
+  outline: 2px solid var(--interactive-accent);
+  outline-offset: 3px;
+}
+
+.chrono-notes-year-heatmap-gap {
+  visibility: hidden;
+}
+
+.chrono-notes-year-placeholder {
+  background: var(--background-modifier-hover);
+  border-radius: 4px;
+  opacity: 0.35;
+}
+
+.chrono-notes-year-placeholder.is-summary {
+  height: var(--chrono-notes-year-quarter-height, 42px);
+}
+
+.chrono-notes-year-placeholder.is-heatmap {
+  height: var(--chrono-notes-year-quarter-height, 116px);
+}
+
+.chrono-notes-week-view {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+
+.chrono-notes-week-calendar {
+  min-width: 0;
+}
+
+.chrono-notes-week-overview {
+  display: grid;
+  gap: var(--chrono-notes-cell-gap);
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+}
+
+.chrono-notes-week-day {
+  align-items: center;
+  background: transparent;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 5px;
+  box-shadow: none !important;
+  color: var(--text-normal);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  isolation: isolate;
+  justify-content: flex-start;
+  min-height: 96px;
+  min-width: 0;
+  padding: 5px;
+  position: relative;
+}
+
+.chrono-notes-week-day:hover {
+  background: var(--background-modifier-hover);
+}
+
+.chrono-notes-week-day:focus-visible {
+  outline: 2px solid var(--interactive-accent);
+  outline-offset: 3px;
+}
+
+.chrono-notes-week-day.is-selected,
+.chrono-notes-week-number-button.is-selected,
+.chrono-notes-year-period.is-selected,
+.chrono-notes-year-heatmap-day.is-selected {
+  box-shadow: 0 0 0 2px var(--interactive-accent) !important;
+}
+
+.chrono-notes-week-day.is-current-period:not(.is-drop-target)::after,
+.chrono-notes-week-number-button.is-current-period::after,
+.chrono-notes-year-period.is-current-period::after,
+.chrono-notes-year-heatmap-day.is-current-period::after {
+  border-radius: inherit;
+  box-shadow: inset 0 0 0 1px var(--chrono-notes-current-period-ring);
+  content: "";
+  inset: 0;
+  pointer-events: none;
+  position: absolute;
+  z-index: 0;
+}
+
+.chrono-notes-week-day > * {
+  position: relative;
+  z-index: 1;
+}
+
+:is(
+  .chrono-notes-day.is-heatmap,
+  .chrono-notes-year-heatmap-day
+)[data-heatmap-level="3"],
+:is(
+  .chrono-notes-day.is-heatmap,
+  .chrono-notes-year-heatmap-day
+)[data-heatmap-level="4"] {
+  --chrono-notes-current-period-ring: var(--chrono-notes-current-period-ring-on-accent);
+}
+
+.chrono-notes-week-day.is-drop-target {
+  background: color-mix(in srgb, var(--interactive-accent) 16%, var(--background-primary));
+  border-color: var(--interactive-accent);
+}
+
+.chrono-notes-week-day > .chrono-notes-day-accessories {
+  flex: 0 0 auto;
+}
+
+.chrono-notes-week-day-name {
+  color: var(--text-muted);
+  font-size: 10px;
+  overflow: hidden;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  width: 100%;
+}
+
+.chrono-notes-week-day-name .is-full,
+.chrono-notes-week-day-name .is-compact {
+  display: none;
+}
+
+.chrono-notes-week-day-name .is-medium {
+  display: inline;
+}
+
+.chrono-notes-week-day-date {
+  font-size: var(--font-ui-small);
+  font-weight: var(--font-medium);
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.chrono-notes-week-day-date .is-compact {
+  display: none;
+}
+
+.chrono-notes-week-day-content {
+  align-items: center;
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 2px;
+  margin-block-start: 1px;
+  min-width: 0;
+  width: 100%;
+}
+
+.chrono-notes-week-day-content .chrono-notes-ics-list[data-responsive="true"]
+  .chrono-notes-ics-event[data-event-index="1"],
+.chrono-notes-week-day-content .chrono-notes-ics-list[data-responsive="true"]
+  .chrono-notes-ics-event[data-event-index="2"],
+.chrono-notes-week-day-content .chrono-notes-ics-more.is-wide {
+  display: none;
+}
+
+.chrono-notes-week-ranges {
+  margin-top: 7px;
+  min-width: 0;
+}
+
+.chrono-notes-week-ranges > header {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 4px;
+  min-height: 24px;
+}
+
+.chrono-notes-week-ranges h3 {
+  color: var(--text-muted);
+  font-size: var(--font-ui-smaller);
+  font-weight: var(--font-semibold);
+  margin: 0;
+}
+
+.chrono-notes-weekly-note {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid var(--background-modifier-border);
+  border-radius: 0;
+  box-shadow: none !important;
+  color: var(--text-normal);
+  display: grid;
+  gap: 7px;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  min-height: 32px;
+  padding: 4px 2px 7px;
+  text-align: left;
+  width: 100%;
+}
+
+.chrono-notes-weekly-note-heading {
+  align-items: center;
+  display: inline-flex;
+  gap: 7px;
+  min-width: 0;
+}
+
+.chrono-notes-weekly-note-heading > .chrono-notes-calendar-indicator.is-progress {
+  width: 30px;
+}
+
+.chrono-notes-weekly-note:hover {
+  background: var(--background-modifier-hover);
+}
+
+.chrono-notes-weekly-note small {
+  color: var(--text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chrono-notes-week-tasks {
+  min-width: 0;
+}
+
+.chrono-notes-week-tasks > header {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 5px;
+}
+
+.chrono-notes-week-tasks h3 {
+  font-size: var(--font-ui-small);
+  margin: 0;
+}
+
+.chrono-notes-week-create-range {
+  align-items: center;
+  align-self: flex-start;
+  background: transparent;
+  border: 0;
+  box-shadow: none !important;
+  display: inline-flex;
+  justify-content: center;
+  min-height: 24px;
+  min-width: 24px;
+  padding: 3px;
+}
+
+.chrono-notes-week-create-range:hover {
+  background: var(--background-modifier-hover);
+}
+
+.chrono-notes-week-tasks > header span {
+  color: var(--text-muted);
+  font-size: var(--font-ui-smaller);
+}
+
+.chrono-notes-week-tasks-empty {
+  border-top: 1px solid var(--background-modifier-border);
+  color: var(--text-muted);
+  display: flex;
+  flex-direction: column;
+  font-size: var(--font-ui-smaller);
+  gap: 2px;
+  padding: 9px 2px 2px;
+}
+
+.chrono-notes-week-tasks-empty strong {
+  color: var(--text-normal);
+  font-size: var(--font-ui-small);
+  font-weight: var(--font-medium);
+}
+
+.chrono-notes-week-interval-strip {
+  inline-size: 100%;
+  row-gap: 3px;
+}
+
+.chrono-notes-calendar button.chrono-notes-week-interval-item {
+  --chrono-notes-interval-surface: color-mix(in srgb, var(--chrono-notes-interval-color) 72%, var(--background-primary));
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--chrono-notes-interval-color) 86%, var(--text-normal));
+  box-sizing: border-box;
+  display: block;
+  font-size: var(--font-ui-smaller);
+  inline-size: 100%;
+  justify-self: stretch;
+  line-height: 18px;
+  min-height: 18px;
+}
+
+.chrono-notes-week-interval-more {
+  color: var(--text-muted);
+  font-size: var(--font-ui-smaller);
+  line-height: 18px;
+  text-align: center;
+}
+
+.chrono-notes-week-task-list {
+  border-top: 1px solid var(--background-modifier-border);
+  display: flex;
+  flex-direction: column;
+}
+
+.chrono-notes-week-task {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid var(--background-modifier-border);
+  border-radius: 0;
+  color: var(--text-normal);
+  display: grid;
+  gap: 7px;
+  grid-template-columns: auto auto minmax(0, 1fr) auto;
+  min-height: 34px;
+  padding: 4px 2px;
+  width: 100%;
+}
+
+.chrono-notes-week-task:hover {
+  background: var(--background-modifier-hover);
+}
+
+.chrono-notes-week-task time,
+.chrono-notes-week-task small {
+  color: var(--text-muted);
+  font-size: var(--font-ui-smaller);
+  white-space: nowrap;
+}
+
+.chrono-notes-week-task-due {
+  font-size: var(--font-ui-smaller);
+  max-width: 108px;
+  min-width: 0;
+  padding-block: 2px;
+}
+
+.chrono-notes-week-task small {
+  display: flex;
+  gap: 6px;
+}
+
+.chrono-notes-week-task-overdue {
+  color: var(--text-normal);
+  font-weight: 600;
+}
+
+.chrono-notes-week-task[draggable="true"] {
+  cursor: grab;
+}
+
+.chrono-notes-week-task input[type="checkbox"] {
+  margin: 0;
+}
+
+.chrono-notes-week-task-toggle {
+  align-items: center;
+  display: inline-flex;
+  justify-content: center;
+}
+
+.chrono-notes-week-task-source {
+  background: transparent;
+  border: 0;
+  border-radius: 2px;
+  box-shadow: none !important;
+  color: var(--text-normal);
+  min-width: 0;
+  overflow: hidden;
+  padding: 3px 1px;
+  text-align: left;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chrono-notes-week-task-source:hover {
+  color: var(--text-accent);
+}
+
+.chrono-notes-week-task[data-completed="true"] .chrono-notes-week-task-source {
+  color: var(--text-muted);
+  text-decoration: line-through;
+}
+
+.chrono-notes-week-task[data-overdue="warning"] {
+  box-shadow: inset 2px 0 var(--text-warning) !important;
+}
+
+.chrono-notes-week-task[data-overdue="severe"] {
+  box-shadow: inset 2px 0 var(--text-error) !important;
+}
+
+.chrono-notes-calendar-preview {
+  background: var(--background-primary);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 6px;
+  box-shadow: var(--shadow-s);
+  color: var(--text-normal);
+  font-size: var(--font-ui-small);
+  max-height: min(240px, calc(100vh - 24px));
+  max-width: min(280px, calc(100vw - 24px));
+  overflow: auto;
+  padding: 10px 12px;
+  pointer-events: none;
+  position: fixed;
+  white-space: pre-wrap;
+  width: max-content;
+  z-index: var(--layer-popover, 1000);
+}
+
+.chrono-notes-calendar-preview-date {
+  color: var(--text-muted);
+  font-size: var(--font-ui-smaller);
+  margin-bottom: 6px;
+}
+
+.chrono-notes-calendar-preview-meta {
+  color: var(--text-muted);
+  margin-bottom: 4px;
+}
+
+.chrono-notes-calendar-preview-error {
+  color: var(--text-error);
+}
+
+.chrono-notes-calendar-preview-body {
+  overflow-wrap: anywhere;
+}
+
+.chrono-notes-calendar[data-font-size-mode] {
+  font-size: var(--chrono-notes-font-normal);
+}
+
+.chrono-notes-calendar[data-font-size-mode] :is(
+  .chrono-notes-calendar-picker-trigger,
+  .chrono-notes-today,
+  .chrono-notes-view-mode button,
+  .chrono-notes-period-picker button,
+  .chrono-notes-day-number,
+  .chrono-notes-year-period,
+  .chrono-notes-week-day-date,
+  .chrono-notes-weekly-note
+) {
+  font-size: var(--chrono-notes-font-normal);
+}
+
+.chrono-notes-calendar[data-font-size-mode] :is(
+  .chrono-notes-week-heading,
+  .chrono-notes-weekday,
+  .chrono-notes-week-number-button,
+  .chrono-notes-heatmap-legend,
+  .chrono-notes-week-day-name,
+  .chrono-notes-week-task,
+  .chrono-notes-week-interval-item,
+  .chrono-notes-month-range,
+  .chrono-notes-calendar-overlay
+) {
+  font-size: var(--chrono-notes-font-small);
+}
+
+.chrono-notes-calendar[data-font-size-mode] :is(
+  .chrono-notes-regional-marker,
+  .chrono-notes-holiday-footer,
+  .chrono-notes-calendar-overlay-event,
+  .chrono-notes-ics-list,
+  .chrono-notes-ics-more,
+  .chrono-notes-calendar-indicator.is-progress.is-horizontal
+) {
+  font-size: var(--chrono-notes-font-micro);
+}
+
+@container (max-width: 460px) {
+  .chrono-notes-calendar-overlays[data-count="2"] {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@container (min-width: 560px) {
+  .chrono-notes-week-day {
+    min-height: 118px;
+    padding-inline: 5px;
+  }
+
+  .chrono-notes-week-day-name .is-full {
+    display: inline;
+  }
+
+  .chrono-notes-week-day-name .is-medium {
+    display: none;
+  }
+
+  .chrono-notes-week-day-content .chrono-notes-ics-list[data-responsive="true"]
+    .chrono-notes-ics-event[data-event-index="1"],
+  .chrono-notes-week-day-content .chrono-notes-ics-list[data-responsive="true"]
+    .chrono-notes-ics-event[data-event-index="2"] {
+    display: flex;
+  }
+
+  .chrono-notes-week-day-content .chrono-notes-ics-more.is-medium {
+    display: none;
+  }
+
+  .chrono-notes-week-day-content .chrono-notes-ics-more.is-wide {
+    display: block;
+  }
+
+  .chrono-notes-week-day-content
+    .chrono-notes-ics-list[data-responsive="true"][data-wide-overflow="false"]
+    .chrono-notes-ics-event:last-of-type {
+    padding-right: 0;
+  }
+}
+
+@container (max-width: 360px) {
+  .chrono-notes-calendar[data-font-size-mode="follow-widget"] {
+    --chrono-notes-font-header: 14px;
+    --chrono-notes-font-normal: 12px;
+    --chrono-notes-font-small: 9px;
+    --chrono-notes-font-micro: 8px;
+  }
+
+  .chrono-notes-calendar {
+    --chrono-notes-cell-gap: 4px;
+    --chrono-notes-heatmap-cell-gap: 3px;
+    padding: 4px;
+  }
+
+  .chrono-notes-today {
+    font-size: 0;
+    padding-inline: 7px !important;
+  }
+
+  .chrono-notes-today::after {
+    content: "•";
+    font-size: var(--font-ui-medium);
+  }
+
+  .chrono-notes-month-grid {
+    grid-template-columns: 30px var(--chrono-notes-week-date-gap) repeat(7, minmax(25px, 1fr));
+  }
+
+  .chrono-notes-week-day {
+    min-height: 58px;
+  }
+
+  .chrono-notes-week-day-name .is-medium {
+    display: none;
+  }
+
+  .chrono-notes-week-day-name .is-compact {
+    display: inline;
+  }
+
+  .chrono-notes-week-day-content {
+    display: none;
+  }
+
+  .chrono-notes-week-day-date .is-full {
+    display: none;
+  }
+
+  .chrono-notes-week-day-date .is-compact {
+    display: inline;
+  }
+
+  .chrono-notes-week-task {
+    gap: 5px;
+    grid-template-columns: auto auto minmax(0, 1fr) auto;
+  }
+
+  .chrono-notes-week-task-due {
+    max-width: 82px;
+  }
+
+  .chrono-notes-week-task[data-overdue="none"] small,
+  .chrono-notes-week-task-kind {
+    display: none;
+  }
+
+  .chrono-notes-heatmap-legend {
+    display: none;
+  }
+
+  .chrono-notes-year-summary-row {
+    grid-template-columns: minmax(60px, 0.6fr) repeat(3, minmax(0, 1fr));
+  }
+
+  .chrono-notes-year-period {
+    font-size: 10px;
+    padding-inline: 4px;
+  }
+
+  .chrono-notes-year-heatmap-months {
+    gap: 4px;
+  }
+
+  .chrono-notes-year-heatmap-grid {
+    grid-template-rows: repeat(7, 10px);
+  }
+
+  .chrono-notes-year-heatmap-day,
+  .chrono-notes-year-heatmap-gap {
+    height: 10px;
+    width: 10px;
+  }
+
+  .chrono-notes-day-main {
+    padding: 4px;
+  }
+
+  .chrono-notes-ics-list {
+    display: none;
+  }
+
+  .chrono-notes-regional-marker {
+    font-size: 7px;
+    line-height: 9px;
+  }
+
+  .chrono-notes-calendar[data-font-size-mode] .chrono-notes-day .chrono-notes-day-number {
+    font-size: min(var(--chrono-notes-font-normal), 12px);
+  }
+
+  .chrono-notes-holiday-footer {
+    font-size: 8px;
+    line-height: 10px;
+  }
+
+}
+
+@container (min-width: 720px) {
+  .chrono-notes-calendar[data-font-size-mode="follow-widget"] {
+    --chrono-notes-font-header: 17px;
+    --chrono-notes-font-normal: 14px;
+    --chrono-notes-font-small: 11px;
+    --chrono-notes-font-micro: 9px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chrono-notes-calendar * {
+    scroll-behavior: auto !important;
+    transition: none !important;
+  }
+}
+
+@media (pointer: coarse) {
+  .chrono-notes-calendar {
+    --chrono-notes-heatmap-cell-gap: 4px;
+  }
+
+  .chrono-notes-settings-tab {
+    height: 44px;
+    min-height: 44px;
+  }
+
+  .chrono-notes-calendar-header > button,
+  .chrono-notes-calendar-navigation > button,
+  .chrono-notes-calendar-toolbar button {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  .chrono-notes-mini-calendar-header button,
+  .chrono-notes-mini-calendar-period-picker button {
+    height: 44px;
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  .chrono-notes-mini-calendar-period-picker {
+    top: 48px;
+  }
+
+  .chrono-notes-mini-calendar-year-navigation {
+    grid-template-columns: 44px minmax(0, 1fr) 44px;
+  }
+
+  .chrono-notes-calendar-picker-trigger,
+  .chrono-notes-period-picker button {
+    min-height: 44px;
+  }
+
+  .chrono-notes-calendar-picker-trigger {
+    min-width: 44px;
+  }
+
+  .chrono-notes-period-picker {
+    top: 58px;
+  }
+
+  .chrono-notes-week-task-due {
+    min-height: 44px;
+    max-width: min(140px, 32cqw);
+  }
+
+  .chrono-notes-week-task-toggle,
+  .chrono-notes-week-create-range,
+  .chrono-notes-interval-list-create {
+    height: 44px;
+    min-height: 44px;
+    min-width: 44px;
+    width: 44px;
+  }
+
+  .chrono-notes-heatmap-dimension select {
+    height: 44px;
+    min-height: 44px;
+  }
+
+  .chrono-notes-month-interval-strip {
+    --chrono-notes-month-interval-lane-height: 18px;
+  }
+
+  .chrono-notes-year-heatmap-quarter > .chrono-notes-year-period,
+  .chrono-notes-year-heatmap-month > .chrono-notes-year-period,
+  .chrono-notes-year-summary-row > .chrono-notes-year-period {
+    min-height: 44px;
+  }
+
+  .chrono-notes-year-heatmap-months {
+    gap: 8px;
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .chrono-notes-year-heatmap-grid {
+    grid-template-rows: repeat(7, clamp(32px, 14cqw, 44px));
+  }
+
+  .chrono-notes-year-heatmap-day,
+  .chrono-notes-year-heatmap-gap {
+    height: clamp(32px, 14cqw, 44px);
+    width: clamp(32px, 14cqw, 44px);
+  }
+}

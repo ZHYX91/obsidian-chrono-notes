@@ -1,0 +1,220 @@
+.chrono-notes-settings-tabs {
+  align-items: flex-end;
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 2px;
+  margin: 0 0 22px;
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  overscroll-behavior-inline: contain;
+  padding: 0;
+  border-bottom: 1px solid var(--background-modifier-border);
+  scrollbar-width: thin;
+}
+
+.chrono-notes-settings-tab {
+  background: transparent;
+  border: 1px solid transparent;
+  border-bottom: 2px solid transparent;
+  border-radius: 5px 5px 0 0;
+  box-sizing: border-box;
+  box-shadow: none !important;
+  color: var(--text-muted);
+  cursor: pointer;
+  flex: 0 0 auto;
+  font-size: var(--font-ui-small);
+  height: 34px;
+  min-height: 34px;
+  margin-bottom: -1px;
+  padding: 0 12px;
+  white-space: nowrap;
+}
+
+.chrono-notes-settings-tab:focus-visible {
+  outline: 2px solid var(--interactive-accent);
+  outline-offset: -2px;
+}
+
+.chrono-notes-settings-tab:hover {
+  background: var(--interactive-hover);
+  border-color: var(--background-modifier-border);
+  color: var(--text-normal);
+}
+
+.chrono-notes-settings-tab.is-active,
+.chrono-notes-settings-tab.is-active:hover {
+  background: color-mix(in srgb, var(--interactive-accent) 12%, transparent);
+  border-color: var(--background-modifier-border);
+  border-bottom-color: var(--interactive-accent);
+  color: var(--text-normal);
+}
+
+.chrono-notes-settings-hint {
+  color: var(--text-muted);
+  font-size: var(--font-ui-small);
+  margin: 4px 0 12px;
+}
+
+.chrono-notes-settings-panel {
+  container-type: inline-size;
+  min-width: 0;
+}
+
+.chrono-notes-settings-guide {
+  background: var(--background-secondary);
+  border-inline-start: 3px solid var(--interactive-accent);
+  border-radius: var(--radius-s);
+  color: var(--text-muted);
+  font-size: var(--font-ui-small);
+  margin: 0 0 18px;
+  padding: 10px 12px;
+}
+
+.chrono-notes-settings-guide p {
+  margin: 0;
+}
+
+.chrono-notes-settings-syntax-comparison {
+  color: var(--text-normal);
+  margin-top: 6px;
+  overflow-wrap: anywhere;
+}
+
+.chrono-notes-periodic-section-heading {
+  border-top: 1px solid var(--background-modifier-border);
+  margin-top: 14px;
+  padding-top: 14px;
+}
+
+.chrono-notes-periodic-section-heading .setting-item-name {
+  font-size: var(--font-ui-medium);
+  font-weight: var(--font-semibold);
+}
+
+:is(
+  .chrono-notes-periodic-path-setting,
+  .chrono-notes-periodic-template-setting
+) {
+  align-items: stretch;
+  flex-direction: column;
+  gap: 8px;
+}
+
+:is(
+  .chrono-notes-periodic-path-setting,
+  .chrono-notes-periodic-template-setting
+) .setting-item-info {
+  min-width: 0;
+  width: 100%;
+}
+
+:is(
+  .chrono-notes-periodic-path-setting,
+  .chrono-notes-periodic-template-setting
+) .setting-item-control {
+  align-items: stretch;
+  flex: none;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  width: 100%;
+}
+
+:is(
+  .chrono-notes-periodic-path-setting,
+  .chrono-notes-periodic-template-setting
+) .setting-item-control input {
+  box-sizing: border-box;
+  max-width: 100%;
+  width: 100%;
+}
+
+.chrono-notes-periodic-path-example,
+.chrono-notes-periodic-path-feedback {
+  max-width: 100%;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  text-align: start;
+  width: 100%;
+}
+
+.chrono-notes-periodic-path-feedback {
+  box-sizing: border-box;
+  color: var(--text-muted);
+  display: block;
+  line-height: 1.5;
+  overflow: visible;
+}
+
+:is(
+  .chrono-notes-periodic-path-example,
+  .chrono-notes-periodic-path-feedback
+) code {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+
+.chrono-notes-periodic-path-feedback-value {
+  unicode-bidi: plaintext;
+}
+
+.chrono-notes-periodic-path-feedback.is-error {
+  color: var(--text-error);
+}
+
+.chrono-notes-periodic-template-example {
+  margin-top: 4px;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+
+.chrono-notes-wide-input-setting {
+  align-items: stretch;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.chrono-notes-wide-input-setting .setting-item-info,
+.chrono-notes-wide-input-setting .setting-item-control {
+  min-width: 0;
+  width: 100%;
+}
+
+.chrono-notes-wide-input-setting .setting-item-control {
+  align-items: stretch;
+  flex: none;
+}
+
+.chrono-notes-wide-input-setting :is(input, textarea) {
+  box-sizing: border-box;
+  max-width: 100%;
+  width: 100%;
+}
+
+.chrono-notes-settings-primary-action {
+  margin-bottom: 8px;
+}
+
+.chrono-notes-ics-status {
+  border-top: 1px solid var(--background-modifier-border);
+  display: grid;
+  gap: 4px;
+  margin-top: 10px;
+  padding-top: 10px;
+}
+
+.chrono-notes-ics-source {
+  color: var(--text-muted);
+  font-size: var(--font-ui-smaller);
+  overflow-wrap: anywhere;
+}
+
+.chrono-notes-ics-source.is-error {
+  color: var(--text-error);
+}
+
+.chrono-notes-settings-panel textarea {
+  min-height: 88px;
+}
