@@ -699,11 +699,11 @@ body.is-mobile
   width: 100%;
 }
 
-.chrono-notes-day-accessories:has(> .chrono-notes-day-status > .chrono-notes-calendar-indicator) {
+.chrono-notes-day-accessories[data-has-note-indicator="true"] {
   grid-template-columns: minmax(8px, 1fr) minmax(0, max-content);
 }
 
-.chrono-notes-day-accessories:has(> .chrono-notes-day-status > .chrono-notes-calendar-indicator):has(> .chrono-notes-regional-marker) {
+.chrono-notes-day-accessories[data-has-note-indicator="true"][data-has-regional-marker="true"] {
   column-gap: 4px;
 }
 

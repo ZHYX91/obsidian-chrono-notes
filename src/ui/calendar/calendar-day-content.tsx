@@ -23,8 +23,14 @@ export function CalendarDayStatusRow({
     day.regionalMarker === null
       ? null
       : formatRegionalMarkerLabel(day.regionalMarker.kind, translator.t);
+  const hasNoteIndicator =
+    showNoteIndicators && day.noteState !== "not-configured";
   return (
-    <span className="chrono-notes-day-accessories">
+    <span
+      className="chrono-notes-day-accessories"
+      data-has-note-indicator={String(hasNoteIndicator)}
+      data-has-regional-marker={String(regionalMarker !== null)}
+    >
       <span className="chrono-notes-day-status">
         <CalendarNoteIndicator
           show={showNoteIndicators}

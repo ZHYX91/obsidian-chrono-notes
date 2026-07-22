@@ -17,17 +17,17 @@ const checkReleaseVersion = (...arguments_: string[]) => execFileSync(
 
 describe("release version contract", () => {
   it("accepts the exact manifest version", () => {
-    expect(checkReleaseVersion("0.1.0")).toContain(
-      "Release version contract passed for 0.1.0.",
+    expect(checkReleaseVersion("0.1.1")).toContain(
+      "Release version contract passed for 0.1.1.",
     );
   });
 
   it("rejects a v-prefixed tag", () => {
-    expect(() => checkReleaseVersion("v0.1.0")).toThrow();
+    expect(() => checkReleaseVersion("v0.1.1")).toThrow();
   });
 
   it("rejects a different semantic version", () => {
-    expect(() => checkReleaseVersion("0.1.1")).toThrow();
+    expect(() => checkReleaseVersion("0.1.2")).toThrow();
   });
 
   it("requires a release tag", () => {

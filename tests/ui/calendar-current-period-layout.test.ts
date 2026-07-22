@@ -200,6 +200,36 @@ describe("calendar current-period layout", () => {
     expect(currentMonth?.classList.contains("is-selected")).toBe(false);
   });
 
+  it("shows the exact active day in year summary mode", () => {
+    const document = renderYear(false, APRIL_18, "day", APRIL_18);
+    const selectedMonth = document.querySelector(
+      '.chrono-notes-year-period[data-period-kind="month"].is-selected',
+    );
+
+    expect(selectedMonth?.getAttribute("data-period-month")).toBe("4");
+    expect(selectedMonth?.querySelector(
+      ".chrono-notes-year-period-selection",
+    )?.textContent).toBe("18");
+    expect(selectedMonth?.getAttribute("aria-label")).toContain("18");
+  });
+
+  it("shows the active week in the containing year-summary month", () => {
+    const document = renderYear(
+      false,
+      APRIL_18,
+      "week",
+      { year: 2026, month: 7, day: 16 },
+    );
+    const selectedMonth = document.querySelector(
+      '.chrono-notes-year-period[data-period-kind="month"].is-selected',
+    );
+
+    expect(selectedMonth?.getAttribute("data-period-month")).toBe("7");
+    expect(selectedMonth?.querySelector(
+      ".chrono-notes-year-period-selection",
+    )?.textContent).toBe("W29");
+  });
+
   it("does not mark periods when the displayed year is not current", () => {
     const document = renderYear(
       false,
@@ -349,6 +379,7 @@ function renderYear(
   selectionDate: LocalDate,
 ) {
   const markup = renderToStaticMarkup(createElement(YearView, {
+    weekStartDay: "monday",
     query: heatmap ? HEATMAP_QUERY : QUERY,
     translator: createTranslator("en", "en"),
     today,

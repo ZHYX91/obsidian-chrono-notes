@@ -17,7 +17,9 @@ import {
   shiftPeriod,
   type LocalDate,
   type PeriodicNoteType,
+  type WeekStartDay,
 } from "../../core/periodic/periodic-date";
+import { getCalendarWeekIdentity } from "../../core/periodic/calendar-week";
 import type {
   YearHeatmapDay,
   YearCalendarQuery,
@@ -57,7 +59,12 @@ const QUARTER_OBSERVER_MARGIN = "220px 0px";
 const QUARTER_PLACEHOLDER_HEIGHT_PROPERTY =
   "--chrono-notes-year-quarter-height";
 
-export type CalendarSelectionKind = "day" | "week" | "month" | "quarter";
+export type CalendarSelectionKind =
+  | "day"
+  | "week"
+  | "month"
+  | "quarter"
+  | "year";
 
 export interface YearViewProps {
   readonly query: YearCalendarQuery;
@@ -68,6 +75,7 @@ export interface YearViewProps {
   readonly showNoteIndicators: boolean;
   readonly taskAnnotationMode: TodoAnnotationMode;
   readonly quarterNameMode: QuarterNameMode;
+  readonly weekStartDay: WeekStartDay;
   readonly selection: Readonly<{
     kind: CalendarSelectionKind;
     date: LocalDate;
@@ -97,6 +105,7 @@ export function YearView({
   showNoteIndicators,
   taskAnnotationMode,
   quarterNameMode,
+  weekStartDay,
   selection,
   monthSelectionRequest,
   onSelect,
@@ -106,14 +115,14 @@ export function YearView({
 }: YearViewProps) {
   const [renderedQuarters, setRenderedQuarters] = useState(
     () => getInitialRenderedQuarters(
-      selection.kind === "month" && selection.date.year === query.year
+      selection.kind !== "year" && selection.date.year === query.year
         ? selection.date.month
         : null,
     ),
   );
   const root = useRef<HTMLDivElement>(null);
   const dayButtons = useRef(new Map<string, HTMLButtonElement>());
-  const handledMonthSelection = useRef<string | null>(null);
+  const handledPeriodSelection = useRef<string | null>(null);
   const previewEnabled = heatmap && showHoverPreview;
   const {
     activePreview,
@@ -135,9 +144,9 @@ export function YearView({
     : null;
 
   useEffect(() => {
-    handledMonthSelection.current = null;
+    handledPeriodSelection.current = null;
     setRenderedQuarters(getInitialRenderedQuarters(
-      selection.kind === "month" && selection.date.year === query.year
+      selection.kind !== "year" && selection.date.year === query.year
         ? selection.date.month
         : null,
     ));
@@ -184,25 +193,37 @@ export function YearView({
   }, []);
 
   useEffect(() => {
-    if (selection.kind !== "month" || selection.date.year !== query.year) {
-      handledMonthSelection.current = null;
+    if (selection.kind === "year" || selection.date.year !== query.year) {
+      handledPeriodSelection.current = null;
       return;
     }
-    const selectionKey = `${selection.date.year}-${selection.date.month}-${monthSelectionRequest}`;
-    if (handledMonthSelection.current === selectionKey) return;
+    const selectionKey = [
+      selection.kind,
+      selection.date.year,
+      selection.date.month,
+      selection.date.day,
+      monthSelectionRequest,
+    ].join("-");
+    if (handledPeriodSelection.current === selectionKey) return;
     const quarter = Math.ceil(selection.date.month / 3);
     if (!renderedQuarters.has(quarter)) {
       revealQuarter(quarter);
       return;
     }
-    handledMonthSelection.current = selectionKey;
+    handledPeriodSelection.current = selectionKey;
     const frame = window.requestAnimationFrame(() => {
-      root.current?.querySelector<HTMLElement>(
-        `[data-period-kind="month"][data-period-month="${selection.date.month}"]`,
-      )?.scrollIntoView({ block: "nearest" });
+      const selectedElement = heatmap && selection.kind === "day"
+        ? dayButtons.current.get(formatLocalDateKey(selection.date))
+        : root.current?.querySelector<HTMLElement>(
+            selection.kind === "quarter"
+              ? `[data-period-kind="quarter"][data-period-month="${selection.date.month}"]`
+              : `[data-period-kind="month"][data-period-month="${selection.date.month}"]`,
+          );
+      selectedElement?.scrollIntoView({ block: "center" });
     });
     return () => window.cancelAnimationFrame(frame);
   }, [
+    heatmap,
     query.year,
     monthSelectionRequest,
     renderedQuarters,
@@ -254,6 +275,7 @@ export function YearView({
           showNoteIndicators={showNoteIndicators}
           taskAnnotationMode={taskAnnotationMode}
           quarterNameMode={quarterNameMode}
+          weekStartDay={weekStartDay}
           heatmap={heatmap}
           rendered={renderedQuarters.has(quarter.quarter)}
           selection={selection}
@@ -294,6 +316,7 @@ interface LazyQuarterProps {
   readonly showNoteIndicators: boolean;
   readonly taskAnnotationMode: TodoAnnotationMode;
   readonly quarterNameMode: QuarterNameMode;
+  readonly weekStartDay: WeekStartDay;
   readonly heatmap: boolean;
   readonly rendered: boolean;
   readonly selection: YearViewProps["selection"];
@@ -367,6 +390,7 @@ function SummaryQuarter({
   quarterNameMode,
   today,
   selection,
+  weekStartDay,
   onSelect,
   onOpenPeriodic,
   longPress,
@@ -389,21 +413,29 @@ function SummaryQuarter({
         onOpenPeriodic={onOpenPeriodic}
         longPress={longPress}
       />
-      {quarter.months.map((month) => (
-        <PeriodButton
-          key={month.month}
-          summary={month.summary}
-          label={monthLabels[month.month - 1] ?? ""}
-          translator={translator}
-          showNoteIndicators={showNoteIndicators}
-          taskAnnotationMode={taskAnnotationMode}
-          today={today}
-          selected={isSelected(selection, "month", month.summary.date)}
-          onSelect={onSelect}
-          onOpenPeriodic={onOpenPeriodic}
-          longPress={longPress}
-        />
-      ))}
+      {quarter.months.map((month) => {
+        const summarySelection = getSummaryMonthSelection(
+          selection,
+          month.summary.date,
+          weekStartDay,
+        );
+        return (
+          <PeriodButton
+            key={month.month}
+            summary={month.summary}
+            label={monthLabels[month.month - 1] ?? ""}
+            selectionDetail={summarySelection.detail}
+            translator={translator}
+            showNoteIndicators={showNoteIndicators}
+            taskAnnotationMode={taskAnnotationMode}
+            today={today}
+            selected={summarySelection.selected}
+            onSelect={onSelect}
+            onOpenPeriodic={onOpenPeriodic}
+            longPress={longPress}
+          />
+        );
+      })}
     </div>
   );
 }
@@ -411,6 +443,7 @@ function SummaryQuarter({
 function PeriodButton({
   summary,
   label,
+  selectionDetail,
   translator,
   showNoteIndicators,
   taskAnnotationMode,
@@ -422,6 +455,7 @@ function PeriodButton({
 }: Readonly<{
   summary: YearPeriodicSummary;
   label: string;
+  selectionDetail?: string | undefined;
   translator: Translator;
   showNoteIndicators: boolean;
   taskAnnotationMode: TodoAnnotationMode;
@@ -431,8 +465,11 @@ function PeriodButton({
   onOpenPeriodic: YearViewProps["onOpenPeriodic"];
   longPress: LongPressGesture;
 }>) {
+  const periodLabel = selectionDetail === undefined
+    ? label
+    : `${label} ${selectionDetail}`;
   const accessibleLabel = formatYearPeriodLabel(
-    label,
+    periodLabel,
     summary.noteState,
     summary.errorMessage,
     summary.statistics,
@@ -493,6 +530,11 @@ function PeriodButton({
         </span>
       ) : null}
       <span className="chrono-notes-year-period-label">{label}</span>
+      {selectionDetail === undefined ? null : (
+        <span className="chrono-notes-year-period-selection">
+          {selectionDetail}
+        </span>
+      )}
     </button>
   );
 }
@@ -749,4 +791,25 @@ function isSelected(
   }
   if (selection.date.month !== date.month) return false;
   return kind !== "day" || selection.date.day === date.day;
+}
+
+function getSummaryMonthSelection(
+  selection: YearViewProps["selection"],
+  month: LocalDate,
+  weekStartDay: WeekStartDay,
+): Readonly<{ selected: boolean; detail?: string }> {
+  if (
+    selection.date.year !== month.year ||
+    selection.date.month !== month.month
+  ) {
+    return { selected: false };
+  }
+  if (selection.kind === "day") {
+    return { selected: true, detail: String(selection.date.day) };
+  }
+  if (selection.kind === "week") {
+    const week = getCalendarWeekIdentity(selection.date, weekStartDay);
+    return { selected: true, detail: `W${week.weekNumber}` };
+  }
+  return { selected: isSelected(selection, "month", month) };
 }

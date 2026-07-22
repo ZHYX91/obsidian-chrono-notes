@@ -277,6 +277,67 @@ describe("CalendarApp active query", () => {
     await act(async () => root.unmount());
   });
 
+  it("syncs an active periodic note without changing the chosen view mode", async () => {
+    const baseProps = createProps(() => () => undefined, () => () => undefined);
+    const container = document.createElement("div");
+    document.body.append(container);
+    const root = createRoot(container);
+
+    await act(async () => root.render(createElement(CalendarApp, baseProps)));
+    const viewButtons = container.querySelectorAll<HTMLButtonElement>(
+      ".chrono-notes-view-mode button",
+    );
+    await act(async () => viewButtons[0]?.click());
+
+    await act(async () => root.render(createElement(CalendarApp, {
+      ...baseProps,
+      navigationRequest: {
+        revision: 1,
+        date: { year: 2026, month: 4, day: 18 },
+        noteType: "monthly",
+        mode: "sync",
+      },
+    })));
+
+    expect(container.querySelector(".chrono-notes-week-view")).not.toBeNull();
+    expect(selectors.week.mock.calls.at(-1)?.[0]).toEqual({
+      year: 2026,
+      month: 4,
+      day: 1,
+    });
+
+    await act(async () => root.unmount());
+  });
+
+  it("uses the majority month and week-year for a cross-year weekly note", async () => {
+    const baseProps = createProps(() => () => undefined, () => () => undefined);
+    const container = document.createElement("div");
+    document.body.append(container);
+    const root = createRoot(container);
+
+    await act(async () => root.render(createElement(CalendarApp, {
+      ...baseProps,
+      navigationRequest: {
+        revision: 1,
+        date: { year: 2025, month: 12, day: 29 },
+        noteType: "weekly",
+        mode: "sync",
+      },
+    })));
+    expect(selectors.month.mock.calls.at(-1)?.[0]).toEqual({
+      year: 2026,
+      month: 1,
+    });
+
+    const viewButtons = container.querySelectorAll<HTMLButtonElement>(
+      ".chrono-notes-view-mode button",
+    );
+    await act(async () => viewButtons[2]?.click());
+    expect(selectors.year.mock.calls.at(-1)?.[0]).toBe(2026);
+
+    await act(async () => root.unmount());
+  });
+
   it("uses This month as a month-granularity action only in year view", async () => {
     const props = createProps(() => () => undefined, () => () => undefined);
     const container = document.createElement("div");

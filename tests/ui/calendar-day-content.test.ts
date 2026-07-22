@@ -8,6 +8,7 @@ import { createTranslator } from "../../src/shared/i18n";
 import {
   CalendarDayCalendarDetails,
   CalendarDayEvents,
+  CalendarDayStatusRow,
 } from "../../src/ui/calendar/calendar-day-content";
 import { noteStatistics } from "../support/note-statistics";
 
@@ -45,6 +46,23 @@ describe("calendar day content", () => {
     expect(markup).toContain('data-wide-overflow="false"');
     expect(markup).toContain("chrono-notes-ics-more is-medium");
     expect(markup).not.toContain("chrono-notes-ics-more is-wide");
+  });
+
+  it("exposes status layout state without relational CSS selectors", () => {
+    const day = {
+      ...emptyDay(),
+      noteState: "has-body" as const,
+      regionalMarker: { kind: "work" as const, region: "cn" as const },
+    };
+    const markup = renderToStaticMarkup(createElement(CalendarDayStatusRow, {
+      day,
+      showNoteIndicators: true,
+      taskAnnotationMode: "hole",
+      translator: createTranslator("en", "en"),
+    }));
+
+    expect(markup).toContain('data-has-note-indicator="true"');
+    expect(markup).toContain('data-has-regional-marker="true"');
   });
 });
 

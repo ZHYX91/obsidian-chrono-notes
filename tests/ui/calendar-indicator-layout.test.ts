@@ -125,10 +125,10 @@ describe("calendar indicator layout", () => {
       /\.chrono-notes-day-status\s*\{[^}]*\}/s,
     )?.[0];
     const indicatorAccessoryRule = styles.match(
-      /\.chrono-notes-day-accessories:has\(> \.chrono-notes-day-status > \.chrono-notes-calendar-indicator\)\s*\{[^}]*\}/s,
+      /\.chrono-notes-day-accessories\[data-has-note-indicator="true"\]\s*\{[^}]*\}/s,
     )?.[0];
     const pairedAccessoryRule = styles.match(
-      /\.chrono-notes-day-accessories:has\(> \.chrono-notes-day-status > \.chrono-notes-calendar-indicator\):has\(> \.chrono-notes-regional-marker\)\s*\{[^}]*\}/s,
+      /\.chrono-notes-day-accessories\[data-has-note-indicator="true"\]\[data-has-regional-marker="true"\]\s*\{[^}]*\}/s,
     )?.[0];
 
     expect(dayRule).toContain("display: grid;");

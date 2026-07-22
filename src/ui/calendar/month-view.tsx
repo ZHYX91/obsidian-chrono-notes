@@ -252,7 +252,12 @@ export function MonthView({
                 )}
                 selected={
                   selectionKind === "week" &&
-                  isSameLocalDate(selected, week.weekStart)
+                  isSamePeriod(
+                    selected,
+                    week.weekStart,
+                    "weekly",
+                    weekStartDay,
+                  )
                 }
                 showNoteIndicators={!heatmapEnabled && showNoteIndicators}
                 taskAnnotationMode={taskAnnotationMode}

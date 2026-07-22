@@ -1,5 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+type MockEventCallback = (
+  file?: Readonly<{ path: string }> | null,
+) => void;
+
 const mocks = vi.hoisted(() => {
   interface Deferred<T> {
     readonly promise: Promise<T>;
@@ -28,8 +32,8 @@ const mocks = vi.hoisted(() => {
     removedSettingTabs: [] as unknown[],
     workspaceLeaves: [] as Array<{ readonly view: unknown }>,
     layoutReadyCallbacks: [] as Array<() => void>,
-    workspaceCallbacks: new Map<string, Array<() => void>>(),
-    vaultCallbacks: new Map<string, Array<() => void>>(),
+    workspaceCallbacks: new Map<string, Array<MockEventCallback>>(),
+    vaultCallbacks: new Map<string, Array<MockEventCallback>>(),
     domCallbacks: new Map<string, Array<EventListener>>(),
     domEventUnsubscribes: [] as Array<ReturnType<typeof vi.fn>>,
     documentVisibilityState: "visible" as DocumentVisibilityState,
@@ -46,6 +50,7 @@ const mocks = vi.hoisted(() => {
     noteListPaths: vi.fn<() => readonly string[]>(),
     noteRead: vi.fn<(path: string) => Promise<string>>(),
     icsRead: vi.fn<(source: string) => Promise<string>>(),
+    activeFilePath: null as string | null,
   };
 
   class MockPlugin {
@@ -182,6 +187,7 @@ const mocks = vi.hoisted(() => {
   class MockChronoNotesView {
     readonly refresh = vi.fn();
     readonly jumpToDate = vi.fn();
+    readonly syncToPeriodicNote = vi.fn();
 
     constructor(
       readonly leaf: unknown,
@@ -441,6 +447,54 @@ describe("ChronoNotesPlugin lifecycle composition", () => {
 
     plugin.unload();
     error.mockRestore();
+  });
+
+  it("synchronizes open calendar views to the active periodic note", async () => {
+    const plugin = createPlugin();
+    await plugin.onload();
+    plugin.settings.periodicNotes.daily = {
+      enabled: true,
+      pattern: "'Daily'/yyyy-MM-dd",
+      templatePath: "",
+    };
+    plugin.settings.periodicNotes.monthly = {
+      enabled: true,
+      pattern: "'Monthly'/yyyy-MM",
+      templatePath: "",
+    };
+    const registration = mocks.state.views[0];
+    if (registration === undefined) throw new Error("Expected calendar view");
+    mocks.state.activeFilePath = "Daily/2026-07-22.md";
+    const view = registration.creator({}) as InstanceType<
+      typeof mocks.MockChronoNotesView
+    >;
+    expect(view.syncToPeriodicNote).toHaveBeenCalledWith(
+      { year: 2026, month: 7, day: 22 },
+      "daily",
+    );
+    mocks.state.workspaceLeaves.push({ view });
+
+    mocks.state.workspaceCallbacks.get("file-open")?.[0]?.({
+      path: "Daily/2026-07-16.md",
+    });
+    expect(view.syncToPeriodicNote).toHaveBeenLastCalledWith(
+      { year: 2026, month: 7, day: 16 },
+      "daily",
+    );
+
+    mocks.state.activeFilePath = "Monthly/2026-04.md";
+    mocks.state.workspaceCallbacks.get("active-leaf-change")?.[0]?.();
+    expect(view.syncToPeriodicNote).toHaveBeenLastCalledWith(
+      { year: 2026, month: 4, day: 1 },
+      "monthly",
+    );
+
+    mocks.state.activeFilePath = "Other/note.md";
+    mocks.state.workspaceCallbacks.get("file-open")?.[0]?.({
+      path: "Other/note.md",
+    });
+    expect(view.syncToPeriodicNote).toHaveBeenCalledTimes(3);
+    plugin.unload();
   });
 
   it("keeps deferred initial note reads stopped when they settle after unload", async () => {
@@ -714,9 +768,9 @@ function createPlugin(): ChronoNotesPlugin {
 
 function createApp(): Record<string, unknown> {
   const addCallback = (
-    callbacks: Map<string, Array<() => void>>,
+    callbacks: Map<string, Array<MockEventCallback>>,
     event: string,
-    callback: () => void,
+    callback: MockEventCallback,
   ): { off(): void } => {
     const listeners = callbacks.get(event) ?? [];
     listeners.push(callback);
@@ -728,16 +782,18 @@ function createApp(): Record<string, unknown> {
     onLayoutReady: (callback: () => void) => {
       mocks.state.layoutReadyCallbacks.push(callback);
     },
-    on: (event: string, callback: () => void) =>
+    on: (event: string, callback: MockEventCallback) =>
       addCallback(mocks.state.workspaceCallbacks, event, callback),
     getLeavesOfType: () => mocks.state.workspaceLeaves,
     getRightLeaf: () => null,
     getLeaf: () => ({ setViewState: vi.fn() }),
     revealLeaf: vi.fn(),
-    getActiveFile: () => null,
+    getActiveFile: () => mocks.state.activeFilePath === null
+      ? null
+      : { path: mocks.state.activeFilePath },
   };
   const vault = {
-    on: (event: string, callback: () => void) =>
+    on: (event: string, callback: MockEventCallback) =>
       addCallback(mocks.state.vaultCallbacks, event, callback),
     getAbstractFileByPath: () => null,
   };
@@ -761,6 +817,7 @@ function resetCollections(): void {
   mocks.state.domEventUnsubscribes.length = 0;
   mocks.state.documentVisibilityState = "visible";
   mocks.state.localTimeZone = "Asia/Shanghai";
+  mocks.state.activeFilePath = null;
   mocks.state.eventUnsubscribes.length = 0;
   mocks.state.noteSourceUnsubscribes.length = 0;
   mocks.state.noteEventListeners.length = 0;

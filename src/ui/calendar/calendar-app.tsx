@@ -20,6 +20,7 @@ import {
   moveDateToCalendarWeekYear,
 } from "../../core/periodic/calendar-week";
 import {
+  getPeriodAnchor,
   shiftPeriod,
   type LocalDate,
   type PeriodicNoteType,
@@ -103,6 +104,8 @@ export interface CalendarAppProps {
 export interface CalendarNavigationRequest {
   readonly revision: number;
   readonly date: LocalDate;
+  readonly noteType: PeriodicNoteType;
+  readonly mode: "jump" | "sync";
 }
 
 export function CalendarApp({
@@ -154,6 +157,30 @@ export function CalendarApp({
     setViewMode("month");
   }, []);
   const settings = getSettings();
+  const selectPeriodicNote = useCallback((
+    date: LocalDate,
+    noteType: PeriodicNoteType,
+  ) => {
+    const anchor = getPeriodAnchor(date, noteType, settings.weekStartDay);
+    const selectionDate = noteType === "weekly"
+      ? shiftPeriod(anchor, "daily", 3, settings.weekStartDay)
+      : anchor;
+    setOpenPeriodPicker(null);
+    setSelected(selectionDate);
+    setSelectionKind(getPeriodicSelectionKind(noteType));
+    setVisibleMonth({
+      year: selectionDate.year,
+      month: selectionDate.month,
+    });
+  }, [settings.weekStartDay]);
+  const openPeriodic = useCallback((
+    date: LocalDate,
+    noteType: PeriodicNoteType,
+    target: NoteOpenTarget,
+  ) => {
+    selectPeriodicNote(date, noteType);
+    return onOpenPeriodic(date, noteType, target);
+  }, [onOpenPeriodic, selectPeriodicNote]);
   const {
     activePreview,
     activePreviewKey,
@@ -357,8 +384,10 @@ export function CalendarApp({
     setOpenPeriodPicker(null);
   }, [longPress, viewMode]);
   useEffect(() => {
-    if (navigationRequest !== null) jumpToDate(navigationRequest.date);
-  }, [jumpToDate, navigationRequest]);
+    if (navigationRequest === null) return;
+    if (navigationRequest.mode === "jump") jumpToDate(navigationRequest.date);
+    else selectPeriodicNote(navigationRequest.date, navigationRequest.noteType);
+  }, [jumpToDate, navigationRequest, selectPeriodicNote]);
   useEffect(() => {
     dismissPreview();
   }, [activeQuery, dismissPreview]);
@@ -493,13 +522,21 @@ export function CalendarApp({
           >
             <button
               type="button"
-              className="chrono-notes-calendar-picker-trigger"
+              className={`chrono-notes-calendar-picker-trigger${
+                selectionKind === "year" &&
+                selected.year === (viewMode === "week"
+                  ? headerWeek.weekYear
+                  : visibleMonth.year)
+                  ? " is-selected"
+                  : ""
+              }`}
               aria-label={viewMode === "week"
                 ? `${t("calendar.chooseWeekYear")}: ${headerWeek.weekYear}`
                 : t("calendar.chooseYear")}
               aria-expanded={openPeriodPicker === (
                 viewMode === "week" ? "week-year" : "year"
               )}
+              aria-pressed={selectionKind === "year"}
               onClick={() => {
                 const kind = viewMode === "week" ? "week-year" : "year";
                 setOpenPeriodPicker((current) => current === kind ? null : kind);
@@ -513,9 +550,16 @@ export function CalendarApp({
             {viewMode === "month" ? (
               <button
                 type="button"
-                className="chrono-notes-calendar-picker-trigger"
+                className={`chrono-notes-calendar-picker-trigger${
+                  selectionKind === "month" &&
+                  selected.year === visibleMonth.year &&
+                  selected.month === visibleMonth.month
+                    ? " is-selected"
+                    : ""
+                }`}
                 aria-label={t("calendar.chooseMonth")}
                 aria-expanded={openPeriodPicker === "month"}
+                aria-pressed={selectionKind === "month"}
                 onClick={() =>
                   setOpenPeriodPicker((current) =>
                     current === "month" ? null : "month",
@@ -534,9 +578,12 @@ export function CalendarApp({
             ) : viewMode === "week" ? (
               <button
                 type="button"
-                className="chrono-notes-calendar-picker-trigger"
+                className={`chrono-notes-calendar-picker-trigger${
+                  selectionKind === "week" ? " is-selected" : ""
+                }`}
                 aria-label={`${t("calendar.chooseWeek")}: ${weekPickerLabels.accessible}`}
                 aria-expanded={openPeriodPicker === "week"}
+                aria-pressed={selectionKind === "week"}
                 title={weekPickerLabels.accessible}
                 onClick={() =>
                   setOpenPeriodPicker((current) =>
@@ -614,7 +661,7 @@ export function CalendarApp({
                     });
                     setSelectionKind("quarter");
                   }}
-                  onOpenPeriodic={onOpenPeriodic}
+                  onOpenPeriodic={openPeriodic}
                   onClose={closePeriodPicker}
                 />
               </CalendarPickerLayer>
@@ -766,6 +813,7 @@ export function CalendarApp({
           showNoteIndicators={settings.showNoteIndicators}
           taskAnnotationMode={settings.todoAnnotationMode}
           quarterNameMode={settings.quarterNameMode}
+          weekStartDay={settings.weekStartDay}
           selection={{ kind: selectionKind, date: selected }}
           monthSelectionRequest={monthSelectionRequest}
           onSelect={(kind, date) => {
@@ -773,7 +821,7 @@ export function CalendarApp({
             setSelected(date);
             setVisibleMonth({ year: date.year, month: date.month });
           }}
-          onOpenPeriodic={onOpenPeriodic}
+          onOpenPeriodic={openPeriodic}
           onOpenDateContextMenu={onOpenDateContextMenu}
           longPress={longPress}
         />
@@ -781,6 +829,7 @@ export function CalendarApp({
         <WeekView
           query={weekQuery}
           translator={translator}
+          selectionKind={selectionKind}
           selectedDate={selected}
           today={today}
           showHoverPreview={settings.showHoverPreview}
@@ -793,7 +842,7 @@ export function CalendarApp({
             setSelectionKind("day");
             setVisibleMonth({ year: date.year, month: date.month });
           }}
-          onOpenPeriodic={onOpenPeriodic}
+          onOpenPeriodic={openPeriodic}
           onOpenPath={onOpenPath}
           onCreateRange={onCreateRange}
           onToggleTask={onToggleTask}
@@ -827,7 +876,7 @@ export function CalendarApp({
           }}
           onSelect={selectMonthItem}
           onMoveSelection={moveMonthSelection}
-          onOpenPeriodic={onOpenPeriodic}
+          onOpenPeriodic={openPeriodic}
           onOpenPath={onOpenPath}
           onCreateRange={onCreateRange}
           onOpenDateContextMenu={onOpenDateContextMenu}
@@ -842,4 +891,21 @@ export function CalendarApp({
       )}
     </div>
   );
+}
+
+function getPeriodicSelectionKind(
+  noteType: PeriodicNoteType,
+): CalendarSelectionKind {
+  switch (noteType) {
+    case "daily":
+      return "day";
+    case "weekly":
+      return "week";
+    case "monthly":
+      return "month";
+    case "quarterly":
+      return "quarter";
+    case "yearly":
+      return "year";
+  }
 }

@@ -144,13 +144,17 @@ export default class ChronoNotesPlugin extends Plugin {
       this.noteNavbar = noteNavbar;
       this.registerRuntimeDisposer(() => noteNavbar.unmount());
       this.registerEvent(this.app.workspace.on("active-leaf-change", () => {
-        if (this.isRuntimeCurrent(runtimeRevision)) noteNavbar.update();
+        if (!this.isRuntimeCurrent(runtimeRevision)) return;
+        noteNavbar.update();
+        this.syncCalendarSelectionToActiveFile();
       }));
       this.registerEvent(this.app.workspace.on("layout-change", () => {
         if (this.isRuntimeCurrent(runtimeRevision)) noteNavbar.update();
       }));
-      this.registerEvent(this.app.workspace.on("file-open", () => {
-        if (this.isRuntimeCurrent(runtimeRevision)) noteNavbar.update();
+      this.registerEvent(this.app.workspace.on("file-open", (file) => {
+        if (!this.isRuntimeCurrent(runtimeRevision)) return;
+        noteNavbar.update();
+        this.syncCalendarSelectionToPath(file?.path);
       }));
       this.registerEvent(this.app.vault.on("rename", () => {
         if (this.isRuntimeCurrent(runtimeRevision)) noteNavbar.handleFileRename();
@@ -180,6 +184,7 @@ export default class ChronoNotesPlugin extends Plugin {
       this.app.workspace.onLayoutReady(() => {
         if (!this.isRuntimeCurrent(runtimeRevision)) return;
         noteNavbar.update();
+        this.syncCalendarSelectionToActiveFile();
         void this.startDeferredIndexes(noteIndex, runtimeRevision);
         void this.showFirstUseGuideOnce(runtimeRevision);
       });
@@ -248,8 +253,8 @@ export default class ChronoNotesPlugin extends Plugin {
     if (noteIndex === null || icsEventIndex === null) return;
     this.registerView(
       CHRONO_NOTES_VIEW_TYPE,
-      (leaf) =>
-        new ChronoNotesView(leaf, {
+      (leaf) => {
+        const view = new ChronoNotesView(leaf, {
           noteIndex,
           icsEventIndex,
           getSettings: () => this.settings,
@@ -284,7 +289,13 @@ export default class ChronoNotesPlugin extends Plugin {
               },
             });
           },
-        }),
+        });
+        const activeNote = this.getActivePeriodicNoteMatch();
+        if (activeNote !== null) {
+          view.syncToPeriodicNote(activeNote.date, activeNote.noteType);
+        }
+        return view;
+      },
     );
     this.addRibbonIcon("calendar-days", messages.ribbonCalendar, () => {
       void this.activateCalendarView();
@@ -690,9 +701,20 @@ export default class ChronoNotesPlugin extends Plugin {
   }
 
   private getMiniCalendarInitialDate(): LocalDate {
-    const path = this.app.workspace.getActiveFile()?.path;
-    if (path === undefined) return getCurrentLocalDate();
-    const match = findPeriodicNotePathMatch(
+    return this.getActivePeriodicNoteMatch()?.date ?? getCurrentLocalDate();
+  }
+
+  private getActivePeriodicNoteMatch(): ReturnType<
+    typeof findPeriodicNotePathMatch
+  > {
+    return this.getPeriodicNoteMatch(this.app.workspace.getActiveFile()?.path);
+  }
+
+  private getPeriodicNoteMatch(path: string | undefined): ReturnType<
+    typeof findPeriodicNotePathMatch
+  > {
+    if (path === undefined) return null;
+    return findPeriodicNotePathMatch(
       path,
       PERIODIC_NOTE_TYPES
         .filter((noteType) => this.settings.periodicNotes[noteType].enabled)
@@ -705,7 +727,20 @@ export default class ChronoNotesPlugin extends Plugin {
         weekStartDay: this.settings.weekStartDay,
       },
     );
-    return match?.date ?? getCurrentLocalDate();
+  }
+
+  private syncCalendarSelectionToActiveFile(): void {
+    this.syncCalendarSelectionToPath(this.app.workspace.getActiveFile()?.path);
+  }
+
+  private syncCalendarSelectionToPath(path: string | undefined): void {
+    const match = this.getPeriodicNoteMatch(path);
+    if (match === null) return;
+    for (const leaf of this.app.workspace.getLeavesOfType(CHRONO_NOTES_VIEW_TYPE)) {
+      if (leaf.view instanceof ChronoNotesView) {
+        leaf.view.syncToPeriodicNote(match.date, match.noteType);
+      }
+    }
   }
 
   private getTranslator(): Translator {

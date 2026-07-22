@@ -54,6 +54,24 @@
   z-index: 1;
 }
 
+.chrono-notes-year-period-selection {
+  background: var(--interactive-accent);
+  border-radius: 999px;
+  bottom: 3px;
+  color: var(--text-on-accent);
+  font-size: 9px;
+  font-weight: var(--font-semibold);
+  inset-inline-end: 4px;
+  line-height: 1;
+  max-width: calc(100% - 8px);
+  overflow: hidden;
+  padding: 2px 4px;
+  position: absolute;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  z-index: 2;
+}
+
 .chrono-notes-year-period-status > .chrono-notes-calendar-indicator.is-top {
   flex: 0 1 auto;
 }
@@ -200,6 +218,7 @@
 }
 
 .chrono-notes-week-day.is-selected,
+.chrono-notes-weekly-note.is-selected,
 .chrono-notes-week-number-button.is-selected,
 .chrono-notes-year-period.is-selected,
 .chrono-notes-year-heatmap-day.is-selected {

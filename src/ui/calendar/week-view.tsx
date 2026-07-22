@@ -47,10 +47,12 @@ import {
   getWeekViewMessages,
 } from "./week-view-presentation";
 import { formatCalendarNoteState } from "./calendar-note-presentation";
+import type { CalendarSelectionKind } from "./year-view";
 
 export interface WeekViewProps {
   readonly query: WeekCalendarQuery;
   readonly translator: Translator;
+  readonly selectionKind: CalendarSelectionKind;
   readonly selectedDate: LocalDate;
   readonly today: LocalDate;
   readonly showHoverPreview: boolean;
@@ -93,6 +95,7 @@ export interface WeekViewProps {
 export function WeekView({
   query,
   translator,
+  selectionKind,
   selectedDate,
   today,
   showHoverPreview,
@@ -152,7 +155,8 @@ export function WeekView({
         >
           {query.days.map((day) => {
             const dayKey = formatLocalDateKey(day.date);
-            const selected = isSameLocalDate(selectedDate, day.date);
+            const selected = selectionKind === "day" &&
+              isSameLocalDate(selectedDate, day.date);
             const isToday = isSameLocalDate(today, day.date);
             const visualLabels = formatWeekDayVisualLabels(day.date, locale);
             const accessibleLabel = formatCalendarDayLabel(
@@ -331,8 +335,9 @@ export function WeekView({
       {query.weeklyNote.noteState === "not-configured" ? null : (
         <button
           type="button"
-          className="chrono-notes-weekly-note"
+          className={`chrono-notes-weekly-note${selectionKind === "week" ? " is-selected" : ""}`}
           data-note-state={query.weeklyNote.noteState}
+          aria-pressed={selectionKind === "week"}
           onClick={(event) => {
             if (weeklyNoteTouch.consumeClick()) {
               event.preventDefault();

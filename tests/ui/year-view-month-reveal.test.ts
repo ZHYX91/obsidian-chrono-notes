@@ -69,6 +69,7 @@ describe("year view month reveal", () => {
     await renderYear(2025, 1);
     expect(getJulyButton()).not.toBeNull();
     expect(scrollIntoView).toHaveBeenCalledTimes(1);
+    expect(scrollIntoView).toHaveBeenLastCalledWith({ block: "center" });
 
     await renderYear(2026, 2);
     expect(getJulyButton()).not.toBeNull();
@@ -82,6 +83,7 @@ describe("year view month reveal", () => {
   async function renderYear(year: number, monthSelectionRequest: number) {
     const selected: LocalDate = Object.freeze({ year, month: 7, day: 1 });
     await act(async () => root.render(createElement(YearView, {
+      weekStartDay: "monday",
       query: getQuery(year),
       translator,
       today,
