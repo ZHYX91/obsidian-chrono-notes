@@ -6,13 +6,20 @@ Chrono Notes 是一个面向 Obsidian 周期笔记工作流的日历插件，整
 
 ## 界面截图
 
-英文桌面月视图：
-
-![Chrono Notes 英文桌面月视图](docs/assets/chrono-notes-month-desktop-en.png)
-
-简体中文桌面月视图：
-
-![Chrono Notes 简体中文桌面月视图](docs/assets/chrono-notes-month-desktop-zh-cn.png)
+<table>
+  <thead>
+    <tr>
+      <th>PC</th>
+      <th>Android</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td width="70%"><img src="docs/assets/chrono-notes-desktop-en.png" alt="Chrono Notes 桌面端区间笔记与月历"></td>
+      <td width="30%"><img src="docs/assets/chrono-notes-android-en.png" alt="Chrono Notes Android 月历"></td>
+    </tr>
+  </tbody>
+</table>
 
 ## 产品范围
 

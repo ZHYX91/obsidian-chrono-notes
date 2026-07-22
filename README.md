@@ -6,13 +6,20 @@ Chrono Notes is an Obsidian calendar workspace for periodic notes, Chinese lunar
 
 ## Screenshots
 
-English desktop month view:
-
-![Chrono Notes English desktop month view](docs/assets/chrono-notes-month-desktop-en.png)
-
-Simplified Chinese desktop month view:
-
-![Chrono Notes Simplified Chinese desktop month view](docs/assets/chrono-notes-month-desktop-zh-cn.png)
+<table>
+  <thead>
+    <tr>
+      <th>Desktop</th>
+      <th>Android</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td width="70%"><img src="docs/assets/chrono-notes-desktop-en.png" alt="Chrono Notes desktop interval note and month calendar"></td>
+      <td width="30%"><img src="docs/assets/chrono-notes-android-en.png" alt="Chrono Notes Android month calendar"></td>
+    </tr>
+  </tbody>
+</table>
 
 ## Product scope
 

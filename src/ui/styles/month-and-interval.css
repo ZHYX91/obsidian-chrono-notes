@@ -259,8 +259,17 @@
   outline-offset: 1px;
 }
 
-.chrono-notes-month-interval-more {
+.chrono-notes-calendar button.chrono-notes-month-interval-more {
+  align-self: stretch;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  height: var(--chrono-notes-month-interval-more-height);
   line-height: 12px;
+  max-height: var(--chrono-notes-month-interval-more-height);
+  min-height: 0;
+  padding: 0;
   pointer-events: auto;
 }
 

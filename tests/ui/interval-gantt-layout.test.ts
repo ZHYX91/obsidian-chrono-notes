@@ -352,6 +352,9 @@ button:not(.clickable-icon) {
       /@media \(pointer:\s*coarse\)[\s\S]*?\.chrono-notes-month-interval-strip\s*\{[^}]*--chrono-notes-month-interval-lane-height:\s*18px;/s,
     );
     expect(styles).toMatch(
+      /\.chrono-notes-calendar button\.chrono-notes-month-interval-more\s*\{[^}]*background:\s*transparent;[^}]*border:\s*0;[^}]*border-radius:\s*0;[^}]*height:\s*var\(--chrono-notes-month-interval-more-height\);[^}]*max-height:\s*var\(--chrono-notes-month-interval-more-height\);[^}]*min-height:\s*0;[^}]*padding:\s*0;/s,
+    );
+    expect(styles).toMatch(
       /\.chrono-notes-calendar button\.chrono-notes-month-interval-item::before\s*\{[^}]*background-color:\s*var\(--chrono-notes-interval-surface\);[^}]*block-size:\s*var\(--chrono-notes-month-interval-line-height\);[^}]*inline-size:\s*100%;[^}]*inset-block-start:\s*50%;[^}]*pointer-events:\s*none;[^}]*position:\s*absolute;[^}]*transform:\s*translateY\(-50%\);/s,
     );
     expect(styles).toMatch(
