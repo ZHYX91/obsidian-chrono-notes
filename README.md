@@ -4,6 +4,16 @@ Chrono Notes is an Obsidian calendar workspace for periodic notes, Chinese lunar
 
 > Current release: 0.1.0. Functional parity and repository-side release hardening are implemented. The current artifact passes the automated release gates and has been verified in isolated desktop and Android-emulator Vaults. Physical-device verification remains outstanding. The official Mainland China 2027 holiday schedule is not yet published, so the gate preserves `unavailable`, emits a warning, and never substitutes predicted data.
 
+## Screenshots
+
+English desktop month view:
+
+![Chrono Notes English desktop month view](docs/assets/chrono-notes-month-desktop-en.png)
+
+Simplified Chinese desktop month view:
+
+![Chrono Notes Simplified Chinese desktop month view](docs/assets/chrono-notes-month-desktop-zh-cn.png)
+
 ## Product scope
 
 - Year, month, and week views.

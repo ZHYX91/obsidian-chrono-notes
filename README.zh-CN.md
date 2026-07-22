@@ -4,6 +4,16 @@ Chrono Notes 是一个面向 Obsidian 周期笔记工作流的日历插件，整
 
 > 当前版本：0.1.0。功能对等与仓库侧发布加固已经实现；当前产物通过自动发布门禁，并已在隔离的桌面与 Android 模拟器 Vault 中验证。真实设备验证仍未完成。中国大陆 2027 官方节假日安排尚未发布，因此门禁保留 `unavailable`、发出警告且不使用预测数据。
 
+## 界面截图
+
+英文桌面月视图：
+
+![Chrono Notes 英文桌面月视图](docs/assets/chrono-notes-month-desktop-en.png)
+
+简体中文桌面月视图：
+
+![Chrono Notes 简体中文桌面月视图](docs/assets/chrono-notes-month-desktop-zh-cn.png)
+
 ## 产品范围
 
 - 年、月、周三种视图；
