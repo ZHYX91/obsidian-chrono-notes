@@ -98,6 +98,19 @@ export class ChronoNotesView extends ItemView {
     this.navigationRequest = Object.freeze({
       revision: this.navigationRevision,
       date: Object.freeze({ year: date.year, month: date.month, day: date.day }),
+      noteType: "daily",
+      mode: "jump",
+    });
+    this.refresh();
+  }
+
+  syncToPeriodicNote(date: LocalDate, noteType: PeriodicNoteType): void {
+    this.navigationRevision += 1;
+    this.navigationRequest = Object.freeze({
+      revision: this.navigationRevision,
+      date: Object.freeze({ year: date.year, month: date.month, day: date.day }),
+      noteType,
+      mode: "sync",
     });
     this.refresh();
   }

@@ -52,16 +52,42 @@ describe("ChronoNotesView React root lifecycle", () => {
 
     view.jumpToDate({ year: 2026, month: 7, day: 20 });
     expect(mocks.render).toHaveBeenCalledTimes(2);
+    expect(getNavigationRequest()).toEqual({
+      revision: 1,
+      date: { year: 2026, month: 7, day: 20 },
+      noteType: "daily",
+      mode: "jump",
+    });
+
+    view.syncToPeriodicNote(
+      { year: 2026, month: 4, day: 18 },
+      "quarterly",
+    );
+    expect(mocks.render).toHaveBeenCalledTimes(3);
+    expect(getNavigationRequest()).toEqual({
+      revision: 2,
+      date: { year: 2026, month: 4, day: 18 },
+      noteType: "quarterly",
+      mode: "sync",
+    });
 
     await view.onClose();
     expect(mocks.unmount).toHaveBeenCalledOnce();
 
     view.refresh();
     view.jumpToDate({ year: 2026, month: 7, day: 21 });
-    expect(mocks.render).toHaveBeenCalledTimes(2);
+    view.syncToPeriodicNote({ year: 2026, month: 7, day: 1 }, "monthly");
+    expect(mocks.render).toHaveBeenCalledTimes(3);
     expect(mocks.unmount).toHaveBeenCalledOnce();
   });
 });
+
+function getNavigationRequest(): unknown {
+  const element = mocks.render.mock.calls.at(-1)?.[0] as
+    | { readonly props?: { readonly navigationRequest?: unknown } }
+    | undefined;
+  return element?.props?.navigationRequest;
+}
 
 function createHost(): ConstructorParameters<typeof ChronoNotesView>[1] {
   return {

@@ -290,6 +290,7 @@ function renderWeek(
   const markup = renderToStaticMarkup(createElement(WeekView, {
     query,
     translator: createTranslator("en", "en"),
+    selectionKind: "day",
     selectedDate,
     today,
     showHoverPreview: true,

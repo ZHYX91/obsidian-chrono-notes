@@ -186,6 +186,7 @@ describe("YearView interactions", () => {
       onOpenDateContextMenu: () => undefined,
       longPress,
       ...overrides,
+      weekStartDay: overrides.weekStartDay ?? "monday",
     })));
   }
 

@@ -88,6 +88,7 @@ describe("WeekView task rescheduling", () => {
     await act(async () => root.render(createElement(WeekView, {
       query,
       translator: createTranslator("en", "en-US"),
+      selectionKind: "day",
       selectedDate: query.weekStart,
       today: { year: 2026, month: 7, day: 20 },
       showHoverPreview: false,
@@ -164,6 +165,7 @@ describe("WeekView task rescheduling", () => {
     await act(async () => root.render(createElement(WeekView, {
       query,
       translator: createTranslator("en", "en-US"),
+      selectionKind: "day",
       selectedDate: query.weekStart,
       today: { year: 2026, month: 7, day: 20 },
       showHoverPreview: false,
