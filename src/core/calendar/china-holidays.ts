@@ -29,6 +29,18 @@ const TRADITIONAL_CHINESE_HOLIDAY_NAMES: Readonly<Record<string, string>> = Obje
   抗战胜利日: "抗戰勝利日",
 });
 
+const ENGLISH_HOLIDAY_NAMES: Readonly<Record<string, string>> = Object.freeze({
+  元旦节: "New Year's Day",
+  春节: "Spring Festival",
+  清明节: "Qingming Festival",
+  劳动节: "Labour Day",
+  端午节: "Dragon Boat Festival",
+  中秋节: "Mid-Autumn Festival",
+  国庆节: "National Day",
+  国庆中秋: "National Day / Mid-Autumn Festival",
+  抗战胜利日: "Victory Day",
+});
+
 export function getChinaHolidayDay(date: LocalDate, locale: string): ChinaHolidayDay {
   const holiday = HolidayUtil.getHoliday(date.year, date.month, date.day);
   const coverage = holiday === null
@@ -61,7 +73,8 @@ export function getChinaHolidayYearCoverage(year: number): HolidayDataCoverage {
 }
 
 function localizeHolidayName(name: string, locale: string): string {
-  return resolveRegionalHolidayLocale(locale) === "zh-TW"
-    ? TRADITIONAL_CHINESE_HOLIDAY_NAMES[name] ?? name
-    : name;
+  const resolvedLocale = resolveRegionalHolidayLocale(locale);
+  if (resolvedLocale === "zh-TW") return TRADITIONAL_CHINESE_HOLIDAY_NAMES[name] ?? name;
+  if (resolvedLocale === "en") return ENGLISH_HOLIDAY_NAMES[name] ?? name;
+  return name;
 }

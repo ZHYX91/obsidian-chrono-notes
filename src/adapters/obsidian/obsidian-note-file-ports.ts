@@ -1,4 +1,4 @@
-import type { Vault } from "obsidian";
+import type { FileManager, Vault } from "obsidian";
 
 import type { IntervalNoteFilePort } from "../../features/intervals/interval-note-commands";
 import type { PeriodicNoteFilePort } from "../../features/periodic/periodic-note-commands";
@@ -6,7 +6,10 @@ import type { TaskFilePort } from "../../features/tasks/task-commands";
 import { isMarkdownFile } from "./obsidian-markdown-files";
 
 export class ObsidianPeriodicNoteFilePort implements PeriodicNoteFilePort {
-  constructor(private readonly vault: Vault) {}
+  constructor(
+    private readonly vault: Vault,
+    private readonly fileManager: FileManager,
+  ) {}
 
   exists(path: string): boolean {
     return isMarkdownFile(this.vault.getAbstractFileByPath(path));
@@ -19,7 +22,7 @@ export class ObsidianPeriodicNoteFilePort implements PeriodicNoteFilePort {
 
   async delete(path: string): Promise<void> {
     const file = this.vault.getAbstractFileByPath(path);
-    if (isMarkdownFile(file)) await this.vault.delete(file, true);
+    if (isMarkdownFile(file)) await this.fileManager.trashFile(file);
   }
 }
 

@@ -843,6 +843,12 @@ body.is-mobile
   border-color: var(--interactive-accent);
 }
 
+.chrono-notes-calendar-indicator.is-state[data-note-state="indexing"] {
+  border-color: var(--text-muted);
+  border-style: dashed;
+  opacity: 0.65;
+}
+
 .chrono-notes-calendar-indicator.is-state[data-note-state="yaml-only"] {
   background: var(--interactive-accent);
   border-color: var(--interactive-accent);

@@ -37,7 +37,7 @@ Holiday extensions implement only Mainland China public holidays/workday adjustm
 
 ## 5. Documents, tasks, and statistics
 
-- Note states include missing, empty, YAML-only, body content, and read failure.
+- Note states include transient indexing, missing, empty, YAML-only, body content, and read failure. An unknown path while NoteIndex is updating must remain indexing rather than being reported as missing or offered for creation.
 - State, preview, tasks, and statistics come from one parsed document.
 - Parsing covers BOM, LF, CRLF, CR, mixed endings, and closing YAML delimiters at EOF.
 - Statistics cover word, link, tag, and task-completion dimensions with one shared display contract.

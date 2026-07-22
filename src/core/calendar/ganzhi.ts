@@ -2,7 +2,10 @@ import type {
   CalendarOverlayEventKind,
   CalendarOverlayTransition,
 } from "./calendar-overlay";
-import { withLunarLibraryLanguage } from "./lunar-library-language";
+import {
+  localizeSolarTermName,
+  withLunarLibraryLanguage,
+} from "./lunar-library-language";
 import type { LocalDate } from "../periodic/periodic-date";
 import {
   createLunarDateContext,
@@ -30,11 +33,10 @@ export function getGanzhiDayFromContext(
   context: LunarDateContext,
   locale: string,
 ): GanzhiDay {
-  const raw = withLunarLibraryLanguage("zh-CN", () => calculateGanzhiDay(context));
+  const raw = withLunarLibraryLanguage(locale, () => calculateGanzhiDay(context));
   const solarTerm = raw.solarTerm === null
     ? null
-    : withLunarLibraryLanguage(locale, () =>
-        context.lunar.getCurrentJie()?.getName() ?? raw.solarTerm);
+    : localizeSolarTermName(raw.solarTerm, locale);
   const chinese = locale.toLowerCase().startsWith("zh");
   const dateText = raw.transition === null
     ? raw.dayPillar

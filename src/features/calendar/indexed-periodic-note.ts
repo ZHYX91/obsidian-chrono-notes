@@ -10,6 +10,7 @@ import type { NoteIndexSnapshot } from "../notes/note-index";
 
 export type IndexedPeriodicNoteState =
   | NoteContentState
+  | "indexing"
   | "missing"
   | "error"
   | "not-configured";
@@ -32,6 +33,12 @@ export function hasIndexedPeriodicNote(
     state === "has-body" ||
     state === "error"
   );
+}
+
+export function canOpenOrCreateIndexedPeriodicNote(
+  state: IndexedPeriodicNoteState,
+): boolean {
+  return state !== "indexing" && state !== "not-configured";
 }
 
 export interface PeriodicNoteRule {
@@ -64,18 +71,18 @@ export function selectIndexedPeriodicNote(
     return emptyIndexedPeriodicNote(date, null, "not-configured");
   }
 
-  const notePath = formatPeriodicNotePath(
-    date,
-    { noteType, pattern: rule.pattern },
-    context,
-  );
+  const notePath = resolveIndexedPeriodicNotePath(date, noteType, context, rule);
   if (notePath === null) {
     return emptyIndexedPeriodicNote(date, null, "not-configured");
   }
 
   const entry = snapshot.notes[notePath];
   if (entry === undefined) {
-    return emptyIndexedPeriodicNote(date, notePath, "missing");
+    return emptyIndexedPeriodicNote(
+      date,
+      notePath,
+      snapshot.readiness === "indexing" ? "indexing" : "missing",
+    );
   }
   if (entry.kind === "error") {
     return Object.freeze({
@@ -97,10 +104,39 @@ export function selectIndexedPeriodicNote(
   });
 }
 
+export function isPeriodicNotePathIndexing(
+  date: LocalDate,
+  noteType: PeriodicNoteType,
+  snapshot: NoteIndexSnapshot,
+  context: PeriodicNotePathContext,
+  rule: PeriodicNoteRule,
+): boolean {
+  if (snapshot.readiness !== "indexing") return false;
+  const notePath = resolveIndexedPeriodicNotePath(date, noteType, context, rule);
+  return notePath !== null && snapshot.notes[notePath] === undefined;
+}
+
+function resolveIndexedPeriodicNotePath(
+  date: LocalDate,
+  noteType: PeriodicNoteType,
+  context: PeriodicNotePathContext,
+  rule: PeriodicNoteRule,
+): string | null {
+  if (!rule.enabled || rule.pattern.trim().length === 0) return null;
+  return formatPeriodicNotePath(
+    date,
+    { noteType, pattern: rule.pattern },
+    context,
+  );
+}
+
 function emptyIndexedPeriodicNote(
   date: LocalDate,
   notePath: string | null,
-  noteState: Extract<IndexedPeriodicNoteState, "missing" | "not-configured">,
+  noteState: Extract<
+    IndexedPeriodicNoteState,
+    "indexing" | "missing" | "not-configured"
+  >,
 ): IndexedPeriodicNote {
   return Object.freeze({
     date,

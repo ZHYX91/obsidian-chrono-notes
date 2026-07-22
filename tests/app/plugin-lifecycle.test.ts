@@ -417,44 +417,52 @@ describe("ChronoNotesPlugin lifecycle composition", () => {
     expect(navbar.handleFileRename).not.toHaveBeenCalled();
   });
 
-  it("cleans up NoteIndex when startup fails before any UI registration", async () => {
+  it("defers indexing until layout-ready and reports a startup failure without blocking UI", async () => {
     const plugin = createPlugin();
     mocks.state.noteListPaths.mockImplementation(() => {
       throw new Error("list failed");
     });
+    const error = vi.spyOn(console, "error").mockImplementation(() => undefined);
 
-    await expect(plugin.onload()).rejects.toThrow("list failed");
+    await plugin.onload();
+    expect(mocks.state.noteListPaths).not.toHaveBeenCalled();
+    expect(mocks.state.views).toHaveLength(1);
+    expect(mocks.state.commands).not.toHaveLength(0);
 
+    mocks.state.layoutReadyCallbacks[0]?.();
+    await vi.waitFor(() => expect(mocks.state.noteListPaths).toHaveBeenCalledOnce());
     expect(mocks.state.noteSourceUnsubscribes[0]).toHaveBeenCalledOnce();
-    expect(plugin.noteIndex).toBeNull();
-    expect(plugin.icsEventIndex).toBeNull();
-    expect(mocks.state.views).toHaveLength(0);
-    expect(mocks.state.commands).toHaveLength(0);
-    expect(mocks.state.ribbons).toHaveLength(0);
-    expect(mocks.state.settingTabs).toHaveLength(0);
-    expect(mocks.state.navbarInstances).toHaveLength(0);
+    await vi.waitFor(() => expect(error).toHaveBeenCalledWith(
+      "Chrono Notes: deferred indexing failed",
+      expect.any(Error),
+    ));
+    expect(plugin.noteIndex).not.toBeNull();
+    expect(plugin.icsEventIndex).not.toBeNull();
 
     plugin.unload();
+    error.mockRestore();
   });
 
-  it("does not continue composing UI when initial note reads settle after unload", async () => {
+  it("keeps deferred initial note reads stopped when they settle after unload", async () => {
     const read = mocks.createDeferred<string>();
     mocks.state.noteListPaths.mockReturnValue(["slow.md"]);
     mocks.state.noteRead.mockReturnValue(read.promise);
     const plugin = createPlugin();
 
-    const loading = plugin.onload();
+    await plugin.onload();
+    expect(mocks.state.noteRead).not.toHaveBeenCalled();
+    mocks.state.layoutReadyCallbacks[0]?.();
     await vi.waitFor(() => expect(mocks.state.noteRead).toHaveBeenCalledWith("slow.md"));
     plugin.unload();
     read.resolve("# Late note");
-    await loading;
+    await Promise.resolve();
+    await Promise.resolve();
 
     expect(plugin.noteIndex).toBeNull();
     expect(plugin.icsEventIndex).toBeNull();
-    expect(mocks.state.views).toHaveLength(0);
-    expect(mocks.state.commands).toHaveLength(0);
-    expect(mocks.state.settingTabs).toHaveLength(0);
-    expect(mocks.state.navbarInstances).toHaveLength(0);
+    expect(mocks.state.removedViews).toEqual(["chrono-notes-calendar"]);
+    expect(mocks.state.removedCommands).toHaveLength(mocks.state.commands.length);
+    expect(mocks.state.removedSettingTabs).toEqual(mocks.state.settingTabs);
   });
 
   it("keeps a late ICS refresh stopped after unload", async () => {
@@ -467,19 +475,18 @@ describe("ChronoNotesPlugin lifecycle composition", () => {
     const plugin = createPlugin();
     await plugin.onload();
 
+    mocks.state.layoutReadyCallbacks[0]?.();
     await vi.waitFor(() => expect(mocks.state.icsRead).toHaveBeenCalledWith("late.ics"));
     const index = plugin.icsEventIndex;
     if (index === null) throw new Error("Expected the ICS index to be composed.");
     const listener = vi.fn();
     index.subscribe(listener);
-    const refresh = plugin.refreshIcs(false);
     const versionBeforeUnload = index.getSnapshot().version;
-    expect(listener).toHaveBeenCalledOnce();
-    listener.mockClear();
 
     plugin.unload();
     read.resolve("BEGIN:VCALENDAR\r\nEND:VCALENDAR\r\n");
-    await refresh;
+    await Promise.resolve();
+    await Promise.resolve();
 
     expect(index.getSnapshot().version).toBe(versionBeforeUnload + 1);
     expect(index.getSnapshot()).toMatchObject({
@@ -498,6 +505,7 @@ describe("ChronoNotesPlugin lifecycle composition", () => {
     mocks.state.loadData.mockResolvedValue(settings);
     const plugin = createPlugin();
     await plugin.onload();
+    mocks.state.layoutReadyCallbacks[0]?.();
     const index = plugin.icsEventIndex;
     if (index === null) throw new Error("Expected the ICS index to be composed.");
     await vi.waitFor(() => expect(index.getSnapshot().state).toBe("ready"));
@@ -655,7 +663,7 @@ describe("ChronoNotesPlugin lifecycle composition", () => {
     mocks.state.saveData.mockReturnValue(save.promise);
     const plugin = createPlugin();
     await plugin.onload();
-    const firstUseCallback = mocks.state.layoutReadyCallbacks[1];
+    const firstUseCallback = mocks.state.layoutReadyCallbacks[0];
     if (firstUseCallback === undefined) {
       throw new Error("Expected a first-use layout-ready callback.");
     }
@@ -678,7 +686,7 @@ describe("ChronoNotesPlugin lifecycle composition", () => {
     const error = vi.spyOn(console, "error").mockImplementation(() => undefined);
     const plugin = createPlugin();
     await plugin.onload();
-    const firstUseCallback = mocks.state.layoutReadyCallbacks[1];
+    const firstUseCallback = mocks.state.layoutReadyCallbacks[0];
     if (firstUseCallback === undefined) {
       throw new Error("Expected a first-use layout-ready callback.");
     }

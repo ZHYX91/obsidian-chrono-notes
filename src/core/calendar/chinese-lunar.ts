@@ -9,7 +9,10 @@ import {
   createLunarDateContext,
   type LunarDateContext,
 } from "./lunar-date-context";
-import { withLunarLibraryLanguage } from "./lunar-library-language";
+import {
+  localizeSolarTermName,
+  withLunarLibraryLanguage,
+} from "./lunar-library-language";
 
 export interface ChineseLunarDay {
   readonly lunarMonth: number;
@@ -40,9 +43,14 @@ export function getChineseLunarDayFromContext(
 function buildChineseLunarDay(context: LunarDateContext): ChineseLunarDay {
   const { lunar } = context;
   const signedMonth = lunar.getMonth();
+  const lunarMonth = Math.abs(signedMonth);
   const lunarDay = lunar.getDay();
-  const lunarMonthName = `${lunar.getMonthInChinese()}月`;
-  const lunarDayName = lunar.getDayInChinese();
+  const isLeapMonth = signedMonth < 0;
+  const chinese = I18n.getLanguage() !== "en";
+  const lunarMonthName = chinese
+    ? `${lunar.getMonthInChinese()}月`
+    : `${isLeapMonth ? "Leap lunar month" : "Lunar month"} ${lunarMonth}`;
+  const lunarDayName = chinese ? lunar.getDayInChinese() : `day ${lunarDay}`;
   const rawFestival = lunar.getFestivals()[0] ?? null;
   const language = I18n.getLanguage();
   const festival = rawFestival === null
@@ -50,23 +58,27 @@ function buildChineseLunarDay(context: LunarDateContext): ChineseLunarDay {
     : language === "en" || rawFestival.length < 3
       ? rawFestival
       : rawFestival.slice(0, 2);
-  const rawSolarTerm = lunar.getJieQi();
-  const solarTerm = rawSolarTerm.length === 0 ? null : rawSolarTerm;
+  const rawSolarTerm = lunar.getCurrentJieQi()?.getName() ?? null;
+  const solarTerm = rawSolarTerm === null
+    ? null
+    : localizeSolarTermName(rawSolarTerm, I18n.getLanguage());
 
-  const dateText = lunarDay === 1 ? lunarMonthName : lunarDayName;
+  const dateText = chinese
+    ? lunarDay === 1 ? lunarMonthName : lunarDayName
+    : `Lunar ${isLeapMonth ? "L" : ""}${lunarMonth}/${lunarDay}`;
   const eventText = festival ?? solarTerm;
   const eventKind = festival !== null
     ? "festival"
     : solarTerm !== null ? "solar-term" : null;
   const transition = lunarDay === 1 ? "month" : null;
-  const accessibilityText = `${lunarMonthName}${lunarDayName}${eventText === null
-    ? ""
-    : `，${eventText}`}`;
+  const accessibilityText = chinese
+    ? `${lunarMonthName}${lunarDayName}${eventText === null ? "" : `，${eventText}`}`
+    : [lunarMonthName, lunarDayName, ...(eventText === null ? [] : [eventText])].join(", ");
 
   return Object.freeze({
-    lunarMonth: Math.abs(signedMonth),
+    lunarMonth,
     lunarDay,
-    isLeapMonth: signedMonth < 0,
+    isLeapMonth,
     lunarMonthName,
     lunarDayName,
     festival,

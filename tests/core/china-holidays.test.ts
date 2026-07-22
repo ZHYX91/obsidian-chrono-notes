@@ -47,4 +47,17 @@ describe("getChinaHolidayDay", () => {
     expect(Object.isFrozen(result.holidays[0])).toBe(true);
     expect(Object.isFrozen(result.workday)).toBe(true);
   });
+
+  it("localizes holidays and their adjusted workdays in English", () => {
+    expect(getChinaHolidayDay({ year: 2026, month: 2, day: 17 }, "en-US")).toEqual({
+      coverage: "available",
+      holidays: [{ region: "cn", name: "Spring Festival" }],
+      workday: { region: "cn", name: "Spring Festival", isWorkday: false },
+    });
+    expect(getChinaHolidayDay({ year: 2026, month: 2, day: 28 }, "en-US")).toEqual({
+      coverage: "available",
+      holidays: [],
+      workday: { region: "cn", name: "Spring Festival", isWorkday: true },
+    });
+  });
 });

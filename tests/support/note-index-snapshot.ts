@@ -1,5 +1,6 @@
 import { parseNote } from "../../src/core/note/parsed-note";
 import type {
+  NoteIndexReadiness,
   NoteIndexSnapshot,
   PresentNoteIndexEntry,
 } from "../../src/features/notes/note-index";
@@ -8,6 +9,7 @@ import { NoteIndexProjections } from "../../src/features/notes/note-index-projec
 export function createNoteIndexSnapshot(
   entries: Readonly<Record<string, PresentNoteIndexEntry>>,
   version: number,
+  readiness: NoteIndexReadiness = "ready",
 ): NoteIndexSnapshot {
   const projections = new NoteIndexProjections();
   for (const [path, entry] of Object.entries(entries)) {
@@ -15,6 +17,7 @@ export function createNoteIndexSnapshot(
   }
   return Object.freeze({
     version,
+    readiness,
     notes: Object.freeze(entries),
     taskDates: projections.taskDates,
     intervals: projections.intervals,

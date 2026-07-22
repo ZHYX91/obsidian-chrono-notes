@@ -44,9 +44,11 @@ export interface MissingNoteIndexEntry {
 
 export type PresentNoteIndexEntry = ParsedNoteIndexEntry | ErrorNoteIndexEntry;
 export type NoteIndexEntry = PresentNoteIndexEntry | MissingNoteIndexEntry;
+export type NoteIndexReadiness = "indexing" | "ready";
 
 export interface NoteIndexSnapshot {
   readonly version: number;
+  readonly readiness: NoteIndexReadiness;
   readonly notes: Readonly<Record<string, PresentNoteIndexEntry>>;
   readonly taskDates: TaskDateIndexSnapshot;
   readonly intervals: IntervalIndexSnapshot;
@@ -91,6 +93,8 @@ export interface NoteIndexOptions {
   readonly diagnosticClock?: () => number;
   /** Schedules the bounded checkpoint used to publish a partially settled live batch. */
   readonly scheduleLiveCommitCheckpoint?: (callback: () => void) => () => void;
+  /** Schedules the quiet checkpoint before a live discovery wave becomes ready. */
+  readonly scheduleReadinessCheckpoint?: (callback: () => void) => () => void;
 }
 
 /** Optional mutable counters for deterministic tests and local benchmarks. */
@@ -167,6 +171,7 @@ interface LiveReadBatch {
 
 const INITIAL_SNAPSHOT: NoteIndexSnapshot = Object.freeze({
   version: 0,
+  readiness: "indexing",
   notes: Object.freeze({}),
   taskDates: EMPTY_TASK_DATE_INDEX_SNAPSHOT,
   intervals: EMPTY_INTERVAL_INDEX_SNAPSHOT,
@@ -206,8 +211,10 @@ export class NoteIndex {
   private readonly diagnostics: NoteIndexDiagnostics | null;
   private readonly diagnosticClock: () => number;
   private readonly scheduleLiveCommitCheckpoint: (callback: () => void) => () => void;
+  private readonly scheduleReadinessCheckpoint: (callback: () => void) => () => void;
   private diagnosticsEnabled: boolean;
   private scheduledEventFlush: ScheduledFlush | null = null;
+  private cancelReadinessCheckpoint: (() => void) | null = null;
 
   constructor(
     private readonly source: NoteSource,
@@ -223,6 +230,8 @@ export class NoteIndex {
     this.diagnostics = options.diagnostics ?? null;
     this.diagnosticClock = options.diagnosticClock ?? defaultDiagnosticClock;
     this.scheduleLiveCommitCheckpoint = options.scheduleLiveCommitCheckpoint
+      ?? scheduleMacrotaskCheckpoint;
+    this.scheduleReadinessCheckpoint = options.scheduleReadinessCheckpoint
       ?? scheduleMacrotaskCheckpoint;
     this.diagnosticsEnabled = this.diagnostics !== null;
   }
@@ -267,10 +276,11 @@ export class NoteIndex {
         await initialIndexing;
       } finally {
         if (this.initialIndexing === initialIndexing) this.initialIndexing = null;
-        if (this.initialStaging === staging) {
-          this.initialStaging = null;
-          this.initialKnownPaths = null;
-        }
+      }
+      this.publishReadyAfterInitialIndexing(startLifecycle, staging);
+      if (this.initialStaging === staging) {
+        this.initialStaging = null;
+        this.initialKnownPaths = null;
       }
     } catch (error) {
       this.rollbackFailedStart(startLifecycle);
@@ -287,6 +297,8 @@ export class NoteIndex {
     this.unsubscribeSource = null;
     this.pendingEventIntents.clear();
     this.scheduledEventFlush = null;
+    this.cancelReadinessCheckpoint?.();
+    this.cancelReadinessCheckpoint = null;
     this.cancelLiveReadBatches();
     this.cancelQueuedReads();
     this.releaseRunningReadSlots();
@@ -296,11 +308,12 @@ export class NoteIndex {
     this.initialKnownPaths = null;
     this.bufferedStartupEvents = null;
     this.revisions.clear();
-    if (this.entries.size > 0) {
+    if (this.entries.size > 0 || this.snapshot.readiness !== "indexing") {
       const hadPublishedEntries = Object.keys(this.snapshot.notes).length > 0;
       this.entries.clear();
       this.projections.clear();
-      if (hadPublishedEntries) this.publish();
+      if (hadPublishedEntries) this.publish(true, "indexing");
+      else this.publish(false, "indexing");
     }
   }
 
@@ -349,6 +362,7 @@ export class NoteIndex {
       }
       return current.promise;
     }
+    if (!this.entries.has(path)) this.markIndexing();
     return this.beginRead(path, this.advanceRevision(path), {
       kind: "live",
       forceParse: false,
@@ -393,12 +407,21 @@ export class NoteIndex {
           this.queueReadIntent(event.path, revision, true);
           break;
         }
+        const newPathWasUnknown = !this.entries.has(event.path);
+        if (newPathWasUnknown) {
+          this.cancelReadinessCheckpoint?.();
+          this.cancelReadinessCheckpoint = null;
+        }
         this.initialKnownPaths?.delete(event.oldPath);
         this.initialKnownPaths?.add(event.path);
         const oldRevision = this.advanceRevision(event.oldPath);
         this.invalidateAsyncWork(event.oldPath);
         this.queueMissingIntent(event.oldPath, oldRevision);
-        this.removePublishedEntry(event.oldPath);
+        const removedOldPath = this.removePublishedEntry(
+          event.oldPath,
+          newPathWasUnknown ? "indexing" : this.snapshot.readiness,
+        );
+        if (newPathWasUnknown && !removedOldPath) this.markIndexing();
         const newRevision = this.advanceRevision(event.path);
         this.invalidateAsyncWork(event.path);
         this.queueReadIntent(event.path, newRevision, true);
@@ -420,11 +443,16 @@ export class NoteIndex {
     this.initialStaging?.entries.delete(path);
   }
 
-  private removePublishedEntry(path: string): void {
+  private removePublishedEntry(
+    path: string,
+    readiness: NoteIndexReadiness = this.snapshot.readiness,
+  ): boolean {
     if (this.entries.delete(path)) {
       this.projections.replace(path, null);
-      this.publish();
+      this.publish(true, readiness);
+      return true;
     }
+    return false;
   }
 
   private queueReadIntent(
@@ -432,6 +460,7 @@ export class NoteIndex {
     revision: number,
     forceParse: boolean,
   ): void {
+    if (!this.entries.has(path)) this.markIndexing();
     const pending = this.pendingEventIntents.get(path);
     this.pendingEventIntents.set(path, {
       kind: "read",
@@ -482,7 +511,10 @@ export class NoteIndex {
         reads.push([path, intent]);
       }
     }
-    if (reads.length === 0) return;
+    if (reads.length === 0) {
+      this.scheduleReadyWhenIdle();
+      return;
+    }
     const batch = this.createLiveReadBatch(reads.length);
     for (const [path, intent] of reads) {
       void this.beginRead(path, intent.revision, {
@@ -519,7 +551,6 @@ export class NoteIndex {
     const workerCount = Math.min(this.readConcurrency, tasks.length);
     try {
       await Promise.all(Array.from({ length: workerCount }, () => runWorker()));
-      this.commitInitialStaging(staging);
     } finally {
       this.finishDiagnosticTiming("initialIndexingMs", indexingStarted);
     }
@@ -531,6 +562,15 @@ export class NoteIndex {
   ): Promise<void> {
     await this.indexInitialPaths(paths, staging);
     await this.settleStartupWork(staging.lifecycle);
+  }
+
+  private publishReadyAfterInitialIndexing(
+    lifecycle: number,
+    staging: InitialStaging,
+  ): void {
+    if (!this.active || this.lifecycle !== lifecycle) return;
+    this.commitInitialStaging(staging, "ready");
+    if (this.snapshot.readiness !== "ready") this.publish(false, "ready");
   }
 
   private async settleStartupWork(lifecycle: number): Promise<void> {
@@ -570,6 +610,7 @@ export class NoteIndex {
     }).finally(() => {
       const current = this.inFlight.get(path);
       if (current?.promise === promise) this.inFlight.delete(path);
+      this.scheduleReadyWhenIdle();
     });
     this.inFlight.set(path, { publication, lifecycle, revision, promise });
     this.readQueue.push({
@@ -611,6 +652,7 @@ export class NoteIndex {
             this.activeReadCount -= 1;
           }
           this.drainReadQueue();
+          this.scheduleReadyWhenIdle();
         });
     }
   }
@@ -794,6 +836,7 @@ export class NoteIndex {
     if (final) {
       batch.active = false;
       this.liveReadBatches.delete(batch);
+      this.scheduleReadyWhenIdle();
     }
   }
 
@@ -807,7 +850,10 @@ export class NoteIndex {
     this.liveReadBatches.clear();
   }
 
-  private commitInitialStaging(staging: InitialStaging): void {
+  private commitInitialStaging(
+    staging: InitialStaging,
+    readiness: NoteIndexReadiness,
+  ): void {
     if (
       !this.active ||
       this.lifecycle !== staging.lifecycle ||
@@ -834,7 +880,7 @@ export class NoteIndex {
     } finally {
       this.finishDiagnosticTiming("initialCommitsMs", commitStarted);
     }
-    if (hasChanges) this.publish();
+    if (hasChanges) this.publish(true, readiness);
   }
 
   private canCommit(path: string, revision: number, lifecycle: number): boolean {
@@ -862,6 +908,8 @@ export class NoteIndex {
     }
     this.pendingEventIntents.clear();
     this.scheduledEventFlush = null;
+    this.cancelReadinessCheckpoint?.();
+    this.cancelReadinessCheckpoint = null;
     this.cancelLiveReadBatches();
     this.cancelQueuedReads();
     this.releaseRunningReadSlots();
@@ -875,7 +923,9 @@ export class NoteIndex {
     const hadPublishedEntries = this.entries.size > 0;
     this.entries.clear();
     this.projections.clear();
-    if (hadPublishedEntries) this.publish();
+    if (hadPublishedEntries || this.snapshot.readiness !== "indexing") {
+      this.publish(hadPublishedEntries, "indexing");
+    }
   }
 
   private advanceRevision(path: string): number {
@@ -884,17 +934,63 @@ export class NoteIndex {
     return revision;
   }
 
-  private publish(): void {
+  private markIndexing(): void {
+    this.cancelReadinessCheckpoint?.();
+    this.cancelReadinessCheckpoint = null;
+    if (this.snapshot.readiness !== "indexing") this.publish(false, "indexing");
+  }
+
+  private scheduleReadyWhenIdle(): void {
+    if (
+      !this.active ||
+      this.snapshot.readiness === "ready" ||
+      this.initialStaging !== null ||
+      this.cancelReadinessCheckpoint !== null ||
+      !this.isLiveWorkIdle()
+    ) {
+      return;
+    }
+    const lifecycle = this.lifecycle;
+    this.cancelReadinessCheckpoint = this.scheduleReadinessCheckpoint(() => {
+      this.cancelReadinessCheckpoint = null;
+      if (
+        this.active &&
+        this.lifecycle === lifecycle &&
+        this.initialStaging === null &&
+        this.isLiveWorkIdle()
+      ) {
+        this.publish(false, "ready");
+      }
+    });
+  }
+
+  private isLiveWorkIdle(): boolean {
+    return this.pendingEventIntents.size === 0 &&
+      this.inFlight.size === 0 &&
+      this.readQueue.length === 0 &&
+      this.runningReads.size === 0 &&
+      this.liveReadBatches.size === 0;
+  }
+
+  private publish(
+    notesChanged = true,
+    readiness: NoteIndexReadiness = this.snapshot.readiness,
+  ): void {
     const materializationStarted = this.startDiagnosticTiming();
-    const notes: Record<string, PresentNoteIndexEntry> = Object.create(null) as Record<
-      string,
-      PresentNoteIndexEntry
-    >;
-    for (const [path, entry] of this.entries) notes[path] = entry;
-    this.incrementDiagnostic("materializations");
+    let notes = this.snapshot.notes;
+    if (notesChanged) {
+      const materialized: Record<string, PresentNoteIndexEntry> = Object.create(null) as Record<
+        string,
+        PresentNoteIndexEntry
+      >;
+      for (const [path, entry] of this.entries) materialized[path] = entry;
+      notes = Object.freeze(materialized);
+      this.incrementDiagnostic("materializations");
+    }
     this.snapshot = Object.freeze({
       version: this.snapshot.version + 1,
-      notes: Object.freeze(notes),
+      readiness,
+      notes,
       taskDates: this.projections.taskDates,
       intervals: this.projections.intervals,
     });

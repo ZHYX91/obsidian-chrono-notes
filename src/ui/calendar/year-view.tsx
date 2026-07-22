@@ -24,7 +24,10 @@ import type {
   YearPeriodicSummary,
   YearCalendarQuarter,
 } from "../../features/calendar/year-calendar-query";
-import { hasIndexedPeriodicNote } from "../../features/calendar/indexed-periodic-note";
+import {
+  canOpenOrCreateIndexedPeriodicNote,
+  hasIndexedPeriodicNote,
+} from "../../features/calendar/indexed-periodic-note";
 import type { NoteOpenTarget } from "../../features/periodic/periodic-note-commands";
 import type { Translator } from "../../shared/i18n";
 import type {
@@ -709,7 +712,7 @@ function HeatmapDayButton({
         onSelect("day", cell.date);
         onOpenDateContextMenu(
           cell.date,
-          cell.noteState !== "not-configured",
+          canOpenOrCreateIndexedPeriodicNote(cell.noteState),
           hasIndexedPeriodicNote(cell.noteState),
           event.nativeEvent,
         );

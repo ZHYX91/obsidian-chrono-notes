@@ -17,6 +17,8 @@ export function formatCalendarNoteState(
       return errorMessage === undefined
         ? t("calendar.noteState.error")
         : t("calendar.noteState.errorDetail", { error: errorMessage });
+    case "indexing":
+      return t("calendar.noteState.indexing");
     case "missing":
       return t("calendar.noteState.missing");
     case "not-configured":

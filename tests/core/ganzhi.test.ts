@@ -1,3 +1,4 @@
+import { I18n } from "lunar-typescript";
 import { describe, expect, it } from "vitest";
 
 import { getGanzhiDay } from "../../src/core/calendar/ganzhi";
@@ -46,8 +47,18 @@ describe("getGanzhiDay", () => {
   });
 
   it("freezes results and restores lunar library language", () => {
+    I18n.setLanguage("en");
     const value = getGanzhiDay({ year: 2026, month: 7, day: 7 }, "en-US");
     expect(Object.isFrozen(value)).toBe(true);
-    expect(value.monthPillar).toBe("乙未");
+    expect(value).toMatchObject({
+      yearPillar: "BingWu",
+      monthPillar: "YiWei",
+      dayPillar: "RenWu",
+      solarTerm: "Minor Heat",
+      dateText: "M YiWei",
+      eventText: "Minor Heat",
+      accessibilityText: "Year BingWu, month YiWei, day RenWu, Minor Heat 09:56",
+    });
+    expect(I18n.getLanguage()).toBe("en");
   });
 });

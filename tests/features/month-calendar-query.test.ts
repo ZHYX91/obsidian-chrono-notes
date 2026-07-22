@@ -349,11 +349,11 @@ describe("selectMonthCalendar", () => {
 
     expect(newYear?.holidays).toEqual([
       { region: "sg", name: "New Year's Day" },
-      { region: "cn", name: "元旦节" },
+      { region: "cn", name: "New Year's Day" },
     ]);
     expect(newYear?.workday).toEqual({
       region: "cn",
-      name: "元旦节",
+      name: "New Year's Day",
       isWorkday: false,
     });
     expect(newYear?.regionalMarker).toEqual({ kind: "holiday", region: "sg" });
@@ -400,6 +400,7 @@ describe("selectMonthCalendar", () => {
     });
     const guarded: NoteIndexSnapshot = Object.freeze({
       version: base.version,
+      readiness: base.readiness,
       notes: base.notes,
       taskDates: base.taskDates,
       get intervals(): NoteIndexSnapshot["intervals"] {

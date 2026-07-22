@@ -15,7 +15,10 @@ import {
   type PeriodicNoteType,
 } from "../../core/periodic/periodic-date";
 import type { CalendarDay } from "../../features/calendar/calendar-day-query";
-import { hasIndexedPeriodicNote } from "../../features/calendar/indexed-periodic-note";
+import {
+  canOpenOrCreateIndexedPeriodicNote,
+  hasIndexedPeriodicNote,
+} from "../../features/calendar/indexed-periodic-note";
 import type { WeekCalendarQuery } from "../../features/calendar/week-calendar-query";
 import type { NoteOpenTarget } from "../../features/periodic/periodic-note-commands";
 import type { Translator } from "../../shared/i18n";
@@ -229,7 +232,7 @@ export function WeekView({
                   onSelectDate(day.date);
                   onOpenDateContextMenu(
                     day.date,
-                    day.noteState !== "not-configured",
+                    canOpenOrCreateIndexedPeriodicNote(day.noteState),
                     hasIndexedPeriodicNote(day.noteState),
                     event.nativeEvent,
                   );

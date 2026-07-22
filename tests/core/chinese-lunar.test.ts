@@ -76,9 +76,31 @@ describe("getChineseLunarDay", () => {
 
     expect(traditional).toMatchObject({ festival: "春節", eventText: "春節" });
     expect(english).toMatchObject({
+      lunarMonthName: "Lunar month 1",
+      lunarDayName: "day 1",
+      dateText: "Lunar 1/1",
       festival: "Lunar New Year",
       eventText: "Lunar New Year",
+      accessibilityText: "Lunar month 1, day 1, Lunar New Year",
     });
     expect(I18n.getLanguage()).toBe("en");
+  });
+
+  it("uses compact numeric lunar dates and standard solar-term names in English", () => {
+    expect(getChineseLunarDay({ year: 2026, month: 7, day: 7 }, "en-US")).toMatchObject({
+      lunarMonth: 5,
+      lunarDay: 23,
+      lunarMonthName: "Lunar month 5",
+      lunarDayName: "day 23",
+      solarTerm: "Minor Heat",
+      dateText: "Lunar 5/23",
+      eventText: "Minor Heat",
+      accessibilityText: "Lunar month 5, day 23, Minor Heat",
+    });
+    expect(getChineseLunarDay({ year: 2025, month: 7, day: 25 }, "en-US")).toMatchObject({
+      isLeapMonth: true,
+      lunarMonthName: "Leap lunar month 6",
+      dateText: "Lunar L6/1",
+    });
   });
 });

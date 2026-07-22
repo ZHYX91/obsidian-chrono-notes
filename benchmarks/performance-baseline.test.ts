@@ -129,7 +129,10 @@ describe(`performance baseline (${__CHRONO_BENCHMARK_NOTE_COUNT__} notes)`, () =
     expect(initialDiagnostics.publishes).toBe(1);
     expect(indexedEntries).toBe(__CHRONO_BENCHMARK_NOTE_COUNT__);
     expect(eventMeasurements.algorithm.maxReadsPerFinalPath).toBe(1);
-    expect(eventMeasurements.algorithm.maxPublishesPerCreateModifyBatch).toBeLessThanOrEqual(1);
+    // An unknown path intentionally publishes one lightweight "indexing" transition
+    // before the final materialized note snapshot. Event reduction must still keep
+    // the whole create/modify storm within those two observable publications.
+    expect(eventMeasurements.algorithm.maxPublishesPerCreateModifyBatch).toBeLessThanOrEqual(2);
     expect(eventMeasurements.algorithm.allBatchPathsParsed).toBe(true);
     expect(eventMeasurements.algorithm.batchNotificationsMatched).toBe(true);
     expect(eventMeasurements.algorithm.complexBatchReads).toBe(2);

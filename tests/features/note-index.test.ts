@@ -123,6 +123,7 @@ describe("NoteIndex", () => {
     expect(source.listenerCount).toBe(0);
     expect(index.getSnapshot()).toEqual({
       version: 0,
+      readiness: "indexing",
       notes: {},
       taskDates: { revision: 0, byDate: {} },
       intervals: { revision: 0, items: [] },
@@ -271,6 +272,7 @@ describe("NoteIndex", () => {
     await Promise.resolve();
     expect(index.getSnapshot()).toEqual({
       version: 0,
+      readiness: "indexing",
       notes: {},
       taskDates: { revision: 0, byDate: {} },
       intervals: { revision: 0, items: [] },
@@ -488,6 +490,7 @@ describe("NoteIndex", () => {
         },
       });
       await index.start();
+      Object.assign(diagnostics, createDiagnostics());
       const paths = Array.from(
         { length: pathCount },
         (_, pathIndex) => `Daily/batch-${pathIndex}.md`,
@@ -496,12 +499,12 @@ describe("NoteIndex", () => {
       const refreshes = paths.map((path) => index.refresh(path));
 
       await vi.waitFor(() => expect(source.read).toHaveBeenCalledTimes(pathCount));
-      expect(diagnostics.publishes).toBe(0);
+      expect(diagnostics.publishes).toBe(1);
       expect(checkpoints).toHaveLength(1);
       checkpoints[0]?.callback();
       await Promise.all(refreshes);
 
-      expect(diagnostics.publishes).toBe(1);
+      expect(diagnostics.publishes).toBe(2);
       expect(Object.keys(index.getSnapshot().notes)).toHaveLength(pathCount);
     },
   );
@@ -582,7 +585,7 @@ describe("NoteIndex", () => {
     },
   );
 
-  it("commits the initial batch before a startup live read but waits before ready", async () => {
+  it("keeps the initial batch private until startup live work is ready", async () => {
     const source = new FakeNoteSource();
     const firstRead = new Deferred<string>();
     const secondRead = new Deferred<string>();
@@ -602,13 +605,11 @@ describe("NoteIndex", () => {
     source.emit({ type: "create", path: "Daily/live.md" });
     firstRead.resolve("first initial");
     secondRead.resolve("second initial");
-    await vi.waitFor(() => expect(index.getSnapshot().version).toBe(1));
+    await Promise.resolve();
 
-    expect(Object.keys(index.getSnapshot().notes).sort()).toEqual([
-      "Daily/first.md",
-      "Daily/second.md",
-    ]);
-    expect(index.getSnapshot().version).toBe(1);
+    expect(Object.keys(index.getSnapshot().notes)).toEqual([]);
+    expect(index.getSnapshot().readiness).toBe("indexing");
+    expect(index.getSnapshot().version).toBe(0);
     expect(ready).toBe(false);
 
     liveRead.resolve("live");
@@ -695,6 +696,7 @@ describe("NoteIndex", () => {
 
     expect(index.getSnapshot()).toEqual({
       version: 0,
+      readiness: "indexing",
       notes: {},
       taskDates: { revision: 0, byDate: {} },
       intervals: { revision: 0, items: [] },
@@ -708,7 +710,7 @@ describe("NoteIndex", () => {
       revision: 2,
       note: { document: { body: "current live" } },
     });
-    expect(index.getSnapshot().version).toBe(1);
+    expect(index.getSnapshot().version).toBe(2);
   });
 
   it("does not expose staged entries when a live entry is deleted during initial indexing", async () => {
@@ -734,6 +736,7 @@ describe("NoteIndex", () => {
     source.emit({ type: "delete", path: "Daily/live.md" });
     expect(index.getSnapshot()).toEqual({
       version: 2,
+      readiness: "indexing",
       notes: {},
       taskDates: { revision: 0, byDate: {} },
       intervals: { revision: 0, items: [] },
@@ -837,6 +840,7 @@ describe("NoteIndex", () => {
 
     expect(index.getSnapshot()).toEqual({
       version: 0,
+      readiness: "indexing",
       notes: {},
       taskDates: { revision: 0, byDate: {} },
       intervals: { revision: 0, items: [] },
@@ -941,12 +945,14 @@ describe("NoteIndex", () => {
 
     source.emit({ type: "modify", path: "Daily/today.md" });
 
-    await vi.waitFor(() => expect(remainingListener).toHaveBeenCalledTimes(1));
-    expect(index.get("Daily/today.md")).toMatchObject({
-      kind: "parsed",
-      note: { document: { body: "updated" } },
+    await vi.waitFor(() => {
+      expect(index.get("Daily/today.md")).toMatchObject({
+        kind: "parsed",
+        note: { document: { body: "updated" } },
+      });
     });
-    expect(failingListener).toHaveBeenCalledTimes(1);
+    expect(failingListener).toHaveBeenCalledTimes(3);
+    expect(remainingListener).toHaveBeenCalledTimes(3);
     expect(reportError).toHaveBeenCalledWith(
       "Chrono Notes: listener notification failed",
       listenerError,
@@ -1011,8 +1017,8 @@ describe("NoteIndex", () => {
       revision: 2,
       note: { document: { body: "new revision" } },
     });
-    expect(index.getSnapshot().version).toBe(1);
-    expect(listener).toHaveBeenCalledTimes(1);
+    expect(index.getSnapshot().version).toBe(2);
+    expect(listener).toHaveBeenCalledTimes(2);
   });
 
   it("discards unpublished initial work when stopped before the batch completes", async () => {
@@ -1037,6 +1043,7 @@ describe("NoteIndex", () => {
     await starting;
     expect(index.getSnapshot()).toEqual({
       version: 0,
+      readiness: "indexing",
       notes: {},
       taskDates: { revision: 0, byDate: {} },
       intervals: { revision: 0, items: [] },
@@ -1147,17 +1154,25 @@ describe("NoteIndex", () => {
       documentParses: 1,
       parses: 1,
       materializations: 1,
-      publishes: 1,
+      publishes: 4,
     });
   });
 
-  it("reduces create followed by delete to no read or publication", async () => {
+  it("reduces create followed by delete to no read while restoring readiness", async () => {
     const source = new FakeNoteSource();
     source.read.mockResolvedValue("must not be read");
     const diagnostics = createDiagnostics();
-    const index = new NoteIndex(source, { diagnostics });
+    const readinessCheckpoints: Array<() => void> = [];
+    const index = new NoteIndex(source, {
+      diagnostics,
+      scheduleReadinessCheckpoint: (callback) => {
+        readinessCheckpoints.push(callback);
+        return () => undefined;
+      },
+    });
     await index.start();
     const initialSnapshot = index.getSnapshot();
+    Object.assign(diagnostics, createDiagnostics());
 
     source.emit({ type: "create", path: "Daily/transient.md" });
     source.emit({ type: "delete", path: "Daily/transient.md" });
@@ -1165,7 +1180,11 @@ describe("NoteIndex", () => {
     await Promise.resolve();
 
     expect(source.read).not.toHaveBeenCalled();
-    expect(index.getSnapshot()).toBe(initialSnapshot);
+    expect(index.getSnapshot().readiness).toBe("indexing");
+    expect(index.getSnapshot().notes).toBe(initialSnapshot.notes);
+    expect(readinessCheckpoints).toHaveLength(1);
+    readinessCheckpoints[0]?.();
+    expect(index.getSnapshot().readiness).toBe("ready");
     expect(diagnostics).toEqual({
       queuedEvents: 2,
       eventBatches: 1,
@@ -1174,7 +1193,7 @@ describe("NoteIndex", () => {
       documentParses: 0,
       parses: 0,
       materializations: 0,
-      publishes: 0,
+      publishes: 2,
     });
   });
 
@@ -1204,9 +1223,9 @@ describe("NoteIndex", () => {
       });
     });
     expect(source.read).toHaveBeenCalledTimes(2);
-    expect(listener).toHaveBeenCalledTimes(2);
+    expect(listener).toHaveBeenCalledTimes(4);
     expect(diagnostics.queuedEvents).toBe(2);
-    expect(diagnostics.publishes).toBe(3);
+    expect(diagnostics.publishes).toBe(5);
   });
 
   it("keeps chained rename barriers and reads only the final path", async () => {
@@ -1236,7 +1255,7 @@ describe("NoteIndex", () => {
     await vi.waitFor(() => expect(index.get("Daily/C.md").kind).toBe("parsed"));
     expect(source.read.mock.calls.map(([path]) => path)).toEqual(["Daily/C.md"]);
     expect(index.get("Daily/B.md").kind).toBe("missing");
-    expect(listener).toHaveBeenCalledTimes(2);
+    expect(listener).toHaveBeenCalledTimes(3);
     expect(diagnostics.parses).toBe(2);
   });
 
@@ -1323,7 +1342,7 @@ describe("NoteIndex", () => {
       "Daily/B.md",
     ]);
     expect(index.get("Daily/temp.md").kind).toBe("missing");
-    expect(listener).toHaveBeenCalledTimes(3);
+    expect(listener).toHaveBeenCalledTimes(4);
   });
 
   it("publishes live reads completed together once without waiting for a slow path", async () => {
@@ -1360,17 +1379,18 @@ describe("NoteIndex", () => {
         "Daily/fast-b.md",
       ]);
     });
-    expect(index.getSnapshot().version).toBe(1);
-    expect(firstListener).toHaveBeenCalledTimes(1);
-    expect(secondListener).toHaveBeenCalledTimes(1);
+    expect(index.getSnapshot().version).toBe(3);
+    expect(firstListener).toHaveBeenCalledTimes(2);
+    expect(secondListener).toHaveBeenCalledTimes(2);
 
     reads.get("Daily/slow.md")?.resolve("slow");
     await vi.waitFor(() => expect(index.get("Daily/slow.md").kind).toBe("parsed"));
-    expect(index.getSnapshot().version).toBe(2);
-    expect(firstListener).toHaveBeenCalledTimes(2);
-    expect(secondListener).toHaveBeenCalledTimes(2);
+    await vi.waitFor(() => expect(index.getSnapshot().readiness).toBe("ready"));
+    expect(index.getSnapshot().version).toBe(5);
+    expect(firstListener).toHaveBeenCalledTimes(4);
+    expect(secondListener).toHaveBeenCalledTimes(4);
     expect(diagnostics.materializations).toBe(2);
-    expect(diagnostics.publishes).toBe(2);
+    expect(diagnostics.publishes).toBe(5);
   });
 
   it("joins a pending event read and resolves refresh after publication", async () => {
@@ -1392,7 +1412,7 @@ describe("NoteIndex", () => {
       kind: "parsed",
       note: { document: { body: "published content" } },
     });
-    expect(listener).toHaveBeenCalledTimes(1);
+    expect(listener).toHaveBeenCalledTimes(2);
   });
 
   it("lets an explicit refresh supersede a queued missing intent", async () => {
@@ -1433,7 +1453,7 @@ describe("NoteIndex", () => {
     source.emit({ type: "delete", path: "Daily/today.md" });
     await index.refresh("Daily/today.md");
 
-    expect(observedKinds).toEqual(["missing", "parsed"]);
+    expect(observedKinds).toEqual(["missing", "missing", "parsed"]);
     expect(index.get("Daily/today.md")).toMatchObject({
       kind: "parsed",
       note: { document: { body: "recreated" } },
@@ -1799,7 +1819,7 @@ describe("NoteIndex", () => {
     await Promise.resolve();
     await Promise.resolve();
     expect(queuedSource.read).not.toHaveBeenCalled();
-    expect(queuedIndex.getSnapshot().version).toBe(0);
+    expect(queuedIndex.getSnapshot().version).toBe(2);
 
     const completedSource = new FakeNoteSource();
     const completedRead = new Deferred<string>();
@@ -1816,13 +1836,13 @@ describe("NoteIndex", () => {
     completedIndex.stop();
     await Promise.resolve();
 
-    expect(completedIndex.getSnapshot().version).toBe(0);
+    expect(completedIndex.getSnapshot().version).toBe(2);
     expect(completedIndex.get("Daily/completed.md").kind).toBe("missing");
     expect(completedDiagnostics).toMatchObject({
       queuedEvents: 1,
       reads: 1,
       materializations: 0,
-      publishes: 0,
+      publishes: 2,
     });
   });
 

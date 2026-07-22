@@ -72,6 +72,7 @@ export const EN_MESSAGES = {
   "calendar.noteState.hasBody": "note with body",
   "calendar.noteState.error": "note read error",
   "calendar.noteState.errorDetail": "note read error: {error}",
+  "calendar.noteState.indexing": "note is being indexed",
   "calendar.noteState.missing": "note missing",
   "calendar.noteState.notConfigured": "note type not configured",
   "calendar.taskProgress": Object.freeze({
@@ -119,6 +120,7 @@ export const EN_MESSAGES = {
   "pluginCommand.period.quarterly": "quarterly note",
   "pluginCommand.period.yearly": "yearly note",
   "pluginNotice.periodicNotConfigured": "Configure and enable {period} first.",
+  "pluginNotice.noteIndexing": "The note index is still updating. Try again shortly.",
   "pluginNotice.rangeNotConfigured": "Configure a range note folder first.",
   "pluginNotice.invalidRange": "Choose two different dates for a range note.",
   "pluginNotice.error": "Chrono Notes: {message}",

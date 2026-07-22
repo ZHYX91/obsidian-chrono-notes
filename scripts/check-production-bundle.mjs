@@ -10,6 +10,7 @@ import {
   productionJavascriptBudgetBytes,
   productionJavascriptReferenceBytes,
 } from "./build-contract.mjs";
+import { assertPackageVersionContract } from "./release-contract.mjs";
 
 const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const resolveProjectPath = (relativePath) => path.resolve(projectRoot, relativePath);
@@ -41,16 +42,7 @@ const versions = JSON.parse(versionsSource);
 const metafile = JSON.parse(metafileSource);
 
 assert.deepEqual(builtManifest, sourceManifest, "Built manifest must match manifest.json");
-assert.equal(
-  sourceManifest.version,
-  packageJson.version,
-  "manifest.json and package.json versions must match",
-);
-assert.equal(
-  versions[sourceManifest.version],
-  sourceManifest.minAppVersion,
-  "versions.json must map the package version to manifest.json minAppVersion",
-);
+assertPackageVersionContract(sourceManifest, packageJson, versions);
 
 const obsidianApiVersion = packageJson.devDependencies?.obsidian;
 assert.match(

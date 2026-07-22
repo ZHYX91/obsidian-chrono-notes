@@ -28,10 +28,6 @@ class FakeVault {
     this.contents.set(path, content);
     return file;
   });
-  readonly delete = vi.fn(async (file: FakeFile) => {
-    this.files.delete(file.path);
-    this.contents.delete(file.path);
-  });
   readonly read = vi.fn(async (file: FakeFile) => this.contents.get(file.path) ?? "");
   readonly modify = vi.fn(async (file: FakeFile, content: string) => {
     this.contents.set(file.path, content);
@@ -61,7 +57,13 @@ describe("Obsidian periodic note ports", () => {
 
   it("creates missing parent folders and deletes only the addressed Markdown note", async () => {
     const vault = new FakeVault();
-    const files = new ObsidianPeriodicNoteFilePort(vault as never);
+    const fileManager = {
+      trashFile: vi.fn(async (file: FakeFile) => {
+        vault.files.delete(file.path);
+        vault.contents.delete(file.path);
+      }),
+    };
+    const files = new ObsidianPeriodicNoteFilePort(vault as never, fileManager as never);
 
     await files.createEmpty("Calendar/Daily/2026-05-18.md");
     expect([...vault.folders]).toEqual(["Calendar", "Calendar/Daily"]);
@@ -70,6 +72,9 @@ describe("Obsidian periodic note ports", () => {
 
     await files.delete("Calendar/Daily/2026-05-18.md");
     expect(files.exists("Calendar/Daily/2026-05-18.md")).toBe(false);
+    expect(fileManager.trashFile).toHaveBeenCalledWith(expect.objectContaining({
+      path: "Calendar/Daily/2026-05-18.md",
+    }));
   });
 
   it("processes task source files atomically through the Vault port", async () => {

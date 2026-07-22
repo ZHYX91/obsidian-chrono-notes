@@ -24,7 +24,7 @@ translation_status: source
 
 ## 当前边界
 
-- 正常日历查询仍等待完整初始 NoteIndex；没有独立 readiness 协议前不得把空快照当成渐进加载状态。
+- 日历入口先注册，布局就绪后后台启动 NoteIndex 与首次 ICS 刷新；独立 readiness 协议负责把未知路径标为 indexing，并在 ready 前阻止创建。
 - 真实最低/当前 Obsidian、真实移动端、Profiler、长任务和 heap 属于人工发布门禁，自动测试不能替代。
 - 年度节假日数据只接受一手来源；不得预测尚未官方发布的安排。
 - 修改配对稳定文档时，中英文必须同步更新或明确标记翻译过期。

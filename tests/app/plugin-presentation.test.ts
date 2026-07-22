@@ -6,6 +6,7 @@ import {
   formatIcsRefreshNotice,
   formatPeriodicNotConfiguredNotice,
   formatPluginErrorNotice,
+  getNoteIndexingNotice,
   getPluginCommandMessages,
   getTaskCommandNotice,
 } from "../../src/app/plugin-presentation";
@@ -31,6 +32,12 @@ function snapshot(overrides: Partial<IcsEventIndexSnapshot>): IcsEventIndexSnaps
 }
 
 describe("plugin presentation", () => {
+  it("reports a non-error notice while the note index is updating", () => {
+    expect(getNoteIndexingNotice(createTranslator("en", "en").t)).toBe(
+      "The note index is still updating. Try again shortly.",
+    );
+  });
+
   it("translates command, ribbon, and periodic-note names", () => {
     const messages = getPluginCommandMessages(createTranslator("zh-CN", "en").t);
 

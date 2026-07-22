@@ -70,6 +70,7 @@ export const ZH_CN_MESSAGES = {
   "calendar.noteState.hasBody": "含正文的笔记",
   "calendar.noteState.error": "笔记读取错误",
   "calendar.noteState.errorDetail": "笔记读取错误：{error}",
+  "calendar.noteState.indexing": "正在索引笔记",
   "calendar.noteState.missing": "笔记不存在",
   "calendar.noteState.notConfigured": "未配置此类笔记",
   "calendar.taskProgress": Object.freeze({
@@ -117,6 +118,7 @@ export const ZH_CN_MESSAGES = {
   "pluginCommand.period.quarterly": "季度笔记",
   "pluginCommand.period.yearly": "年记",
   "pluginNotice.periodicNotConfigured": "请先配置并启用{period}。",
+  "pluginNotice.noteIndexing": "笔记索引仍在更新，请稍后重试。",
   "pluginNotice.rangeNotConfigured": "请先配置区间笔记目录。",
   "pluginNotice.invalidRange": "请为区间笔记选择两个不同日期。",
   "pluginNotice.error": "Chrono Notes：{message}",

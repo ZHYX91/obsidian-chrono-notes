@@ -12,6 +12,7 @@ import { formatPeriodicNotePath } from "../../core/periodic/periodic-note-path";
 import type { RangeNoteSettings } from "../../shared/settings";
 import { getIntervalNoteScanFolder } from "../intervals/interval-list-setup";
 import type {
+  NoteIndexReadiness,
   NoteIndexSnapshot,
   PresentNoteIndexEntry,
 } from "../notes/note-index";
@@ -83,6 +84,7 @@ interface DayDependency {
 
 interface MonthDependencies {
   readonly kind: "month";
+  readonly noteReadiness: NoteIndexReadiness;
   readonly geometryKey: string;
   readonly dayOptionsKey: string;
   readonly weeklyOptionsKey: string;
@@ -95,6 +97,7 @@ interface MonthDependencies {
 
 interface WeekDependencies {
   readonly kind: "week";
+  readonly noteReadiness: NoteIndexReadiness;
   readonly geometryKey: string;
   readonly dayOptionsKey: string;
   readonly weeklyOptionsKey: string;
@@ -118,6 +121,7 @@ interface YearQuarterDependencies {
 
 interface YearDependencies {
   readonly kind: "year";
+  readonly noteReadiness: NoteIndexReadiness;
   readonly geometryKey: string;
   readonly monthlyOptionsKey: string;
   readonly quarterlyOptionsKey: string;
@@ -343,6 +347,7 @@ function collectMonthDependencies(
     : EMPTY_INTERVAL_ITEMS;
   return Object.freeze({
     kind: "month",
+    noteReadiness: noteSnapshot.readiness,
     geometryKey: keyOf(target.year, target.month, options.weekStartDay),
     dayOptionsKey: calendarDayOptionsKey(options),
     weeklyOptionsKey: periodicOptionsKey(options, options.weekly),
@@ -388,6 +393,7 @@ function collectWeekDependencies(
   if (weekEnd === undefined) throw new Error("Week query dependency has no end date");
   return Object.freeze({
     kind: "week",
+    noteReadiness: noteSnapshot.readiness,
     geometryKey: keyOf(formatLocalDateKey(weekStart), options.weekStartDay),
     dayOptionsKey: calendarDayOptionsKey({ ...options, heatmap: null }),
     weeklyOptionsKey: periodicOptionsKey(options, options.weekly),
@@ -470,6 +476,7 @@ function collectYearDependencies(
   });
   return Object.freeze({
     kind: "year",
+    noteReadiness: noteSnapshot.readiness,
     geometryKey: keyOf(year, options.weekStartDay, request.heatmap),
     monthlyOptionsKey: periodicOptionsKey(options, options.monthly),
     quarterlyOptionsKey: periodicOptionsKey(options, options.quarterly),
@@ -612,6 +619,7 @@ function equalDependencies(
   switch (left.kind) {
     case "month":
       return right.kind === "month" &&
+        left.noteReadiness === right.noteReadiness &&
         left.geometryKey === right.geometryKey &&
         left.dayOptionsKey === right.dayOptionsKey &&
         left.weeklyOptionsKey === right.weeklyOptionsKey &&
@@ -622,6 +630,7 @@ function equalDependencies(
         equalNestedReferences(left.intervalItemsByWeek, right.intervalItemsByWeek);
     case "week":
       return right.kind === "week" &&
+        left.noteReadiness === right.noteReadiness &&
         left.geometryKey === right.geometryKey &&
         left.dayOptionsKey === right.dayOptionsKey &&
         left.weeklyOptionsKey === right.weeklyOptionsKey &&
@@ -632,7 +641,9 @@ function equalDependencies(
         equalReferences(left.taskBuckets, right.taskBuckets) &&
         equalReferences(left.intervalItems, right.intervalItems);
     case "year":
-      return right.kind === "year" && equalYearDependencies(left, right);
+      return right.kind === "year" &&
+        left.noteReadiness === right.noteReadiness &&
+        equalYearDependencies(left, right);
   }
 }
 
@@ -683,7 +694,8 @@ function equalYearQuarterDependencies(
   leftRoot: YearDependencies,
   rightRoot: YearDependencies,
 ): boolean {
-  return leftRoot.quarterlyOptionsKey === rightRoot.quarterlyOptionsKey &&
+  return leftRoot.noteReadiness === rightRoot.noteReadiness &&
+    leftRoot.quarterlyOptionsKey === rightRoot.quarterlyOptionsKey &&
     left.summaryEntry === right.summaryEntry &&
     left.months.length === right.months.length &&
     left.months.every((month, monthIndex) => {
@@ -699,7 +711,8 @@ function equalYearMonthDependencies(
   leftRoot: YearDependencies,
   rightRoot: YearDependencies,
 ): boolean {
-  return leftRoot.monthlyOptionsKey === rightRoot.monthlyOptionsKey &&
+  return leftRoot.noteReadiness === rightRoot.noteReadiness &&
+    leftRoot.monthlyOptionsKey === rightRoot.monthlyOptionsKey &&
     leftRoot.heatmapOptionsKey === rightRoot.heatmapOptionsKey &&
     left.summaryEntry === right.summaryEntry &&
     equalReferences(left.dailyEntries, right.dailyEntries);
@@ -769,8 +782,12 @@ function shareMonthQuery(
   nextDependencies: MonthDependencies,
 ): MonthCalendarQuery {
   if (previousDependencies.geometryKey !== nextDependencies.geometryKey) return next;
-  const canShareDays = previousDependencies.dayOptionsKey === nextDependencies.dayOptionsKey;
+  const readinessUnchanged = previousDependencies.noteReadiness ===
+    nextDependencies.noteReadiness;
+  const canShareDays = readinessUnchanged &&
+    previousDependencies.dayOptionsKey === nextDependencies.dayOptionsKey;
   const canShareWeekly =
+    readinessUnchanged &&
     previousDependencies.weeklyOptionsKey === nextDependencies.weeklyOptionsKey;
   const canShareIntervalOptions =
     previousDependencies.intervalOptionsKey === nextDependencies.intervalOptionsKey;
@@ -831,7 +848,10 @@ function shareWeekQuery(
   nextDependencies: WeekDependencies,
 ): WeekCalendarQuery {
   if (previousDependencies.geometryKey !== nextDependencies.geometryKey) return next;
-  const canShareDays = previousDependencies.dayOptionsKey === nextDependencies.dayOptionsKey;
+  const readinessUnchanged = previousDependencies.noteReadiness ===
+    nextDependencies.noteReadiness;
+  const canShareDays = readinessUnchanged &&
+    previousDependencies.dayOptionsKey === nextDependencies.dayOptionsKey;
   const days = next.days.map((day, index) =>
     canShareDays && equalDayDependency(
       previousDependencies.days[index],
@@ -840,6 +860,7 @@ function shareWeekQuery(
       ? previous.days[index] ?? day
       : day);
   const weeklyNote =
+    readinessUnchanged &&
     previousDependencies.weeklyOptionsKey === nextDependencies.weeklyOptionsKey &&
     previousDependencies.weeklyEntry === nextDependencies.weeklyEntry
       ? previous.weeklyNote
@@ -872,6 +893,8 @@ function shareYearQuery(
   nextDependencies: YearDependencies,
 ): YearCalendarQuery {
   if (previousDependencies.geometryKey !== nextDependencies.geometryKey) return next;
+  const readinessUnchanged = previousDependencies.noteReadiness ===
+    nextDependencies.noteReadiness;
   const quarters = next.quarters.map((quarter, quarterIndex) => {
     const oldQuarter = previous.quarters[quarterIndex];
     const oldDependency = previousDependencies.quarters[quarterIndex];
@@ -899,6 +922,7 @@ function shareYearQuery(
         return oldMonth;
       }
       const summary =
+        readinessUnchanged &&
         previousDependencies.monthlyOptionsKey === nextDependencies.monthlyOptionsKey &&
         oldMonthDependency.summaryEntry === monthDependency.summaryEntry
           ? oldMonth.summary
@@ -908,6 +932,7 @@ function shareYearQuery(
         : Object.freeze({ ...month, summary });
     });
     const summary =
+      readinessUnchanged &&
       previousDependencies.quarterlyOptionsKey === nextDependencies.quarterlyOptionsKey &&
       oldDependency.summaryEntry === dependency.summaryEntry
         ? oldQuarter.summary

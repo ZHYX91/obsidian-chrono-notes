@@ -90,6 +90,33 @@ describe("CalendarQueryStore", () => {
     expect(icsSource.listenerCount).toBe(0);
   });
 
+  it("recomputes unknown periodic paths when note-index readiness changes", () => {
+    const ready = createNoteIndexSnapshot({}, 1, "ready");
+    const noteSource = new MutableSnapshotSource(ready);
+    const store = new CalendarQueryStore(
+      noteSource,
+      new MutableSnapshotSource(disabledIcs()),
+      monthRequest(),
+    );
+    const initial = expectMonth(store.getSnapshot());
+    expect(findDay(initial, "2026-07-08").noteState).toBe("missing");
+    const listener = vi.fn();
+    store.subscribe(listener);
+
+    noteSource.publish(Object.freeze({
+      ...ready,
+      version: 2,
+      readiness: "indexing",
+    }));
+
+    const indexing = expectMonth(store.getSnapshot());
+    expect(listener).toHaveBeenCalledOnce();
+    expect(findDay(indexing, "2026-07-08").noteState).toBe("indexing");
+    expect(findDay(indexing, "2026-07-08")).not.toBe(
+      findDay(initial, "2026-07-08"),
+    );
+  });
+
   it("replaces only the affected month day and week", () => {
     const initial = createParsedNoteIndexSnapshot({
       "Daily/2026-07-08.md": "before",
@@ -544,6 +571,7 @@ function parsedEntry(
 function guardIntervals(snapshot: NoteIndexSnapshot): NoteIndexSnapshot {
   return Object.freeze({
     version: snapshot.version,
+    readiness: snapshot.readiness,
     notes: snapshot.notes,
     taskDates: snapshot.taskDates,
     get intervals(): NoteIndexSnapshot["intervals"] {
@@ -562,6 +590,7 @@ function removeIntervalWhileSharingOtherReferences(
   );
   return Object.freeze({
     version,
+    readiness: snapshot.readiness,
     notes: Object.freeze(notes),
     taskDates: snapshot.taskDates,
     intervals: Object.freeze({

@@ -71,6 +71,7 @@ export const ZH_TW_MESSAGES = {
   "calendar.noteState.hasBody": "含正文的筆記",
   "calendar.noteState.error": "筆記讀取錯誤",
   "calendar.noteState.errorDetail": "筆記讀取錯誤：{error}",
+  "calendar.noteState.indexing": "正在建立筆記索引",
   "calendar.noteState.missing": "筆記不存在",
   "calendar.noteState.notConfigured": "未設定此類筆記",
   "calendar.taskProgress": Object.freeze({
@@ -118,6 +119,7 @@ export const ZH_TW_MESSAGES = {
   "pluginCommand.period.quarterly": "季度筆記",
   "pluginCommand.period.yearly": "年記",
   "pluginNotice.periodicNotConfigured": "請先設定並啟用{period}。",
+  "pluginNotice.noteIndexing": "筆記索引仍在更新，請稍後再試。",
   "pluginNotice.rangeNotConfigured": "請先設定區間筆記目錄。",
   "pluginNotice.invalidRange": "請為區間筆記選擇兩個不同日期。",
   "pluginNotice.error": "Chrono Notes：{message}",
