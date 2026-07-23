@@ -1,6 +1,10 @@
 import { Setting } from "obsidian";
 
-import { isPluginLocale, isWeekStartDay } from "../../shared/settings";
+import {
+  isPluginLocale,
+  isWeekStartDay,
+} from "../../shared/settings";
+import { PLUGIN_LANGUAGE_OPTIONS } from "../../shared/plugin-languages";
 import type { SettingsSectionContext } from "./settings-section-context";
 
 export function renderGeneralSettingsSection(
@@ -13,16 +17,11 @@ export function renderGeneralSettingsSection(
     .setName(t("settings.general.language"))
     .setDesc(t("settings.general.languageDesc"))
     .addDropdown((dropdown) => {
+      dropdown.addOption("auto", t("settings.general.auto"));
+      for (const option of PLUGIN_LANGUAGE_OPTIONS) {
+        dropdown.addOption(option.value, option.label);
+      }
       dropdown
-        .addOption("auto", t("settings.general.auto"))
-        .addOption("en", t("settings.general.languageEnglish"))
-        .addOption("zh-CN", t("settings.general.languageSimplifiedChinese"))
-        .addOption("zh-TW", t("settings.general.languageTraditionalChinese"))
-        .addOption("ar", "العربية")
-        .addOption("fa", "فارسی")
-        .addOption("he", "עברית")
-        .addOption("am", "አማርኛ")
-        .addOption("hi", "हिन्दी")
         .setValue(context.host.settings.locale)
         .onChange(async (value) => {
           if (!isPluginLocale(value)) return;
