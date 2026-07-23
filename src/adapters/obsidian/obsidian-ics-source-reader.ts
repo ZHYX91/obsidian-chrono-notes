@@ -1,4 +1,4 @@
-import type { TFile, Vault } from "obsidian";
+import { TFile, type Vault } from "obsidian";
 
 import type { IcsSourceReader } from "../../features/calendar/ics-event-index";
 
@@ -30,13 +30,7 @@ export class ObsidianIcsSourceReader implements IcsSourceReader {
     if (trimmed.length === 0) throw new Error("ICS source is empty");
 
     const vaultEntry = this.vault.getAbstractFileByPath(trimmed);
-    if (
-      vaultEntry !== null &&
-      "extension" in vaultEntry &&
-      typeof vaultEntry.extension === "string"
-    ) {
-      return this.vault.cachedRead(vaultEntry as TFile);
-    }
+    if (vaultEntry instanceof TFile) return this.vault.cachedRead(vaultEntry);
     if (isAbsoluteLocalPath(trimmed)) return this.readLocal(trimmed);
 
     const adapter = this.vault.adapter as unknown as VaultFileAdapter;

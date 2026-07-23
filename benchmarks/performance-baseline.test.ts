@@ -171,7 +171,7 @@ async function measureInitialConcurrencyMatrix(): Promise<
     const diagnostics = createDiagnostics();
     const index = new NoteIndex(source, {
       diagnostics,
-      initialReadConcurrency: concurrency,
+      readConcurrency: concurrency,
     });
     const heapBefore = sampleHeapUsed();
     const startupMs = await measureAsync(() => index.start());

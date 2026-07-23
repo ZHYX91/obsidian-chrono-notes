@@ -66,7 +66,11 @@ export function parseIcsCalendar(
 ): IcsParseResult {
   validateDisplayZone(options.displayZone);
   const normalized = content.startsWith("\uFEFF") ? content.slice(1) : content;
-  const root = new ICAL.Component(ICAL.parse(normalized));
+  const parsed: unknown = ICAL.parse(normalized);
+  if (!isJCalComponent(parsed)) {
+    throw new Error("ICS source must contain exactly one calendar component");
+  }
+  const root = new ICAL.Component(parsed);
   const components = root.name === "vevent"
     ? [root]
     : root.getAllSubcomponents("vevent");
@@ -97,6 +101,13 @@ export function parseIcsCalendar(
     skippedRecurring,
     skippedInvalid,
   });
+}
+
+function isJCalComponent(value: unknown): value is [string, unknown[], unknown[]] {
+  return Array.isArray(value) &&
+    typeof value[0] === "string" &&
+    Array.isArray(value[1]) &&
+    Array.isArray(value[2]);
 }
 
 export function buildIcsDateIndex(events: readonly IcsCalendarEvent[]): IcsDateIndexResult {

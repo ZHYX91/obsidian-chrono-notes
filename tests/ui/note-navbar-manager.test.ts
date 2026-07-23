@@ -35,6 +35,7 @@ const EMPTY_NOTE_SNAPSHOT = createNoteIndexSnapshot({}, 1);
 
 interface FakeElement {
   readonly classList: Pick<DOMTokenList, "add" | "contains" | "remove">;
+  readonly ownerDocument: { createElement(): FakeElement };
   className: string;
   nextElementSibling: FakeElement | null;
   parentElement: FakeElement | null;
@@ -52,6 +53,7 @@ function createElement(): FakeElement {
       contains: (token) => classes.has(token),
       remove: (...tokens) => tokens.forEach((token) => classes.delete(token)),
     },
+    ownerDocument: { createElement: vi.fn(createElement) },
     className: "",
     nextElementSibling: null,
     parentElement: null,
@@ -123,6 +125,8 @@ describe("NoteNavbarManager", () => {
 
     manager.update();
     expect(mocks.createRoot).toHaveBeenCalledOnce();
+    expect(content.ownerDocument.createElement).toHaveBeenCalledOnce();
+    expect(document.createElement).not.toHaveBeenCalled();
     expect(mocks.roots[0]?.render).toHaveBeenCalledOnce();
     expect(content.previousElementSibling?.nextElementSibling).toBe(content);
     expect(parent.classList.contains("chrono-notes-navbar-mounted")).toBe(false);

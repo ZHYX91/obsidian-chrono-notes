@@ -61,6 +61,28 @@ describe("IcsEventIndex", () => {
     expect(listener).toHaveBeenCalledTimes(2);
   });
 
+  it("normalizes a synchronous non-Error reader failure", async () => {
+    const reader: IcsSourceReader = {
+      read: () => {
+        throw { code: "E_READ" };
+      },
+    };
+    const index = new IcsEventIndex(reader);
+
+    await index.refresh({
+      enabled: true,
+      sources: ["broken.ics"],
+      displayZone: "UTC",
+    });
+
+    expect(index.getSnapshot().sourceStatuses).toEqual([
+      expect.objectContaining({
+        source: "broken.ics",
+        error: "ICS source reader failed",
+      }),
+    ]);
+  });
+
   it("continues notifying subscribers after one of them throws", async () => {
     const reader: IcsSourceReader = {
       read: vi.fn(async () => calendar("ready", "20260506")),

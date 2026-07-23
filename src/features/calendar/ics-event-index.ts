@@ -198,7 +198,7 @@ export class IcsEventIndex {
     try {
       return Promise.resolve(this.reader.read(source));
     } catch (error) {
-      return Promise.reject(error);
+      return Promise.reject(normalizeError(error));
     }
   }
 
@@ -305,6 +305,14 @@ function getSourceLabel(source: string): string {
 
 function getErrorMessage(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
+}
+
+function normalizeError(error: unknown): Error {
+  if (error instanceof Error) return error;
+  const message = typeof error === "string" && error.length > 0
+    ? error
+    : "ICS source reader failed";
+  return new Error(message, { cause: error });
 }
 
 function sum(

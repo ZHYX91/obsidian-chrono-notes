@@ -517,7 +517,7 @@ describe("NoteIndex", () => {
     source.read.mockImplementation((path) => (
       path === "Daily/blocked.md" ? blockedRead.promise : liveRead.promise
     ));
-    const index = new NoteIndex(source, { initialReadConcurrency: 1 });
+    const index = new NoteIndex(source, { readConcurrency: 1 });
 
     const starting = index.start();
     expect(source.read.mock.calls.map(([path]) => path)).toEqual(["Daily/blocked.md"]);
@@ -1063,7 +1063,7 @@ describe("NoteIndex", () => {
       if (path === "Daily/new.md") return newRead.promise;
       throw new Error(`unexpected read for ${path}`);
     });
-    const index = new NoteIndex(source, { initialReadConcurrency: 1 });
+    const index = new NoteIndex(source, { readConcurrency: 1 });
     const listener = vi.fn();
     index.subscribe(listener);
 

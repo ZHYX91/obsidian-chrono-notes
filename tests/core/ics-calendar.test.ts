@@ -6,6 +6,17 @@ import {
 } from "../../src/core/calendar/ics-calendar";
 
 describe("ICS calendar parsing", () => {
+  it("rejects ambiguous top-level parse results before component construction", () => {
+    expect(() => parseIcsCalendar([
+      "BEGIN:VCALENDAR",
+      "END:VCALENDAR",
+      "BEGIN:VCALENDAR",
+      "END:VCALENDAR",
+    ].join("\n"), "multiple.ics", { displayZone: "UTC" })).toThrow(
+      "ICS source must contain exactly one calendar component",
+    );
+  });
+
   it("handles BOM, folded lines, escaped text, and multiple events", () => {
     const parsed = parseIcsCalendar([
       "\uFEFFBEGIN:VCALENDAR",

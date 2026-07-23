@@ -2,15 +2,26 @@ import path from "node:path";
 
 import { afterEach, describe, expect, it, vi } from "vitest";
 
+const { MockTFile } = vi.hoisted(() => ({
+  MockTFile: class MockTFile {
+    constructor(
+      readonly path: string,
+      readonly extension: string,
+    ) {}
+  },
+}));
+
+vi.mock("obsidian", () => ({ TFile: MockTFile }));
+
 import { ObsidianIcsSourceReader } from "../../src/adapters/obsidian/obsidian-ics-source-reader";
 
 class FakeVault {
-  readonly files = new Map<string, { path: string; extension: string }>();
+  readonly files = new Map<string, unknown>();
   readonly cachedRead = vi.fn(async (file: { path: string }) => `vault:${file.path}`);
 
   constructor(readonly adapter: object) {}
 
-  getAbstractFileByPath(source: string): { path: string; extension: string } | null {
+  getAbstractFileByPath(source: string): unknown | null {
     return this.files.get(source) ?? null;
   }
 }
@@ -22,13 +33,24 @@ describe("ObsidianIcsSourceReader", () => {
 
   it("reads an existing Vault file through cachedRead", async () => {
     const vault = new FakeVault({});
-    vault.files.set("Calendar/team.ics", { path: "Calendar/team.ics", extension: "ics" });
+    vault.files.set("Calendar/team.ics", new MockTFile("Calendar/team.ics", "ics"));
     const readLocal = vi.fn<() => Promise<string>>();
     const reader = new ObsidianIcsSourceReader(vault as never, { readLocal });
 
     await expect(reader.read(" Calendar/team.ics ")).resolves.toBe("vault:Calendar/team.ics");
     expect(vault.cachedRead).toHaveBeenCalledOnce();
     expect(readLocal).not.toHaveBeenCalled();
+  });
+
+  it("does not treat a non-file Vault entry as a readable file", async () => {
+    const vault = new FakeVault({});
+    vault.files.set("Calendar", { path: "Calendar", extension: "ics" });
+    const reader = new ObsidianIcsSourceReader(vault as never);
+
+    await expect(reader.read("Calendar")).rejects.toThrow(
+      "Relative local ICS paths require a filesystem vault",
+    );
+    expect(vault.cachedRead).not.toHaveBeenCalled();
   });
 
   it("reads absolute and desktop-vault-relative local paths", async () => {

@@ -87,8 +87,6 @@ interface QueuedRead {
 export interface NoteIndexOptions {
   /** Maximum number of source reads shared by initial and live indexing. */
   readonly readConcurrency?: number;
-  /** @deprecated Use `readConcurrency`. */
-  readonly initialReadConcurrency?: number;
   readonly diagnostics?: NoteIndexDiagnostics;
   readonly diagnosticClock?: () => number;
   /** Schedules the bounded checkpoint used to publish a partially settled live batch. */
@@ -220,9 +218,7 @@ export class NoteIndex {
     private readonly source: NoteSource,
     options: NoteIndexOptions = {},
   ) {
-    const readConcurrency = options.readConcurrency
-      ?? options.initialReadConcurrency
-      ?? DEFAULT_READ_CONCURRENCY;
+    const readConcurrency = options.readConcurrency ?? DEFAULT_READ_CONCURRENCY;
     if (!Number.isInteger(readConcurrency) || readConcurrency < 1) {
       throw new RangeError("NoteIndex read concurrency must be a positive integer");
     }
@@ -1062,8 +1058,8 @@ function defaultDiagnosticClock(): number {
 }
 
 function scheduleMacrotaskCheckpoint(callback: () => void): () => void {
-  const handle = setTimeout(callback, 0);
-  return () => clearTimeout(handle);
+  const handle = globalThis.setTimeout(callback, 0);
+  return () => globalThis.clearTimeout(handle);
 }
 
 function areParsedNoteDocumentsEqual(

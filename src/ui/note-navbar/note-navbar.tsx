@@ -114,7 +114,7 @@ export class NoteNavbarManager {
       mount.container.nextElementSibling !== content
     ) {
       this.unmountLeaf(leaf);
-      const container = document.createElement("div");
+      const container = content.ownerDocument.createElement("div");
       container.className = "chrono-notes-navbar-container";
       content.insertAdjacentElement("beforebegin", container);
       mount = Object.freeze({ root: createRoot(container), container });
