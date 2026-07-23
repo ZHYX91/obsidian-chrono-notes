@@ -24,10 +24,11 @@ Chrono Notes is an Obsidian calendar workspace for periodic notes, optional cale
 - Year, month, and week calendar views.
 - Daily, weekly, monthly, quarterly, and yearly periodic notes.
 - Chinese lunar and Ganzhi calendar extensions, including solar terms and traditional festivals.
+- Persian (Solar Hijri), Ethiopic, Hebrew, Indian national (Saka), Islamic civil, and Umm al-Qura calendar extensions.
 - Mainland China and Singapore holiday extensions.
 - Tasks, statistics, heatmaps, time-range notes, templates, and previews.
 - Local, read-only ICS calendar sources.
-- English, Simplified Chinese, and Traditional Chinese UI.
+- English, Simplified Chinese, Traditional Chinese, Arabic, Persian, Hebrew, Amharic, and Hindi UI, including right-to-left layout where applicable.
 
 Calendar information and plugin settings stay inside the Vault. Chrono Notes does not require an account or send calendar and note data to a remote service.
 
@@ -42,6 +43,7 @@ Calendar information and plugin settings stay inside the Vault. Chrono Notes doe
 
 - ICS sources are local read-only files; remote calendar subscriptions are not fetched directly.
 - Holiday availability depends on verified official data. Unpublished future schedules are shown as unavailable rather than predicted.
+- Non-Gregorian extensions are display overlays backed by the runtime's Unicode calendar data. Gregorian dates remain the note-path, navigation, and indexing anchor; unavailable runtime calendars are omitted safely.
 - Some mobile interaction and layout details depend on the Obsidian app and device input stack.
 
 ## Manual installation

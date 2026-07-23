@@ -805,7 +805,7 @@ body.is-mobile
 }
 
 .chrono-notes-ics-list[data-has-overflow="true"] .chrono-notes-ics-event:last-of-type {
-  padding-right: 24px;
+  padding-inline-end: 24px;
 }
 
 .chrono-notes-ics-dot {
@@ -829,7 +829,7 @@ body.is-mobile
   font-size: 9px;
   line-height: 12px;
   position: absolute;
-  right: 0;
+  inset-inline-end: 0;
 }
 
 .chrono-notes-calendar-indicator {

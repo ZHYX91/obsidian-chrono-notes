@@ -105,6 +105,17 @@ describe("ChronoNotesSettingTab save orchestration", () => {
       ?.getAttribute("aria-selected")).toBe("true");
   });
 
+  it("sets the settings surface direction from the selected locale", () => {
+    const { tab, host } = createTab();
+    host.settings.locale = "ar";
+    tab.display();
+    expect(tab.containerEl.dir).toBe("rtl");
+
+    host.settings.locale = "hi";
+    tab.display();
+    expect(tab.containerEl.dir).toBe("ltr");
+  });
+
   it("saves a scheduled section edit after the 300 ms debounce", async () => {
     const { context, saveSettings } = displayAndGetGeneralContext();
 

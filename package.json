@@ -1,6 +1,6 @@
 {
   "name": "obsidian-chrono-notes",
-  "version": "0.1.2",
+  "version": "0.2.0",
   "description": "A calendar workspace for periodic notes, calendar extensions, regional holidays, tasks, and time ranges.",
   "type": "module",
   "main": "dist/chrono-notes/main.js",
@@ -29,7 +29,10 @@
     "obsidian",
     "calendar",
     "periodic-notes",
-    "lunar-calendar"
+    "lunar-calendar",
+    "persian-calendar",
+    "hebrew-calendar",
+    "islamic-calendar"
   ],
   "author": "ZhengYX",
   "license": "MIT",

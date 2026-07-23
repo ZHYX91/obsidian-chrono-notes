@@ -12,7 +12,10 @@ export const externalModules = Object.freeze([
   "@electron/remote",
 ]);
 
-export const productionJavascriptBudgetBytes = 1_000_000;
+// 0.2.0 adds five complete static UI catalogs. Their measured contribution is
+// about 97 KB; the budget keeps roughly 50 KB of headroom without hiding that
+// intentional product cost behind an arbitrary dependency increase.
+export const productionJavascriptBudgetBytes = 1_150_000;
 
-// Last verified bundle before package-level attribution was introduced.
-export const productionJavascriptReferenceBytes = 978_748;
+// Published 0.1.2 production artifact before the multilingual 0.2.0 work.
+export const productionJavascriptReferenceBytes = 991_182;

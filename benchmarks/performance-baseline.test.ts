@@ -334,6 +334,24 @@ function measureCalendarQueries(
     },
   );
   const decoratedMonthColdMs = measure(decoratedMonth);
+  const intlDecoratedCache = new CalendarDecorationCache();
+  const intlDecoratedMonth = () => selectMonthCalendar(
+    { year: 2026, month: 7 },
+    snapshot,
+    DISABLED_ICS,
+    {
+      locale: "ar",
+      weekStartDay: "monday" as const,
+      calendarOverlays: ["persian", "islamic-umalqura"] as const,
+      holidayRegions: [] as const,
+      heatmap: null,
+      daily: { enabled: true, pattern: "'Daily'/yyyy-MM-dd" },
+      weekly: { enabled: true, pattern: "'Weekly'/kkkk-WW" },
+      rangeNotes: RANGE_SETTINGS,
+      decorationCache: intlDecoratedCache,
+    },
+  );
+  const intlDecoratedMonthColdMs = measure(intlDecoratedMonth);
   const interval = () => selectIntervalNotes(snapshot, RANGE_SETTINGS);
   const yearOverview = () => selectYearCalendarOverview(
     2026,
@@ -366,6 +384,8 @@ function measureCalendarQueries(
     monthStoreWarm: measureOperation(monthStoreWarm),
     decoratedMonthCold: round(decoratedMonthColdMs),
     decoratedMonthWarm: measureOperation(decoratedMonth),
+    intlDecoratedMonthCold: round(intlDecoratedMonthColdMs),
+    intlDecoratedMonthWarm: measureOperation(intlDecoratedMonth),
     intervalQuery: measureOperation(interval),
     yearOverview: measureOperation(yearOverview),
     yearHeatmap: measureOperation(yearHeatmap),

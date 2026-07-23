@@ -212,7 +212,7 @@
   grid-template-columns: repeat(3, minmax(0, 1fr));
   max-height: min(440px, calc(100vh - 132px));
   overflow-y: auto;
-  padding-right: 2px;
+  padding-inline-end: 2px;
   scrollbar-gutter: stable;
 }
 
@@ -227,14 +227,14 @@
 }
 
 .chrono-notes-week-picker-number {
-  border-right: 1px solid var(--background-modifier-border);
+  border-inline-end: 1px solid var(--background-modifier-border);
   font-weight: var(--font-semibold);
-  padding-right: 5px;
+  padding-inline-end: 5px;
   white-space: nowrap;
 }
 
 .chrono-notes-week-picker-range {
-  padding-left: 5px;
+  padding-inline-start: 5px;
   white-space: nowrap;
 }
 
@@ -257,7 +257,7 @@
 .chrono-notes-calendar-header .chrono-notes-today,
 .chrono-notes-mini-calendar-header .chrono-notes-mini-calendar-today {
   flex: none;
-  margin-left: auto;
+  margin-inline-start: auto;
 }
 
 .chrono-notes-mini-calendar-modal-container {
@@ -466,7 +466,7 @@
 }
 
 .chrono-notes-view-mode button + button {
-  border-left: 1px solid var(--background-modifier-border);
+  border-inline-start: 1px solid var(--background-modifier-border);
 }
 
 .chrono-notes-view-mode button.is-active {
@@ -479,7 +479,7 @@
   display: flex;
   flex: none;
   gap: 5px;
-  margin-left: auto;
+  margin-inline-start: auto;
 }
 
 .chrono-notes-heatmap-dimension select {

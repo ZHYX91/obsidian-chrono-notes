@@ -8,7 +8,16 @@ import type { CalendarOverlayId } from "../core/calendar/calendar-overlay";
 
 export const SETTINGS_SCHEMA_VERSION = 15;
 
-export type PluginLocale = "auto" | "en" | "zh-CN" | "zh-TW";
+export type PluginLocale =
+  | "auto"
+  | "en"
+  | "zh-CN"
+  | "zh-TW"
+  | "ar"
+  | "fa"
+  | "he"
+  | "am"
+  | "hi";
 export type CalendarOverlay = CalendarOverlayId;
 export type HolidayRegion = "cn" | "sg";
 export type QuarterNameMode = "number" | "chinese";
@@ -268,7 +277,15 @@ export function normalizeSettings(value: unknown): ChronoNotesSettings {
 }
 
 export function isPluginLocale(value: unknown): value is PluginLocale {
-  return value === "auto" || value === "en" || value === "zh-CN" || value === "zh-TW";
+  return value === "auto" ||
+    value === "en" ||
+    value === "zh-CN" ||
+    value === "zh-TW" ||
+    value === "ar" ||
+    value === "fa" ||
+    value === "he" ||
+    value === "am" ||
+    value === "hi";
 }
 
 export function isWeekStartDay(value: unknown): value is WeekStartDay {
@@ -276,7 +293,14 @@ export function isWeekStartDay(value: unknown): value is WeekStartDay {
 }
 
 export function isCalendarOverlay(value: unknown): value is CalendarOverlay {
-  return value === "chinese-lunar" || value === "ganzhi";
+  return value === "chinese-lunar" ||
+    value === "ganzhi" ||
+    value === "persian" ||
+    value === "ethiopic" ||
+    value === "hebrew" ||
+    value === "indian" ||
+    value === "islamic-civil" ||
+    value === "islamic-umalqura";
 }
 
 export function isHolidayRegion(value: unknown): value is HolidayRegion {

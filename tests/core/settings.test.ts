@@ -48,6 +48,26 @@ describe("settings", () => {
     });
   });
 
+  it("normalizes the six Intl calendar extensions and added UI locales", () => {
+    for (const locale of ["ar", "fa", "he", "am", "hi"] as const) {
+      expect(normalizeSettings({
+        locale,
+        calendarOverlays: ["persian", "islamic-umalqura"],
+      })).toMatchObject({
+        locale,
+        calendarOverlays: ["persian", "islamic-umalqura"],
+      });
+    }
+    expect(normalizeSettings({
+      calendarOverlays: [
+        "ethiopic",
+        "hebrew",
+        "indian",
+        "islamic-civil",
+      ],
+    }).calendarOverlays).toEqual(["ethiopic", "hebrew"]);
+  });
+
   it("normalizes independent note-creation confirmation flags", () => {
     expect(
       normalizeSettings({

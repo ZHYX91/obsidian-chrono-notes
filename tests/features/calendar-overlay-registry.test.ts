@@ -12,8 +12,15 @@ describe("calendar overlay registry", () => {
     expect(CALENDAR_OVERLAY_DEFINITIONS.map(({ id }) => id)).toEqual([
       "chinese-lunar",
       "ganzhi",
+      "persian",
+      "ethiopic",
+      "hebrew",
+      "indian",
+      "islamic-civil",
+      "islamic-umalqura",
     ]);
-    expect(new Set(CALENDAR_OVERLAY_DEFINITIONS.map(({ id }) => id)).size).toBe(2);
+    expect(new Set(CALENDAR_OVERLAY_DEFINITIONS.map(({ id }) => id)).size)
+      .toBe(CALENDAR_OVERLAY_DEFINITIONS.length);
   });
 
   it("returns recursively frozen results in selected slot order", () => {

@@ -660,7 +660,7 @@
   .chrono-notes-week-day-content
     .chrono-notes-ics-list[data-responsive="true"][data-wide-overflow="false"]
     .chrono-notes-ics-event:last-of-type {
-    padding-right: 0;
+    padding-inline-end: 0;
   }
 }
 

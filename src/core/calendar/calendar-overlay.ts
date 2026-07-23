@@ -1,6 +1,15 @@
 import type { LocalDate } from "../periodic/periodic-date";
 
-export const CALENDAR_OVERLAY_IDS = ["chinese-lunar", "ganzhi"] as const;
+export const CALENDAR_OVERLAY_IDS = [
+  "chinese-lunar",
+  "ganzhi",
+  "persian",
+  "ethiopic",
+  "hebrew",
+  "indian",
+  "islamic-civil",
+  "islamic-umalqura",
+] as const;
 
 export type CalendarOverlayId = typeof CALENDAR_OVERLAY_IDS[number];
 export type CalendarOverlayEventKind = "festival" | "solar-term";

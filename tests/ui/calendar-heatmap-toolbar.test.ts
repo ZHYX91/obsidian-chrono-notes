@@ -37,7 +37,7 @@ describe("calendar heatmap toolbar", () => {
       /\.chrono-notes-calendar-toolbar\s*\{[^}]*display:\s*flex;[^}]*flex-wrap:\s*wrap;/s,
     );
     expect(styles).toMatch(
-      /\.chrono-notes-heatmap-tools\s*\{[^}]*display:\s*flex;[^}]*flex:\s*none;[^}]*margin-left:\s*auto;/s,
+      /\.chrono-notes-heatmap-tools\s*\{[^}]*display:\s*flex;[^}]*flex:\s*none;[^}]*margin-inline-start:\s*auto;/s,
     );
     expect(styles).toMatch(
       /@container \(max-width:\s*360px\)[\s\S]*?\.chrono-notes-heatmap-legend\s*\{\s*display:\s*none;/s,

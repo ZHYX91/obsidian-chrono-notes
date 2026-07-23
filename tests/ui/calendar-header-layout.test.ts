@@ -14,6 +14,12 @@ const miniCalendar = readFileSync(
 );
 
 describe("calendar header layout", () => {
+  it("applies the resolved writing direction at the calendar root", () => {
+    expect(calendarApp).toMatch(
+      /className="chrono-notes-calendar"\s*dir=\{translator\.direction\}/s,
+    );
+  });
+
   it("groups previous, period, and next controls with stable compact spacing", () => {
     expect(calendarApp).toContain(
       'className="chrono-notes-calendar-navigation"',
@@ -35,7 +41,7 @@ describe("calendar header layout", () => {
       /\.chrono-notes-calendar-header,\s*\.chrono-notes-mini-calendar-header\s*\{[^}]*display:\s*flex;[^}]*gap:\s*12px;[^}]*min-width:\s*0;/s,
     );
     expect(styles).toMatch(
-      /\.chrono-notes-calendar-header \.chrono-notes-today,\s*\.chrono-notes-mini-calendar-header \.chrono-notes-mini-calendar-today\s*\{[^}]*flex:\s*none;[^}]*margin-left:\s*auto;/s,
+      /\.chrono-notes-calendar-header \.chrono-notes-today,\s*\.chrono-notes-mini-calendar-header \.chrono-notes-mini-calendar-today\s*\{[^}]*flex:\s*none;[^}]*margin-inline-start:\s*auto;/s,
     );
     expect(calendarApp).toMatch(
       /<\/div>\s*<button\s*type="button"\s*className="chrono-notes-today"/s,

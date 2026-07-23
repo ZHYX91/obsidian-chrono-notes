@@ -54,7 +54,7 @@ function isAbsoluteLocalPath(source: string): boolean {
 
 async function readLocalFile(source: string): Promise<string> {
   const { readFile } = getDesktopRequire()("node:fs/promises") as {
-    readFile(path: string, encoding: "utf8"): Promise<string>;
+    readFile: (path: string, encoding: "utf8") => Promise<string>;
   };
   return readFile(source, "utf8");
 }

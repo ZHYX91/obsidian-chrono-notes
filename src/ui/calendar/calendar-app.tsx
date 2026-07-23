@@ -503,6 +503,7 @@ export function CalendarApp({
   return (
     <div
       className="chrono-notes-calendar"
+      dir={translator.direction}
       data-font-size-mode={settings.fontSizeMode}
       style={fontVariables}
       aria-label={t("calendar.ariaLabel")}

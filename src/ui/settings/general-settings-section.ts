@@ -18,6 +18,11 @@ export function renderGeneralSettingsSection(
         .addOption("en", t("settings.general.languageEnglish"))
         .addOption("zh-CN", t("settings.general.languageSimplifiedChinese"))
         .addOption("zh-TW", t("settings.general.languageTraditionalChinese"))
+        .addOption("ar", "العربية")
+        .addOption("fa", "فارسی")
+        .addOption("he", "עברית")
+        .addOption("am", "አማርኛ")
+        .addOption("hi", "हिन्दी")
         .setValue(context.host.settings.locale)
         .onChange(async (value) => {
           if (!isPluginLocale(value)) return;

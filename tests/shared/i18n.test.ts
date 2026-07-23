@@ -13,6 +13,11 @@ describe("resolvePluginLocale", () => {
     expect(resolvePluginLocale("en", "zh-CN")).toBe("en");
     expect(resolvePluginLocale("zh-CN", "en-US")).toBe("zh-CN");
     expect(resolvePluginLocale("zh-TW", "en-US")).toBe("zh-TW");
+    expect(resolvePluginLocale("ar", "en-US")).toBe("ar");
+    expect(resolvePluginLocale("fa", "en-US")).toBe("fa");
+    expect(resolvePluginLocale("he", "en-US")).toBe("he");
+    expect(resolvePluginLocale("am", "en-US")).toBe("am");
+    expect(resolvePluginLocale("hi", "en-US")).toBe("hi");
   });
 
   it("maps automatic Chinese scripts and regions without conflating them", () => {
@@ -25,6 +30,15 @@ describe("resolvePluginLocale", () => {
   it("falls back unknown automatic locales to English", () => {
     expect(resolvePluginLocale("auto", "fr-FR")).toBe("en");
     expect(resolvePluginLocale("auto", "")).toBe("en");
+  });
+
+  it("maps the five added automatic languages, including legacy Hebrew", () => {
+    expect(resolvePluginLocale("auto", "ar-SA")).toBe("ar");
+    expect(resolvePluginLocale("auto", "fa-IR")).toBe("fa");
+    expect(resolvePluginLocale("auto", "he-IL")).toBe("he");
+    expect(resolvePluginLocale("auto", "iw-IL")).toBe("he");
+    expect(resolvePluginLocale("auto", "am-ET")).toBe("am");
+    expect(resolvePluginLocale("auto", "hi-IN")).toBe("hi");
   });
 });
 
@@ -45,6 +59,20 @@ describe("createTranslator", () => {
     const translator = createTranslator("en", "en-US");
     expect(translator.t("calendar.ics.moreEvents", { count: 1 })).toBe("1 more event");
     expect(translator.t("calendar.ics.moreEvents", { count: 2 })).toBe("2 more events");
+  });
+
+  it("provides complete added-language catalogs with the correct direction", () => {
+    expect(createTranslator("ar", "en").t("calendar.today")).toBe("اليوم");
+    expect(createTranslator("fa", "en").t("calendar.today")).toBe("امروز");
+    expect(createTranslator("he", "en").t("calendar.today")).toBe("היום");
+    expect(createTranslator("am", "en").t("calendar.today")).toBe("ዛሬ");
+    expect(createTranslator("hi", "en").t("calendar.today")).toBe("आज");
+
+    expect(createTranslator("ar", "en").direction).toBe("rtl");
+    expect(createTranslator("fa", "en").direction).toBe("rtl");
+    expect(createTranslator("he", "en").direction).toBe("rtl");
+    expect(createTranslator("am", "en").direction).toBe("ltr");
+    expect(createTranslator("hi", "en").direction).toBe("ltr");
   });
 
   it("distinguishes This month and ISO week-picker actions in all locales", () => {

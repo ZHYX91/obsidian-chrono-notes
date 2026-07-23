@@ -52,6 +52,7 @@ describe("acceptance Vault lifecycle", () => {
         "utf8",
       ),
     ) as {
+      calendarOverlays: string[];
       ics: { sources: string[] };
       locale: string;
       periodicNotes: { daily: { pattern: string } };
@@ -74,6 +75,7 @@ describe("acceptance Vault lifecycle", () => {
       state: "ready",
     });
     expect(settings).toMatchObject({
+      calendarOverlays: ["persian", "islamic-umalqura"],
       ics: { sources: ["Fixtures/acceptance.ics"] },
       locale: "en",
       periodicNotes: { daily: { pattern: "'Daily'/yyyy-MM-dd" } },

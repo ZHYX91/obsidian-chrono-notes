@@ -15,6 +15,7 @@ import type { CalendarOverlay, HolidayRegion } from "../../shared/settings";
 import {
   selectCalendarOverlayDay,
   selectCalendarOverlayDays,
+  usesLunarCalendarContext,
 } from "./calendar-overlay-registry";
 import {
   combineRegionalHolidayDays,
@@ -68,8 +69,10 @@ export class CalendarDecorationCache {
       return existing;
     }
 
-    const overlays = Object.freeze(calendarOverlays.map((id) =>
-      this.getOverlay(date, dateKey, normalizedLocale, id)));
+    const overlays = Object.freeze(calendarOverlays.flatMap((id) => {
+      const overlay = this.getOverlay(date, dateKey, normalizedLocale, id);
+      return overlay === null ? [] : [overlay];
+    }));
     const regional = combineRegionalHolidayDays(holidayRegions.map((region) =>
       this.getRegionalDay(date, dateKey, normalizedLocale, region)));
     const result = Object.freeze({
@@ -99,7 +102,7 @@ export class CalendarDecorationCache {
     dateKey: string,
     locale: string,
     id: CalendarOverlay,
-  ): CalendarOverlayDay {
+  ): CalendarOverlayDay | null {
     const key = JSON.stringify([dateKey, locale, id]);
     const existing = touchEntry(this.overlayEntries, key);
     if (existing !== undefined) return existing;
@@ -107,8 +110,11 @@ export class CalendarDecorationCache {
       date,
       locale,
       id,
-      this.getLunarContext(date, dateKey),
+      usesLunarCalendarContext(id)
+        ? this.getLunarContext(date, dateKey)
+        : undefined,
     );
+    if (result === null) return null;
     this.overlayEntries.set(key, result);
     evictOverflow(this.overlayEntries, this.capacity);
     return result;

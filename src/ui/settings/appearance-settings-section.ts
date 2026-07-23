@@ -2,6 +2,7 @@ import { Setting } from "obsidian";
 
 import {
   CALENDAR_OVERLAY_DEFINITIONS,
+  isCalendarOverlaySupported,
   updateCalendarOverlaySlot,
 } from "../../features/calendar/calendar-overlay-registry";
 import {
@@ -174,16 +175,28 @@ function addCalendarOverlaySlot(
   const definition = current === null
     ? null
     : CALENDAR_OVERLAY_DEFINITIONS.find(({ id }) => id === current) ?? null;
+  const currentSupported = current === null ||
+    isCalendarOverlaySupported(current, context.translator.locale);
 
   const setting = new Setting(containerEl)
     .setName(t(slot === 0
       ? "settings.appearance.calendarExtensionFirst"
       : "settings.appearance.calendarExtensionSecond"));
-  if (definition !== null) setting.setDesc(t(definition.descriptionKey));
+  if (definition !== null) {
+    setting.setDesc(currentSupported
+      ? t(definition.descriptionKey)
+      : t("settings.appearance.calendarExtensionUnavailable", {
+        calendar: t(definition.labelKey),
+      }));
+  }
   setting.addDropdown((dropdown) => {
     dropdown.addOption("", t("settings.appearance.calendarExtensionNone"));
     for (const overlay of CALENDAR_OVERLAY_DEFINITIONS) {
-      if (overlay.id !== usedByOtherSlot) {
+      if (
+        overlay.id !== usedByOtherSlot &&
+        (overlay.id === current ||
+          isCalendarOverlaySupported(overlay.id, context.translator.locale))
+      ) {
         dropdown.addOption(overlay.id, t(overlay.labelKey));
       }
     }
