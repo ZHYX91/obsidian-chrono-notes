@@ -30,6 +30,7 @@ export function CalendarDayStatusRow({
       className="chrono-notes-day-accessories"
       data-has-note-indicator={String(hasNoteIndicator)}
       data-has-regional-marker={String(regionalMarker !== null)}
+      dir="ltr"
     >
       <span className="chrono-notes-day-status">
         <CalendarNoteIndicator
@@ -40,7 +41,11 @@ export function CalendarDayStatusRow({
         />
       </span>
       {regionalMarker === null ? null : (
-        <span className="chrono-notes-regional-marker" aria-hidden="true">
+        <span
+          className="chrono-notes-regional-marker"
+          aria-hidden="true"
+          dir={translator.direction}
+        >
           {regionalMarker}
         </span>
       )}

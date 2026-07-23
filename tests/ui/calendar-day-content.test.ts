@@ -63,6 +63,30 @@ describe("calendar day content", () => {
 
     expect(markup).toContain('data-has-note-indicator="true"');
     expect(markup).toContain('data-has-regional-marker="true"');
+    expect(markup).toContain('class="chrono-notes-day-accessories"');
+    expect(markup).toContain('dir="ltr"');
+    expect(markup).toContain('class="chrono-notes-regional-marker" aria-hidden="true" dir="ltr"');
+  });
+
+  it("keeps physical status slots left-to-right while regional text follows RTL", () => {
+    const day = {
+      ...emptyDay(),
+      noteState: "has-body" as const,
+      regionalMarker: { kind: "rest" as const, region: "cn" as const },
+    };
+    const markup = renderToStaticMarkup(createElement(CalendarDayStatusRow, {
+      day,
+      showNoteIndicators: true,
+      taskAnnotationMode: "hole",
+      translator: createTranslator("ar", "ar"),
+    }));
+
+    expect(markup).toContain(
+      'class="chrono-notes-day-accessories" data-has-note-indicator="true" data-has-regional-marker="true" dir="ltr"',
+    );
+    expect(markup).toContain(
+      'class="chrono-notes-regional-marker" aria-hidden="true" dir="rtl"',
+    );
   });
 });
 

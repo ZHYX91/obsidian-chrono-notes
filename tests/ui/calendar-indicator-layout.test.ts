@@ -163,6 +163,8 @@ describe("calendar indicator layout", () => {
     expect(calendarViewSources).not.toContain('placement="below"');
     expect(calendarViewSources).not.toContain('placement="left"');
     expect(calendarDayContent).toContain('className="chrono-notes-day-status"');
+    expect(calendarDayContent).toContain('dir="ltr"');
+    expect(calendarDayContent).toContain("dir={translator.direction}");
   });
 
   it("overlays week-number and year status without moving their centered labels", () => {

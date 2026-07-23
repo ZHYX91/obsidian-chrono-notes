@@ -60,4 +60,15 @@ describe("getChinaHolidayDay", () => {
       workday: { region: "cn", name: "Spring Festival", isWorkday: true },
     });
   });
+
+  it.each(["ar", "fa", "he", "am", "hi"])(
+    "falls back to the English holiday name for unsupported locale %s",
+    (locale) => {
+      expect(getChinaHolidayDay({ year: 2026, month: 2, day: 17 }, locale)).toEqual({
+        coverage: "available",
+        holidays: [{ region: "cn", name: "Spring Festival" }],
+        workday: { region: "cn", name: "Spring Festival", isWorkday: false },
+      });
+    },
+  );
 });

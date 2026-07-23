@@ -20,6 +20,15 @@ describe("getSingaporeHolidayDay", () => {
     ]);
   });
 
+  it.each(["ar", "fa", "he", "am", "hi"])(
+    "falls back to the English holiday name for unsupported locale %s",
+    (locale) => {
+      expect(
+        getSingaporeHolidayDay({ year: 2026, month: 2, day: 17 }, locale).holidays,
+      ).toEqual([{ region: "sg", name: "Chinese New Year" }]);
+    },
+  );
+
   it("includes the official Monday holiday after a Sunday public holiday", () => {
     expect(getSingaporeHolidayDay({ year: 2026, month: 6, day: 1 }, "en")).toEqual({
       coverage: "available",

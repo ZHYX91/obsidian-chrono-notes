@@ -13,6 +13,11 @@ export interface RegionalWorkday {
   readonly isWorkday: boolean;
 }
 
+/**
+ * Regional providers may expose a small curated name set, but never a
+ * region-by-UI-language translation matrix. Chinese variants use their
+ * explicit names; every other unsupported locale falls back to English.
+ */
 export function resolveRegionalHolidayLocale(locale: string): RegionalHolidayLocale {
   const normalized = locale.toLowerCase();
   if (
