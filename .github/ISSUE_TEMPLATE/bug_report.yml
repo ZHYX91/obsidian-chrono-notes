@@ -1,0 +1,61 @@
+name: Bug report
+description: Report a reproducible Chrono Notes problem
+title: "[Bug]: "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: Thanks for helping improve Chrono Notes. Remove private note and calendar content before attaching files or screenshots.
+  - type: input
+    id: versions
+    attributes:
+      label: Versions
+      description: Chrono Notes, Obsidian, and operating-system versions
+      placeholder: Chrono Notes 0.1.1; Obsidian 1.12.7; Android 15
+    validations:
+      required: true
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Platform
+      options:
+        - Windows
+        - macOS
+        - Linux
+        - Android
+        - iOS
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: What happened?
+      description: Describe the actual and expected behavior.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Reproduction steps
+      placeholder: |
+        1. Configure ...
+        2. Open ...
+        3. Select ...
+    validations:
+      required: true
+  - type: textarea
+    id: sample
+    attributes:
+      label: Minimal sample and logs
+      description: Include sanitized settings, note frontmatter, ICS content, console errors, or screenshots when useful.
+      render: shell
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checklist
+      options:
+        - label: I reproduced this with the latest Chrono Notes release.
+          required: true
+        - label: I removed private Vault, task, and calendar data.
+          required: true

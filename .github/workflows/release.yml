@@ -17,7 +17,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     permissions:
+      attestations: write
       contents: write
+      id-token: write
     steps:
       - name: Check out repository
         uses: actions/checkout@v7
@@ -65,6 +67,13 @@ jobs:
             chrono-notes/main.js \
             chrono-notes/manifest.json \
             chrono-notes/styles.css)"
+
+      - name: Attest Obsidian release assets
+        uses: actions/attest@v4
+        with:
+          subject-path: |
+            dist/chrono-notes/main.js
+            dist/chrono-notes/styles.css
 
       - name: Publish GitHub release
         env:
