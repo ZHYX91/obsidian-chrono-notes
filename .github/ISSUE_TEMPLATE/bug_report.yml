@@ -12,7 +12,7 @@ body:
     attributes:
       label: Versions
       description: Chrono Notes, Obsidian, and operating-system versions
-      placeholder: Chrono Notes 0.1.1; Obsidian 1.12.7; Android 15
+      placeholder: Chrono Notes 0.1.2; Obsidian 1.12.7; Android 15
     validations:
       required: true
   - type: dropdown
