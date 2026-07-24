@@ -17,7 +17,7 @@ import {
 } from "./indexed-note";
 import {
   createPersistedNoteIndexSnapshot,
-  parsePersistedNoteIndexSnapshot,
+  parsePersistedNoteIndexSnapshotIncrementally,
   type NoteIndexCache,
   type PersistedNoteIndexEntry,
   type PersistedNoteIndexSnapshot,
@@ -418,7 +418,11 @@ export class NoteIndex {
       await this.cacheSaveTail;
       const raw = await this.cache.load();
       if (raw === null || raw === undefined) return null;
-      const parsed = parsePersistedNoteIndexSnapshot(raw);
+      const parsed = await parsePersistedNoteIndexSnapshotIncrementally(raw, {
+        clock: this.initialIndexClock,
+        timeSliceMs: this.initialIndexTimeSliceMs,
+        yieldToHost: this.yieldInitialIndex,
+      });
       if (parsed !== null) return parsed;
       await this.cache.clear();
     } catch (error) {

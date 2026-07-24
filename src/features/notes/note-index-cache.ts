@@ -4,6 +4,7 @@ import {
   parseLocalDateKey,
   type LocalDate,
 } from "../../core/periodic/periodic-date";
+import { parseNoteInterval } from "../../core/note/note-interval";
 import type { IndexedNote } from "./indexed-note";
 
 export const NOTE_INDEX_CACHE_SCHEMA = 1;
@@ -24,6 +25,12 @@ export interface NoteIndexCache {
   clear(): Promise<void>;
 }
 
+export interface PersistedNoteIndexParseOptions {
+  readonly clock: () => number;
+  readonly timeSliceMs: number;
+  readonly yieldToHost: () => Promise<void>;
+}
+
 export function createPersistedNoteIndexSnapshot(
   entries: readonly PersistedNoteIndexEntry[],
 ): PersistedNoteIndexSnapshot {
@@ -36,17 +43,47 @@ export function createPersistedNoteIndexSnapshot(
 export function parsePersistedNoteIndexSnapshot(
   value: unknown,
 ): PersistedNoteIndexSnapshot | null {
-  if (!isRecord(value) || value.schema !== NOTE_INDEX_CACHE_SCHEMA) return null;
-  if (!Array.isArray(value.entries)) return null;
+  const candidates = getPersistedEntryCandidates(value);
+  if (candidates === null) return null;
   const entries: PersistedNoteIndexEntry[] = [];
   const paths = new Set<string>();
-  for (const candidate of value.entries) {
+  for (const candidate of candidates) {
     const entry = parseEntry(candidate);
     if (entry === null || paths.has(entry.file.path)) return null;
     paths.add(entry.file.path);
     entries.push(entry);
   }
   return createPersistedNoteIndexSnapshot(entries);
+}
+
+export async function parsePersistedNoteIndexSnapshotIncrementally(
+  value: unknown,
+  options: PersistedNoteIndexParseOptions,
+): Promise<PersistedNoteIndexSnapshot | null> {
+  const candidates = getPersistedEntryCandidates(value);
+  if (candidates === null) return null;
+  const entries: PersistedNoteIndexEntry[] = [];
+  const paths = new Set<string>();
+  let timeSliceStarted = options.clock();
+  for (let index = 0; index < candidates.length; index += 1) {
+    const entry = parseEntry(candidates[index]);
+    if (entry === null || paths.has(entry.file.path)) return null;
+    paths.add(entry.file.path);
+    entries.push(entry);
+    if (
+      index + 1 < candidates.length &&
+      options.clock() - timeSliceStarted >= options.timeSliceMs
+    ) {
+      await options.yieldToHost();
+      timeSliceStarted = options.clock();
+    }
+  }
+  return createPersistedNoteIndexSnapshot(entries);
+}
+
+function getPersistedEntryCandidates(value: unknown): readonly unknown[] | null {
+  if (!isRecord(value) || value.schema !== NOTE_INDEX_CACHE_SCHEMA) return null;
+  return Array.isArray(value.entries) ? value.entries : null;
 }
 
 function parseEntry(value: unknown): PersistedNoteIndexEntry | null {
@@ -116,7 +153,32 @@ function parseInterval(value: unknown): IndexedNote["interval"] {
   const start = parseBoundary(value.start);
   const end = parseBoundary(value.end);
   if (start === null || end === null) return null;
-  return Object.freeze({ start, end, dayCount: value.dayCount });
+  const canonical = parseNoteInterval({
+    start: start.value,
+    end: end.value,
+  }).value;
+  if (
+    canonical === null ||
+    value.dayCount !== canonical.dayCount ||
+    !isSameBoundary(start, canonical.start) ||
+    !isSameBoundary(end, canonical.end)
+  ) {
+    return null;
+  }
+  return canonical;
+}
+
+function isSameBoundary(
+  left: NonNullable<IndexedNote["interval"]>["start"],
+  right: NonNullable<IndexedNote["interval"]>["start"],
+): boolean {
+  return (
+    left.value === right.value &&
+    isSameLocalDate(left.date, right.date) &&
+    left.dateKey === right.dateKey &&
+    left.hasTime === right.hasTime &&
+    left.epochMillis === right.epochMillis
+  );
 }
 
 function parseBoundary(value: unknown): NonNullable<IndexedNote["interval"]>["start"] | null {
@@ -186,10 +248,10 @@ function parseTasks(value: unknown, path: string): IndexedNote["tasks"] | null {
       !isRecord(candidate) ||
       typeof candidate.text !== "string" ||
       typeof candidate.completed !== "boolean" ||
-      !isNullableString(candidate.dueDate) ||
-      !isNullableString(candidate.scheduledDate) ||
-      !isNullableString(candidate.startDate) ||
-      !isNullableString(candidate.doneDate) ||
+      !isNullableLocalDateKey(candidate.dueDate) ||
+      !isNullableLocalDateKey(candidate.scheduledDate) ||
+      !isNullableLocalDateKey(candidate.startDate) ||
+      !isNullableLocalDateKey(candidate.doneDate) ||
       candidate.path !== path ||
       !isNonNegativeInteger(candidate.line)
     ) {
@@ -240,8 +302,9 @@ function isNoteState(value: unknown): value is IndexedNote["state"] {
   return value === "empty" || value === "yaml-only" || value === "has-body";
 }
 
-function isNullableString(value: unknown): value is string | null {
-  return value === null || typeof value === "string";
+function isNullableLocalDateKey(value: unknown): value is string | null {
+  return value === null ||
+    (typeof value === "string" && parseLocalDateKey(value) !== null);
 }
 
 function isNonEmptyString(value: unknown): value is string {

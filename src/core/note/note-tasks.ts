@@ -1,3 +1,5 @@
+import { parseLocalDateKey } from "../periodic/periodic-date";
+
 export interface NoteTask {
   readonly text: string;
   readonly completed: boolean;
@@ -30,13 +32,18 @@ export function parseNoteTasks(
     tasks.push(Object.freeze({
       text: text || rawText,
       completed: match[2] !== " ",
-      dueDate: DUE_PATTERN.exec(line)?.[1] ?? null,
-      scheduledDate: SCHEDULED_PATTERN.exec(line)?.[1] ?? null,
-      startDate: START_PATTERN.exec(line)?.[1] ?? null,
-      doneDate: DONE_PATTERN.exec(line)?.[1] ?? null,
+      dueDate: parseTaskDate(DUE_PATTERN, line),
+      scheduledDate: parseTaskDate(SCHEDULED_PATTERN, line),
+      startDate: parseTaskDate(START_PATTERN, line),
+      doneDate: parseTaskDate(DONE_PATTERN, line),
       path,
       line: bodyStartLine + index,
     }));
   }
   return Object.freeze(tasks);
+}
+
+function parseTaskDate(pattern: RegExp, line: string): string | null {
+  const value = pattern.exec(line)?.[1];
+  return value !== undefined && parseLocalDateKey(value) !== null ? value : null;
 }

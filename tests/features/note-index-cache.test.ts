@@ -12,6 +12,7 @@ import { NoteIndex } from "../../src/features/notes/note-index";
 import {
   createPersistedNoteIndexSnapshot,
   parsePersistedNoteIndexSnapshot,
+  parsePersistedNoteIndexSnapshotIncrementally,
   type NoteIndexCache,
   type PersistedNoteIndexSnapshot,
 } from "../../src/features/notes/note-index-cache";
@@ -370,5 +371,116 @@ describe("persistent NoteIndex cache", () => {
         file: { ...FILE, mtime: Number.NaN },
       }],
     })).toBeNull();
+  });
+
+  it("rejects cached tasks with malformed or impossible date keys", () => {
+    const snapshot = cached(
+      "- [ ] Ship 📅 2026-07-24 ⏳ 2026-07-23 🛫 2026-07-22 ✅ 2026-07-25",
+    );
+    const entry = snapshot.entries[0];
+    const task = entry?.note.tasks[0];
+    if (entry === undefined || task === undefined) {
+      throw new Error("Expected a cached task fixture");
+    }
+    const withTaskDate = (
+      key: "dueDate" | "scheduledDate" | "startDate" | "doneDate",
+      value: unknown,
+    ) => ({
+      ...snapshot,
+      entries: [{
+        ...entry,
+        note: {
+          ...entry.note,
+          tasks: [{ ...task, [key]: value }],
+        },
+      }],
+    });
+
+    expect(parsePersistedNoteIndexSnapshot(snapshot)).not.toBeNull();
+    for (const key of [
+      "dueDate",
+      "scheduledDate",
+      "startDate",
+      "doneDate",
+    ] as const) {
+      expect(parsePersistedNoteIndexSnapshot(
+        withTaskDate(key, "2026-02-30"),
+      )).toBeNull();
+      expect(parsePersistedNoteIndexSnapshot(
+        withTaskDate(key, "not-a-date"),
+      )).toBeNull();
+    }
+  });
+
+  it("yields while validating a large persisted snapshot", async () => {
+    const entries = [0, 1, 2].map((index) => {
+      const path = `Daily/${index}.md`;
+      return Object.freeze({
+        file: Object.freeze({ path, mtime: 1, size: 4 }),
+        note: createIndexedNote(parseNote(path, "body")),
+      });
+    });
+    const snapshot = createPersistedNoteIndexSnapshot(entries);
+    const yieldToHost = vi.fn(async () => undefined);
+    let clock = 0;
+
+    const parsed = await parsePersistedNoteIndexSnapshotIncrementally(snapshot, {
+      clock: () => {
+        clock += 10;
+        return clock;
+      },
+      timeSliceMs: 8,
+      yieldToHost,
+    });
+
+    expect(parsed).toEqual(snapshot);
+    expect(yieldToHost).toHaveBeenCalledTimes(2);
+  });
+
+  it("rejects cached intervals whose derived fields contradict their source values", () => {
+    const snapshot = cached([
+      "---",
+      "start: 2026-07-01",
+      "end: 2026-07-03",
+      "---",
+      "body",
+    ].join("\n"));
+    const entry = snapshot.entries[0];
+    const interval = entry?.note.interval;
+    if (entry === undefined || interval === null || interval === undefined) {
+      throw new Error("Expected a cached interval fixture");
+    }
+    const withInterval = (next: unknown) => ({
+      ...snapshot,
+      entries: [{
+        ...entry,
+        note: { ...entry.note, interval: next },
+      }],
+    });
+
+    expect(parsePersistedNoteIndexSnapshot(snapshot)).not.toBeNull();
+    expect(parsePersistedNoteIndexSnapshot(withInterval({
+      ...interval,
+      dayCount: interval.dayCount + 1,
+    }))).toBeNull();
+    expect(parsePersistedNoteIndexSnapshot(withInterval({
+      ...interval,
+      start: {
+        ...interval.start,
+        epochMillis: interval.start.epochMillis + 1,
+      },
+    }))).toBeNull();
+    expect(parsePersistedNoteIndexSnapshot(withInterval({
+      ...interval,
+      start: {
+        ...interval.start,
+        hasTime: !interval.start.hasTime,
+      },
+    }))).toBeNull();
+    expect(parsePersistedNoteIndexSnapshot(withInterval({
+      ...interval,
+      start: interval.end,
+      end: interval.start,
+    }))).toBeNull();
   });
 });

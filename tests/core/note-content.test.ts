@@ -85,6 +85,20 @@ describe("note content derivation", () => {
     ]);
   });
 
+  it("does not project impossible task marker dates into the task model", () => {
+    const [task] = parseNoteTasks(
+      "- [ ] Invalid dates 馃搮 2026-02-30 鈴?2026-13-01 馃洬 2026-00-10",
+      "Tasks.md",
+      0,
+    );
+
+    expect(task).toMatchObject({
+      dueDate: null,
+      scheduledDate: null,
+      startDate: null,
+    });
+  });
+
   it("shares legacy word, link, tag and task completion counting rules", () => {
     const body = [
       "你好 world it's state-of-the-art 1,024",
