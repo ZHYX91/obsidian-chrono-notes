@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 
-import { summarizeNotePreview } from "../../src/core/note/note-preview";
+import {
+  deriveNotePreview,
+  EMPTY_NOTE_EMBED_STATISTICS,
+  summarizeNotePreview,
+} from "../../src/core/note/note-preview";
 import { calculateNoteStatistics } from "../../src/core/note/note-statistics";
 import { parseNoteTasks } from "../../src/core/note/note-tasks";
 
@@ -20,12 +24,34 @@ describe("note content derivation", () => {
     expect(preview).toBe("Heading\nShip feature\nRoadmap\nQuoted line");
   });
 
-  it("uses lightweight labels for embedded media", () => {
-    expect(summarizeNotePreview([
-      "![[images/cover.png|300]]",
+  it("removes embeds from the excerpt and classifies them in one derivation", () => {
+    expect(deriveNotePreview([
+      "Before ![[images/cover.png|300]] after",
       "![[paper.pdf]]",
       "![diagram](assets/flow.svg)",
-    ].join("\n"))).toBe("Image: cover.png\nPDF: paper.pdf\nImage: diagram");
+      "![[Meeting notes#Decision]]",
+      "![[recording.mp3]] ![[clip.mp4]] ![[archive.zip]]",
+      "![titled](assets/extra.png \"preview\") ![angled](<media/voice.ogg>)",
+      "![queried](assets/diagram.svg?raw=1#view)",
+      "[[Project|Roadmap]] and [docs](https://example.com)",
+    ].join("\n"))).toEqual({
+      text: "Before after\nRoadmap and docs",
+      embeds: {
+        imageCount: 4,
+        pdfCount: 1,
+        audioCount: 2,
+        videoCount: 1,
+        noteCount: 1,
+        otherCount: 1,
+      },
+    });
+  });
+
+  it("reuses the frozen empty embed statistics for notes without embeds", () => {
+    const derived = deriveNotePreview("Plain text");
+
+    expect(derived.embeds).toBe(EMPTY_NOTE_EMBED_STATISTICS);
+    expect(Object.isFrozen(derived.embeds)).toBe(true);
   });
 
   it("parses legacy task date markers with normalized source line positions", () => {

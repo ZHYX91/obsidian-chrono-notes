@@ -1,5 +1,9 @@
 import type { NoteContentState } from "../../core/document/parse-note-document";
 import type { NoteStatistics } from "../../core/note/note-statistics";
+import {
+  EMPTY_NOTE_EMBED_STATISTICS,
+  type NoteEmbedStatistics,
+} from "../../core/note/note-preview";
 import type {
   LocalDate,
   PeriodicNoteType,
@@ -20,6 +24,7 @@ export interface IndexedPeriodicNote {
   readonly notePath: string | null;
   readonly noteState: IndexedPeriodicNoteState;
   readonly preview: string | null;
+  readonly embeds: NoteEmbedStatistics;
   readonly statistics: NoteStatistics;
   readonly errorMessage?: string;
 }
@@ -90,6 +95,7 @@ export function selectIndexedPeriodicNote(
       notePath,
       noteState: "error",
       preview: null,
+      embeds: EMPTY_NOTE_EMBED_STATISTICS,
       statistics: EMPTY_STATISTICS,
       errorMessage: entry.error.message,
     });
@@ -100,6 +106,7 @@ export function selectIndexedPeriodicNote(
     notePath,
     noteState: entry.note.state,
     preview: entry.note.preview,
+    embeds: entry.note.embeds,
     statistics: entry.note.statistics,
   });
 }
@@ -143,6 +150,7 @@ function emptyIndexedPeriodicNote(
     notePath,
     noteState,
     preview: null,
+    embeds: EMPTY_NOTE_EMBED_STATISTICS,
     statistics: EMPTY_STATISTICS,
   });
 }

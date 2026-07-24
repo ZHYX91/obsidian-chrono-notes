@@ -302,7 +302,7 @@ function renderWeek(
     selectionKind: "day",
     selectedDate,
     today,
-    showHoverPreview: true,
+    weekStartDay: "monday",
     showNoteIndicators: true,
     showTaskProgress: true,
     activePreviewKey: null,

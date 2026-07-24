@@ -10,6 +10,7 @@ import {
   resolveYearHeatmapTabIndex,
 } from "../../src/ui/calendar/year-view-presentation";
 import { noteStatistics } from "../support/note-statistics";
+import { noteEmbeds } from "../support/note-embeds";
 import { readPluginStyles } from "../support/plugin-styles";
 
 describe("year view presentation", () => {
@@ -74,6 +75,7 @@ describe("year view presentation", () => {
       notePath: "Daily/2026-07-14.md",
       noteState: "has-body" as const,
       preview: "Keep preview unchanged",
+      embeds: noteEmbeds(),
       statistics: noteStatistics({ wordCount: 120 }),
       heatmap: {
         dimension: "word-count" as const,

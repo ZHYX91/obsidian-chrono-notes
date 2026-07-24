@@ -13,8 +13,8 @@ import {
   toUtcDate,
   type LocalDate,
   type PeriodicNoteType,
+  type WeekStartDay,
 } from "../../core/periodic/periodic-date";
-import type { CalendarDay } from "../../features/calendar/calendar-day-query";
 import {
   canOpenOrCreateIndexedPeriodicNote,
   hasIndexedPeriodicNote,
@@ -28,10 +28,7 @@ import {
   CalendarDayEvents,
   CalendarDayStatusRow,
 } from "./calendar-day-content";
-import {
-  canPreviewCalendarDay,
-  formatCalendarDayLabel,
-} from "./calendar-day-presentation";
+import { formatCalendarDayLabel } from "./calendar-day-presentation";
 import { CalendarNoteIndicator } from "./calendar-note-indicator";
 import { IntervalGantt } from "./interval-gantt";
 import { bindLongPress, type LongPressGesture } from "./long-press";
@@ -46,6 +43,11 @@ import {
   getWeekViewMessages,
 } from "./week-view-presentation";
 import { formatCalendarNoteState } from "./calendar-note-presentation";
+import {
+  createDailyCalendarPreview,
+  createPeriodicCalendarPreview,
+} from "./calendar-period-preview";
+import type { CalendarPreviewCell } from "./calendar-preview-tooltip";
 import type { CalendarSelectionKind } from "./year-view";
 
 export interface WeekViewProps {
@@ -54,7 +56,7 @@ export interface WeekViewProps {
   readonly selectionKind: CalendarSelectionKind;
   readonly selectedDate: LocalDate;
   readonly today: LocalDate;
-  readonly showHoverPreview: boolean;
+  readonly weekStartDay: WeekStartDay;
   readonly showNoteIndicators: boolean;
   readonly showTaskProgress: boolean;
   readonly activePreviewKey: string | null;
@@ -78,7 +80,7 @@ export interface WeekViewProps {
   ) => Promise<void>;
   readonly onSchedulePreview: (
     key: string,
-    day: CalendarDay,
+    day: CalendarPreviewCell,
     anchor: HTMLButtonElement,
   ) => void;
   readonly onDismissPreview: () => void;
@@ -97,7 +99,7 @@ export function WeekView({
   selectionKind,
   selectedDate,
   today,
-  showHoverPreview,
+  weekStartDay,
   showNoteIndicators,
   showTaskProgress,
   activePreviewKey,
@@ -143,6 +145,12 @@ export function WeekView({
   const showRangeSection = query.rangeCreationConfigured ||
     (query.rangeNotesVisible && query.intervals.totalCount > 0);
   const datedTaskCountLabel = formatDatedTaskCount(query.tasks.length, t);
+  const weeklyPreview = createPeriodicCalendarPreview(
+    { ...query.weeklyNote, date: query.weekStart },
+    "weekly",
+    weekStartDay,
+  );
+  const weeklyPreviewKey = weeklyPreview.previewTitle;
 
   return (
     <div className="chrono-notes-week-view">
@@ -154,6 +162,7 @@ export function WeekView({
         >
           {query.days.map((day) => {
             const dayKey = formatLocalDateKey(day.date);
+            const dailyPreview = createDailyCalendarPreview(day);
             const selected = selectionKind === "day" &&
               isSameLocalDate(selectedDate, day.date);
             const isToday = isSameLocalDate(today, day.date);
@@ -167,15 +176,6 @@ export function WeekView({
               t,
             );
             const accessibleLabelId = `${previewId}-${dayKey}-label`;
-            const fallbackTitle = formatCalendarDayLabel(
-              dayKey,
-              day,
-              {
-                includeCalendarExtensions: false,
-              },
-              t,
-            );
-            const hasCustomPreview = showHoverPreview && canPreviewCalendarDay(day);
             const touch = bindLongPress(
               longPress,
               () => void onOpenPeriodic(day.date, "daily", "default"),
@@ -196,7 +196,6 @@ export function WeekView({
                 aria-describedby={
                   activePreviewKey === dayKey ? previewId : undefined
                 }
-                title={hasCustomPreview ? undefined : fallbackTitle}
                 key={dayKey}
                 onClick={(event) => {
                   if (touch.consumeClick()) {
@@ -221,11 +220,11 @@ export function WeekView({
                 onTouchEnd={touch.onTouchEnd}
                 onTouchCancel={touch.onTouchCancel}
                 onMouseEnter={(event) =>
-                  onSchedulePreview(dayKey, day, event.currentTarget)
+                  onSchedulePreview(dayKey, dailyPreview, event.currentTarget)
                 }
                 onMouseLeave={onDismissPreview}
                 onFocus={(event) =>
-                  onSchedulePreview(dayKey, day, event.currentTarget)
+                  onSchedulePreview(dayKey, dailyPreview, event.currentTarget)
                 }
                 onBlur={onDismissPreview}
                 onContextMenu={(event) => {
@@ -338,12 +337,14 @@ export function WeekView({
         ) : null}
       </div>
 
-      {query.weeklyNote.noteState === "not-configured" ? null : (
-        <button
+      <button
           type="button"
           className={`chrono-notes-weekly-note${selectionKind === "week" ? " is-selected" : ""}`}
           data-note-state={query.weeklyNote.noteState}
           aria-pressed={selectionKind === "week"}
+          aria-describedby={
+            activePreviewKey === weeklyPreviewKey ? previewId : undefined
+          }
           onClick={(event) => {
             if (weeklyNoteTouch.consumeClick()) {
               event.preventDefault();
@@ -360,6 +361,20 @@ export function WeekView({
           onTouchMove={weeklyNoteTouch.onTouchMove}
           onTouchEnd={weeklyNoteTouch.onTouchEnd}
           onTouchCancel={weeklyNoteTouch.onTouchCancel}
+          onMouseEnter={(event) =>
+            onSchedulePreview(
+              weeklyPreviewKey,
+              weeklyPreview,
+              event.currentTarget,
+            )}
+          onMouseLeave={onDismissPreview}
+          onFocus={(event) =>
+            onSchedulePreview(
+              weeklyPreviewKey,
+              weeklyPreview,
+              event.currentTarget,
+            )}
+          onBlur={onDismissPreview}
         >
           <span className="chrono-notes-weekly-note-heading">
             <CalendarNoteIndicator
@@ -383,8 +398,7 @@ export function WeekView({
               {query.weeklyNote.statistics.taskTotal}
             </strong>
           )}
-        </button>
-      )}
+      </button>
 
       <section
         className="chrono-notes-week-tasks"

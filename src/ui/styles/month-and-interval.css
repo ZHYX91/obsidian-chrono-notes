@@ -492,6 +492,7 @@ body.is-mobile
 }
 
 .chrono-notes-week-number-button {
+  --no-tooltip: true;
   align-items: center;
   background: transparent;
   border: 1px solid transparent;
@@ -558,6 +559,7 @@ body.is-mobile
 }
 
 .chrono-notes-day {
+  --no-tooltip: true;
   align-items: stretch;
   background: transparent;
   border: 1px solid transparent;

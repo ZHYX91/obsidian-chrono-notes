@@ -16,10 +16,7 @@ import {
   CalendarDayEvents,
   CalendarDayStatusRow,
 } from "./calendar-day-content";
-import {
-  canPreviewCalendarDay,
-  formatCalendarDayLabel,
-} from "./calendar-day-presentation";
+import { formatCalendarDayLabel } from "./calendar-day-presentation";
 import { bindLongPress, type LongPressGesture } from "./long-press";
 import {
   isDateInMonthRange,
@@ -33,7 +30,6 @@ export interface MonthDayCellProps {
   readonly selected: boolean;
   readonly tabStop: boolean;
   readonly heatmapEnabled: boolean;
-  readonly showHoverPreview: boolean;
   readonly showNoteIndicators: boolean;
   readonly showTaskProgress: boolean;
   readonly rangePreview: MonthRangeDragPreview | null;
@@ -77,7 +73,6 @@ export function MonthDayCell({
   selected,
   tabStop,
   heatmapEnabled,
-  showHoverPreview,
   showNoteIndicators,
   showTaskProgress,
   rangePreview,
@@ -103,14 +98,10 @@ export function MonthDayCell({
     isDateInMonthRange(cell.date, rangePreview);
   const isRangeStart = rangePreview !== null && isSameLocalDate(cell.date, rangePreview.start);
   const isRangeEnd = rangePreview !== null && isSameLocalDate(cell.date, rangePreview.end);
-  const hasCustomPreview = showHoverPreview && canPreviewCalendarDay(cell);
   const accessibleLabel = formatCalendarDayLabel(key, cell, {
     includeCalendarExtensions: true,
   }, translator.t);
   const accessibleLabelId = `${previewId}-${key}-label`;
-  const fallbackTitle = formatCalendarDayLabel(key, cell, {
-    includeCalendarExtensions: false,
-  }, translator.t);
   const touch = bindLongPress(
     longPress,
     () => onOpenPeriodic(cell.date, "default"),
@@ -135,7 +126,6 @@ export function MonthDayCell({
       aria-selected={selected}
       aria-describedby={activePreviewKey === key ? previewId : undefined}
       tabIndex={isHiddenHeatmapCell ? -1 : tabStop ? 0 : -1}
-      title={hasCustomPreview ? undefined : fallbackTitle}
       onClick={(event) => onClick(event, cell.date)}
       onDoubleClick={() => onOpenPeriodic(cell.date, "default")}
       onAuxClick={(event) => {

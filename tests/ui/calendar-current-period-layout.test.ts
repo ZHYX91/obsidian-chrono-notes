@@ -307,7 +307,6 @@ function renderMonthDay(today: LocalDate, selected: boolean, heatmapEnabled: boo
     selected,
     tabStop: selected,
     heatmapEnabled,
-    showHoverPreview: false,
     showNoteIndicators: true,
     showTaskProgress: true,
     rangePreview: null,

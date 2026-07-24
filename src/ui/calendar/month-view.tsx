@@ -16,7 +16,6 @@ import {
   type PeriodicNoteType,
   type WeekStartDay,
 } from "../../core/periodic/periodic-date";
-import type { CalendarDay } from "../../features/calendar/calendar-day-query";
 import {
   canOpenOrCreateIndexedPeriodicNote,
   hasIndexedPeriodicNote,
@@ -27,6 +26,11 @@ import type { Translator } from "../../shared/i18n";
 import { formatNoteTaskProgress } from "../note-task-progress-presentation";
 import { useHostEnvironment } from "../host-environment";
 import { formatCalendarNoteState } from "./calendar-note-presentation";
+import {
+  createDailyCalendarPreview,
+  createPeriodicCalendarPreview,
+} from "./calendar-period-preview";
+import type { CalendarPreviewCell } from "./calendar-preview-tooltip";
 import { moveCalendarSelection } from "./calendar-interaction";
 import type { LongPressGesture } from "./long-press";
 import { MonthDayCell } from "./month-day-cell";
@@ -52,7 +56,6 @@ export interface MonthViewProps {
   }>;
   readonly weekStartDay: WeekStartDay;
   readonly heatmapEnabled: boolean;
-  readonly showHoverPreview: boolean;
   readonly showNoteIndicators: boolean;
   readonly showTaskProgress: boolean;
   readonly rangeCreationConfigured: boolean;
@@ -60,7 +63,11 @@ export interface MonthViewProps {
   readonly preview: Readonly<{
     activeKey: string | null;
     id: string;
-    schedule: (key: string, cell: CalendarDay, anchor: HTMLElement) => void;
+    schedule: (
+      key: string,
+      cell: CalendarPreviewCell,
+      anchor: HTMLElement,
+    ) => void;
     dismiss: () => void;
     suppressFor: (durationMs: number) => void;
   }>;
@@ -92,7 +99,6 @@ export function MonthView({
   selection,
   weekStartDay,
   heatmapEnabled,
-  showHoverPreview,
   showNoteIndicators,
   showTaskProgress,
   rangeCreationConfigured,
@@ -237,6 +243,12 @@ export function MonthView({
       </div>
       {query.weeks.map((week) => {
         const intervalData = week.intervals;
+        const weeklyPreview = createPeriodicCalendarPreview(
+          week.weeklyNote,
+          "weekly",
+          weekStartDay,
+        );
+        const weeklyPreviewKey = weeklyPreview.previewTitle;
         return (
           <div
             className="chrono-notes-week-block"
@@ -282,6 +294,15 @@ export function MonthView({
                   ].join(t("calendar.itemSeparator")),
                 })}
                 longPress={longPress}
+                previewActive={activePreviewKey === weeklyPreviewKey}
+                previewId={previewId}
+                onSchedulePreview={(anchor) =>
+                  schedulePreview(
+                    weeklyPreviewKey,
+                    weeklyPreview,
+                    anchor,
+                  )}
+                onDismissPreview={dismissPreview}
                 onSelect={() => onSelect("week", week.weekStart)}
                 onOpen={(target) =>
                   void onOpenPeriodic(week.weekStart, "weekly", target)
@@ -301,6 +322,7 @@ export function MonthView({
               />
               {week.days.map((cell) => {
                 const key = formatLocalDateKey(cell.date);
+                const dailyPreview = createDailyCalendarPreview(cell);
                 return (
                   <MonthDayCell
                     key={key}
@@ -313,7 +335,6 @@ export function MonthView({
                     }
                     tabStop={tabStopKey === key}
                     heatmapEnabled={heatmapEnabled}
-                    showHoverPreview={showHoverPreview}
                     showNoteIndicators={showNoteIndicators}
                     showTaskProgress={showTaskProgress}
                     rangePreview={rangePreview}
@@ -348,14 +369,18 @@ export function MonthView({
                     }}
                     onMouseEnter={(dayKey, day, event) => {
                       if (!rangeDrag.isActive()) {
-                        schedulePreview(dayKey, day, event.currentTarget);
+                        schedulePreview(
+                          dayKey,
+                          dailyPreview,
+                          event.currentTarget,
+                        );
                         return;
                       }
                       dismissPreview();
                       setRangePreview(rangeDrag.move(day.date, event.buttons));
                     }}
-                    onFocus={(dayKey, day, anchor) => {
-                      schedulePreview(dayKey, day, anchor);
+                    onFocus={(dayKey, _day, anchor) => {
+                      schedulePreview(dayKey, dailyPreview, anchor);
                     }}
                     onMouseUp={(date, event) => {
                       if (!completeRangeDrag(rangeDrag.finish(date, event.button)))

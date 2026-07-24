@@ -42,6 +42,14 @@ describe("HostEnvironmentProvider", () => {
                 cell: {
                   noteState: "missing",
                   preview: null,
+                  embeds: {
+                    imageCount: 2,
+                    pdfCount: 1,
+                    audioCount: 0,
+                    videoCount: 0,
+                    noteCount: 1,
+                    otherCount: 0,
+                  },
                   calendarExtensions: [
                     {
                       id: "chinese-lunar",
@@ -109,6 +117,8 @@ describe("HostEnvironmentProvider", () => {
       );
     expect(secondaryDocument.querySelector("#owner-preview")?.textContent)
       .toContain("Team sync");
+    expect(secondaryDocument.querySelector("#owner-preview")?.textContent)
+      .toContain("Images 2 · PDFs 1 · Embedded notes 1");
     expect(document.querySelector("#owner-preview")).toBeNull();
     expect(ownerAddEventListener).toHaveBeenCalledWith(
       "resize",

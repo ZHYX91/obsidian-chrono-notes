@@ -32,11 +32,11 @@ const DEFAULT_FILENAME_PATTERNS: Readonly<Record<PeriodicNoteType, string>> = Ob
 });
 
 const PATH_PATTERN_EXAMPLES: Readonly<Record<PeriodicNoteType, string>> = Object.freeze({
-  daily: "'Daily'/yyyy-MM-dd",
-  weekly: "'Weekly'/kkkk-'W'WW",
-  monthly: "'Monthly'/yyyy-MM",
-  quarterly: "'Quarterly'/yyyy-'Q'q",
-  yearly: "'Yearly'/yyyy",
+  daily: "'diary'/yyyy/yyyy-MM/yyyy-MM-dd",
+  weekly: "'diary'/kkkk/kkkk-'W'WW",
+  monthly: "'diary'/yyyy/yyyy-MM",
+  quarterly: "'diary'/yyyy/yyyy-'Q'q",
+  yearly: "'diary'/yyyy",
 });
 
 const TEMPLATE_PATH_EXAMPLES: Readonly<Record<PeriodicNoteType, string>> = Object.freeze({

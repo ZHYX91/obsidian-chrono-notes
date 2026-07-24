@@ -13,6 +13,10 @@ export interface MonthWeekNumberProps {
   readonly showTaskProgress: boolean;
   readonly ariaLabel: string;
   readonly longPress: LongPressGesture;
+  readonly previewActive?: boolean;
+  readonly previewId?: string;
+  readonly onSchedulePreview?: (anchor: HTMLButtonElement) => void;
+  readonly onDismissPreview?: () => void;
   readonly onSelect: () => void;
   readonly onOpen: (target: NoteOpenTarget) => void;
   readonly onMoveToDay: () => void;
@@ -26,6 +30,10 @@ export function MonthWeekNumber({
   showTaskProgress,
   ariaLabel,
   longPress,
+  previewActive = false,
+  previewId,
+  onSchedulePreview,
+  onDismissPreview,
   onSelect,
   onOpen,
   onMoveToDay,
@@ -43,6 +51,7 @@ export function MonthWeekNumber({
         data-show-note-indicators={String(showNoteIndicators)}
         aria-label={ariaLabel}
         aria-current={current ? "true" : undefined}
+        aria-describedby={previewActive ? previewId : undefined}
         aria-pressed={selected}
         tabIndex={selected ? 0 : -1}
         onClick={(event) => handleClick(event, touch.consumeClick, onSelect, onOpen)}
@@ -53,6 +62,10 @@ export function MonthWeekNumber({
         onKeyDown={(event) => {
           handleKeyDown(event, onOpen, onMoveToDay);
         }}
+        onMouseEnter={(event) => onSchedulePreview?.(event.currentTarget)}
+        onMouseLeave={onDismissPreview}
+        onFocus={(event) => onSchedulePreview?.(event.currentTarget)}
+        onBlur={onDismissPreview}
         onTouchStart={touch.onTouchStart}
         onTouchMove={touch.onTouchMove}
         onTouchEnd={touch.onTouchEnd}

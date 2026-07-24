@@ -26,7 +26,28 @@ const selectors = vi.hoisted(() => ({
     weekNumber: 29,
     weekYear: 2026,
     days: [],
-    weeklyNote: { noteState: "not-configured" },
+    weeklyNote: {
+      date: { year: 2026, month: 7, day: 13 },
+      notePath: null,
+      noteState: "not-configured",
+      preview: null,
+      embeds: {
+        imageCount: 0,
+        pdfCount: 0,
+        audioCount: 0,
+        videoCount: 0,
+        noteCount: 0,
+        otherCount: 0,
+      },
+      statistics: {
+        wordCount: 0,
+        linkCount: 0,
+        tagCount: 0,
+        taskTotal: 0,
+        taskCompleted: 0,
+        taskCompletionRate: 0,
+      },
+    },
     tasks: [],
     rangeNotesVisible: false,
     rangeCreationConfigured: false,
@@ -90,6 +111,7 @@ import {
 import { LongPressGesture } from "../../src/ui/calendar/long-press";
 import { createDefaultSettings } from "../../src/shared/settings";
 import { noteStatistics } from "../support/note-statistics";
+import { noteEmbeds } from "../support/note-embeds";
 import {
   createNoteIndexSnapshot,
   createParsedNoteIndexSnapshot,
@@ -204,6 +226,7 @@ describe("CalendarApp active query", () => {
           notePath: null,
           noteState: "not-configured",
           preview: null,
+          embeds: noteEmbeds(),
           statistics: noteStatistics(),
         },
         days: [],

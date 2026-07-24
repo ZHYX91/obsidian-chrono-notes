@@ -95,8 +95,7 @@ describe("YearView interactions", () => {
 
     await renderYear(getQuery(2026), { showHoverPreview: false });
     expect(getDay("2026-01-01").getAttribute("aria-label")).toBeNull();
-    expect(getDay("2026-01-01").getAttribute("title"))
-      .toContain("2026-01-01");
+    expect(getDay("2026-01-01").getAttribute("title")).toBeNull();
   });
 
   it("maps arrow keys to the column-flow heatmap axes", async () => {

@@ -1,6 +1,7 @@
 import type { HeatmapMetric } from "../../core/statistics/heatmap";
 import type { RegionalHoliday, RegionalWorkday } from "../../core/calendar/regional-holidays";
 import type { Translator } from "../../shared/i18n";
+import type { PeriodicNoteType } from "../../core/periodic/periodic-date";
 import { formatCalendarHeatmapMetric } from "./calendar-heatmap-presentation";
 
 interface RegionalPreview {
@@ -58,7 +59,20 @@ export function formatCalendarPreviewError(
 export function getCalendarPreviewStateText(
   state: string,
   t: Translator["t"],
+  noteType?: PeriodicNoteType,
 ): string | null {
+  if (noteType !== undefined) {
+    const period = t(`calendarPreview.period.${noteType}`);
+    switch (state) {
+      case "empty":
+      case "yaml-only":
+        return t("calendarPreview.periodNoBody", { period });
+      case "missing":
+        return t("calendarPreview.periodMissing", { period });
+      case "not-configured":
+        return t("calendarPreview.periodNotConfigured", { period });
+    }
+  }
   switch (state) {
     case "empty":
       return t("calendarPreview.emptyNote");

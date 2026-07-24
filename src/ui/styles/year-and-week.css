@@ -15,6 +15,7 @@
 }
 
 .chrono-notes-year-period {
+  --no-tooltip: true;
   align-items: center;
   background: transparent;
   border: 1px solid transparent;
@@ -126,6 +127,7 @@
 }
 
 .chrono-notes-year-heatmap-day {
+  --no-tooltip: true;
   background: var(--background-modifier-border);
   border: 0;
   box-shadow: none !important;
@@ -181,6 +183,7 @@
 }
 
 .chrono-notes-week-day {
+  --no-tooltip: true;
   align-items: center;
   background: transparent;
   border: 1px solid var(--background-modifier-border);
@@ -319,6 +322,7 @@
 }
 
 .chrono-notes-weekly-note {
+  --no-tooltip: true;
   align-items: center;
   background: transparent;
   border: 0;
@@ -538,7 +542,7 @@
   font-size: var(--font-ui-small);
   max-height: min(240px, calc(100vh - 24px));
   max-width: min(280px, calc(100vw - 24px));
-  overflow: auto;
+  overflow: hidden;
   padding: 10px 12px;
   pointer-events: none;
   position: fixed;
@@ -548,8 +552,9 @@
 }
 
 .chrono-notes-calendar-preview-date {
-  color: var(--text-muted);
+  color: var(--text-normal);
   font-size: var(--font-ui-smaller);
+  font-weight: var(--font-semibold);
   margin-bottom: 6px;
 }
 
@@ -563,7 +568,18 @@
 }
 
 .chrono-notes-calendar-preview-body {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 6;
+  line-clamp: 6;
+  overflow: hidden;
   overflow-wrap: anywhere;
+}
+
+.chrono-notes-calendar-preview-embeds {
+  color: var(--text-muted);
+  font-size: var(--font-ui-smaller);
+  margin-top: 6px;
 }
 
 .chrono-notes-calendar[data-font-size-mode] {

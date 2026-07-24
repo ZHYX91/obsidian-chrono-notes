@@ -9,6 +9,8 @@ import { createPortal } from "react-dom";
 
 import type { HeatmapMetric } from "../../core/statistics/heatmap";
 import type { NoteStatistics } from "../../core/note/note-statistics";
+import type { NoteEmbedStatistics } from "../../core/note/note-preview";
+import type { PeriodicNoteType } from "../../core/periodic/periodic-date";
 import type {
   RegionalHoliday,
   RegionalWorkday,
@@ -35,6 +37,10 @@ import {
 export interface CalendarPreviewCell {
   readonly noteState: string;
   readonly preview: string | null;
+  readonly embeds?: NoteEmbedStatistics;
+  readonly periodicNoteType?: PeriodicNoteType;
+  readonly previewTitle?: string;
+  readonly previewSubtitle?: string | null;
   readonly errorMessage?: string;
   readonly heatmap?: HeatmapMetric | null;
   readonly holidays?: readonly RegionalHoliday[];
@@ -99,14 +105,50 @@ export function CalendarPreviewTooltip({
       aria-live="polite"
       style={style}
     >
-      <div className="chrono-notes-calendar-preview-date">{preview.key}</div>
+      <div className="chrono-notes-calendar-preview-date">
+        {preview.cell.previewTitle ?? preview.key}
+      </div>
+      {preview.cell.previewSubtitle === null ||
+          preview.cell.previewSubtitle === undefined
+        ? null
+        : (
+          <div className="chrono-notes-calendar-preview-meta">
+            {preview.cell.previewSubtitle}
+          </div>
+        )}
       <CalendarExtensionContent cell={preview.cell} t={translator.t} />
       <HeatmapContent cell={preview.cell} t={translator.t} />
       <RegionalCalendarContent cell={preview.cell} t={translator.t} />
       <IcsCalendarContent cell={preview.cell} t={translator.t} />
       <PreviewContent cell={preview.cell} t={translator.t} />
+      <EmbedStatisticsContent cell={preview.cell} t={translator.t} />
     </div>,
     host.document.body,
+  );
+}
+
+function EmbedStatisticsContent({ cell, t }: Readonly<{
+  cell: CalendarPreviewCell;
+  t: Translator["t"];
+}>) {
+  const embeds = cell.embeds;
+  if (embeds === undefined) return null;
+  const items = [
+    [embeds.imageCount, "calendarPreview.embedImages"],
+    [embeds.pdfCount, "calendarPreview.embedPdfs"],
+    [embeds.audioCount, "calendarPreview.embedAudio"],
+    [embeds.videoCount, "calendarPreview.embedVideo"],
+    [embeds.noteCount, "calendarPreview.embedNotes"],
+    [embeds.otherCount, "calendarPreview.embedOther"],
+  ] as const;
+  const labels = items
+    .filter(([count]) => count > 0)
+    .map(([count, key]) => t(key, { count }));
+  if (labels.length === 0) return null;
+  return (
+    <div className="chrono-notes-calendar-preview-embeds">
+      {labels.join(t("calendarPreview.embedSeparator"))}
+    </div>
   );
 }
 
@@ -192,7 +234,11 @@ function PreviewContent({ cell, t }: Readonly<{
       </div>
     );
   }
-  const stateText = getCalendarPreviewStateText(cell.noteState, t);
+  const stateText = getCalendarPreviewStateText(
+    cell.noteState,
+    t,
+    cell.periodicNoteType,
+  );
   if (stateText !== null) {
     return <div className="chrono-notes-calendar-preview-meta">{stateText}</div>;
   }

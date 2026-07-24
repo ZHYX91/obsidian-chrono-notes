@@ -8,6 +8,7 @@ import {
   formatRegionalMarkerLabel,
 } from "../../src/ui/calendar/calendar-day-presentation";
 import { noteStatistics } from "../support/note-statistics";
+import { noteEmbeds } from "../support/note-embeds";
 
 function cell(overrides: Partial<MonthCalendarDay> = {}): MonthCalendarDay {
   return Object.freeze({
@@ -16,6 +17,7 @@ function cell(overrides: Partial<MonthCalendarDay> = {}): MonthCalendarDay {
     notePath: "Daily/2026-07-14.md",
     noteState: "has-body",
     preview: "Keep preview unchanged",
+    embeds: noteEmbeds(),
     statistics: noteStatistics(),
     calendarExtensions: [],
     calendarEvents: [],

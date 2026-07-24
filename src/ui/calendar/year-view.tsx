@@ -38,6 +38,11 @@ import { useHostEnvironment } from "../host-environment";
 import { CalendarNoteIndicator } from "./calendar-note-indicator";
 import { bindLongPress, type LongPressGesture } from "./long-press";
 import { CalendarPreviewTooltip } from "./calendar-preview-tooltip";
+import type { CalendarPreviewCell } from "./calendar-preview-tooltip";
+import {
+  createDailyCalendarPreview,
+  createPeriodicCalendarPreview,
+} from "./calendar-period-preview";
 import { useCalendarPreview } from "./use-calendar-preview";
 import {
   formatQuarterPlaceholderHeight,
@@ -122,14 +127,14 @@ export function YearView({
   const root = useRef<HTMLDivElement>(null);
   const dayButtons = useRef(new Map<string, HTMLButtonElement>());
   const handledPeriodSelection = useRef<string | null>(null);
-  const previewEnabled = heatmap && showHoverPreview;
+  const previewEnabled = showHoverPreview;
   const {
     activePreview,
     activePreviewKey,
     previewId,
     schedulePreview,
     dismissPreview,
-  } = useCalendarPreview<YearHeatmapDay>({
+  } = useCalendarPreview<CalendarPreviewCell>({
     enabled: previewEnabled,
     dismissOnDisable: true,
   });
@@ -151,6 +156,10 @@ export function YearView({
     ));
     dismissPreview();
   }, [dismissPreview, query.year]);
+
+  useEffect(() => {
+    dismissPreview();
+  }, [dismissPreview, heatmap]);
 
   useLayoutEffect(() => {
     const view = root.current;
@@ -282,7 +291,6 @@ export function YearView({
           quarterNameMode={quarterNameMode}
           weekStartDay={weekStartDay}
           heatmap={heatmap}
-          previewEnabled={previewEnabled}
           rendered={renderedQuarters.has(quarter.quarter)}
           selection={selection}
           hasRenderedDaySelection={isSelectedDayRendered(
@@ -324,7 +332,6 @@ interface LazyQuarterProps {
   readonly quarterNameMode: QuarterNameMode;
   readonly weekStartDay: WeekStartDay;
   readonly heatmap: boolean;
-  readonly previewEnabled: boolean;
   readonly rendered: boolean;
   readonly selection: YearViewProps["selection"];
   readonly hasRenderedDaySelection: boolean;
@@ -339,7 +346,7 @@ interface LazyQuarterProps {
   ) => void;
   readonly onSchedulePreview: (
     key: string,
-    cell: YearHeatmapDay,
+    cell: CalendarPreviewCell,
     anchor: HTMLButtonElement,
   ) => void;
   readonly onDismissPreview: () => void;
@@ -400,6 +407,10 @@ function SummaryQuarter({
   weekStartDay,
   onSelect,
   onOpenPeriodic,
+  onSchedulePreview,
+  onDismissPreview,
+  previewId,
+  activePreviewKey,
   longPress,
 }: LazyQuarterProps) {
   return (
@@ -418,6 +429,11 @@ function SummaryQuarter({
         selected={isSelected(selection, "quarter", quarter.summary.date)}
         onSelect={onSelect}
         onOpenPeriodic={onOpenPeriodic}
+        weekStartDay={weekStartDay}
+        activePreviewKey={activePreviewKey}
+        previewId={previewId}
+        onSchedulePreview={onSchedulePreview}
+        onDismissPreview={onDismissPreview}
         longPress={longPress}
       />
       {quarter.months.map((month) => {
@@ -439,6 +455,11 @@ function SummaryQuarter({
             selected={summarySelection.selected}
             onSelect={onSelect}
             onOpenPeriodic={onOpenPeriodic}
+            weekStartDay={weekStartDay}
+            activePreviewKey={activePreviewKey}
+            previewId={previewId}
+            onSchedulePreview={onSchedulePreview}
+            onDismissPreview={onDismissPreview}
             longPress={longPress}
           />
         );
@@ -458,6 +479,11 @@ function PeriodButton({
   selected,
   onSelect,
   onOpenPeriodic,
+  weekStartDay,
+  activePreviewKey,
+  previewId,
+  onSchedulePreview,
+  onDismissPreview,
   longPress,
 }: Readonly<{
   summary: YearPeriodicSummary;
@@ -470,6 +496,11 @@ function PeriodButton({
   selected: boolean;
   onSelect: YearViewProps["onSelect"];
   onOpenPeriodic: YearViewProps["onOpenPeriodic"];
+  weekStartDay: WeekStartDay;
+  activePreviewKey: string | null;
+  previewId: string;
+  onSchedulePreview: LazyQuarterProps["onSchedulePreview"];
+  onDismissPreview: () => void;
   longPress: LongPressGesture;
 }>) {
   const periodLabel = selectionDetail === undefined
@@ -490,6 +521,13 @@ function PeriodButton({
   const touch = bindLongPress(longPress, () => void open("default"));
   const showStatus =
     showNoteIndicators && summary.noteState !== "not-configured";
+  const periodPreview = createPeriodicCalendarPreview(
+    summary,
+    summary.noteType,
+    weekStartDay,
+  );
+  const previewKey = periodPreview.previewTitle;
+  const previewActive = activePreviewKey === previewKey;
   return (
     <button
       type="button"
@@ -499,9 +537,9 @@ function PeriodButton({
       data-note-state={summary.noteState}
       data-show-note-indicators={String(showNoteIndicators)}
       aria-label={accessibleLabel}
+      aria-describedby={previewActive ? previewId : undefined}
       aria-current={current ? "true" : undefined}
       aria-pressed={selected}
-      title={accessibleLabel}
       onClick={(event) => {
         if (touch.consumeClick()) {
           event.preventDefault();
@@ -525,6 +563,12 @@ function PeriodButton({
       onTouchMove={touch.onTouchMove}
       onTouchEnd={touch.onTouchEnd}
       onTouchCancel={touch.onTouchCancel}
+      onMouseEnter={(event) =>
+        onSchedulePreview(previewKey, periodPreview, event.currentTarget)}
+      onMouseLeave={onDismissPreview}
+      onFocus={(event) =>
+        onSchedulePreview(previewKey, periodPreview, event.currentTarget)}
+      onBlur={onDismissPreview}
     >
       {showStatus ? (
         <span className="chrono-notes-year-period-status">
@@ -549,6 +593,7 @@ function HeatmapQuarter(props: LazyQuarterProps) {
     showTaskProgress,
     quarterNameMode,
     today,
+    weekStartDay,
     selection,
     dayButtons,
     onSelect,
@@ -558,7 +603,6 @@ function HeatmapQuarter(props: LazyQuarterProps) {
     onSchedulePreview,
     onDismissPreview,
     previewId,
-    previewEnabled,
     activePreviewKey,
     hasRenderedDaySelection,
     longPress,
@@ -579,6 +623,11 @@ function HeatmapQuarter(props: LazyQuarterProps) {
         selected={isSelected(selection, "quarter", quarter.summary.date)}
         onSelect={onSelect}
         onOpenPeriodic={onOpenPeriodic}
+        weekStartDay={weekStartDay}
+        activePreviewKey={activePreviewKey}
+        previewId={previewId}
+        onSchedulePreview={onSchedulePreview}
+        onDismissPreview={onDismissPreview}
         longPress={longPress}
       />
       <div className="chrono-notes-year-heatmap-months">
@@ -594,6 +643,11 @@ function HeatmapQuarter(props: LazyQuarterProps) {
               selected={isSelected(selection, "month", month.summary.date)}
               onSelect={onSelect}
               onOpenPeriodic={onOpenPeriodic}
+              weekStartDay={weekStartDay}
+              activePreviewKey={activePreviewKey}
+              previewId={previewId}
+              onSchedulePreview={onSchedulePreview}
+              onDismissPreview={onDismissPreview}
               longPress={longPress}
             />
             <div
@@ -643,7 +697,6 @@ function HeatmapQuarter(props: LazyQuarterProps) {
                         onSchedulePreview={onSchedulePreview}
                         onDismissPreview={onDismissPreview}
                         previewId={previewId}
-                        previewEnabled={previewEnabled}
                         previewActive={
                           activePreviewKey === formatLocalDateKey(cell.date)
                         }
@@ -678,7 +731,6 @@ function HeatmapDayButton({
   onSchedulePreview,
   onDismissPreview,
   previewId,
-  previewEnabled,
   previewActive,
   longPress,
 }: Readonly<{
@@ -698,11 +750,11 @@ function HeatmapDayButton({
   onSchedulePreview: LazyQuarterProps["onSchedulePreview"];
   onDismissPreview: () => void;
   previewId: string;
-  previewEnabled: boolean;
   previewActive: boolean;
   longPress: LongPressGesture;
 }>) {
   const key = formatLocalDateKey(cell.date);
+  const dailyPreview = createDailyCalendarPreview(cell);
   const accessibleLabel = formatYearHeatmapDayLabel(key, cell, translator.t);
   const accessibleLabelId = `${previewId}-${key}-label`;
   const open = (target: NoteOpenTarget) =>
@@ -733,7 +785,6 @@ function HeatmapDayButton({
         fallbackTabStop,
         hasDaySelection,
       )}
-      title={previewEnabled ? undefined : accessibleLabel}
       onClick={(event: ReactMouseEvent<HTMLButtonElement>) => {
         if (touch.consumeClick()) {
           event.preventDefault();
@@ -769,10 +820,12 @@ function HeatmapDayButton({
         );
       }}
       onMouseEnter={(event) =>
-        onSchedulePreview(key, cell, event.currentTarget)
+        onSchedulePreview(key, dailyPreview, event.currentTarget)
       }
       onMouseLeave={onDismissPreview}
-      onFocus={(event) => onSchedulePreview(key, cell, event.currentTarget)}
+      onFocus={(event) =>
+        onSchedulePreview(key, dailyPreview, event.currentTarget)
+      }
       onBlur={onDismissPreview}
       onTouchStart={() => {
         onDismissPreview();

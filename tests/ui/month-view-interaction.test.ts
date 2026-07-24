@@ -17,6 +17,7 @@ import {
   type MonthViewProps,
 } from "../../src/ui/calendar/month-view";
 import { noteStatistics } from "../support/note-statistics";
+import { noteEmbeds } from "../support/note-embeds";
 
 const JULY_31 = Object.freeze({ year: 2026, month: 7, day: 31 });
 const AUGUST_1 = Object.freeze({ year: 2026, month: 8, day: 1 });
@@ -128,11 +129,6 @@ describe("MonthView interactions", () => {
       .toContain("2026-08-01");
     expect(day.getAttribute("title")).toBeNull();
 
-    await renderView(monthQuery(2026, 8, [previewableDay]), AUGUST_1, {
-      showHoverPreview: false,
-    });
-    expect(getDayButton("1").getAttribute("aria-label")).toBeNull();
-    expect(getDayButton("1").getAttribute("title")).toContain("2026-08-01");
   });
 
   it("moves right from a week number into its first enabled date", async () => {
@@ -450,7 +446,6 @@ describe("MonthView interactions", () => {
       selection: Object.freeze({ kind: "day", date: selected }),
       weekStartDay: "monday",
       heatmapEnabled: false,
-      showHoverPreview: true,
       showNoteIndicators: true,
       showTaskProgress: true,
       rangeCreationConfigured: true,
@@ -517,6 +512,7 @@ function monthQuery(
           notePath: null,
           noteState: "not-configured",
           preview: null,
+          embeds: noteEmbeds(),
           statistics: noteStatistics(),
         }),
         days: Object.freeze(days),
@@ -538,6 +534,7 @@ function monthDay(date: LocalDate, inCurrentMonth: boolean): MonthCalendarDay {
     notePath: null,
     noteState: "missing",
     preview: null,
+    embeds: noteEmbeds(),
     statistics: noteStatistics(),
     calendarExtensions: Object.freeze([]),
     calendarEvents: Object.freeze([]),

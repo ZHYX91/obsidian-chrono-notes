@@ -47,4 +47,15 @@ describe("calendar preview presentation", () => {
     );
     expect(formatCalendarPreviewError(undefined, t)).toBe("無法讀取筆記：未知錯誤");
   });
+
+  it("describes each periodic-note state with the selected level", () => {
+    const t = createTranslator("zh-CN", "en").t;
+
+    expect(getCalendarPreviewStateText("not-configured", t, "weekly"))
+      .toBe("周记未启用");
+    expect(getCalendarPreviewStateText("missing", t, "monthly"))
+      .toBe("尚未创建月记");
+    expect(getCalendarPreviewStateText("empty", t, "quarterly"))
+      .toBe("季记暂无正文");
+  });
 });

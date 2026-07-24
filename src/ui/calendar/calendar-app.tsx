@@ -28,7 +28,6 @@ import {
 import type { StatisticDisplayDimension } from "../../core/statistics/heatmap";
 import type { NoteTask } from "../../core/note/note-tasks";
 import { normalizeIntervalNoteFolder } from "../../core/note/interval-note-spec";
-import type { CalendarDay } from "../../features/calendar/calendar-day-query";
 import { CalendarDecorationCache } from "../../features/calendar/calendar-decoration-cache";
 import {
   CalendarQueryStore,
@@ -46,6 +45,7 @@ import type { ChronoNotesSettings } from "../../shared/settings";
 import { getCalendarFontVariables } from "./calendar-font-size";
 import { LongPressGesture } from "./long-press";
 import { CalendarPreviewTooltip } from "./calendar-preview-tooltip";
+import type { CalendarPreviewCell } from "./calendar-preview-tooltip";
 import { YearView, type CalendarSelectionKind } from "./year-view";
 import { WeekView } from "./week-view";
 import { CalendarPeriodPickerPopover } from "./calendar-period-picker-popover";
@@ -54,7 +54,6 @@ import {
   CalendarPickerLayer,
   type CalendarPickerModalHost,
 } from "./calendar-picker-layer";
-import { canPreviewCalendarDay } from "./calendar-day-presentation";
 import { createWeekPickerLabelFormatter } from "./week-view-presentation";
 import { useLocalToday } from "../use-local-today";
 import { useCalendarPreview } from "./use-calendar-preview";
@@ -192,10 +191,9 @@ export function CalendarApp({
     schedulePreview,
     dismissPreview,
     suppressPreviewFor,
-  } = useCalendarPreview<CalendarDay>({
+  } = useCalendarPreview<CalendarPreviewCell>({
     enabled: settings.showHoverPreview,
     dismissOnDisable: true,
-    isPreviewable: canPreviewCalendarDay,
   });
   const calendarExtensionKey = settings.calendarExtensions.join("\u0000");
   const holidayRegionKey = settings.holidayRegions.join("\u0000");
@@ -837,7 +835,7 @@ export function CalendarApp({
           selectionKind={selectionKind}
           selectedDate={selected}
           today={today}
-          showHoverPreview={settings.showHoverPreview}
+          weekStartDay={settings.weekStartDay}
           showNoteIndicators={settings.showNoteIndicators}
           showTaskProgress={settings.showTaskProgress}
           activePreviewKey={activePreviewKey}
@@ -867,7 +865,6 @@ export function CalendarApp({
           selection={{ kind: selectionKind, date: selected }}
           weekStartDay={settings.weekStartDay}
           heatmapEnabled={heatmapEnabled}
-          showHoverPreview={settings.showHoverPreview}
           showNoteIndicators={settings.showNoteIndicators}
           showTaskProgress={settings.showTaskProgress}
           rangeCreationConfigured={rangeCreationConfigured}

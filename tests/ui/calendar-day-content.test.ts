@@ -11,6 +11,7 @@ import {
   CalendarDayStatusRow,
 } from "../../src/ui/calendar/calendar-day-content";
 import { noteStatistics } from "../support/note-statistics";
+import { noteEmbeds } from "../support/note-embeds";
 
 describe("calendar day content", () => {
   it("renders no holiday or ICS rows when both collections are empty", () => {
@@ -144,6 +145,7 @@ function emptyDay(): CalendarDay {
     notePath: null,
     noteState: "not-configured",
     preview: null,
+    embeds: noteEmbeds(),
     statistics: noteStatistics(),
     calendarExtensions: [],
     calendarEvents: [],

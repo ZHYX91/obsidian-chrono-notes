@@ -7,7 +7,10 @@ import {
   parseFrontmatter,
   type FrontmatterParseFailure,
 } from "../document/parse-frontmatter";
-import { summarizeNotePreview } from "./note-preview";
+import {
+  deriveNotePreview,
+  type NoteEmbedStatistics,
+} from "./note-preview";
 import { calculateNoteStatistics, type NoteStatistics } from "./note-statistics";
 import {
   parseNoteInterval,
@@ -25,6 +28,7 @@ export interface ParsedNote {
   readonly interval: NoteInterval | null;
   readonly intervalError: NoteIntervalParseFailure | null;
   readonly preview: string | null;
+  readonly embeds: NoteEmbedStatistics;
   readonly tasks: readonly NoteTask[];
   readonly statistics: NoteStatistics;
 }
@@ -43,6 +47,7 @@ export function parseNoteFromDocument(
   const parsedFrontmatter = parseParsedFrontmatter(document);
   const parsedInterval = parseNoteInterval(parsedFrontmatter.value);
   const tasks = parseNoteTasks(document.body, path, document.bodyStartLine);
+  const preview = deriveNotePreview(document.body);
   return Object.freeze({
     path,
     state: document.state,
@@ -51,7 +56,8 @@ export function parseNoteFromDocument(
     frontmatterError: parsedFrontmatter.error,
     interval: parsedInterval.value,
     intervalError: parsedInterval.error,
-    preview: summarizeNotePreview(document.body),
+    preview: preview.text,
+    embeds: preview.embeds,
     tasks,
     statistics: calculateNoteStatistics(document.body, tasks),
   });

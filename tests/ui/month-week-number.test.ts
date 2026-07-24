@@ -5,6 +5,7 @@ import { describe, expect, it } from "vitest";
 import { MonthWeekNumber } from "../../src/ui/calendar/month-week-number";
 import { LongPressGesture } from "../../src/ui/calendar/long-press";
 import { noteStatistics } from "../support/note-statistics";
+import { noteEmbeds } from "../support/note-embeds";
 
 function longPress(): LongPressGesture {
   return new LongPressGesture({
@@ -48,6 +49,7 @@ describe("MonthWeekNumber", () => {
           notePath: "Weekly/2026-01.md",
           noteState: "has-body",
           preview: "Week body",
+          embeds: noteEmbeds(),
           statistics: noteStatistics({
             taskTotal: 4,
             taskCompleted: 1,
@@ -94,6 +96,7 @@ describe("MonthWeekNumber", () => {
           notePath: "Weekly/2026-02.md",
           noteState: "empty",
           preview: null,
+          embeds: noteEmbeds(),
           statistics: noteStatistics(),
         },
         days: [],
@@ -130,6 +133,7 @@ describe("MonthWeekNumber", () => {
           notePath: null,
           noteState: "not-configured",
           preview: null,
+          embeds: noteEmbeds(),
           statistics: noteStatistics(),
         },
         days: [],
@@ -172,6 +176,7 @@ describe("MonthWeekNumber", () => {
           notePath: null,
           noteState: "missing",
           preview: null,
+          embeds: noteEmbeds(),
           statistics: noteStatistics(),
         },
         days: [],
@@ -228,6 +233,7 @@ function renderWeekNumber(current: boolean, selected: boolean): string {
         notePath: null,
         noteState: "not-configured",
         preview: null,
+        embeds: noteEmbeds(),
         statistics: noteStatistics(),
       },
       days: [],

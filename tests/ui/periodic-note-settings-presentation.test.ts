@@ -63,11 +63,11 @@ describe("periodic note settings presentation", () => {
       getPeriodicNotePathExample("quarterly"),
       getPeriodicNotePathExample("yearly"),
     ]).toEqual([
-      "'Daily'/yyyy-MM-dd",
-      "'Weekly'/kkkk-'W'WW",
-      "'Monthly'/yyyy-MM",
-      "'Quarterly'/yyyy-'Q'q",
-      "'Yearly'/yyyy",
+      "'diary'/yyyy/yyyy-MM/yyyy-MM-dd",
+      "'diary'/kkkk/kkkk-'W'WW",
+      "'diary'/yyyy/yyyy-MM",
+      "'diary'/yyyy/yyyy-'Q'q",
+      "'diary'/yyyy",
     ]);
     expect([
       getPeriodicNoteTemplatePathExample("daily"),
@@ -82,6 +82,26 @@ describe("periodic note settings presentation", () => {
       "Templates/Quarterly.md",
       "Templates/Yearly.md",
     ]);
+  });
+
+  it("round-trips every shared diary hierarchy example", () => {
+    const options = { locale: "en-US", weekStartDay: "monday" as const };
+    const examples = [
+      ["daily", "diary/2026/2026-07/2026-07-24.md"],
+      ["weekly", "diary/2026/2026-W30.md"],
+      ["monthly", "diary/2026/2026-07.md"],
+      ["quarterly", "diary/2026/2026-Q3.md"],
+      ["yearly", "diary/2026.md"],
+    ] as const;
+
+    for (const [noteType, path] of examples) {
+      expect(createPeriodicNotePathPreview(
+        { year: 2026, month: 7, day: 24 },
+        noteType,
+        getPeriodicNotePathExample(noteType),
+        options,
+      )).toEqual({ status: "valid", path });
+    }
   });
 
   it("previews Sunday-start ISO weeks with the canonical cross-year anchor", () => {
