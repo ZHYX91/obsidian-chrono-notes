@@ -216,7 +216,7 @@ function createFixtureFiles(settingsSchemaVersion) {
       quarterNameMode: "number",
       fontSizeMode: "immutable",
       immutableFontSizeFactor: 10,
-      todoAnnotationMode: "hole",
+      showTaskProgress: true,
       interceptPropertyDateClicks: true,
       showHoverPreview: true,
       showNoteNavbar: true,

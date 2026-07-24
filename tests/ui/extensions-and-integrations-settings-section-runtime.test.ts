@@ -19,6 +19,16 @@ vi.mock("obsidian", () => ({
       return this;
     }
 
+    addDropdown(configure: (dropdown: unknown) => void): this {
+      const dropdown = {
+        addOption: vi.fn(() => dropdown),
+        setValue: vi.fn(() => dropdown),
+        onChange: vi.fn(() => dropdown),
+      };
+      configure(dropdown);
+      return this;
+    }
+
     addToggle(configure: (toggle: unknown) => void): this {
       const toggle = {
         setValue: vi.fn(() => toggle),
@@ -64,10 +74,10 @@ vi.mock("../../src/ui/settings/settings-presentation", () => ({
 }));
 
 import { createDefaultSettings } from "../../src/shared/settings";
-import { renderIntegrationsSettingsSection } from "../../src/ui/settings/integrations-settings-section";
+import { renderExtensionsAndIntegrationsSettingsSection } from "../../src/ui/settings/extensions-and-integrations-settings-section";
 import type { SettingsSectionContext } from "../../src/ui/settings/settings-section-context";
 
-describe("integrations settings runtime", () => {
+describe("extensions and integrations settings runtime", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.toggleChange = null;
@@ -95,7 +105,7 @@ describe("integrations settings runtime", () => {
       createDiv: vi.fn(),
     } as unknown as HTMLElement;
 
-    renderIntegrationsSettingsSection(containerEl, context);
+    renderExtensionsAndIntegrationsSettingsSection(containerEl, context);
     const onToggle = mocks.toggleChange;
     if (onToggle === null) throw new Error("Expected the ICS toggle handler.");
     await onToggle(true);

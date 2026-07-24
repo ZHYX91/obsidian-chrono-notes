@@ -40,7 +40,7 @@ describe("settings presentation", () => {
       "外观与视图",
       "周期笔记",
       "区间笔记",
-      "集成",
+      "扩展与集成",
     ]);
     expect(periodicNoteLabel("quarterly", t)).toBe("季度笔记");
   });
@@ -98,13 +98,13 @@ describe("settings presentation", () => {
     expect(chinese).toContain("纯中文文本通常可以直接写");
   });
 
-  it("names three neutral ordered holiday-region slots", () => {
+  it("names three ordered holiday-extension regions", () => {
     const t = createTranslator("zh-CN", "en").t;
 
     expect([
-      t("settings.appearance.holidayRegionSlot1"),
-      t("settings.appearance.holidayRegionSlot2"),
-      t("settings.appearance.holidayRegionSlot3"),
-    ]).toEqual(["地区 1", "地区 2", "地区 3"]);
+      t("settings.extensions.holidayRegionSlot1"),
+      t("settings.extensions.holidayRegionSlot2"),
+      t("settings.extensions.holidayRegionSlot3"),
+    ]).toEqual(["第一个地区", "第二个地区", "第三个地区"]);
   });
 });

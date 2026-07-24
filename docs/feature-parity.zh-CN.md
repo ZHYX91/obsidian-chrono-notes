@@ -10,7 +10,7 @@ translation_status: source
 ## 基础与数据
 
 - [x] 独立插件 ID `chrono-notes`、生产构建、版本化 manifest 和三文件安装产物。
-- [x] schema v15 设置迁移、严格归一化、未知字段剔除和独立默认对象。
+- [x] schema v16 设置迁移、严格归一化、未知字段剔除和独立默认对象。
 - [x] UTF-8 BOM、LF/CRLF/CR/混合换行、EOF frontmatter、`---`/`...`、YAML 错误与资源上限解析。
 - [x] NoteIndex 统一拥有笔记存在性、规范文档、预览、任务、统计和区间事实。
 - [x] Vault create/modify/rename/delete、逐路径修订、生命周期、读取去重、初始 staging、错误快照和旧结果屏障。
@@ -66,9 +66,9 @@ translation_status: source
 
 ## 设置、国际化与可访问性
 
-- [x] 常规、外观与视图、周期笔记、区间笔记、集成五个原生设置页签。
+- [x] 常规、外观与视图、周期笔记、区间笔记、扩展与集成五个原生设置页签。
 - [x] English、简体中文、繁体中文、阿拉伯语、波斯语、希伯来语、阿姆哈拉语和印地语完整消息目录及 `auto` 解析；阿拉伯语、波斯语和希伯来语使用 RTL 根方向。
-- [x] 字体跟随 Obsidian、侧栏离散分档或固定倍率；季度名称与任务标注模式。
+- [x] 字体跟随 Obsidian、侧栏离散分档或固定倍率；季度名称，以及从属于笔记状态的待办进度开关。
 - [x] Vault 路径手动输入、完整预览、错误反馈、共享候选目录和 bounded top-100 模糊建议。
 - [x] current、selected、focus 正交状态、非颜色状态文字、可见焦点、ARIA 名称和粗指针目标。
 - [x] 首次使用引导和 Properties 日期打开日记开关。

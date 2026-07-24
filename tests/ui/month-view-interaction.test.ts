@@ -427,7 +427,7 @@ describe("MonthView interactions", () => {
       heatmapEnabled: false,
       showHoverPreview: true,
       showNoteIndicators: true,
-      taskAnnotationMode: "hole",
+      showTaskProgress: true,
       rangeCreationConfigured: true,
       longPress,
       preview: previewController(),

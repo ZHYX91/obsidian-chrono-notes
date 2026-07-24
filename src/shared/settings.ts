@@ -6,7 +6,7 @@ import {
 import type { StatisticDisplayDimension } from "../core/statistics/heatmap";
 import type { CalendarOverlayId } from "../core/calendar/calendar-overlay";
 
-export const SETTINGS_SCHEMA_VERSION = 15;
+export const SETTINGS_SCHEMA_VERSION = 16;
 
 export type PluginLocale =
   | "auto"
@@ -22,7 +22,6 @@ export type CalendarOverlay = CalendarOverlayId;
 export type HolidayRegion = "cn" | "sg";
 export type QuarterNameMode = "number" | "chinese";
 export type FontSizeMode = "follow-obsidian" | "follow-widget" | "immutable";
-export type TodoAnnotationMode = "none" | "color" | "hole";
 export type TemplateEngine = "builtin" | "templater";
 export type RangeNoteScanScope = "range-folder" | "custom-folder" | "entire-vault";
 export type { WeekStartDay } from "../core/periodic/periodic-date";
@@ -57,7 +56,7 @@ export interface ChronoNotesSettings {
   quarterNameMode: QuarterNameMode;
   fontSizeMode: FontSizeMode;
   immutableFontSizeFactor: number;
-  todoAnnotationMode: TodoAnnotationMode;
+  showTaskProgress: boolean;
   interceptPropertyDateClicks: boolean;
   showHoverPreview: boolean;
   showNoteNavbar: boolean;
@@ -85,7 +84,7 @@ export const DEFAULT_SETTINGS: Readonly<ChronoNotesSettings> = {
   quarterNameMode: "number",
   fontSizeMode: "immutable",
   immutableFontSizeFactor: 10,
-  todoAnnotationMode: "hole",
+  showTaskProgress: true,
   interceptPropertyDateClicks: false,
   showHoverPreview: true,
   showNoteNavbar: true,
@@ -153,7 +152,7 @@ const SETTINGS_MIGRATIONS: Readonly<Record<number, SettingsMigration>> = {
     immutableFontSizeFactor: DEFAULT_SETTINGS.immutableFontSizeFactor,
   }),
   11: (settings) => addSettingsFields(settings, 12, {
-    todoAnnotationMode: DEFAULT_SETTINGS.todoAnnotationMode,
+    todoAnnotationMode: "hole",
   }),
   12: (settings) => addSettingsFields(settings, 13, {
     interceptPropertyDateClicks: DEFAULT_SETTINGS.interceptPropertyDateClicks,
@@ -167,6 +166,18 @@ const SETTINGS_MIGRATIONS: Readonly<Record<number, SettingsMigration>> = {
       confirmIntervalNoteCreation: DEFAULT_SETTINGS.confirmIntervalNoteCreation,
     });
     delete migrated.confirmBeforeCreate;
+    return migrated;
+  },
+  15: (settings) => {
+    const legacyMode = settings.todoAnnotationMode;
+    const migrated = addSettingsFields(settings, 16, {
+      showTaskProgress: legacyMode === "none"
+        ? false
+        : legacyMode === "color" || legacyMode === "hole"
+          ? true
+          : DEFAULT_SETTINGS.showTaskProgress,
+    });
+    delete migrated.todoAnnotationMode;
     return migrated;
   },
 };
@@ -221,9 +232,10 @@ export function normalizeSettings(value: unknown): ChronoNotesSettings {
       0,
       20,
     ),
-    todoAnnotationMode: isTodoAnnotationMode(value.todoAnnotationMode)
-      ? value.todoAnnotationMode
-      : defaults.todoAnnotationMode,
+    showTaskProgress:
+      typeof value.showTaskProgress === "boolean"
+        ? value.showTaskProgress
+        : defaults.showTaskProgress,
     interceptPropertyDateClicks:
       typeof value.interceptPropertyDateClicks === "boolean"
         ? value.interceptPropertyDateClicks
@@ -313,10 +325,6 @@ export function isQuarterNameMode(value: unknown): value is QuarterNameMode {
 
 export function isFontSizeMode(value: unknown): value is FontSizeMode {
   return value === "follow-obsidian" || value === "follow-widget" || value === "immutable";
-}
-
-export function isTodoAnnotationMode(value: unknown): value is TodoAnnotationMode {
-  return value === "none" || value === "color" || value === "hole";
 }
 
 export function isTemplateEngine(value: unknown): value is TemplateEngine {

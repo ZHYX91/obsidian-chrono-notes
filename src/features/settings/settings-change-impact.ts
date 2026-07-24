@@ -39,7 +39,7 @@ export function getSettingsChangeImpact(
       previous.quarterNameMode !== next.quarterNameMode ||
       previous.fontSizeMode !== next.fontSizeMode ||
       previous.immutableFontSizeFactor !== next.immutableFontSizeFactor ||
-      previous.todoAnnotationMode !== next.todoAnnotationMode ||
+      previous.showTaskProgress !== next.showTaskProgress ||
       previous.showHoverPreview !== next.showHoverPreview ||
       previous.statisticDisplayDimension !== next.statisticDisplayDimension ||
       previous.statisticValueStep !== next.statisticValueStep ||
@@ -71,7 +71,7 @@ function sameSettings(
     left.quarterNameMode === right.quarterNameMode &&
     left.fontSizeMode === right.fontSizeMode &&
     left.immutableFontSizeFactor === right.immutableFontSizeFactor &&
-    left.todoAnnotationMode === right.todoAnnotationMode &&
+    left.showTaskProgress === right.showTaskProgress &&
     left.interceptPropertyDateClicks === right.interceptPropertyDateClicks &&
     left.showHoverPreview === right.showHoverPreview &&
     left.showNoteNavbar === right.showNoteNavbar &&

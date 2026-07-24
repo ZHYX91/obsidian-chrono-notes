@@ -177,7 +177,7 @@ describe("YearView interactions", () => {
       heatmap: true,
       showHoverPreview: true,
       showNoteIndicators: true,
-      taskAnnotationMode: "hole",
+      showTaskProgress: true,
       quarterNameMode: "number",
       selection: { kind: "month", date: JANUARY_1 },
       monthSelectionRequest: 0,

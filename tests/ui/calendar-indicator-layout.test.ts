@@ -469,12 +469,11 @@ describe("calendar indicator layout", () => {
     );
   });
 
-  it("uses distinct in-slot color and hollow treatments for unfinished tasks", () => {
+  it("uses one outlined in-slot treatment for unfinished task progress", () => {
     expect(styles).toMatch(
-      /\.chrono-notes-calendar-indicator\.is-progress\.is-unfinished-color\s*\{[^}]*background:/s,
+      /\.chrono-notes-calendar-indicator\.is-progress\.is-unfinished\s*\{[^}]*background:\s*transparent;[^}]*border-color:/s,
     );
-    expect(styles).toMatch(
-      /\.chrono-notes-calendar-indicator\.is-progress\.is-unfinished-hole\s*\{[^}]*background:\s*transparent;[^}]*border-color:/s,
-    );
+    expect(styles).not.toContain("is-unfinished-color");
+    expect(styles).not.toContain("is-unfinished-hole");
   });
 });

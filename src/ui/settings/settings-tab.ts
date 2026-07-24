@@ -3,7 +3,9 @@ import { PluginSettingTab, type App } from "obsidian";
 import { createTranslator, type Translator } from "../../shared/i18n";
 import { renderAppearanceSettingsSection } from "./appearance-settings-section";
 import { renderGeneralSettingsSection } from "./general-settings-section";
-import { renderIntegrationsSettingsSection } from "./integrations-settings-section";
+import {
+  renderExtensionsAndIntegrationsSettingsSection,
+} from "./extensions-and-integrations-settings-section";
 import { renderPeriodicSettingsSection } from "./periodic-settings-section";
 import { renderRangeSettingsSection } from "./range-settings-section";
 import {
@@ -84,7 +86,7 @@ export class ChronoNotesSettingTab extends PluginSettingTab {
         renderRangeSettingsSection(panelEl, sectionContext);
         break;
       case "integrations":
-        renderIntegrationsSettingsSection(panelEl, sectionContext);
+        renderExtensionsAndIntegrationsSettingsSection(panelEl, sectionContext);
         break;
       case "general":
       default:

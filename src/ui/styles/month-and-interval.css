@@ -899,13 +899,7 @@ body.is-mobile
   width: 30px;
 }
 
-.chrono-notes-calendar-indicator.is-progress.is-unfinished-color {
-  background: color-mix(in srgb, var(--text-warning) 22%, var(--background-primary));
-  border-color: var(--text-warning);
-  color: var(--text-warning);
-}
-
-.chrono-notes-calendar-indicator.is-progress.is-unfinished-hole {
+.chrono-notes-calendar-indicator.is-progress.is-unfinished {
   background: transparent;
   border-color: var(--text-warning);
   color: var(--text-warning);

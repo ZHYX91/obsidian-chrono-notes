@@ -142,14 +142,12 @@ describe("settings", () => {
     expect(normalizeSettings({ immutableFontSizeFactor: "12" }).immutableFontSizeFactor).toBe(10);
   });
 
-  it("normalizes all legacy todo annotation modes and falls back to hole", () => {
-    expect(createDefaultSettings().todoAnnotationMode).toBe("hole");
-    for (const todoAnnotationMode of ["none", "color", "hole"] as const) {
-      expect(normalizeSettings({ todoAnnotationMode }).todoAnnotationMode)
-        .toBe(todoAnnotationMode);
-    }
-    expect(normalizeSettings({ todoAnnotationMode: "progress" }).todoAnnotationMode).toBe("hole");
-    expect(normalizeSettings({ todoAnnotationMode: null }).todoAnnotationMode).toBe("hole");
+  it("defaults task progress on and accepts only explicit boolean values", () => {
+    expect(createDefaultSettings().showTaskProgress).toBe(true);
+    expect(normalizeSettings({ showTaskProgress: true }).showTaskProgress).toBe(true);
+    expect(normalizeSettings({ showTaskProgress: false }).showTaskProgress).toBe(false);
+    expect(normalizeSettings({ showTaskProgress: "false" }).showTaskProgress).toBe(true);
+    expect(normalizeSettings({ showTaskProgress: null }).showTaskProgress).toBe(true);
   });
 
   it("defaults Properties date interception off and accepts only booleans", () => {
@@ -375,18 +373,38 @@ describe("settings", () => {
     });
   });
 
-  it("adds the legacy-compatible todo annotation default at schema 12", () => {
+  it("adds the legacy todo annotation default and converts it at schema 16", () => {
     expect(migrateSettings({ schemaVersion: 11 })).toMatchObject({
       schemaVersion: SETTINGS_SCHEMA_VERSION,
-      todoAnnotationMode: "hole",
+      showTaskProgress: true,
     });
     expect(migrateSettings({
       schemaVersion: 11,
       todoAnnotationMode: "color",
     })).toMatchObject({
       schemaVersion: SETTINGS_SCHEMA_VERSION,
-      todoAnnotationMode: "color",
+      showTaskProgress: true,
     });
+  });
+
+  it.each([
+    ["none", false],
+    ["color", true],
+    ["hole", true],
+  ] as const)("migrates legacy task annotation %s to task progress %s", (
+    todoAnnotationMode,
+    showTaskProgress,
+  ) => {
+    const migrated = migrateSettings({
+      schemaVersion: 15,
+      todoAnnotationMode,
+    });
+
+    expect(migrated).toMatchObject({
+      schemaVersion: SETTINGS_SCHEMA_VERSION,
+      showTaskProgress,
+    });
+    expect(migrated).not.toHaveProperty("todoAnnotationMode");
   });
 
   it("adds disabled Properties date interception at schema 13", () => {

@@ -17,8 +17,8 @@ const rangeSectionSource = readFileSync(
   new URL("../../src/ui/settings/range-settings-section.ts", import.meta.url),
   "utf8",
 );
-const integrationsSectionSource = readFileSync(
-  new URL("../../src/ui/settings/integrations-settings-section.ts", import.meta.url),
+const extensionsAndIntegrationsSectionSource = readFileSync(
+  new URL("../../src/ui/settings/extensions-and-integrations-settings-section.ts", import.meta.url),
   "utf8",
 );
 const settingsSaveCoordinatorSource = readFileSync(
@@ -70,7 +70,9 @@ describe("periodic note settings structure", () => {
     expect(periodicSectionSource).toContain('setAttribute("aria-required", "true")');
     expect(periodicSectionSource.match(/preparePathInput\(text\.inputEl\)/g)).toHaveLength(2);
     expect(rangeSectionSource.match(/preparePathInput\(text\.inputEl\)/g)).toHaveLength(2);
-    expect(integrationsSectionSource.match(/preparePathInput\(text\.inputEl\)/g)).toHaveLength(1);
+    expect(
+      extensionsAndIntegrationsSectionSource.match(/preparePathInput\(text\.inputEl\)/g),
+    ).toHaveLength(1);
     expect(pathInputSource).toContain('setAttribute("autocapitalize", "off")');
     expect(pathInputSource).toContain('setAttribute("autocomplete", "off")');
     expect(pathInputSource).toContain("inputEl.spellcheck = false");
@@ -88,7 +90,7 @@ describe("periodic note settings structure", () => {
       appearanceSectionSource,
       periodicSectionSource,
       rangeSectionSource,
-      integrationsSectionSource,
+      extensionsAndIntegrationsSectionSource,
     ].join("\n");
     expect(settingsTabSource).toContain("TEXT_SAVE_DELAY_MS = 300");
     expect(textSettingsSource).toContain("context.scheduleSettingsSave()");
@@ -101,7 +103,8 @@ describe("periodic note settings structure", () => {
   });
 
   it("uses full-width range and ICS inputs and keeps the range list action first", () => {
-    const wideInputSettingsSource = `${rangeSectionSource}\n${integrationsSectionSource}`;
+    const wideInputSettingsSource =
+      `${rangeSectionSource}\n${extensionsAndIntegrationsSectionSource}`;
     expect(wideInputSettingsSource.match(/chrono-notes-wide-input-setting/g)).toHaveLength(3);
     expect(rangeSectionSource.indexOf('setName(t("settings.ranges.list"))'))
       .toBeLessThan(rangeSectionSource.indexOf('setName(t("settings.ranges.confirmBeforeCreating"))'));
@@ -112,8 +115,23 @@ describe("periodic note settings structure", () => {
     expect(settingsTabSource).toContain("renderAppearanceSettingsSection(panelEl, sectionContext)");
     expect(settingsTabSource).toContain("renderPeriodicSettingsSection(panelEl, sectionContext)");
     expect(settingsTabSource).toContain("renderRangeSettingsSection(panelEl, sectionContext)");
-    expect(settingsTabSource).toContain("renderIntegrationsSettingsSection(panelEl, sectionContext)");
+    expect(settingsTabSource).toContain("renderExtensionsAndIntegrationsSettingsSection(panelEl, sectionContext)");
     expect(settingsTabSource).not.toContain("new Setting(");
+  });
+
+  it("keeps extensions out of appearance and orders built-in before external data", () => {
+    expect(appearanceSectionSource).not.toContain("addCalendarOverlaySlot");
+    expect(appearanceSectionSource).not.toContain("addHolidayRegionSlot");
+    expect(extensionsAndIntegrationsSectionSource.indexOf(
+      't("settings.extensions.calendarExtensions")',
+    )).toBeLessThan(extensionsAndIntegrationsSectionSource.indexOf(
+      't("settings.extensions.holidayExtensions")',
+    ));
+    expect(extensionsAndIntegrationsSectionSource.indexOf(
+      't("settings.extensions.holidayExtensions")',
+    )).toBeLessThan(extensionsAndIntegrationsSectionSource.indexOf(
+      't("settings.ics.title")',
+    ));
   });
 
   it("isolates post-save consumers behind the shared listener boundary", () => {

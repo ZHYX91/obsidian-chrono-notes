@@ -79,7 +79,7 @@ describe("acceptance Vault lifecycle", () => {
       ics: { sources: ["Fixtures/acceptance.ics"] },
       locale: "en",
       periodicNotes: { daily: { pattern: "'Daily'/yyyy-MM-dd" } },
-      schemaVersion: 15,
+      schemaVersion: 16,
     });
     expect(communityPlugins).toEqual(["chrono-notes"]);
     expect(ics).toContain("SUMMARY:Team offsite");
@@ -226,7 +226,7 @@ async function createHarness(): Promise<{
   await writeFile(path.join(artifactRoot, "styles.css"), "/* styles */\n", "utf8");
   await writeFile(
     path.join(settingsRoot, "settings.ts"),
-    "export const SETTINGS_SCHEMA_VERSION = 15;\n",
+    "export const SETTINGS_SCHEMA_VERSION = 16;\n",
     "utf8",
   );
   return { acceptanceRoot, sourceRoot };

@@ -22,7 +22,6 @@ import {
 import type { WeekCalendarQuery } from "../../features/calendar/week-calendar-query";
 import type { NoteOpenTarget } from "../../features/periodic/periodic-note-commands";
 import type { Translator } from "../../shared/i18n";
-import type { TodoAnnotationMode } from "../../shared/settings";
 import { formatNoteTaskProgress } from "../note-task-progress-presentation";
 import {
   CalendarDayCalendarDetails,
@@ -57,7 +56,7 @@ export interface WeekViewProps {
   readonly today: LocalDate;
   readonly showHoverPreview: boolean;
   readonly showNoteIndicators: boolean;
-  readonly taskAnnotationMode: TodoAnnotationMode;
+  readonly showTaskProgress: boolean;
   readonly activePreviewKey: string | null;
   readonly previewId: string;
   readonly onSelectDate: (date: LocalDate) => void;
@@ -100,7 +99,7 @@ export function WeekView({
   today,
   showHoverPreview,
   showNoteIndicators,
-  taskAnnotationMode,
+  showTaskProgress,
   activePreviewKey,
   previewId,
   onSelectDate,
@@ -264,7 +263,7 @@ export function WeekView({
                 <CalendarDayStatusRow
                   day={day}
                   showNoteIndicators={showNoteIndicators}
-                  taskAnnotationMode={taskAnnotationMode}
+                  showTaskProgress={showTaskProgress}
                   translator={translator}
                 />
                 <span className="chrono-notes-week-day-name">
@@ -360,7 +359,7 @@ export function WeekView({
               show={showNoteIndicators}
               noteState={query.weeklyNote.noteState}
               statistics={query.weeklyNote.statistics}
-              taskAnnotationMode={taskAnnotationMode}
+              showTaskProgress={showTaskProgress}
             />
             <span>{messages.weeklyNote}</span>
           </span>

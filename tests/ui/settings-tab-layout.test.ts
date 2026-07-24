@@ -13,7 +13,7 @@ const tabs: readonly SettingsTabDefinition[] = [
   { id: "appearance", label: "Appearance" },
   { id: "periodic", label: "Periodic notes" },
   { id: "ranges", label: "Range notes" },
-  { id: "integrations", label: "Integrations" },
+  { id: "integrations", label: "Extensions & integrations" },
 ];
 
 describe("createSettingsTabLayout", () => {

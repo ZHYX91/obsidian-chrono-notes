@@ -11,7 +11,6 @@ import {
 import type { MonthCalendarDay } from "../../features/calendar/month-calendar-query";
 import type { NoteOpenTarget } from "../../features/periodic/periodic-note-commands";
 import type { Translator } from "../../shared/i18n";
-import type { TodoAnnotationMode } from "../../shared/settings";
 import {
   CalendarDayCalendarDetails,
   CalendarDayEvents,
@@ -36,7 +35,7 @@ export interface MonthDayCellProps {
   readonly heatmapEnabled: boolean;
   readonly showHoverPreview: boolean;
   readonly showNoteIndicators: boolean;
-  readonly taskAnnotationMode: TodoAnnotationMode;
+  readonly showTaskProgress: boolean;
   readonly rangePreview: MonthRangeDragPreview | null;
   readonly activePreviewKey: string | null;
   readonly previewId: string;
@@ -80,7 +79,7 @@ export function MonthDayCell({
   heatmapEnabled,
   showHoverPreview,
   showNoteIndicators,
-  taskAnnotationMode,
+  showTaskProgress,
   rangePreview,
   activePreviewKey,
   previewId,
@@ -169,7 +168,7 @@ export function MonthDayCell({
               <CalendarDayStatusRow
                 day={cell}
                 showNoteIndicators={showNoteIndicators}
-                taskAnnotationMode={taskAnnotationMode}
+                showTaskProgress={showTaskProgress}
                 translator={translator}
               />
               <span className="chrono-notes-day-number">{cell.date.day}</span>

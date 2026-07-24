@@ -816,7 +816,7 @@ export function CalendarApp({
           heatmap={settings.yearViewHeatmap}
           showHoverPreview={settings.showHoverPreview}
           showNoteIndicators={settings.showNoteIndicators}
-          taskAnnotationMode={settings.todoAnnotationMode}
+          showTaskProgress={settings.showTaskProgress}
           quarterNameMode={settings.quarterNameMode}
           weekStartDay={settings.weekStartDay}
           selection={{ kind: selectionKind, date: selected }}
@@ -839,7 +839,7 @@ export function CalendarApp({
           today={today}
           showHoverPreview={settings.showHoverPreview}
           showNoteIndicators={settings.showNoteIndicators}
-          taskAnnotationMode={settings.todoAnnotationMode}
+          showTaskProgress={settings.showTaskProgress}
           activePreviewKey={activePreviewKey}
           previewId={previewId}
           onSelectDate={(date) => {
@@ -869,7 +869,7 @@ export function CalendarApp({
           heatmapEnabled={heatmapEnabled}
           showHoverPreview={settings.showHoverPreview}
           showNoteIndicators={settings.showNoteIndicators}
-          taskAnnotationMode={settings.todoAnnotationMode}
+          showTaskProgress={settings.showTaskProgress}
           rangeCreationConfigured={rangeCreationConfigured}
           longPress={longPress}
           preview={{

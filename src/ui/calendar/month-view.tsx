@@ -24,7 +24,6 @@ import {
 import type { MonthCalendarQuery } from "../../features/calendar/month-calendar-query";
 import type { NoteOpenTarget } from "../../features/periodic/periodic-note-commands";
 import type { Translator } from "../../shared/i18n";
-import type { TodoAnnotationMode } from "../../shared/settings";
 import { formatNoteTaskProgress } from "../note-task-progress-presentation";
 import { useHostEnvironment } from "../host-environment";
 import { formatCalendarNoteState } from "./calendar-note-presentation";
@@ -55,7 +54,7 @@ export interface MonthViewProps {
   readonly heatmapEnabled: boolean;
   readonly showHoverPreview: boolean;
   readonly showNoteIndicators: boolean;
-  readonly taskAnnotationMode: TodoAnnotationMode;
+  readonly showTaskProgress: boolean;
   readonly rangeCreationConfigured: boolean;
   readonly longPress: LongPressGesture;
   readonly preview: Readonly<{
@@ -95,7 +94,7 @@ export function MonthView({
   heatmapEnabled,
   showHoverPreview,
   showNoteIndicators,
-  taskAnnotationMode,
+  showTaskProgress,
   rangeCreationConfigured,
   longPress,
   preview,
@@ -262,7 +261,7 @@ export function MonthView({
                   )
                 }
                 showNoteIndicators={!heatmapEnabled && showNoteIndicators}
-                taskAnnotationMode={taskAnnotationMode}
+                showTaskProgress={showTaskProgress}
                 ariaLabel={t("calendar.weekLabel", {
                   week: week.weekNumber,
                   weekYear: week.weekYear,
@@ -316,7 +315,7 @@ export function MonthView({
                     heatmapEnabled={heatmapEnabled}
                     showHoverPreview={showHoverPreview}
                     showNoteIndicators={showNoteIndicators}
-                    taskAnnotationMode={taskAnnotationMode}
+                    showTaskProgress={showTaskProgress}
                     rangePreview={rangePreview}
                     activePreviewKey={activePreviewKey}
                     previewId={previewId}

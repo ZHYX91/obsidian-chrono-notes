@@ -1,7 +1,6 @@
 import type { IcsEventOccurrence } from "../../core/calendar/ics-calendar";
 import type { CalendarDay } from "../../features/calendar/calendar-day-query";
 import type { Translator } from "../../shared/i18n";
-import type { TodoAnnotationMode } from "../../shared/settings";
 import { CalendarNoteIndicator } from "./calendar-note-indicator";
 import { formatRegionalMarkerLabel } from "./calendar-day-presentation";
 import { formatCalendarIcsEventLabel } from "./calendar-ics-presentation";
@@ -9,14 +8,14 @@ import { formatCalendarIcsEventLabel } from "./calendar-ics-presentation";
 export interface CalendarDayStatusRowProps {
   readonly day: CalendarDay;
   readonly showNoteIndicators: boolean;
-  readonly taskAnnotationMode: TodoAnnotationMode;
+  readonly showTaskProgress: boolean;
   readonly translator: Translator;
 }
 
 export function CalendarDayStatusRow({
   day,
   showNoteIndicators,
-  taskAnnotationMode,
+  showTaskProgress,
   translator,
 }: CalendarDayStatusRowProps) {
   const regionalMarker =
@@ -37,7 +36,7 @@ export function CalendarDayStatusRow({
           show={showNoteIndicators}
           noteState={day.noteState}
           statistics={day.statistics}
-          taskAnnotationMode={taskAnnotationMode}
+          showTaskProgress={showTaskProgress}
         />
       </span>
       {regionalMarker === null ? null : (

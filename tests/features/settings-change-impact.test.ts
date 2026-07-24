@@ -34,7 +34,7 @@ describe("getSettingsChangeImpact", () => {
   it("routes calendar appearance and periodic path changes precisely", () => {
     const previous = createDefaultSettings();
     const appearance = createDefaultSettings();
-    appearance.todoAnnotationMode = "color";
+    appearance.showTaskProgress = false;
     expect(getSettingsChangeImpact(previous, appearance)).toMatchObject({
       calendar: true,
       navbar: false,

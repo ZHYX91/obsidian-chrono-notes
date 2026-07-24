@@ -2,7 +2,6 @@ import type { KeyboardEvent, MouseEvent } from "react";
 
 import type { MonthCalendarWeek } from "../../features/calendar/month-calendar-query";
 import type { NoteOpenTarget } from "../../features/periodic/periodic-note-commands";
-import type { TodoAnnotationMode } from "../../shared/settings";
 import { CalendarNoteIndicator } from "./calendar-note-indicator";
 import { bindLongPress, type LongPressGesture } from "./long-press";
 
@@ -11,7 +10,7 @@ export interface MonthWeekNumberProps {
   readonly current: boolean;
   readonly selected: boolean;
   readonly showNoteIndicators: boolean;
-  readonly taskAnnotationMode: TodoAnnotationMode;
+  readonly showTaskProgress: boolean;
   readonly ariaLabel: string;
   readonly longPress: LongPressGesture;
   readonly onSelect: () => void;
@@ -24,7 +23,7 @@ export function MonthWeekNumber({
   current,
   selected,
   showNoteIndicators,
-  taskAnnotationMode,
+  showTaskProgress,
   ariaLabel,
   longPress,
   onSelect,
@@ -65,7 +64,7 @@ export function MonthWeekNumber({
               show
               noteState={note.noteState}
               statistics={note.statistics}
-              taskAnnotationMode={taskAnnotationMode}
+              showTaskProgress={showTaskProgress}
             />
           </span>
         ) : null}

@@ -295,7 +295,7 @@ function renderWeek(
     today,
     showHoverPreview: true,
     showNoteIndicators: true,
-    taskAnnotationMode: "hole",
+    showTaskProgress: true,
     activePreviewKey: null,
     previewId: "preview",
     onSelectDate: () => undefined,

@@ -57,7 +57,7 @@ describe("calendar day content", () => {
     const markup = renderToStaticMarkup(createElement(CalendarDayStatusRow, {
       day,
       showNoteIndicators: true,
-      taskAnnotationMode: "hole",
+      showTaskProgress: true,
       translator: createTranslator("en", "en"),
     }));
 
@@ -77,7 +77,7 @@ describe("calendar day content", () => {
     const markup = renderToStaticMarkup(createElement(CalendarDayStatusRow, {
       day,
       showNoteIndicators: true,
-      taskAnnotationMode: "hole",
+      showTaskProgress: true,
       translator: createTranslator("ar", "ar"),
     }));
 

@@ -32,10 +32,7 @@ import {
 } from "../../features/calendar/indexed-periodic-note";
 import type { NoteOpenTarget } from "../../features/periodic/periodic-note-commands";
 import type { Translator } from "../../shared/i18n";
-import type {
-  QuarterNameMode,
-  TodoAnnotationMode,
-} from "../../shared/settings";
+import type { QuarterNameMode } from "../../shared/settings";
 import { formatShortMonthLabels } from "../date-presentation";
 import { useHostEnvironment } from "../host-environment";
 import { CalendarNoteIndicator } from "./calendar-note-indicator";
@@ -74,7 +71,7 @@ export interface YearViewProps {
   readonly heatmap: boolean;
   readonly showHoverPreview: boolean;
   readonly showNoteIndicators: boolean;
-  readonly taskAnnotationMode: TodoAnnotationMode;
+  readonly showTaskProgress: boolean;
   readonly quarterNameMode: QuarterNameMode;
   readonly weekStartDay: WeekStartDay;
   readonly selection: Readonly<{
@@ -104,7 +101,7 @@ export function YearView({
   heatmap,
   showHoverPreview,
   showNoteIndicators,
-  taskAnnotationMode,
+  showTaskProgress,
   quarterNameMode,
   weekStartDay,
   selection,
@@ -281,7 +278,7 @@ export function YearView({
           monthLabels={monthLabels}
           today={today}
           showNoteIndicators={showNoteIndicators}
-          taskAnnotationMode={taskAnnotationMode}
+          showTaskProgress={showTaskProgress}
           quarterNameMode={quarterNameMode}
           weekStartDay={weekStartDay}
           heatmap={heatmap}
@@ -322,7 +319,7 @@ interface LazyQuarterProps {
   readonly monthLabels: readonly string[];
   readonly today: LocalDate;
   readonly showNoteIndicators: boolean;
-  readonly taskAnnotationMode: TodoAnnotationMode;
+  readonly showTaskProgress: boolean;
   readonly quarterNameMode: QuarterNameMode;
   readonly weekStartDay: WeekStartDay;
   readonly heatmap: boolean;
@@ -394,7 +391,7 @@ function SummaryQuarter({
   translator,
   monthLabels,
   showNoteIndicators,
-  taskAnnotationMode,
+  showTaskProgress,
   quarterNameMode,
   today,
   selection,
@@ -414,7 +411,7 @@ function SummaryQuarter({
         )}
         translator={translator}
         showNoteIndicators={showNoteIndicators}
-        taskAnnotationMode={taskAnnotationMode}
+        showTaskProgress={showTaskProgress}
         today={today}
         selected={isSelected(selection, "quarter", quarter.summary.date)}
         onSelect={onSelect}
@@ -435,7 +432,7 @@ function SummaryQuarter({
             selectionDetail={summarySelection.detail}
             translator={translator}
             showNoteIndicators={showNoteIndicators}
-            taskAnnotationMode={taskAnnotationMode}
+            showTaskProgress={showTaskProgress}
             today={today}
             selected={summarySelection.selected}
             onSelect={onSelect}
@@ -454,7 +451,7 @@ function PeriodButton({
   selectionDetail,
   translator,
   showNoteIndicators,
-  taskAnnotationMode,
+  showTaskProgress,
   today,
   selected,
   onSelect,
@@ -466,7 +463,7 @@ function PeriodButton({
   selectionDetail?: string | undefined;
   translator: Translator;
   showNoteIndicators: boolean;
-  taskAnnotationMode: TodoAnnotationMode;
+  showTaskProgress: boolean;
   today: LocalDate;
   selected: boolean;
   onSelect: YearViewProps["onSelect"];
@@ -533,7 +530,7 @@ function PeriodButton({
             show
             noteState={summary.noteState}
             statistics={summary.statistics}
-            taskAnnotationMode={taskAnnotationMode}
+            showTaskProgress={showTaskProgress}
           />
         </span>
       ) : null}
@@ -547,7 +544,7 @@ function HeatmapQuarter(props: LazyQuarterProps) {
     quarter,
     translator,
     monthLabels,
-    taskAnnotationMode,
+    showTaskProgress,
     quarterNameMode,
     today,
     selection,
@@ -574,7 +571,7 @@ function HeatmapQuarter(props: LazyQuarterProps) {
         )}
         translator={translator}
         showNoteIndicators={false}
-        taskAnnotationMode={taskAnnotationMode}
+        showTaskProgress={showTaskProgress}
         today={today}
         selected={isSelected(selection, "quarter", quarter.summary.date)}
         onSelect={onSelect}
@@ -589,7 +586,7 @@ function HeatmapQuarter(props: LazyQuarterProps) {
               label={monthLabels[month.month - 1] ?? ""}
               translator={translator}
               showNoteIndicators={false}
-              taskAnnotationMode={taskAnnotationMode}
+              showTaskProgress={showTaskProgress}
               today={today}
               selected={isSelected(selection, "month", month.summary.date)}
               onSelect={onSelect}

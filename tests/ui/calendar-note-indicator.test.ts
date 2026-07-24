@@ -28,20 +28,20 @@ describe("CalendarNoteIndicator", () => {
       show: true,
       noteState: "missing",
       statistics: statistics(0, 0),
-      taskAnnotationMode: "hole",
+      showTaskProgress: true,
     }))
       .toContain("is-top is-state");
     expect(renderIndicator({
       show: false,
       noteState: "missing",
       statistics: statistics(0, 0),
-      taskAnnotationMode: "hole",
+      showTaskProgress: true,
     })).toBe("");
     expect(renderIndicator({
       show: true,
       noteState: "not-configured",
       statistics: statistics(0, 0),
-      taskAnnotationMode: "hole",
+      showTaskProgress: true,
     })).toBe("");
   });
 
@@ -50,11 +50,11 @@ describe("CalendarNoteIndicator", () => {
       show: true,
       noteState: "has-body",
       statistics: statistics(1, 4),
-      taskAnnotationMode: "hole",
+      showTaskProgress: true,
     });
 
     expect(markup).toContain("is-top is-progress is-horizontal");
-    expect(markup).toContain("is-unfinished-hole");
+    expect(markup).toContain("is-unfinished");
     expect(markup).toContain("width:25%");
     expect(markup).toContain("data-progress-text=\"1/4\"");
     expect(markup).toContain("chrono-notes-calendar-indicator-fill");
@@ -62,32 +62,24 @@ describe("CalendarNoteIndicator", () => {
     expect(markup).not.toContain(">1/4<");
   });
 
-  it("supports disabled, color, and hole treatments without changing task data", () => {
+  it("falls back to note state when task progress is disabled", () => {
     const disabled = renderIndicator({
       show: true,
       noteState: "has-body",
       statistics: statistics(0, 4),
-      taskAnnotationMode: "none",
+      showTaskProgress: false,
     });
-    const color = renderIndicator({
+    const enabled = renderIndicator({
       show: true,
       noteState: "has-body",
       statistics: statistics(0, 4),
-      taskAnnotationMode: "color",
-    });
-    const hole = renderIndicator({
-      show: true,
-      noteState: "has-body",
-      statistics: statistics(0, 4),
-      taskAnnotationMode: "hole",
+      showTaskProgress: true,
     });
 
     expect(disabled).toContain("is-top is-state");
     expect(disabled).not.toContain("is-progress");
-    expect(color).toContain("is-unfinished-color");
-    expect(color).toContain("data-progress-text=\"0/4\"");
-    expect(hole).toContain("is-unfinished-hole");
-    expect(hole).toContain("data-progress-text=\"0/4\"");
+    expect(enabled).toContain("is-unfinished");
+    expect(enabled).toContain("data-progress-text=\"0/4\"");
   });
 
   it("does not mark completed tasks as unfinished", () => {
@@ -95,7 +87,7 @@ describe("CalendarNoteIndicator", () => {
       show: true,
       noteState: "has-body",
       statistics: statistics(4, 4),
-      taskAnnotationMode: "color",
+      showTaskProgress: true,
     });
     expect(markup).toContain("is-complete");
     expect(markup).not.toContain("is-unfinished");
@@ -106,7 +98,7 @@ describe("CalendarNoteIndicator", () => {
       show: true,
       noteState: "has-body",
       statistics: statistics(9, 4),
-      taskAnnotationMode: "hole",
+      showTaskProgress: true,
     });
     expect(markup).toContain("width:100%");
     expect(markup).toContain("data-progress-text=\"9/4\"");

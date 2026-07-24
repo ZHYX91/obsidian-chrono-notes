@@ -46,8 +46,8 @@ vi.mock("../../src/ui/settings/periodic-settings-section", () => ({
 vi.mock("../../src/ui/settings/range-settings-section", () => ({
   renderRangeSettingsSection: mocks.renderRanges,
 }));
-vi.mock("../../src/ui/settings/integrations-settings-section", () => ({
-  renderIntegrationsSettingsSection: mocks.renderIntegrations,
+vi.mock("../../src/ui/settings/extensions-and-integrations-settings-section", () => ({
+  renderExtensionsAndIntegrationsSettingsSection: mocks.renderIntegrations,
 }));
 
 import type { App } from "obsidian";

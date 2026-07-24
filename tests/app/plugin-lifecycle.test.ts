@@ -647,7 +647,7 @@ describe("ChronoNotesPlugin lifecycle composition", () => {
       expect(refreshIcs).not.toHaveBeenCalled();
       expect(modalHost.getSettingsRevision()).toBe(0);
 
-      plugin.settings.todoAnnotationMode = "color";
+      plugin.settings.showTaskProgress = false;
       await plugin.saveSettings();
       expect(view.refresh).toHaveBeenCalledOnce();
       expect(remainingListener).not.toHaveBeenCalled();
@@ -706,7 +706,7 @@ describe("ChronoNotesPlugin lifecycle composition", () => {
     const navbar = mocks.state.navbarInstances[0];
     if (navbar === undefined) throw new Error("Expected the navbar to be composed.");
 
-    plugin.settings.todoAnnotationMode = "color";
+    plugin.settings.showTaskProgress = false;
     const first = plugin.saveSettings();
     plugin.settings.showNoteNavbar = false;
     const second = plugin.saveSettings();

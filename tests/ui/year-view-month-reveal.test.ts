@@ -90,7 +90,7 @@ describe("year view month reveal", () => {
       heatmap: false,
       showHoverPreview: false,
       showNoteIndicators: true,
-      taskAnnotationMode: "hole",
+      showTaskProgress: true,
       quarterNameMode: "number",
       selection: { kind: "month", date: selected },
       monthSelectionRequest,
