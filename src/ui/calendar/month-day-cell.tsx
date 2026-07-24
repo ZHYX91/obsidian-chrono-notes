@@ -107,6 +107,7 @@ export function MonthDayCell({
   const accessibleLabel = formatCalendarDayLabel(key, cell, {
     includeCalendarExtensions: true,
   }, translator.t);
+  const accessibleLabelId = `${previewId}-${key}-label`;
   const fallbackTitle = formatCalendarDayLabel(key, cell, {
     includeCalendarExtensions: false,
   }, translator.t);
@@ -129,7 +130,7 @@ export function MonthDayCell({
       data-calendar-extension-count={cell.calendarExtensions.length}
       data-regional-marker={cell.regionalMarker?.kind ?? "none"}
       aria-hidden={isHiddenHeatmapCell || undefined}
-      aria-label={accessibleLabel}
+      aria-labelledby={accessibleLabelId}
       aria-current={isToday ? "date" : undefined}
       aria-selected={selected}
       aria-describedby={activePreviewKey === key ? previewId : undefined}
@@ -160,6 +161,12 @@ export function MonthDayCell({
       }}
     >
       <span className="chrono-notes-day-main">
+        <span
+          id={accessibleLabelId}
+          className="chrono-notes-visually-hidden"
+        >
+          {accessibleLabel}
+        </span>
         {isHiddenHeatmapCell ? null : heatmapEnabled ? (
           <span className="chrono-notes-day-number">{cell.date.day}</span>
         ) : (

@@ -1275,6 +1275,9 @@ describe("NoteIndex", () => {
         note: { document: { body: "after" } },
       });
     });
+    await vi.waitFor(() => {
+      expect(index.getSnapshot().readiness).toBe("ready");
+    });
     expect(source.read).toHaveBeenCalledTimes(2);
     expect(listener).toHaveBeenCalledTimes(4);
     expect(diagnostics.queuedEvents).toBe(2);

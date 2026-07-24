@@ -350,7 +350,7 @@ function getApril18Cell(query: MonthCalendarQuery) {
 
 function getYearDay(document: ReturnType<typeof renderYear>) {
   const day = document.querySelector(
-    '.chrono-notes-year-heatmap-day[aria-label^="2026-04-18"]',
+    '.chrono-notes-year-heatmap-day[data-date-key="2026-04-18"]',
   );
   if (day === null) {
     throw new Error("Expected April 18 in the year heatmap");

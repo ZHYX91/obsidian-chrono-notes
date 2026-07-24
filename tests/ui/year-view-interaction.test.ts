@@ -82,6 +82,23 @@ describe("YearView interactions", () => {
     )).toHaveLength(1);
   });
 
+  it("uses referenced accessible text without a second host tooltip", async () => {
+    await renderYear(getQuery(2026));
+    const day = getDay("2026-01-01");
+    const accessibleLabelId = day.getAttribute("aria-labelledby");
+
+    expect(day.getAttribute("aria-label")).toBeNull();
+    expect(accessibleLabelId).toBeTruthy();
+    expect(document.getElementById(accessibleLabelId ?? "")?.textContent)
+      .toContain("2026-01-01");
+    expect(day.getAttribute("title")).toBeNull();
+
+    await renderYear(getQuery(2026), { showHoverPreview: false });
+    expect(getDay("2026-01-01").getAttribute("aria-label")).toBeNull();
+    expect(getDay("2026-01-01").getAttribute("title"))
+      .toContain("2026-01-01");
+  });
+
   it("maps arrow keys to the column-flow heatmap axes", async () => {
     const onSelect = vi.fn<YearViewProps["onSelect"]>();
     await renderYear(getQuery(2026), {
@@ -192,7 +209,7 @@ describe("YearView interactions", () => {
 
   function getDay(dateKey: string): HTMLButtonElement {
     const button = container.querySelector<HTMLButtonElement>(
-      `.chrono-notes-year-heatmap-day[aria-label^="${dateKey}"]`,
+      `.chrono-notes-year-heatmap-day[data-date-key="${dateKey}"]`,
     );
     if (button === null) throw new Error(`Expected heatmap day ${dateKey}`);
     return button;

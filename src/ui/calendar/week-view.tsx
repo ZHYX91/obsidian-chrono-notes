@@ -166,6 +166,7 @@ export function WeekView({
               },
               t,
             );
+            const accessibleLabelId = `${previewId}-${dayKey}-label`;
             const fallbackTitle = formatCalendarDayLabel(
               dayKey,
               day,
@@ -191,7 +192,7 @@ export function WeekView({
                 data-regional-marker={day.regionalMarker?.kind ?? "none"}
                 aria-pressed={selected}
                 aria-current={isToday ? "date" : undefined}
-                aria-label={accessibleLabel}
+                aria-labelledby={accessibleLabelId}
                 aria-describedby={
                   activePreviewKey === dayKey ? previewId : undefined
                 }
@@ -260,6 +261,12 @@ export function WeekView({
                   }
                 }}
               >
+                <span
+                  id={accessibleLabelId}
+                  className="chrono-notes-visually-hidden"
+                >
+                  {accessibleLabel}
+                </span>
                 <CalendarDayStatusRow
                   day={day}
                   showNoteIndicators={showNoteIndicators}

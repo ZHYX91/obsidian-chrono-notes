@@ -43,7 +43,7 @@ Calendar information and plugin settings stay inside the Vault. Chrono Notes doe
 
 - ICS sources are local read-only files; remote calendar subscriptions are not fetched directly.
 - Holiday availability depends on verified official data. Unpublished future schedules are shown as unavailable rather than predicted.
-- Non-Gregorian extensions are display overlays backed by the runtime's Unicode calendar data. Gregorian dates remain the note-path, navigation, and indexing anchor; unavailable runtime calendars are omitted safely.
+- Non-Gregorian calendar extensions are backed by the runtime's Unicode calendar data. Gregorian dates remain the note-path, navigation, and indexing anchor; unavailable runtime calendars are omitted safely.
 - Some mobile interaction and layout details depend on the Obsidian app and device input stack.
 
 ## Manual installation

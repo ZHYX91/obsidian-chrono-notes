@@ -110,6 +110,31 @@ describe("MonthView interactions", () => {
     expect(getDateTabStops()).toEqual([getDayButton("1")]);
   });
 
+  it("references hidden accessible text without exposing a host tooltip label", async () => {
+    const previewableDay = Object.freeze({
+      ...monthDay(AUGUST_1, true),
+      notePath: "Daily/2026-08-01.md",
+      noteState: "has-body" as const,
+      preview: "Body",
+    });
+
+    await renderView(monthQuery(2026, 8, [previewableDay]), AUGUST_1);
+    const day = getDayButton("1");
+    const accessibleLabelId = day.getAttribute("aria-labelledby");
+
+    expect(day.getAttribute("aria-label")).toBeNull();
+    expect(accessibleLabelId).toBeTruthy();
+    expect(document.getElementById(accessibleLabelId ?? "")?.textContent)
+      .toContain("2026-08-01");
+    expect(day.getAttribute("title")).toBeNull();
+
+    await renderView(monthQuery(2026, 8, [previewableDay]), AUGUST_1, {
+      showHoverPreview: false,
+    });
+    expect(getDayButton("1").getAttribute("aria-label")).toBeNull();
+    expect(getDayButton("1").getAttribute("title")).toContain("2026-08-01");
+  });
+
   it("moves right from a week number into its first enabled date", async () => {
     const onMoveSelection = vi.fn<(date: LocalDate) => void>();
     const augustQuery = monthQuery(2026, 8, [

@@ -71,11 +71,18 @@ describe("week calendar layout", () => {
 
     expect(richDay).not.toBeNull();
     expect(Array.from(richDay!.children, (child) => child.className)).toEqual([
+      "chrono-notes-visually-hidden",
       "chrono-notes-day-accessories",
       "chrono-notes-week-day-name",
       "chrono-notes-week-day-date",
       "chrono-notes-week-day-content",
     ]);
+    expect(richDay?.getAttribute("aria-label")).toBeNull();
+    const accessibleLabelId = richDay?.getAttribute("aria-labelledby");
+    expect(accessibleLabelId).toBeTruthy();
+    expect(document.getElementById(accessibleLabelId ?? "")?.textContent)
+      .toContain("2026-02-17");
+    expect(richDay?.getAttribute("title")).toBeNull();
     expect(richDay?.querySelector(".chrono-notes-calendar-extensions")).not.toBeNull();
     expect(richDay?.querySelector(".chrono-notes-holiday-footer")).not.toBeNull();
     expect(richDay?.querySelectorAll(".chrono-notes-ics-event")).toHaveLength(3);
@@ -254,8 +261,10 @@ describe("week calendar layout", () => {
     expect(weekViewSource).toContain(
       "aria-label={datedTaskCountLabel} title={datedTaskCountLabel}",
     );
-    expect(weekViewSource).not.toContain("aria-labelledby=");
-    expect(weekViewSource).not.toContain('id="chrono-notes-week-');
+    expect(weekViewSource).toContain("aria-labelledby={accessibleLabelId}");
+    expect(weekViewSource).toContain(
+      'className="chrono-notes-visually-hidden"',
+    );
   });
 });
 

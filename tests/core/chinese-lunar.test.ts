@@ -38,12 +38,12 @@ describe("getChineseLunarDay", () => {
       .toMatchObject({
         lunarMonth: 8,
         lunarDay: 15,
-        festivals: ["中秋"],
+        festivals: ["中秋节"],
         dateText: "十五",
         events: [{
           id: "festival:中秋节",
           kind: "festival",
-          text: "中秋",
+          text: "中秋节",
         }],
       });
   });

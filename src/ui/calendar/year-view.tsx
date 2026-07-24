@@ -282,6 +282,7 @@ export function YearView({
           quarterNameMode={quarterNameMode}
           weekStartDay={weekStartDay}
           heatmap={heatmap}
+          previewEnabled={previewEnabled}
           rendered={renderedQuarters.has(quarter.quarter)}
           selection={selection}
           hasRenderedDaySelection={isSelectedDayRendered(
@@ -323,6 +324,7 @@ interface LazyQuarterProps {
   readonly quarterNameMode: QuarterNameMode;
   readonly weekStartDay: WeekStartDay;
   readonly heatmap: boolean;
+  readonly previewEnabled: boolean;
   readonly rendered: boolean;
   readonly selection: YearViewProps["selection"];
   readonly hasRenderedDaySelection: boolean;
@@ -556,6 +558,7 @@ function HeatmapQuarter(props: LazyQuarterProps) {
     onSchedulePreview,
     onDismissPreview,
     previewId,
+    previewEnabled,
     activePreviewKey,
     hasRenderedDaySelection,
     longPress,
@@ -640,6 +643,7 @@ function HeatmapQuarter(props: LazyQuarterProps) {
                         onSchedulePreview={onSchedulePreview}
                         onDismissPreview={onDismissPreview}
                         previewId={previewId}
+                        previewEnabled={previewEnabled}
                         previewActive={
                           activePreviewKey === formatLocalDateKey(cell.date)
                         }
@@ -674,6 +678,7 @@ function HeatmapDayButton({
   onSchedulePreview,
   onDismissPreview,
   previewId,
+  previewEnabled,
   previewActive,
   longPress,
 }: Readonly<{
@@ -693,10 +698,13 @@ function HeatmapDayButton({
   onSchedulePreview: LazyQuarterProps["onSchedulePreview"];
   onDismissPreview: () => void;
   previewId: string;
+  previewEnabled: boolean;
   previewActive: boolean;
   longPress: LongPressGesture;
 }>) {
   const key = formatLocalDateKey(cell.date);
+  const accessibleLabel = formatYearHeatmapDayLabel(key, cell, translator.t);
+  const accessibleLabelId = `${previewId}-${key}-label`;
   const open = (target: NoteOpenTarget) =>
     onOpenPeriodic(cell.date, "daily", target);
   const touch = bindLongPress(
@@ -713,9 +721,10 @@ function HeatmapDayButton({
       type="button"
       role="gridcell"
       className={`chrono-notes-year-heatmap-day${isToday ? " is-current-period" : ""}${selected ? " is-selected" : ""}`}
+      data-date-key={key}
       data-heatmap-level={cell.heatmap.level}
       style={{ gridColumn, gridRow }}
-      aria-label={formatYearHeatmapDayLabel(key, cell, translator.t)}
+      aria-labelledby={accessibleLabelId}
       aria-current={isToday ? "date" : undefined}
       aria-selected={selected}
       aria-describedby={previewActive ? previewId : undefined}
@@ -724,7 +733,7 @@ function HeatmapDayButton({
         fallbackTabStop,
         hasDaySelection,
       )}
-      title={formatYearHeatmapDayLabel(key, cell, translator.t)}
+      title={previewEnabled ? undefined : accessibleLabel}
       onClick={(event: ReactMouseEvent<HTMLButtonElement>) => {
         if (touch.consumeClick()) {
           event.preventDefault();
@@ -772,7 +781,14 @@ function HeatmapDayButton({
       onTouchMove={touch.onTouchMove}
       onTouchEnd={touch.onTouchEnd}
       onTouchCancel={touch.onTouchCancel}
-    />
+    >
+      <span
+        id={accessibleLabelId}
+        className="chrono-notes-visually-hidden"
+      >
+        {accessibleLabel}
+      </span>
+    </button>
   );
 }
 

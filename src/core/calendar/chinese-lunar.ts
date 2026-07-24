@@ -56,13 +56,7 @@ function buildChineseLunarDay(context: LunarDateContext): ChineseLunarDay {
     "zh-CN",
     () => [...lunar.getFestivals()],
   );
-  const language = I18n.getLanguage();
-  const festivals = Object.freeze(
-    rawFestivals.map((festival) =>
-      language === "en" || festival.length < 3
-        ? festival
-        : festival.slice(0, 2)),
-  );
+  const festivals = Object.freeze([...rawFestivals]);
   const rawSolarTerm = lunar.getCurrentJieQi()?.getName() ?? null;
   const canonicalSolarTerm = withLunarLibraryLanguage(
     "zh-CN",
