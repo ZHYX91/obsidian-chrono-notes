@@ -8,35 +8,37 @@ import {
   getCurrentLocalDate,
   getMillisecondsUntilNextLocalDay,
 } from "../shared/local-date-clock";
+import { useHostEnvironment } from "./host-environment";
 
 export function useLocalToday(): LocalDate {
+  const host = useHostEnvironment();
   const [today, setToday] = useState(getCurrentLocalDate);
 
   useEffect(() => {
     let timeout: number | null = null;
     const synchronize = () => {
-      if (timeout !== null) window.clearTimeout(timeout);
+      if (timeout !== null) host.window.clearTimeout(timeout);
       const now = new Date();
       const current = getCurrentLocalDate(now);
       setToday((previous) =>
         isSameLocalDate(previous, current) ? previous : current,
       );
-      timeout = window.setTimeout(
+      timeout = host.window.setTimeout(
         synchronize,
         getMillisecondsUntilNextLocalDay(now),
       );
     };
     const handleVisibilityChange = () => {
-      if (document.visibilityState === "visible") synchronize();
+      if (host.document.visibilityState === "visible") synchronize();
     };
 
     synchronize();
-    document.addEventListener("visibilitychange", handleVisibilityChange);
+    host.document.addEventListener("visibilitychange", handleVisibilityChange);
     return () => {
-      if (timeout !== null) window.clearTimeout(timeout);
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      if (timeout !== null) host.window.clearTimeout(timeout);
+      host.document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
-  }, []);
+  }, [host.document, host.window]);
 
   return today;
 }

@@ -325,6 +325,59 @@ describe("NoteIndex", () => {
     expect(Object.keys(index.getSnapshot().notes)).toHaveLength(17);
   });
 
+  it("yields all initial workers together when their shared time slice expires", async () => {
+    const source = new FakeNoteSource();
+    source.paths = Array.from({ length: 8 }, (_, index) => `Daily/${index}.md`);
+    let clock = 0;
+    source.read.mockImplementation(async (path) => {
+      clock += 2;
+      return path;
+    });
+    const firstYield = new Deferred<void>();
+    const yieldInitialIndex = vi.fn<() => Promise<void>>()
+      .mockImplementationOnce(() => firstYield.promise)
+      .mockResolvedValue(undefined);
+    const index = new NoteIndex(source, {
+      readConcurrency: 4,
+      initialIndexTimeSliceMs: 5,
+      initialIndexClock: () => clock,
+      yieldInitialIndex,
+    });
+    const listener = vi.fn();
+    index.subscribe(listener);
+
+    const starting = index.start();
+    await vi.waitFor(() => expect(yieldInitialIndex).toHaveBeenCalledOnce());
+
+    expect(source.read).toHaveBeenCalledTimes(4);
+    expect(index.getSnapshot()).toMatchObject({
+      version: 0,
+      readiness: "indexing",
+      notes: {},
+    });
+    expect(listener).not.toHaveBeenCalled();
+
+    firstYield.resolve();
+    await starting;
+
+    expect(source.read).toHaveBeenCalledTimes(8);
+    expect(yieldInitialIndex).toHaveBeenCalledTimes(2);
+    expect(Object.keys(index.getSnapshot().notes)).toHaveLength(8);
+    expect(index.getSnapshot().readiness).toBe("ready");
+    expect(listener).toHaveBeenCalledOnce();
+  });
+
+  it("rejects an invalid initial indexing time slice", () => {
+    const source = new FakeNoteSource();
+
+    expect(() => new NoteIndex(source, { initialIndexTimeSliceMs: 0 })).toThrow(
+      "NoteIndex initial time slice must be a positive number",
+    );
+    expect(() => new NoteIndex(source, {
+      initialIndexTimeSliceMs: Number.POSITIVE_INFINITY,
+    })).toThrow("NoteIndex initial time slice must be a positive number");
+  });
+
   it("coalesces one thousand startup creates into the baseline and waits for them", async () => {
     const source = new FakeNoteSource();
     source.paths = Array.from({ length: 1_000 }, (_, index) => `Daily/${index}.md`);

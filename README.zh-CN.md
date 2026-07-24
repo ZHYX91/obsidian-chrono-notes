@@ -59,6 +59,13 @@ pnpm check
 
 开发环境需要 Node.js 22.13 及以上的 22.x 版本，或 Node.js 24 及更高版本，以及 pnpm 11.7.0。架构与测试细节见[开发者文档](https://github.com/ZHYX91/obsidian-chrono-notes/blob/main/docs/architecture.zh-CN.md)。问题与功能建议可提交到 [GitHub Issues](https://github.com/ZHYX91/obsidian-chrono-notes/issues)。
 
+## 致谢
+
+Chrono Notes 受到以下项目的启发：
+
+- Liam Cain：[Calendar](https://github.com/liamcain/obsidian-calendar-plugin)
+- 纳米级尘埃（a-nano-dust）：[Dust Calendar](https://github.com/a-nano-dust/dust-obsidian-calendar)
+
 ## English
 
 See the [English README](https://github.com/ZHYX91/obsidian-chrono-notes/blob/main/README.md).

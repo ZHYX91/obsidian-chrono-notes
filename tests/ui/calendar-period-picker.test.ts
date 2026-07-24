@@ -1,6 +1,5 @@
 import { Window } from "happy-dom";
 import { createElement } from "react";
-import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 
 import { createTranslator } from "../../src/shared/i18n";
@@ -13,6 +12,7 @@ import {
 } from "../../src/ui/calendar/calendar-period-picker";
 import { CalendarPeriodPickerPopover } from "../../src/ui/calendar/calendar-period-picker-popover";
 import { readPluginStyles } from "../support/plugin-styles";
+import { renderWithTestHost } from "../support/render-with-host";
 
 const styles = readPluginStyles();
 
@@ -61,7 +61,7 @@ describe("calendar period picker", () => {
   });
 
   it("uses the configured Chinese quarter labels in the month picker", () => {
-    const markup = renderToStaticMarkup(createElement(CalendarPeriodPickerPopover, {
+    const markup = renderWithTestHost(createElement(CalendarPeriodPickerPopover, {
       kind: "month",
       year: 2026,
       month: 7,
@@ -174,7 +174,7 @@ function renderPicker(input: Readonly<{
   month: number;
   today: Readonly<{ year: number; month: number; day: number }>;
 }>) {
-  const markup = renderToStaticMarkup(createElement(CalendarPeriodPickerPopover, {
+  const markup = renderWithTestHost(createElement(CalendarPeriodPickerPopover, {
     ...input,
     selectedQuarter: null,
     quarterNameMode: "number",

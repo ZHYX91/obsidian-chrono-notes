@@ -1,12 +1,12 @@
 export interface SettingsSaveClock {
-  setTimeout(callback: () => void, delayMs: number): number;
-  clearTimeout(handle: number): void;
+  readonly setTimeout: (callback: () => void, delayMs: number) => number;
+  readonly clearTimeout: (handle: number) => void;
 }
 
 export interface SettingsSaveCoordinatorOptions {
-  delayMs: number;
-  onError(error: unknown): void;
-  clock?: SettingsSaveClock;
+  readonly delayMs: number;
+  readonly onError: (error: unknown) => void;
+  readonly clock?: SettingsSaveClock;
 }
 
 const BROWSER_CLOCK: SettingsSaveClock = {

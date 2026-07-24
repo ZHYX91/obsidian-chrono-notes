@@ -184,7 +184,7 @@ function touchEntry<T>(entries: Map<string, T>, key: string): T | undefined {
 
 function evictOverflow<T>(entries: Map<string, T>, capacity: number): void {
   while (entries.size > capacity) {
-    const oldestKey = entries.keys().next().value as string | undefined;
+    const oldestKey = entries.keys().next().value;
     if (oldestKey === undefined) return;
     entries.delete(oldestKey);
   }

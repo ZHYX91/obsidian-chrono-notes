@@ -1,13 +1,13 @@
 import { readFileSync } from "node:fs";
 import { Window } from "happy-dom";
 import { createElement } from "react";
-import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 
 import { parseNoteInterval } from "../../src/core/note/note-interval";
 import type { IntervalWeekData } from "../../src/features/intervals/interval-note-query";
 import { IntervalGantt } from "../../src/ui/calendar/interval-gantt";
 import { readPluginStyles } from "../support/plugin-styles";
+import { renderWithTestHost } from "../support/render-with-host";
 
 const styles = readPluginStyles();
 const source = readFileSync(
@@ -32,7 +32,7 @@ describe("interval gantt layout", () => {
   });
 
   it("does not create a flow row for a week without interval notes", () => {
-    const markup = renderToStaticMarkup(createElement(IntervalGantt, {
+    const markup = renderWithTestHost(createElement(IntervalGantt, {
       data: {
         items: [],
         visibleLaneCount: 0,
@@ -249,7 +249,7 @@ button:not(.clickable-icon) {
       }],
       totalCount: 4,
     };
-    const markup = renderToStaticMarkup(createElement(IntervalGantt, {
+    const markup = renderWithTestHost(createElement(IntervalGantt, {
       data,
       variant: "month",
       ariaLabel: "Range notes",
@@ -316,7 +316,7 @@ button:not(.clickable-icon) {
       hiddenItems: [],
       totalCount: 1,
     };
-    const markup = renderToStaticMarkup(createElement(IntervalGantt, {
+    const markup = renderWithTestHost(createElement(IntervalGantt, {
       data,
       variant: "month",
       ariaLabel: "Range notes",
@@ -436,7 +436,7 @@ button:not(.clickable-icon) {
       totalCount: 2,
     };
 
-    const markup = renderToStaticMarkup(createElement(IntervalGantt, {
+    const markup = renderWithTestHost(createElement(IntervalGantt, {
       data,
       variant: "week",
       ariaLabel: "Range notes",

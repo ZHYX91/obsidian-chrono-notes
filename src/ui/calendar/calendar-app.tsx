@@ -40,7 +40,7 @@ import {
 import type { IcsEventIndex } from "../../features/calendar/ics-event-index";
 import type { NoteIndex } from "../../features/notes/note-index";
 import type { NoteOpenTarget } from "../../features/periodic/periodic-note-commands";
-import { createTranslator } from "../../shared/i18n";
+import type { Translator } from "../../shared/i18n";
 import { getCurrentLocalDate } from "../../shared/local-date-clock";
 import type { ChronoNotesSettings } from "../../shared/settings";
 import { getCalendarFontVariables } from "./calendar-font-size";
@@ -63,12 +63,14 @@ import {
   formatNarrowWeekdayLabels,
   formatShortMonthLabel,
 } from "../date-presentation";
+import { useHostEnvironment } from "../host-environment";
 
 export interface CalendarAppProps {
   readonly pickerModalHost?: CalendarPickerModalHost;
   readonly noteIndex: NoteIndex;
   readonly icsEventIndex: IcsEventIndex;
   readonly getSettings: () => ChronoNotesSettings;
+  readonly getTranslator: () => Translator;
   readonly onOpenPeriodic: (
     date: LocalDate,
     noteType: PeriodicNoteType,
@@ -96,7 +98,7 @@ export interface CalendarAppProps {
     date: LocalDate,
     configured: boolean,
     noteExists: boolean,
-    event: globalThis.MouseEvent,
+    event: MouseEvent,
   ) => void;
   readonly navigationRequest: CalendarNavigationRequest | null;
 }
@@ -113,6 +115,7 @@ export function CalendarApp({
   noteIndex,
   icsEventIndex,
   getSettings,
+  getTranslator,
   onOpenPeriodic,
   onSetYearHeatmap,
   onSetStatisticDimension,
@@ -124,6 +127,7 @@ export function CalendarApp({
   onOpenDateContextMenu,
   navigationRequest,
 }: CalendarAppProps) {
+  const host = useHostEnvironment();
   const today = useLocalToday();
   const [visibleMonth, setVisibleMonth] = useState(() => ({
     year: today.year,
@@ -141,10 +145,10 @@ export function CalendarApp({
   const longPress = useMemo(
     () =>
       new LongPressGesture({
-        setTimeout: (callback, delay) => window.setTimeout(callback, delay),
-        clearTimeout: (handle) => window.clearTimeout(handle),
+        setTimeout: (callback, delay) => host.window.setTimeout(callback, delay),
+        clearTimeout: (handle) => host.window.clearTimeout(handle),
       }),
-    [],
+    [host.window],
   );
   const decorationCache = useMemo(() => new CalendarDecorationCache(), []);
   const periodPickerAnchor = useRef<HTMLDivElement>(null);
@@ -198,8 +202,8 @@ export function CalendarApp({
   const rangeCreationConfigured =
     normalizeIntervalNoteFolder(settings.rangeNotes.folder).length > 0;
   const translator = useMemo(
-    () => createTranslator(settings.locale, navigator.language),
-    [settings.locale],
+    () => getTranslator(),
+    [getTranslator, settings.locale],
   );
   const { locale, t } = translator;
   const monthQueryRequest = useMemo<MonthCalendarQueryRequest>(() =>
@@ -368,15 +372,15 @@ export function CalendarApp({
   useEffect(() => {
     const cancelLongPress = () => longPress.cancel();
     const cancelHiddenLongPress = () => {
-      if (document.visibilityState === "hidden") cancelLongPress();
+      if (host.document.visibilityState === "hidden") cancelLongPress();
     };
-    window.addEventListener("blur", cancelLongPress);
-    document.addEventListener("visibilitychange", cancelHiddenLongPress);
+    host.window.addEventListener("blur", cancelLongPress);
+    host.document.addEventListener("visibilitychange", cancelHiddenLongPress);
     return () => {
-      window.removeEventListener("blur", cancelLongPress);
-      document.removeEventListener("visibilitychange", cancelHiddenLongPress);
+      host.window.removeEventListener("blur", cancelLongPress);
+      host.document.removeEventListener("visibilitychange", cancelHiddenLongPress);
     };
-  }, [longPress]);
+  }, [host.document, host.window, longPress]);
   useEffect(() => () => decorationCache.clear(), [decorationCache]);
   useEffect(() => () => queryStore.dispose(), [queryStore]);
   useEffect(() => {

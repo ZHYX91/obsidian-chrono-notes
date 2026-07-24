@@ -1,4 +1,4 @@
-import { Notice, Plugin, TFolder } from "obsidian";
+import { getLanguage, Notice, Plugin, TFolder } from "obsidian";
 
 import { ObsidianIcsSourceReader } from "../adapters/obsidian/obsidian-ics-source-reader";
 import { ObsidianNoteSource } from "../adapters/obsidian/obsidian-note-source";
@@ -132,6 +132,7 @@ export default class ChronoNotesPlugin extends Plugin {
       const noteNavbar = new NoteNavbarManager(this.app, {
         noteIndex,
         getSettings: () => this.settings,
+        getTranslator: () => this.getTranslator(),
         openPeriodic: (date, noteType, target) => this.openPeriodicNote(date, noteType, target),
         openCalendar: () => this.activateCalendarView(),
         openPath: (path, target) => this.openIndexedNote(path, target),
@@ -258,6 +259,7 @@ export default class ChronoNotesPlugin extends Plugin {
           noteIndex,
           icsEventIndex,
           getSettings: () => this.settings,
+          getTranslator: () => this.getTranslator(),
           openPeriodic: (date, noteType, target) =>
             this.openPeriodicNote(date, noteType, target),
           setYearHeatmap: async (enabled) => {
@@ -360,7 +362,7 @@ export default class ChronoNotesPlugin extends Plugin {
             : {}),
         },
         {
-          locale: resolveSettingsLocale(this.settings.locale),
+          locale: this.getTranslator().locale,
           weekStartDay: this.settings.weekStartDay,
           periodicNotes: this.settings.periodicNotes,
           templateEngine: this.settings.templateEngine,
@@ -393,7 +395,7 @@ export default class ChronoNotesPlugin extends Plugin {
       noteType,
       snapshot,
       {
-        locale: resolveSettingsLocale(this.settings.locale),
+        locale: this.getTranslator().locale,
         weekStartDay: this.settings.weekStartDay,
       },
       config,
@@ -723,7 +725,7 @@ export default class ChronoNotesPlugin extends Plugin {
           pattern: this.settings.periodicNotes[noteType].pattern,
         })),
       {
-        locale: resolveSettingsLocale(this.settings.locale),
+        locale: this.getTranslator().locale,
         weekStartDay: this.settings.weekStartDay,
       },
     );
@@ -743,14 +745,9 @@ export default class ChronoNotesPlugin extends Plugin {
     }
   }
 
-  private getTranslator(): Translator {
-    return createTranslator(this.settings.locale, navigator.language);
+  getTranslator(): Translator {
+    return createTranslator(this.settings.locale, getLanguage());
   }
-}
-
-function resolveSettingsLocale(locale: ChronoNotesSettings["locale"]): string {
-  if (locale === "auto") return navigator.language;
-  return locale;
 }
 
 function getLocalTimeZone(): string {

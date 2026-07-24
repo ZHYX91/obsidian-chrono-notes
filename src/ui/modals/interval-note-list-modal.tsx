@@ -23,6 +23,7 @@ import {
   formatNoteTaskProgress,
   getNoteTaskProgressPresentation,
 } from "../note-task-progress-presentation";
+import { HostEnvironmentProvider } from "../host-environment";
 import { useLocalToday } from "../use-local-today";
 import {
   formatIntervalListCount,
@@ -62,13 +63,16 @@ export class IntervalNoteListModal extends Modal {
     this.contentEl.empty();
     this.contentEl.addClass("chrono-notes-interval-list-modal");
     this.disposeKeyboardInsets = bindMobileKeyboardInsets(modalEl);
-    this.root = createRoot(this.contentEl.createDiv());
+    const mount = this.contentEl.createDiv();
+    this.root = createRoot(mount);
     this.root.render(
-      <IntervalNoteListContent
-        host={this.host}
-        translator={this.translator}
-        onRequestClose={() => this.close()}
-      />,
+      <HostEnvironmentProvider document={mount.ownerDocument}>
+        <IntervalNoteListContent
+          host={this.host}
+          translator={this.translator}
+          onRequestClose={() => this.close()}
+        />
+      </HostEnvironmentProvider>,
     );
   }
 
@@ -102,7 +106,10 @@ interface MobileKeyboardPlugin {
 }
 
 function bindMobileKeyboardInsets(modalEl: HTMLElement): () => void {
-  const capacitorWindow = window as typeof window & {
+  const ownerDocument = modalEl.ownerDocument;
+  const ownerWindow = ownerDocument.defaultView;
+  if (ownerWindow === null) return () => undefined;
+  const capacitorWindow = ownerWindow as typeof ownerWindow & {
     Capacitor?: {
       Plugins?: {
         Keyboard?: MobileKeyboardPlugin;
@@ -113,7 +120,7 @@ function bindMobileKeyboardInsets(modalEl: HTMLElement): () => void {
   if (keyboard === undefined) return () => undefined;
 
   let disposed = false;
-  let viewportHeightBeforeKeyboard = window.innerHeight;
+  let viewportHeightBeforeKeyboard = ownerWindow.innerHeight;
   let visibleKeyboard: MobileKeyboardInfo | null = null;
   const handles: MobileKeyboardListenerHandle[] = [];
   const clearInset = () => {
@@ -123,7 +130,7 @@ function bindMobileKeyboardInsets(modalEl: HTMLElement): () => void {
     modalEl.style.removeProperty("--chrono-notes-keyboard-shift");
   };
   const applyInset = (info: MobileKeyboardInfo) => {
-    const currentViewportHeight = window.innerHeight;
+    const currentViewportHeight = ownerWindow.innerHeight;
     const viewportResized = currentViewportHeight <
       viewportHeightBeforeKeyboard - 8;
     const reportedScreenHeight = info.screenHeight;
@@ -152,20 +159,20 @@ function bindMobileKeyboardInsets(modalEl: HTMLElement): () => void {
     modalEl.addClass("is-keyboard-visible");
   };
   const isKeyboardInput = (element: Element | null) =>
-    element instanceof HTMLInputElement ||
-    element instanceof HTMLTextAreaElement ||
-    (element instanceof HTMLElement && element.isContentEditable);
+    element instanceof ownerWindow.HTMLInputElement ||
+    element instanceof ownerWindow.HTMLTextAreaElement ||
+    (element instanceof ownerWindow.HTMLElement && element.isContentEditable);
   const handleFocusIn = (event: FocusEvent) => {
     if (!isKeyboardInput(event.target as Element | null)) return;
-    viewportHeightBeforeKeyboard = window.innerHeight;
+    viewportHeightBeforeKeyboard = ownerWindow.innerHeight;
   };
   const handleResize = () => {
     if (visibleKeyboard === null) {
       if (
-        !isKeyboardInput(document.activeElement) ||
-        window.innerHeight > viewportHeightBeforeKeyboard
+        !isKeyboardInput(ownerDocument.activeElement) ||
+        ownerWindow.innerHeight > viewportHeightBeforeKeyboard
       ) {
-        viewportHeightBeforeKeyboard = window.innerHeight;
+        viewportHeightBeforeKeyboard = ownerWindow.innerHeight;
       }
       return;
     }
@@ -199,16 +206,16 @@ function bindMobileKeyboardInsets(modalEl: HTMLElement): () => void {
   trackHandle(keyboard.addListener("keyboardDidHide", () => {
     visibleKeyboard = null;
     clearInset();
-    viewportHeightBeforeKeyboard = window.innerHeight;
+    viewportHeightBeforeKeyboard = ownerWindow.innerHeight;
   }));
   modalEl.addEventListener("focusin", handleFocusIn);
-  window.addEventListener("resize", handleResize);
+  ownerWindow.addEventListener("resize", handleResize);
 
   return () => {
     if (disposed) return;
     disposed = true;
     modalEl.removeEventListener("focusin", handleFocusIn);
-    window.removeEventListener("resize", handleResize);
+    ownerWindow.removeEventListener("resize", handleResize);
     clearInset();
     for (const handle of handles) removeHandle(handle);
     handles.length = 0;

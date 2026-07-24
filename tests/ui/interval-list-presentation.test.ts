@@ -129,7 +129,7 @@ describe("interval list presentation", () => {
       'modalEl.addEventListener("focusin", handleFocusIn)',
     );
     expect(intervalListModalSource).toContain(
-      "window.innerHeight > viewportHeightBeforeKeyboard",
+      "ownerWindow.innerHeight > viewportHeightBeforeKeyboard",
     );
     expect(intervalListModalSource).toContain(
       'modalEl.addClass("chrono-notes-interval-list-modal-container")',

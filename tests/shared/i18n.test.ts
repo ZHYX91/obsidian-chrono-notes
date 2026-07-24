@@ -5,6 +5,7 @@ import {
   createTranslator,
   resolvePluginLocale,
   type MessageKey,
+  type MessageCatalogs,
   type MessageValue,
 } from "../../src/shared/i18n";
 
@@ -59,6 +60,60 @@ describe("createTranslator", () => {
     const translator = createTranslator("en", "en-US");
     expect(translator.t("calendar.ics.moreEvents", { count: 1 })).toBe("1 more event");
     expect(translator.t("calendar.ics.moreEvents", { count: 2 })).toBe("2 more events");
+  });
+
+  it("selects every Arabic plural category with an other fallback", () => {
+    const translator = createTranslator("ar", "ar-SA");
+    expect(translator.t("pluginNotice.events", { count: 0 })).toBe(
+      "لا توجد أحداث",
+    );
+    expect(translator.t("pluginNotice.events", { count: 1 })).toBe(
+      "حدث واحد",
+    );
+    expect(translator.t("pluginNotice.events", { count: 2 })).toBe(
+      "حدثان",
+    );
+    expect(translator.t("pluginNotice.events", { count: 3 })).toBe(
+      "3 أحداث",
+    );
+    expect(translator.t("pluginNotice.events", { count: 11 })).toBe(
+      "11 حدثًا",
+    );
+    expect(translator.t("pluginNotice.events", { count: 100 })).toBe(
+      "100 حدث",
+    );
+  });
+
+  it("falls back to the required other form when a locale category is absent", () => {
+    const catalogs: MessageCatalogs = {
+      ...MESSAGE_CATALOGS,
+      ar: {
+        ...MESSAGE_CATALOGS.ar,
+        "pluginNotice.events": {
+          other: "fallback {count}",
+        },
+      },
+    };
+
+    expect(
+      createTranslator("ar", "ar-SA", catalogs).t("pluginNotice.events", {
+        count: 2,
+      }),
+    ).toBe("fallback 2");
+  });
+
+  it("selects Hebrew dual messages and keeps locale-specific zero semantics", () => {
+    const hebrew = createTranslator("he", "he-IL");
+    expect(hebrew.t("pluginNotice.events", { count: 1 })).toBe("אירוע 1");
+    expect(hebrew.t("pluginNotice.events", { count: 2 })).toBe("2 אירועים");
+    expect(hebrew.t("pluginNotice.events", { count: 3 })).toBe("אירועי 3");
+
+    for (const locale of ["fa", "am", "hi"] as const) {
+      const translator = createTranslator(locale, locale);
+      const value = translator.t("pluginNotice.events", { count: 0 });
+      expect(value).toContain("0");
+      expect(value).not.toBe("");
+    }
   });
 
   it("provides complete added-language catalogs with the correct direction", () => {
@@ -124,7 +179,10 @@ describe("createTranslator", () => {
 });
 
 function collectPlaceholders(value: MessageValue): string[] {
-  const messages = typeof value === "string" ? [value] : [value.one, value.other];
+  const messages = typeof value === "string"
+    ? [value]
+    : Object.values(value).filter((message): message is string =>
+      typeof message === "string");
   return [...new Set(
     messages.flatMap((message) =>
       [...message.matchAll(/\{([A-Za-z][A-Za-z0-9]*)\}/g)]

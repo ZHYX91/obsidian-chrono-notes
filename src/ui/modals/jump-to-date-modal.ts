@@ -47,7 +47,7 @@ export class JumpToDateModal extends Modal {
         .setButtonText(messages.jump)
         .setCta()
         .onClick(() => void this.submit()));
-    window.setTimeout(() => {
+    this.input.ownerDocument.defaultView?.setTimeout(() => {
       this.input?.focus();
       this.input?.select();
     }, 0);

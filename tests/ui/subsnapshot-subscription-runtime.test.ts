@@ -108,6 +108,7 @@ describe("React sub-snapshot subscriptions", () => {
       {
         noteIndex: noteIndex as unknown as NoteIndex,
         getSettings: () => settings,
+        getTranslator: () => createTranslator(settings.locale, "en"),
         openPeriodic: vi.fn(async () => undefined),
         openCalendar: vi.fn(async () => undefined),
         openPath: vi.fn(async () => undefined),

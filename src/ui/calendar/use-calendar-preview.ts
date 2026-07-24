@@ -7,6 +7,7 @@ import {
 } from "react";
 
 import { shouldDismissCalendarPreview } from "./calendar-preview";
+import { useHostEnvironment } from "../host-environment";
 import type {
   ActiveCalendarPreview,
   CalendarPreviewCell,
@@ -41,6 +42,7 @@ export function useCalendarPreview<Cell extends CalendarPreviewCell>({
   dismissOnDisable,
   isPreviewable = isAlwaysPreviewable,
 }: UseCalendarPreviewOptions<Cell>): CalendarPreviewController<Cell> {
+  const host = useHostEnvironment();
   const [activePreview, setActivePreview] =
     useState<ActiveCalendarPreview | null>(null);
   const previewTimer = useRef<number | null>(null);
@@ -49,9 +51,9 @@ export function useCalendarPreview<Cell extends CalendarPreviewCell>({
 
   const clearPreviewTimer = useCallback(() => {
     if (previewTimer.current !== null)
-      window.clearTimeout(previewTimer.current);
+      host.window.clearTimeout(previewTimer.current);
     previewTimer.current = null;
-  }, []);
+  }, [host.window]);
 
   const hidePreviewWithoutCancelling = useCallback(
     () => setActivePreview(null),
@@ -72,12 +74,12 @@ export function useCalendarPreview<Cell extends CalendarPreviewCell>({
       )
         return;
       clearPreviewTimer();
-      previewTimer.current = window.setTimeout(() => {
+      previewTimer.current = host.window.setTimeout(() => {
         previewTimer.current = null;
         setActivePreview({ key, cell, anchor });
       }, HOVER_PREVIEW_DELAY_MS);
     },
-    [clearPreviewTimer, enabled, isPreviewable],
+    [clearPreviewTimer, enabled, host.window, isPreviewable],
   );
 
   const suppressPreviewFor = useCallback((durationMs: number) => {

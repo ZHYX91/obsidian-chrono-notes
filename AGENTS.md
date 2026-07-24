@@ -24,7 +24,7 @@ The future `NoteIndex` is the single source of truth for note existence, parsed 
 - `pnpm dev`: development bundle in watch mode.
 - `pnpm typecheck`: strict TypeScript validation.
 - `pnpm test`: run Vitest once.
-- `pnpm build`: type-check and create `dist/chrono-notes/`.
+- `pnpm build`: type-check and create the standard plugin assets at `dist/`.
 - `pnpm check`: type-check, test, and production build.
 
 ## Code Style

@@ -26,6 +26,7 @@ import type { NoteOpenTarget } from "../../features/periodic/periodic-note-comma
 import type { Translator } from "../../shared/i18n";
 import type { TodoAnnotationMode } from "../../shared/settings";
 import { formatNoteTaskProgress } from "../note-task-progress-presentation";
+import { useHostEnvironment } from "../host-environment";
 import { formatCalendarNoteState } from "./calendar-note-presentation";
 import { moveCalendarSelection } from "./calendar-interaction";
 import type { LongPressGesture } from "./long-press";
@@ -80,7 +81,7 @@ export interface MonthViewProps {
     date: LocalDate,
     configured: boolean,
     noteExists: boolean,
-    event: globalThis.MouseEvent,
+    event: MouseEvent,
   ) => void;
 }
 
@@ -105,6 +106,7 @@ export function MonthView({
   onCreateRange,
   onOpenDateContextMenu,
 }: MonthViewProps) {
+  const host = useHostEnvironment();
   const [hoveredIntervalPath, setHoveredIntervalPath] =
     useState<string | null>(null);
   const [focusedIntervalPath, setFocusedIntervalPath] =
@@ -164,12 +166,12 @@ export function MonthView({
   );
 
   useEffect(() => {
-    const handleWindowMouseUp = (event: globalThis.MouseEvent) => {
+    const handleWindowMouseUp = (event: MouseEvent) => {
       completeRangeDrag(rangeDrag.finish(undefined, event.button));
     };
-    window.addEventListener("mouseup", handleWindowMouseUp);
-    return () => window.removeEventListener("mouseup", handleWindowMouseUp);
-  }, [completeRangeDrag, rangeDrag]);
+    host.window.addEventListener("mouseup", handleWindowMouseUp);
+    return () => host.window.removeEventListener("mouseup", handleWindowMouseUp);
+  }, [completeRangeDrag, host.window, rangeDrag]);
   useEffect(() => () => rangeDrag.cancel(), [rangeDrag]);
 
   const handleKeyDown = useCallback(

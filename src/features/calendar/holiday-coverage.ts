@@ -69,7 +69,10 @@ export function createHolidayCoverageReport(currentYear: number): HolidayCoverag
     throw new RangeError("Holiday coverage year must be a positive integer");
   }
 
-  const years = Object.freeze([currentYear, currentYear + 1]) as readonly [number, number];
+  const years: readonly [number, number] = Object.freeze([
+    currentYear,
+    currentYear + 1,
+  ]);
   const entries = Object.freeze(years.flatMap((year) => (
     HOLIDAY_REGION_DEFINITIONS.map((definition) => {
       const coverage = definition.getYearCoverage(year);

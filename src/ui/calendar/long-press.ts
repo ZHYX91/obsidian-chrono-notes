@@ -1,17 +1,17 @@
 export interface LongPressClock {
-  setTimeout(callback: () => void, delay: number): number;
-  clearTimeout(handle: number): void;
+  readonly setTimeout: (callback: () => void, delay: number) => number;
+  readonly clearTimeout: (handle: number) => void;
 }
 
 const LONG_PRESS_DELAY_MS = 500;
 
 export interface LongPressBinding {
-  onTouchStart(): void;
-  onTouchMove(): void;
-  onTouchEnd(): void;
-  onTouchCancel(): void;
-  onContextMenu(): void;
-  consumeClick(): boolean;
+  readonly onTouchStart: () => void;
+  readonly onTouchMove: () => void;
+  readonly onTouchEnd: () => void;
+  readonly onTouchCancel: () => void;
+  readonly onContextMenu: () => void;
+  readonly consumeClick: () => boolean;
 }
 
 export interface LongPressBindingOptions {

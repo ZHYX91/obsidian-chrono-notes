@@ -197,7 +197,7 @@ async function createHarness(): Promise<{
   temporaryRoots.push(root);
   const sourceRoot = path.join(root, "project");
   const acceptanceRoot = path.join(root, "acceptance");
-  const artifactRoot = path.join(sourceRoot, "dist", "chrono-notes");
+  const artifactRoot = path.join(sourceRoot, "dist");
   const settingsRoot = path.join(sourceRoot, "src", "shared");
   await mkdir(artifactRoot, { recursive: true });
   await mkdir(settingsRoot, { recursive: true });

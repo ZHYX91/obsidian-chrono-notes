@@ -17,6 +17,7 @@ import type {
   WeekStartDay,
 } from "../../core/periodic/periodic-date";
 import type { Translator } from "../../shared/i18n";
+import { useHostEnvironment } from "../host-environment";
 import {
   formatPeriodPickerTargetLabel,
   getYearPickerWindow,
@@ -48,6 +49,7 @@ interface CalendarWeekPickerPopoverProps {
 export function CalendarWeekPickerPopover(
   props: CalendarWeekPickerPopoverProps,
 ) {
+  const host = useHostEnvironment();
   const {
     anchorRef,
     kind,
@@ -97,7 +99,7 @@ export function CalendarWeekPickerPopover(
     const updateColumns = (width: number) => {
       setColumns(getWeekPickerColumnCount(width));
     };
-    const style = window.getComputedStyle(root);
+    const style = host.window.getComputedStyle(root);
     updateColumns(getWeekPickerContentBoxWidth(
       root.getBoundingClientRect().width,
       Number.parseFloat(style.paddingLeft) || 0,
@@ -105,20 +107,25 @@ export function CalendarWeekPickerPopover(
       Number.parseFloat(style.borderLeftWidth) || 0,
       Number.parseFloat(style.borderRightWidth) || 0,
     ));
-    if (typeof ResizeObserver === "undefined") return undefined;
-    const observer = new ResizeObserver((entries) => {
+    const HostResizeObserver = (
+      host.window as Window & {
+        readonly ResizeObserver?: typeof ResizeObserver;
+      }
+    ).ResizeObserver;
+    if (HostResizeObserver === undefined) return undefined;
+    const observer = new HostResizeObserver((entries) => {
       const width = entries[0]?.contentRect.width;
       if (width !== undefined) updateColumns(width);
     });
     observer.observe(root);
     return () => observer.disconnect();
-  }, [kind, rootRef]);
+  }, [host.window, kind, rootRef]);
 
   useEffect(() => () => {
     if (typeaheadTimerRef.current !== null) {
-      window.clearTimeout(typeaheadTimerRef.current);
+      host.window.clearTimeout(typeaheadTimerRef.current);
     }
-  }, []);
+  }, [host.window]);
 
   const focusWeek = (index: number) => {
     const target = rootRef.current?.querySelector<HTMLButtonElement>(
@@ -143,9 +150,9 @@ export function CalendarWeekPickerPopover(
       event.preventDefault();
       typeaheadRef.current = typeahead.buffer;
       if (typeaheadTimerRef.current !== null) {
-        window.clearTimeout(typeaheadTimerRef.current);
+        host.window.clearTimeout(typeaheadTimerRef.current);
       }
-      typeaheadTimerRef.current = window.setTimeout(() => {
+      typeaheadTimerRef.current = host.window.setTimeout(() => {
         typeaheadRef.current = "";
         typeaheadTimerRef.current = null;
       }, 700);

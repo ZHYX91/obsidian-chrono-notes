@@ -1,6 +1,5 @@
 import { Window } from "happy-dom";
 import { createElement } from "react";
-import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 
 import { createTranslator } from "../../src/shared/i18n";
@@ -12,6 +11,7 @@ import {
 } from "../../src/ui/calendar/calendar-week-picker";
 import { CalendarWeekPickerPopover } from "../../src/ui/calendar/calendar-week-picker-popover";
 import { readPluginStyles } from "../support/plugin-styles";
+import { renderWithTestHost } from "../support/render-with-host";
 
 const styles = readPluginStyles();
 
@@ -75,7 +75,7 @@ describe("calendar week picker", () => {
   });
 
   it("renders all 53 weeks as single focus targets with independent current and selected states", () => {
-    const markup = renderToStaticMarkup(createElement(CalendarWeekPickerPopover, {
+    const markup = renderWithTestHost(createElement(CalendarWeekPickerPopover, {
       kind: "week",
       weekYear: 2026,
       weekNumber: 53,
@@ -164,7 +164,7 @@ function renderWeekPicker(input: Readonly<{
   weekStartDay: "monday" | "sunday";
   today: Readonly<{ year: number; month: number; day: number }>;
 }>) {
-  const markup = renderToStaticMarkup(createElement(CalendarWeekPickerPopover, {
+  const markup = renderWithTestHost(createElement(CalendarWeekPickerPopover, {
     ...input,
     anchorRef: { current: null },
     translator: createTranslator("en", "en"),

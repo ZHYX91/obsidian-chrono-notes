@@ -32,6 +32,7 @@ vi.mock("../../src/ui/calendar/calendar-app", () => ({
 
 import type { WorkspaceLeaf } from "obsidian";
 
+import { createTranslator } from "../../src/shared/i18n";
 import { ChronoNotesView } from "../../src/ui/calendar/chrono-notes-view";
 
 describe("ChronoNotesView React root lifecycle", () => {
@@ -83,10 +84,16 @@ describe("ChronoNotesView React root lifecycle", () => {
 });
 
 function getNavigationRequest(): unknown {
-  const element = mocks.render.mock.calls.at(-1)?.[0] as
-    | { readonly props?: { readonly navigationRequest?: unknown } }
+  const provider = mocks.render.mock.calls.at(-1)?.[0] as
+    | {
+        readonly props?: {
+          readonly children?: {
+            readonly props?: { readonly navigationRequest?: unknown };
+          };
+        };
+      }
     | undefined;
-  return element?.props?.navigationRequest;
+  return provider?.props?.children?.props?.navigationRequest;
 }
 
 function createHost(): ConstructorParameters<typeof ChronoNotesView>[1] {
@@ -94,6 +101,7 @@ function createHost(): ConstructorParameters<typeof ChronoNotesView>[1] {
     noteIndex: {} as never,
     icsEventIndex: {} as never,
     getSettings: vi.fn(),
+    getTranslator: () => createTranslator("en", "en"),
     openPeriodic: vi.fn(),
     setYearHeatmap: vi.fn(),
     setStatisticDimension: vi.fn(),

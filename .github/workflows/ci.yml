@@ -60,7 +60,5 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: chrono-notes-production
-          path: |
-            dist/chrono-notes/
-            dist/chrono-notes.meta.json
+          path: dist/
           if-no-files-found: error

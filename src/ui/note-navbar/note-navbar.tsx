@@ -19,7 +19,7 @@ import {
 import { selectNoteNavbarContextFromProjection } from "../../features/periodic/note-navbar-query";
 import type { NoteIndex } from "../../features/notes/note-index";
 import type { NoteOpenTarget } from "../../features/periodic/periodic-note-commands";
-import { createTranslator } from "../../shared/i18n";
+import type { Translator } from "../../shared/i18n";
 import type { ChronoNotesSettings } from "../../shared/settings";
 import {
   formatCompactNoteTaskProgress,
@@ -37,6 +37,7 @@ const RELATED_LIMIT = 5;
 export interface NoteNavbarHost {
   readonly noteIndex: NoteIndex;
   getSettings(): ChronoNotesSettings;
+  getTranslator(): Translator;
   openPeriodic(date: LocalDate, noteType: PeriodicNoteType, target: NoteOpenTarget): Promise<void>;
   openCalendar(): Promise<void>;
   openPath(path: string, target: NoteOpenTarget): Promise<void>;
@@ -64,7 +65,7 @@ export class NoteNavbarManager {
 
   update(): void {
     const settings = this.host.getSettings();
-    const translator = createTranslator(settings.locale, navigator.language);
+    const translator = this.host.getTranslator();
     const leaves = new Set(this.app.workspace.getLeavesOfType("markdown"));
     for (const leaf of this.mounts.keys()) {
       if (!leaves.has(leaf)) this.unmountLeaf(leaf);
@@ -147,7 +148,7 @@ function NoteNavbar({ path, host }: Readonly<{ path: string; host: NoteNavbarHos
   );
   const intervals = useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
   const settings = host.getSettings();
-  const translator = createTranslator(settings.locale, navigator.language);
+  const translator = host.getTranslator();
   const { t } = translator;
   const messages = getNoteNavbarMessages(t);
   const context = selectNoteNavbarContextFromProjection(path, intervals, {

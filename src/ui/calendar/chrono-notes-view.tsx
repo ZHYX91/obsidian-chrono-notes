@@ -8,6 +8,8 @@ import type { IcsEventIndex } from "../../features/calendar/ics-event-index";
 import type { NoteIndex } from "../../features/notes/note-index";
 import type { NoteOpenTarget } from "../../features/periodic/periodic-note-commands";
 import type { ChronoNotesSettings } from "../../shared/settings";
+import type { Translator } from "../../shared/i18n";
+import { HostEnvironmentProvider } from "../host-environment";
 import { createCalendarPickerModalHost } from "../modals/calendar-picker-modal-host";
 import { CalendarApp, type CalendarNavigationRequest } from "./calendar-app";
 import type { CalendarPickerModalHost } from "./calendar-picker-layer";
@@ -18,6 +20,7 @@ export interface ChronoNotesViewHost {
   readonly noteIndex: NoteIndex;
   readonly icsEventIndex: IcsEventIndex;
   getSettings(): ChronoNotesSettings;
+  getTranslator(): Translator;
   openPeriodic(
     date: LocalDate,
     noteType: PeriodicNoteType,
@@ -71,25 +74,31 @@ export class ChronoNotesView extends ItemView {
   refresh(): void {
     if (this.root === null) return;
     this.root.render(
-      <CalendarApp
-        pickerModalHost={this.pickerModalHost}
-        noteIndex={this.host.noteIndex}
-        icsEventIndex={this.host.icsEventIndex}
-        getSettings={() => this.host.getSettings()}
-        onOpenPeriodic={(date, noteType, target) =>
-          this.host.openPeriodic(date, noteType, target)}
-        onSetYearHeatmap={(enabled) => this.host.setYearHeatmap(enabled)}
-        onSetStatisticDimension={(dimension) => this.host.setStatisticDimension(dimension)}
-        onOpenPath={(path, target) => this.host.openPath(path, target)}
-        onCreateRange={(initialDate, initialEndDate) =>
-          this.host.createRange(initialDate, initialEndDate)}
-        onToggleTask={(task) => this.host.toggleTask(task)}
-        onRescheduleTask={(task, nextDueDate) => this.host.rescheduleTask(task, nextDueDate)}
-        onOpenTaskSource={(task, target) => this.host.openTaskSource(task, target)}
-        onOpenDateContextMenu={(date, configured, noteExists, event) =>
-          this.host.openDateContextMenu(date, configured, noteExists, event)}
-        navigationRequest={this.navigationRequest}
-      />,
+      <HostEnvironmentProvider document={this.contentEl.ownerDocument}>
+        <CalendarApp
+          pickerModalHost={this.pickerModalHost}
+          noteIndex={this.host.noteIndex}
+          icsEventIndex={this.host.icsEventIndex}
+          getSettings={() => this.host.getSettings()}
+          getTranslator={() => this.host.getTranslator()}
+          onOpenPeriodic={(date, noteType, target) =>
+            this.host.openPeriodic(date, noteType, target)}
+          onSetYearHeatmap={(enabled) => this.host.setYearHeatmap(enabled)}
+          onSetStatisticDimension={(dimension) =>
+            this.host.setStatisticDimension(dimension)}
+          onOpenPath={(path, target) => this.host.openPath(path, target)}
+          onCreateRange={(initialDate, initialEndDate) =>
+            this.host.createRange(initialDate, initialEndDate)}
+          onToggleTask={(task) => this.host.toggleTask(task)}
+          onRescheduleTask={(task, nextDueDate) =>
+            this.host.rescheduleTask(task, nextDueDate)}
+          onOpenTaskSource={(task, target) =>
+            this.host.openTaskSource(task, target)}
+          onOpenDateContextMenu={(date, configured, noteExists, event) =>
+            this.host.openDateContextMenu(date, configured, noteExists, event)}
+          navigationRequest={this.navigationRequest}
+        />
+      </HostEnvironmentProvider>,
     );
   }
 

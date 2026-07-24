@@ -28,6 +28,7 @@ vi.mock("react-dom/client", () => ({
 
 import { MarkdownView } from "obsidian";
 import { NoteNavbarManager } from "../../src/ui/note-navbar/note-navbar";
+import { createTranslator } from "../../src/shared/i18n";
 import { createDefaultSettings } from "../../src/shared/settings";
 import { createNoteIndexSnapshot } from "../support/note-index-snapshot";
 
@@ -115,6 +116,7 @@ describe("NoteNavbarManager", () => {
           subscribe: () => () => undefined,
         },
         getSettings: () => settings,
+        getTranslator: () => createTranslator(settings.locale, "en"),
         openPeriodic: vi.fn(),
         openCalendar: vi.fn(),
         openPath: vi.fn(),
@@ -161,6 +163,7 @@ describe("NoteNavbarManager", () => {
           subscribe: () => () => undefined,
         },
         getSettings: () => settings,
+        getTranslator: () => createTranslator(settings.locale, "en"),
       } as never,
     );
 
@@ -199,6 +202,7 @@ describe("NoteNavbarManager", () => {
           subscribe: () => () => undefined,
         },
         getSettings: () => settings,
+        getTranslator: () => createTranslator(settings.locale, "en"),
       } as never,
     );
 

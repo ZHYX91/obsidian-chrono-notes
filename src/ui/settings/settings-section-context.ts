@@ -7,6 +7,7 @@ import type { VaultPathSuggestionCatalog } from "./vault-path-suggest";
 
 export interface SettingsHost extends Plugin {
   settings: ChronoNotesSettings;
+  getTranslator(): Translator;
   saveSettings(): Promise<void>;
   openIntervalNoteList(): void;
   getIcsSnapshot(): IcsEventIndexSnapshot | null;

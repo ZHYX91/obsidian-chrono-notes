@@ -1,5 +1,9 @@
 export interface PluralMessage {
-  readonly one: string;
+  readonly zero?: string;
+  readonly one?: string;
+  readonly two?: string;
+  readonly few?: string;
+  readonly many?: string;
   readonly other: string;
 }
 

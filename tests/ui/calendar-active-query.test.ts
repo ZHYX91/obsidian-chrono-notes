@@ -82,6 +82,7 @@ vi.mock("../../src/ui/calendar/use-calendar-preview", () => ({
 
 import type { IcsEventIndex } from "../../src/features/calendar/ics-event-index";
 import type { NoteIndex } from "../../src/features/notes/note-index";
+import { createTranslator } from "../../src/shared/i18n";
 import {
   CalendarApp,
   type CalendarAppProps,
@@ -516,6 +517,7 @@ function createProps(
     noteIndex,
     icsEventIndex,
     getSettings: () => settings,
+    getTranslator: () => createTranslator(settings.locale, "en"),
     onOpenPeriodic: async () => undefined,
     onSetYearHeatmap: async () => undefined,
     onSetStatisticDimension: async () => undefined,

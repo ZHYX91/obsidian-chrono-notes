@@ -1,7 +1,6 @@
 import { readFileSync } from "node:fs";
 import { Window } from "happy-dom";
 import { createElement } from "react";
-import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 
 import type { IcsEventOccurrence } from "../../src/core/calendar/ics-calendar";
@@ -21,6 +20,7 @@ import {
   createParsedNoteIndexSnapshot,
 } from "../support/note-index-snapshot";
 import { readPluginStyles } from "../support/plugin-styles";
+import { renderWithTestHost } from "../support/render-with-host";
 
 const styles = readPluginStyles();
 const weekViewSource = readFileSync(
@@ -287,7 +287,7 @@ function renderWeek(
   selectedDate: LocalDate,
   today: LocalDate,
 ) {
-  const markup = renderToStaticMarkup(createElement(WeekView, {
+  const markup = renderWithTestHost(createElement(WeekView, {
     query,
     translator: createTranslator("en", "en"),
     selectionKind: "day",

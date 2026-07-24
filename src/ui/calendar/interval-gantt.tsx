@@ -10,6 +10,7 @@ import type { NoteStatistics } from "../../core/note/note-statistics";
 import type { IntervalWeekData } from "../../features/intervals/interval-note-query";
 import type { NoteOpenTarget } from "../../features/periodic/periodic-note-commands";
 import { getNoteTaskProgressPresentation } from "../note-task-progress-presentation";
+import { useHostEnvironment } from "../host-environment";
 
 interface IntervalBarStyle extends CSSProperties {
   readonly "--chrono-notes-interval-task-progress": string;
@@ -40,6 +41,7 @@ export function IntervalGantt({
   linkedPathInteraction,
   onOpenPath,
 }: IntervalGanttProps) {
+  const host = useHostEnvironment();
   const [overflowOpen, setOverflowOpen] = useState(false);
   const overflowId = useId();
   const overflowButtonRef = useRef<HTMLButtonElement>(null);
@@ -55,18 +57,18 @@ export function IntervalGantt({
         setOverflowOpen(false);
       }
     };
-    const dismissOnEscape = (event: globalThis.KeyboardEvent): void => {
+    const dismissOnEscape = (event: KeyboardEvent): void => {
       if (event.key !== "Escape") return;
       setOverflowOpen(false);
       overflowButtonRef.current?.focus();
     };
-    document.addEventListener("pointerdown", dismissOnPointerDown);
-    document.addEventListener("keydown", dismissOnEscape);
+    host.document.addEventListener("pointerdown", dismissOnPointerDown);
+    host.document.addEventListener("keydown", dismissOnEscape);
     return () => {
-      document.removeEventListener("pointerdown", dismissOnPointerDown);
-      document.removeEventListener("keydown", dismissOnEscape);
+      host.document.removeEventListener("pointerdown", dismissOnPointerDown);
+      host.document.removeEventListener("keydown", dismissOnEscape);
     };
-  }, [overflowOpen]);
+  }, [host.document, overflowOpen]);
   if (data.totalCount === 0) return null;
   const monthGridTemplateRows = variant === "month"
     ? [

@@ -12,9 +12,9 @@ const workflow = readFileSync(
 
 describe("release workflow contract", () => {
   it("keeps the loose Obsidian assets and adds one install-ready archive", () => {
-    expect(workflow).toContain("dist/chrono-notes/main.js");
-    expect(workflow).toContain("dist/chrono-notes/manifest.json");
-    expect(workflow).toContain("dist/chrono-notes/styles.css");
+    expect(workflow).toContain("dist/main.js");
+    expect(workflow).toContain("dist/manifest.json");
+    expect(workflow).toContain("dist/styles.css");
     expect(workflow).toContain("chrono-notes-${GITHUB_REF_NAME}.zip");
     expect(workflow).toContain("chrono-notes/main.js");
     expect(workflow).toContain("chrono-notes/manifest.json");
@@ -28,11 +28,15 @@ describe("release workflow contract", () => {
     expect(workflow).toContain('gh release create "$GITHUB_REF_NAME"');
   });
 
-  it("attests the executable and stylesheet release assets", () => {
+  it("attests every published release asset", () => {
     expect(workflow).toContain("attestations: write");
     expect(workflow).toContain("id-token: write");
     expect(workflow).toContain("uses: actions/attest@v4");
-    expect(workflow).toContain("dist/chrono-notes/main.js");
-    expect(workflow).toContain("dist/chrono-notes/styles.css");
+    expect(workflow).toContain("dist/main.js");
+    expect(workflow).toContain("dist/manifest.json");
+    expect(workflow).toContain("dist/styles.css");
+    expect(workflow).toContain(
+      "dist/chrono-notes-${{ github.ref_name }}.zip",
+    );
   });
 });

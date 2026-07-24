@@ -195,15 +195,21 @@ function siftRankedPathDown<T extends { readonly path: string }>(
     const leftIndex = index * 2 + 1;
     const rightIndex = leftIndex + 1;
     let worstIndex = index;
+    const left = heap[leftIndex];
+    const currentWorst = heap[worstIndex];
     if (
-      heap[leftIndex] !== undefined &&
-      compareRankedPaths(heap[leftIndex] as RankedPath<T>, heap[worstIndex] as RankedPath<T>) > 0
+      left !== undefined &&
+      currentWorst !== undefined &&
+      compareRankedPaths(left, currentWorst) > 0
     ) {
       worstIndex = leftIndex;
     }
+    const right = heap[rightIndex];
+    const updatedWorst = heap[worstIndex];
     if (
-      heap[rightIndex] !== undefined &&
-      compareRankedPaths(heap[rightIndex] as RankedPath<T>, heap[worstIndex] as RankedPath<T>) > 0
+      right !== undefined &&
+      updatedWorst !== undefined &&
+      compareRankedPaths(right, updatedWorst) > 0
     ) {
       worstIndex = rightIndex;
     }

@@ -1,15 +1,20 @@
 import { useEffect, useRef, type RefObject } from "react";
 
+import { useHostEnvironment } from "../host-environment";
+
 export function useCalendarPickerDialog(
   anchorRef: RefObject<HTMLElement>,
   onClose: () => void,
   scrollSelected = false,
 ): RefObject<HTMLDivElement> {
+  const host = useHostEnvironment();
   const rootRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const previousFocus = document.activeElement instanceof HTMLElement
-      ? document.activeElement
+    const activeElement = host.document.activeElement as HTMLElement | null;
+    const previousFocus = activeElement !== null &&
+      typeof activeElement.focus === "function"
+      ? activeElement
       : null;
     const root = rootRef.current;
     const selected = root?.querySelector<HTMLElement>('[data-selected="true"]');
@@ -23,21 +28,21 @@ export function useCalendarPickerDialog(
       if (anchorRef.current?.contains(event.target as Node)) return;
       onClose();
     };
-    const handleKeyDown = (event: globalThis.KeyboardEvent) => {
+    const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key !== "Escape") return;
       event.preventDefault();
       onClose();
     };
-    document.addEventListener("pointerdown", handlePointerDown);
-    document.addEventListener("keydown", handleKeyDown);
+    host.document.addEventListener("pointerdown", handlePointerDown);
+    host.document.addEventListener("keydown", handleKeyDown);
     return () => {
-      document.removeEventListener("pointerdown", handlePointerDown);
-      document.removeEventListener("keydown", handleKeyDown);
-      if (previousFocus !== null && document.contains(previousFocus)) {
+      host.document.removeEventListener("pointerdown", handlePointerDown);
+      host.document.removeEventListener("keydown", handleKeyDown);
+      if (previousFocus !== null && host.document.contains(previousFocus)) {
         previousFocus.focus();
       }
     };
-  }, [anchorRef, onClose, scrollSelected]);
+  }, [anchorRef, host.document, host.window, onClose, scrollSelected]);
 
   return rootRef;
 }

@@ -6,6 +6,8 @@ import {
 } from "react";
 import { createPortal } from "react-dom";
 
+import { useHostEnvironment } from "../host-environment";
+
 export interface CalendarPickerModalSession {
   readonly mount: HTMLElement;
   close(): void;
@@ -31,12 +33,12 @@ export function CalendarPickerLayer({
   title,
   onClose,
 }: CalendarPickerLayerProps) {
+  const host = useHostEnvironment();
   const [mount, setMount] = useState<HTMLElement | null>(null);
   const onCloseRef = useRef(onClose);
   onCloseRef.current = onClose;
   const useModal = modalHost !== undefined &&
-    typeof document !== "undefined" &&
-    document.body.hasClass("is-mobile");
+    host.document.body.hasClass("is-mobile");
 
   useEffect(() => {
     if (!useModal || modalHost === undefined) return undefined;

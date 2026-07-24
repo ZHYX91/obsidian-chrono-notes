@@ -87,6 +87,10 @@ interface QueuedRead {
 export interface NoteIndexOptions {
   /** Maximum number of source reads shared by initial and live indexing. */
   readonly readConcurrency?: number;
+  /** Main-thread budget before initial indexing yields to a new host task. */
+  readonly initialIndexTimeSliceMs?: number;
+  readonly initialIndexClock?: () => number;
+  readonly yieldInitialIndex?: () => Promise<void>;
   readonly diagnostics?: NoteIndexDiagnostics;
   readonly diagnosticClock?: () => number;
   /** Schedules the bounded checkpoint used to publish a partially settled live batch. */
@@ -176,6 +180,7 @@ const INITIAL_SNAPSHOT: NoteIndexSnapshot = Object.freeze({
 });
 
 const DEFAULT_READ_CONCURRENCY = 16;
+const DEFAULT_INITIAL_INDEX_TIME_SLICE_MS = 8;
 
 /**
  * Single owner for all Vault-derived note query state.
@@ -206,6 +211,9 @@ export class NoteIndex {
   private lifecycle = 0;
   private activeReadCount = 0;
   private readonly readConcurrency: number;
+  private readonly initialIndexTimeSliceMs: number;
+  private readonly initialIndexClock: () => number;
+  private readonly yieldInitialIndex: () => Promise<void>;
   private readonly diagnostics: NoteIndexDiagnostics | null;
   private readonly diagnosticClock: () => number;
   private readonly scheduleLiveCommitCheckpoint: (callback: () => void) => () => void;
@@ -222,7 +230,15 @@ export class NoteIndex {
     if (!Number.isInteger(readConcurrency) || readConcurrency < 1) {
       throw new RangeError("NoteIndex read concurrency must be a positive integer");
     }
+    const initialIndexTimeSliceMs = options.initialIndexTimeSliceMs
+      ?? DEFAULT_INITIAL_INDEX_TIME_SLICE_MS;
+    if (!Number.isFinite(initialIndexTimeSliceMs) || initialIndexTimeSliceMs <= 0) {
+      throw new RangeError("NoteIndex initial time slice must be a positive number");
+    }
     this.readConcurrency = readConcurrency;
+    this.initialIndexTimeSliceMs = initialIndexTimeSliceMs;
+    this.initialIndexClock = options.initialIndexClock ?? defaultDiagnosticClock;
+    this.yieldInitialIndex = options.yieldInitialIndex ?? yieldInitialIndexToHost;
     this.diagnostics = options.diagnostics ?? null;
     this.diagnosticClock = options.diagnosticClock ?? defaultDiagnosticClock;
     this.scheduleLiveCommitCheckpoint = options.scheduleLiveCommitCheckpoint
@@ -531,6 +547,23 @@ export class NoteIndex {
       revision: this.advanceRevision(path),
     }));
     let nextTaskIndex = 0;
+    let timeSliceStarted = this.initialIndexClock();
+    let pendingYield: Promise<void> | null = null;
+    const yieldWhenTimeSliceExpires = async (): Promise<void> => {
+      if (this.initialIndexClock() - timeSliceStarted < this.initialIndexTimeSliceMs) {
+        return;
+      }
+      if (pendingYield === null) {
+        const yielding = (async () => {
+          await this.yieldInitialIndex();
+          timeSliceStarted = this.initialIndexClock();
+        })();
+        pendingYield = yielding.finally(() => {
+          pendingYield = null;
+        });
+      }
+      await pendingYield;
+    };
     const runWorker = async (): Promise<void> => {
       while (nextTaskIndex < tasks.length) {
         const task = tasks[nextTaskIndex];
@@ -542,6 +575,7 @@ export class NoteIndex {
           continue;
         }
         await this.beginRead(task.path, task.revision, { kind: "initial", staging });
+        await yieldWhenTimeSliceExpires();
       }
     };
     const workerCount = Math.min(this.readConcurrency, tasks.length);
@@ -1055,6 +1089,23 @@ export class NoteIndex {
 
 function defaultDiagnosticClock(): number {
   return globalThis.performance?.now() ?? Date.now();
+}
+
+function yieldInitialIndexToHost(): Promise<void> {
+  if (typeof globalThis.MessageChannel === "function") {
+    return new Promise((resolve) => {
+      const channel = new globalThis.MessageChannel();
+      channel.port1.onmessage = () => {
+        channel.port1.close();
+        channel.port2.close();
+        resolve();
+      };
+      channel.port2.postMessage(undefined);
+    });
+  }
+  return new Promise((resolve) => {
+    globalThis.setTimeout(resolve, 0);
+  });
 }
 
 function scheduleMacrotaskCheckpoint(callback: () => void): () => void {

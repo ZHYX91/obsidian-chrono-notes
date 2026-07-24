@@ -37,6 +37,7 @@ import type {
   TodoAnnotationMode,
 } from "../../shared/settings";
 import { formatShortMonthLabels } from "../date-presentation";
+import { useHostEnvironment } from "../host-environment";
 import { CalendarNoteIndicator } from "./calendar-note-indicator";
 import { bindLongPress, type LongPressGesture } from "./long-press";
 import { CalendarPreviewTooltip } from "./calendar-preview-tooltip";
@@ -91,7 +92,7 @@ export interface YearViewProps {
     date: LocalDate,
     configured: boolean,
     noteExists: boolean,
-    event: globalThis.MouseEvent,
+    event: MouseEvent,
   ) => void;
   readonly longPress: LongPressGesture;
 }
@@ -113,6 +114,7 @@ export function YearView({
   onOpenDateContextMenu,
   longPress,
 }: YearViewProps) {
+  const host = useHostEnvironment();
   const [renderedQuarters, setRenderedQuarters] = useState(
     () => getInitialRenderedQuarters(
       selection.kind !== "year" && selection.date.year === query.year
@@ -172,11 +174,16 @@ export function YearView({
         view.style.setProperty(QUARTER_PLACEHOLDER_HEIGHT_PROPERTY, height);
     };
     updatePlaceholderHeight();
-    if (typeof ResizeObserver === "undefined") return;
-    const observer = new ResizeObserver(updatePlaceholderHeight);
+    const HostResizeObserver = (
+      host.window as Window & {
+        readonly ResizeObserver?: typeof ResizeObserver;
+      }
+    ).ResizeObserver;
+    if (HostResizeObserver === undefined) return;
+    const observer = new HostResizeObserver(updatePlaceholderHeight);
     observer.observe(measuredQuarter);
     return () => observer.disconnect();
-  }, [heatmap, query.year]);
+  }, [heatmap, host.window, query.year]);
 
   const revealQuarter = useCallback((quarter: number) => {
     setRenderedQuarters((current) => {
@@ -211,7 +218,7 @@ export function YearView({
       return;
     }
     handledPeriodSelection.current = selectionKey;
-    const frame = window.requestAnimationFrame(() => {
+    const frame = host.window.requestAnimationFrame(() => {
       const selectedElement = heatmap && selection.kind === "day"
         ? dayButtons.current.get(formatLocalDateKey(selection.date))
         : root.current?.querySelector<HTMLElement>(
@@ -221,9 +228,10 @@ export function YearView({
           );
       selectedElement?.scrollIntoView({ block: "center" });
     });
-    return () => window.cancelAnimationFrame(frame);
+    return () => host.window.cancelAnimationFrame(frame);
   }, [
     heatmap,
+    host.window,
     query.year,
     monthSelectionRequest,
     renderedQuarters,
@@ -252,11 +260,11 @@ export function YearView({
       dismissPreview();
       revealQuarter(Math.ceil(next.month / 3));
       onSelect("day", next);
-      window.requestAnimationFrame(() =>
+      host.window.requestAnimationFrame(() =>
         dayButtons.current.get(formatLocalDateKey(next))?.focus(),
       );
     },
-    [dismissPreview, onSelect, query.year, revealQuarter],
+    [dismissPreview, host.window, onSelect, query.year, revealQuarter],
   );
 
   return (

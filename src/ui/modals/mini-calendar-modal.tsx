@@ -36,6 +36,10 @@ import {
   formatNarrowWeekdayLabels,
   formatShortMonthLabels,
 } from "../date-presentation";
+import {
+  HostEnvironmentProvider,
+  useHostEnvironment,
+} from "../host-environment";
 import { getDateModalMessages } from "./date-modal-presentation";
 import { createCalendarPickerModalHost } from "./calendar-picker-modal-host";
 
@@ -63,11 +67,13 @@ export class MiniCalendarModal extends Modal {
     const mount = this.contentEl.createDiv();
     this.root = createRoot(mount);
     this.root.render(
-      <MiniCalendar
-        {...this.options}
-        pickerModalHost={this.pickerModalHost}
-        onClose={() => this.close()}
-      />,
+      <HostEnvironmentProvider document={mount.ownerDocument}>
+        <MiniCalendar
+          {...this.options}
+          pickerModalHost={this.pickerModalHost}
+          onClose={() => this.close()}
+        />
+      </HostEnvironmentProvider>,
     );
   }
 
@@ -92,6 +98,7 @@ function MiniCalendar({
   onClose,
   pickerModalHost,
 }: MiniCalendarProps) {
+  const host = useHostEnvironment();
   const { locale, t } = translator;
   const messages = getDateModalMessages(t);
   const [displayMonth, setDisplayMonth] = useState<CalendarMonth>(() => ({
@@ -127,21 +134,21 @@ function MiniCalendar({
       !isSameLocalDate(focusedDate, initialDate)
     ) return;
     focusAfterMove.current = false;
-    const handle = window.setTimeout(
+    const handle = host.window.setTimeout(
       () => dayButtons.current.get(key)?.focus(),
       0,
     );
-    return () => window.clearTimeout(handle);
-  }, [focusedDate, initialDate, model.grid]);
+    return () => host.window.clearTimeout(handle);
+  }, [focusedDate, host.window, initialDate, model.grid]);
 
   useEffect(() => {
     if (!periodPickerOpen) return;
-    const handle = window.setTimeout(
+    const handle = host.window.setTimeout(
       () => monthButtons.current.get(displayMonth.month)?.focus(),
       0,
     );
-    return () => window.clearTimeout(handle);
-  }, [displayMonth.month, periodPickerOpen]);
+    return () => host.window.clearTimeout(handle);
+  }, [displayMonth.month, host.window, periodPickerOpen]);
 
   const selectDate = useCallback(
     async (date: LocalDate) => {
@@ -182,8 +189,8 @@ function MiniCalendar({
 
   const closePeriodPicker = useCallback(() => {
     setPeriodPickerOpen(false);
-    window.setTimeout(() => periodTrigger.current?.focus(), 0);
-  }, []);
+    host.window.setTimeout(() => periodTrigger.current?.focus(), 0);
+  }, [host.window]);
   const dayRows = Array.from(
     { length: Math.ceil(model.grid.days.length / 7) },
     (_, rowIndex) => model.grid.days.slice(rowIndex * 7, rowIndex * 7 + 7),

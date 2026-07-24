@@ -172,6 +172,9 @@ async function measureInitialConcurrencyMatrix(): Promise<
     const index = new NoteIndex(source, {
       diagnostics,
       readConcurrency: concurrency,
+      // This matrix isolates worker-pool semantics. Cooperative host yielding is
+      // covered by the deterministic NoteIndex contract and the main benchmark.
+      initialIndexTimeSliceMs: Number.MAX_SAFE_INTEGER,
     });
     const heapBefore = sampleHeapUsed();
     const startupMs = await measureAsync(() => index.start());

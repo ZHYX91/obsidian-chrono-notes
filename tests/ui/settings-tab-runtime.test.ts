@@ -52,6 +52,7 @@ vi.mock("../../src/ui/settings/integrations-settings-section", () => ({
 
 import type { App } from "obsidian";
 
+import { createTranslator } from "../../src/shared/i18n";
 import { createDefaultSettings } from "../../src/shared/settings";
 import { ChronoNotesSettingTab } from "../../src/ui/settings/settings-tab";
 import type {
@@ -116,6 +117,22 @@ describe("ChronoNotesSettingTab save orchestration", () => {
     expect(tab.containerEl.dir).toBe("ltr");
   });
 
+  it("uses the Obsidian locale supplied by the host when language is Auto", () => {
+    const { tab, host } = createTab();
+    host.settings.locale = "auto";
+    host.getTranslator = () => createTranslator("auto", "ar");
+
+    tab.display();
+
+    expect(tab.containerEl.dir).toBe("rtl");
+    expect(mocks.renderGeneral.mock.calls[0]?.[1]).toMatchObject({
+      translator: {
+        locale: "ar",
+        direction: "rtl",
+      },
+    });
+  });
+
   it("saves a scheduled section edit after the 300 ms debounce", async () => {
     const { context, saveSettings } = displayAndGetGeneralContext();
 
@@ -172,8 +189,10 @@ function createTab(): {
   readonly saveSettings: ReturnType<typeof vi.fn<() => Promise<void>>>;
 } {
   const saveSettings = vi.fn(async () => undefined);
+  const settings = createDefaultSettings();
   const host = {
-    settings: createDefaultSettings(),
+    settings,
+    getTranslator: () => createTranslator(settings.locale, "en"),
     saveSettings,
     openIntervalNoteList: vi.fn(),
     getIcsSnapshot: vi.fn(() => null),

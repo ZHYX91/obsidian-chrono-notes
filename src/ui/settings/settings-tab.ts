@@ -56,7 +56,7 @@ export class ChronoNotesSettingTab extends PluginSettingTab {
 
   private render(focusTab: SettingsTabId | null): void {
     const { containerEl } = this;
-    this.translator = createTranslator(this.host.settings.locale, navigator.language);
+    this.translator = this.host.getTranslator();
     containerEl.empty();
     containerEl.addClass("chrono-notes-settings");
     containerEl.dir = this.translator.direction;

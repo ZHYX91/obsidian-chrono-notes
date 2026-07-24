@@ -119,7 +119,7 @@ function getFormatter(
   const formatter = new Intl.DateTimeFormat(normalizedLocale, options);
   FORMATTERS.set(key, formatter);
   while (FORMATTERS.size > FORMATTER_CAPACITY) {
-    const oldest = FORMATTERS.keys().next().value as string | undefined;
+    const oldest = FORMATTERS.keys().next().value;
     if (oldest === undefined) break;
     FORMATTERS.delete(oldest);
   }

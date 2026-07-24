@@ -87,7 +87,7 @@ export interface WeekViewProps {
     date: LocalDate,
     configured: boolean,
     noteExists: boolean,
-    event: globalThis.MouseEvent,
+    event: MouseEvent,
   ) => void;
   readonly longPress: LongPressGesture;
 }

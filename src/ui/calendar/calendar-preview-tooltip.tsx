@@ -14,6 +14,7 @@ import type {
   RegionalWorkday,
 } from "../../core/calendar/regional-holidays";
 import type { Translator } from "../../shared/i18n";
+import { useHostEnvironment } from "../host-environment";
 import { placeCalendarPreview } from "./calendar-preview";
 import {
   formatCalendarPreviewError,
@@ -51,6 +52,7 @@ export function CalendarPreviewTooltip({
   preview,
   translator,
 }: CalendarPreviewTooltipProps) {
+  const host = useHostEnvironment();
   const tooltipRef = useRef<HTMLDivElement>(null);
   const [style, setStyle] = useState<CSSProperties>({ visibility: "hidden" });
 
@@ -60,23 +62,23 @@ export function CalendarPreviewTooltip({
     const anchorRect = preview.anchor.getBoundingClientRect();
     const tooltipRect = tooltip.getBoundingClientRect();
     const position = placeCalendarPreview(anchorRect, tooltipRect, {
-      width: window.innerWidth,
-      height: window.innerHeight,
+      width: host.window.innerWidth,
+      height: host.window.innerHeight,
     });
     setStyle({ ...position, visibility: "visible" });
-  }, [preview.anchor]);
+  }, [host.window, preview.anchor]);
 
   useLayoutEffect(() => {
     updatePosition();
-    const frame = window.requestAnimationFrame(updatePosition);
-    window.addEventListener("resize", updatePosition);
-    window.addEventListener("scroll", updatePosition, true);
+    const frame = host.window.requestAnimationFrame(updatePosition);
+    host.window.addEventListener("resize", updatePosition);
+    host.window.addEventListener("scroll", updatePosition, true);
     return () => {
-      window.cancelAnimationFrame(frame);
-      window.removeEventListener("resize", updatePosition);
-      window.removeEventListener("scroll", updatePosition, true);
+      host.window.cancelAnimationFrame(frame);
+      host.window.removeEventListener("resize", updatePosition);
+      host.window.removeEventListener("scroll", updatePosition, true);
     };
-  }, [preview, updatePosition]);
+  }, [host.window, preview, updatePosition]);
 
   return createPortal(
     <div
@@ -92,7 +94,7 @@ export function CalendarPreviewTooltip({
       <RegionalCalendarContent cell={preview.cell} t={translator.t} />
       <PreviewContent cell={preview.cell} t={translator.t} />
     </div>,
-    document.body,
+    host.document.body,
   );
 }
 

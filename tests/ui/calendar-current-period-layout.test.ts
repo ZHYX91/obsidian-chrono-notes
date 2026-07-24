@@ -1,6 +1,5 @@
 import { Window } from "happy-dom";
 import { createElement } from "react";
-import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 
 import type { LocalDate } from "../../src/core/periodic/periodic-date";
@@ -23,6 +22,7 @@ import {
   createNoteIndexSnapshot,
   createParsedNoteIndexSnapshot,
 } from "../support/note-index-snapshot";
+import { renderWithTestHost } from "../support/render-with-host";
 
 const EMPTY_NOTES: NoteIndexSnapshot = createNoteIndexSnapshot({}, 1);
 
@@ -299,7 +299,7 @@ describe("calendar current-period layout", () => {
 });
 
 function renderMonthDay(today: LocalDate, selected: boolean, heatmapEnabled: boolean) {
-  const markup = renderToStaticMarkup(createElement(MonthDayCell, {
+  const markup = renderWithTestHost(createElement(MonthDayCell, {
     cell: heatmapEnabled ? APRIL_18_HEATMAP_CELL : APRIL_18_CELL,
     translator: createTranslator("en", "en"),
     today,
@@ -378,7 +378,7 @@ function renderYear(
   selectionKind: CalendarSelectionKind,
   selectionDate: LocalDate,
 ) {
-  const markup = renderToStaticMarkup(createElement(YearView, {
+  const markup = renderWithTestHost(createElement(YearView, {
     weekStartDay: "monday",
     query: heatmap ? HEATMAP_QUERY : QUERY,
     translator: createTranslator("en", "en"),

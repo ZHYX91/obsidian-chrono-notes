@@ -131,6 +131,7 @@ vi.mock("../../src/ui/use-local-today", () => ({
 
 import type { IcsEventIndex } from "../../src/features/calendar/ics-event-index";
 import type { NoteIndex } from "../../src/features/notes/note-index";
+import { createTranslator } from "../../src/shared/i18n";
 import { createDefaultSettings } from "../../src/shared/settings";
 import {
   CalendarApp,
@@ -268,6 +269,7 @@ function createProps(): CalendarAppProps {
       getSnapshot: () => icsSnapshot,
     } as unknown as IcsEventIndex,
     getSettings: () => settings,
+    getTranslator: () => createTranslator(settings.locale, "en"),
     onOpenPeriodic: async () => undefined,
     onSetYearHeatmap: async () => undefined,
     onSetStatisticDimension: async () => undefined,

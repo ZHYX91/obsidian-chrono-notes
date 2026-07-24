@@ -16,10 +16,10 @@ export interface Translator {
 
 export function resolvePluginLocale(
   configuredLocale: PluginLocale,
-  systemLocale: string,
+  hostLocale: string,
 ): SupportedLocale {
   if (configuredLocale !== "auto") return configuredLocale;
-  const normalized = systemLocale.trim().replaceAll("_", "-").toLowerCase();
+  const normalized = hostLocale.trim().replaceAll("_", "-").toLowerCase();
   const language = normalized.split("-")[0];
   if (language === "ar") return "ar";
   if (language === "fa") return "fa";
@@ -39,10 +39,10 @@ export function resolvePluginLocale(
 
 export function createTranslator(
   configuredLocale: PluginLocale,
-  systemLocale: string,
+  hostLocale: string,
   catalogs: MessageCatalogs = MESSAGE_CATALOGS,
 ): Translator {
-  const locale = resolvePluginLocale(configuredLocale, systemLocale);
+  const locale = resolvePluginLocale(configuredLocale, hostLocale);
   return Object.freeze({
     locale,
     direction: locale === "ar" || locale === "fa" || locale === "he" ? "rtl" : "ltr",
@@ -60,7 +60,8 @@ function selectMessage(
 ): string {
   if (typeof message === "string") return message;
   if (typeof count !== "number") return message.other;
-  return new Intl.PluralRules(locale).select(count) === "one" ? message.one : message.other;
+  const category = new Intl.PluralRules(locale).select(count);
+  return message[category] ?? message.other;
 }
 
 function interpolate(message: string, parameters: MessageParameters): string {

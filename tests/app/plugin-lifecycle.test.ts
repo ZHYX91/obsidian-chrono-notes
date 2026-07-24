@@ -37,6 +37,7 @@ const mocks = vi.hoisted(() => {
     domCallbacks: new Map<string, Array<EventListener>>(),
     domEventUnsubscribes: [] as Array<ReturnType<typeof vi.fn>>,
     documentVisibilityState: "visible" as DocumentVisibilityState,
+    appLanguage: "en",
     localTimeZone: "Asia/Shanghai",
     eventUnsubscribes: [] as Array<ReturnType<typeof vi.fn>>,
     noteSourceUnsubscribes: [] as Array<ReturnType<typeof vi.fn>>,
@@ -249,6 +250,7 @@ const mocks = vi.hoisted(() => {
 });
 
 vi.mock("obsidian", () => ({
+  getLanguage: () => mocks.state.appLanguage,
   Notice: mocks.MockNotice,
   Plugin: mocks.MockPlugin,
   TFolder: mocks.MockTFolder,
@@ -336,6 +338,7 @@ describe("ChronoNotesPlugin lifecycle composition", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     resetCollections();
+    mocks.state.appLanguage = "en";
     mocks.state.loadData.mockResolvedValue({ firstUseGuideSeen: true });
     mocks.state.saveData.mockResolvedValue(undefined);
     mocks.state.noteListPaths.mockReturnValue([]);
@@ -421,6 +424,20 @@ describe("ChronoNotesPlugin lifecycle composition", () => {
     mocks.state.vaultCallbacks.get("rename")?.forEach((callback) => callback());
     expect(navbar.update).toHaveBeenCalledTimes(2);
     expect(navbar.handleFileRename).not.toHaveBeenCalled();
+  });
+
+  it("resolves Auto from Obsidian's configured language instead of the system locale", async () => {
+    mocks.state.appLanguage = "ar";
+    vi.stubGlobal("navigator", { language: "zh-CN" });
+    const plugin = createPlugin();
+
+    await plugin.onload();
+
+    expect(plugin.getTranslator()).toMatchObject({
+      locale: "ar",
+      direction: "rtl",
+    });
+    plugin.unload();
   });
 
   it("defers indexing until layout-ready and reports a startup failure without blocking UI", async () => {
@@ -816,6 +833,7 @@ function resetCollections(): void {
   mocks.state.domCallbacks.clear();
   mocks.state.domEventUnsubscribes.length = 0;
   mocks.state.documentVisibilityState = "visible";
+  mocks.state.appLanguage = "en";
   mocks.state.localTimeZone = "Asia/Shanghai";
   mocks.state.activeFilePath = null;
   mocks.state.eventUnsubscribes.length = 0;
