@@ -54,6 +54,15 @@
   z-index: 1;
 }
 
+.chrono-notes-year-period.is-current-period
+  .chrono-notes-year-period-label {
+  background: var(--chrono-notes-current-period-fill);
+  border-radius: 4px;
+  box-sizing: border-box;
+  color: var(--chrono-notes-current-period-foreground);
+  padding: 0 2px;
+}
+
 .chrono-notes-year-period-selection {
   background: var(--interactive-accent);
   border-radius: 999px;
@@ -225,33 +234,22 @@
   box-shadow: 0 0 0 2px var(--interactive-accent) !important;
 }
 
-.chrono-notes-week-day.is-current-period:not(.is-drop-target)::after,
-.chrono-notes-week-number-button.is-current-period::after,
-.chrono-notes-year-period.is-current-period::after,
 .chrono-notes-year-heatmap-day.is-current-period::after {
-  border-radius: inherit;
-  box-shadow: inset 0 0 0 1px var(--chrono-notes-current-period-ring);
+  background: var(--chrono-notes-current-period-fill);
+  border-radius: 50%;
   content: "";
-  inset: 0;
+  height: clamp(3px, 20%, 6px);
+  inset: 50% auto auto 50%;
   pointer-events: none;
   position: absolute;
-  z-index: 0;
+  transform: translate(-50%, -50%);
+  width: clamp(3px, 20%, 6px);
+  z-index: 1;
 }
 
 .chrono-notes-week-day > * {
   position: relative;
   z-index: 1;
-}
-
-:is(
-  .chrono-notes-day.is-heatmap,
-  .chrono-notes-year-heatmap-day
-)[data-heatmap-level="3"],
-:is(
-  .chrono-notes-day.is-heatmap,
-  .chrono-notes-year-heatmap-day
-)[data-heatmap-level="4"] {
-  --chrono-notes-current-period-ring: var(--chrono-notes-current-period-ring-on-accent);
 }
 
 .chrono-notes-week-day.is-drop-target {
@@ -287,6 +285,13 @@
   font-weight: var(--font-medium);
   line-height: 1.2;
   white-space: nowrap;
+}
+
+.chrono-notes-week-day.is-current-period .chrono-notes-week-day-date {
+  background: var(--chrono-notes-current-period-fill);
+  border-radius: 4px;
+  color: var(--chrono-notes-current-period-foreground);
+  padding: 0 4px;
 }
 
 .chrono-notes-week-day-date .is-compact {

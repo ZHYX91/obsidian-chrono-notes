@@ -7,8 +7,8 @@
 
 .chrono-notes-calendar {
   --chrono-notes-cell-gap: 6px;
-  --chrono-notes-current-period-ring: color-mix(in srgb, var(--text-normal) 60%, transparent);
-  --chrono-notes-current-period-ring-on-accent: color-mix(in srgb, var(--text-on-accent) 75%, transparent);
+  --chrono-notes-current-period-fill: var(--text-normal);
+  --chrono-notes-current-period-foreground: var(--background-secondary);
   --chrono-notes-font-header: var(--font-ui-medium);
   --chrono-notes-font-normal: var(--font-ui-small);
   --chrono-notes-font-small: var(--font-ui-smaller);

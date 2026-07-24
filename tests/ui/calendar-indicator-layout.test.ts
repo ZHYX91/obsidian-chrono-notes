@@ -242,14 +242,14 @@ describe("calendar indicator layout", () => {
     expect(styles).not.toMatch(/\.chrono-notes-day\.is-outside\s*\{[^}]*opacity:/s);
   });
 
-  it("uses a neutral inner border and an external selected frame", () => {
-    expect(styles).toMatch(
-      /--chrono-notes-current-period-ring:\s*color-mix\(in srgb, var\(--text-normal\) 60%, transparent\);/s,
+  it("uses inverse current-period labels and an external selected frame", () => {
+    expect(styles).toContain(
+      "--chrono-notes-current-period-fill: var(--text-normal);",
     );
-    expect(styles).toMatch(
-      /--chrono-notes-current-period-ring-on-accent:\s*color-mix\(in srgb, var\(--text-on-accent\) 75%, transparent\);/s,
+    expect(styles).toContain(
+      "--chrono-notes-current-period-foreground: var(--background-secondary);",
     );
-    expect(styles).not.toContain("--chrono-notes-current-period-background");
+    expect(styles).not.toContain("--chrono-notes-current-period-ring");
     for (const selector of [
       ".chrono-notes-day.is-selected",
       ".chrono-notes-day.is-range-start",
@@ -281,51 +281,79 @@ describe("calendar indicator layout", () => {
       );
     }
 
-    const currentSelectors = [
+    for (const { selector, padding } of [
       {
-        selector: ".chrono-notes-day.is-current-period:not(.is-range-preview):not(.is-range-start):not(.is-range-end)::after",
-        zIndex: 2,
+        selector: ".chrono-notes-day.is-current-period .chrono-notes-day-number",
+        padding: "0 4px",
       },
       {
-        selector: ".chrono-notes-week-day.is-current-period:not(.is-drop-target)::after",
-        zIndex: 0,
+        selector: ".chrono-notes-week-number-button.is-current-period .chrono-notes-week-number-label",
+        padding: "0 3px",
       },
       {
-        selector: ".chrono-notes-week-number-button.is-current-period::after",
-        zIndex: 0,
+        selector: ".chrono-notes-week-day.is-current-period .chrono-notes-week-day-date",
+        padding: "0 4px",
       },
       {
-        selector: ".chrono-notes-year-period.is-current-period::after",
-        zIndex: 0,
+        selector: ".chrono-notes-year-period.is-current-period .chrono-notes-year-period-label",
+        padding: "0 2px",
       },
-      {
-        selector: ".chrono-notes-year-heatmap-day.is-current-period::after",
-        zIndex: 0,
-      },
-    ];
-    for (const { selector, zIndex } of currentSelectors) {
-      const currentRule = declarationsForSelector(selector);
-      expect(currentRule, selector).toContain(
-        "box-shadow: inset 0 0 0 1px var(--chrono-notes-current-period-ring);",
+    ]) {
+      const labelRule = declarationsForSelector(selector);
+      expect(labelRule, selector).toContain(
+        "background: var(--chrono-notes-current-period-fill);",
       );
-      expect(currentRule, selector).toContain("border-radius: inherit;");
-      expect(currentRule, selector).toContain("inset: 0;");
-      expect(currentRule, selector).toContain("pointer-events: none;");
-      expect(currentRule, selector).toContain("position: absolute;");
-      expect(currentRule, selector).toContain(`z-index: ${zIndex};`);
+      expect(labelRule, selector).toContain("border-radius: 4px;");
+      expect(labelRule, selector).toContain(
+        "color: var(--chrono-notes-current-period-foreground);",
+      );
+      expect(labelRule, selector).toContain(`padding: ${padding};`);
     }
-    expect(styles).not.toMatch(
-      /\.chrono-notes-(?:day|week-day|week-number-button|year-period)\.is-current-period[^:{]*\{[^}]*background:/s,
+    const dayLabelRule = declarationsForSelector(
+      ".chrono-notes-day.is-current-period .chrono-notes-day-number",
     );
-    expect(styles).not.toMatch(
-      /\.chrono-notes-(?:day|week-day|week-number-button|year-period)[^{]*\.is-current-period\s+\.chrono-notes-(?:day-number|week-day-date|week-number-label|year-period-label)\s*\{/s,
+    expect(dayLabelRule).toContain("display: inline-block;");
+    expect(dayLabelRule).toContain("width: auto;");
+
+    for (const selector of [
+      ".chrono-notes-day.is-current-period",
+      ".chrono-notes-week-day.is-current-period",
+      ".chrono-notes-week-number-button.is-current-period",
+      ".chrono-notes-year-period.is-current-period",
+    ]) {
+      expect(declarationsForSelector(selector), selector).not.toContain(
+        "background:",
+      );
+    }
+    for (const selector of [
+      ".chrono-notes-day.is-current-period:not(.is-range-preview):not(.is-range-start):not(.is-range-end)::after",
+      ".chrono-notes-week-day.is-current-period:not(.is-drop-target)::after",
+      ".chrono-notes-week-number-button.is-current-period::after",
+      ".chrono-notes-year-period.is-current-period::after",
+    ]) {
+      expect(declarationsForSelector(selector), selector).toBe("");
+    }
+
+    const heatmapMarkerRule = declarationsForSelector(
+      ".chrono-notes-year-heatmap-day.is-current-period::after",
     );
+    expect(heatmapMarkerRule).toContain(
+      "background: var(--chrono-notes-current-period-fill);",
+    );
+    expect(heatmapMarkerRule).toContain("border-radius: 50%;");
+    expect(heatmapMarkerRule).toContain("height: clamp(3px, 20%, 6px);");
+    expect(heatmapMarkerRule).toContain("inset: 50% auto auto 50%;");
+    expect(heatmapMarkerRule).toContain("pointer-events: none;");
+    expect(heatmapMarkerRule).toContain("position: absolute;");
+    expect(heatmapMarkerRule).toContain(
+      "transform: translate(-50%, -50%);",
+    );
+    expect(heatmapMarkerRule).toContain("width: clamp(3px, 20%, 6px);");
+    expect(heatmapMarkerRule).toContain("z-index: 1;");
+
     expect(yearView).toContain("data-period-kind={kind}");
     expect(styles).not.toContain("--chrono-notes-current-period-inset");
     expect(styles).not.toContain("--chrono-notes-current-period-radius");
-    expect(styles).toMatch(
-      /:is\([\s\S]*?\.chrono-notes-day\.is-heatmap,[\s\S]*?\.chrono-notes-year-heatmap-day[\s\S]*?\)\[data-heatmap-level="4"\]\s*\{[^}]*--chrono-notes-current-period-ring:\s*var\(--chrono-notes-current-period-ring-on-accent\);/s,
-    );
     for (const level of [1, 2, 3, 4]) {
       expect(styles).toMatch(new RegExp(
         `\\.chrono-notes-day\\.is-heatmap\\[data-heatmap-level="${level}"\\]\\s*\\{[^}]*background:`,
@@ -409,12 +437,12 @@ describe("calendar indicator layout", () => {
     );
   });
 
-  it("uses a compact base month height and lets each week stretch as one row", () => {
+  it("uses a breathable base month height and lets each week stretch as one row", () => {
     expect(styles).toMatch(
       /\.chrono-notes-week-block\s*\{[^}]*align-items:\s*stretch;/s,
     );
     expect(styles).toMatch(
-      /\.chrono-notes-day-main\s*\{[^}]*min-height:\s*52px;/s,
+      /\.chrono-notes-day-main\s*\{[^}]*min-height:\s*56px;/s,
     );
   });
 

@@ -218,11 +218,11 @@ describe("week calendar layout", () => {
     expect(styles).not.toMatch(
       /\.chrono-notes-week-day\.is-current-period\s*\{[^}]*background:/s,
     );
-    expect(styles).toContain(
-      ".chrono-notes-week-day.is-current-period:not(.is-drop-target)::after,",
+    expect(styles).not.toContain(
+      ".chrono-notes-week-day.is-current-period:not(.is-drop-target)::after",
     );
-    expect(styles).not.toMatch(
-      /\.chrono-notes-week-day\.is-current-period \.chrono-notes-week-day-date\s*\{/s,
+    expect(styles).toMatch(
+      /\.chrono-notes-week-day\.is-current-period \.chrono-notes-week-day-date\s*\{[^}]*background:\s*var\(--chrono-notes-current-period-fill\);[^}]*border-radius:\s*4px;[^}]*color:\s*var\(--chrono-notes-current-period-foreground\);[^}]*padding:\s*0 4px;/s,
     );
     expect(styles).toMatch(
       /\.chrono-notes-week-day-content\s*\{[^}]*gap:\s*2px;[^}]*margin-block-start:\s*1px;/s,

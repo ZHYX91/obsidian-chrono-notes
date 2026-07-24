@@ -176,14 +176,19 @@ button:not(.clickable-icon) {
     expect(dayMainRule).toContain("display: flex;");
     expect(dayMainRule).toContain("flex-direction: column;");
     expect(dayMainRule).toContain("grid-row: 1;");
-    expect(dayMainRule).toContain("min-height: 52px;");
+    expect(dayMainRule).toContain("min-height: 56px;");
     expect(dayMainRule).toContain("padding: 5px;");
     expect(dayMainRule).toContain("z-index: 1;");
-    const currentFrameRule = styles.match(
+    expect(styles).not.toMatch(
       /\.chrono-notes-day\.is-current-period:not\(\.is-range-preview\):not\(\.is-range-start\):not\(\.is-range-end\)::after\s*\{[^}]*\}/s,
+    );
+    const currentLabelRule = styles.match(
+      /\.chrono-notes-day\.is-current-period \.chrono-notes-day-number\s*\{[^}]*\}/s,
     )?.[0];
-    expect(currentFrameRule).toContain("pointer-events: none;");
-    expect(currentFrameRule).toContain("z-index: 2;");
+    expect(currentLabelRule).toContain(
+      "background: var(--chrono-notes-current-period-fill);",
+    );
+    expect(currentLabelRule).toContain("padding: 0 4px;");
     const intervalButtonRule = styles.match(
       /\.chrono-notes-calendar button\.chrono-notes-month-interval-item\s*\{[^}]*\}/s,
     )?.[0];
