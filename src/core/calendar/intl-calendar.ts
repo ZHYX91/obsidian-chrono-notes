@@ -1,7 +1,7 @@
 import type {
-  CalendarOverlayId,
-  CalendarOverlayResult,
-} from "./calendar-overlay";
+  CalendarExtensionId,
+  CalendarExtensionResult,
+} from "./calendar-extension";
 import {
   toUtcDate,
   type LocalDate,
@@ -14,7 +14,7 @@ export const INTL_CALENDAR_IDS = [
   "indian",
   "islamic-civil",
   "islamic-umalqura",
-] as const satisfies readonly CalendarOverlayId[];
+] as const satisfies readonly CalendarExtensionId[];
 
 export type IntlCalendarId = typeof INTL_CALENDAR_IDS[number];
 
@@ -27,8 +27,9 @@ interface CalendarIdentity {
 
 const FORMATTER_CAPACITY = 64;
 const FORMATTERS = new Map<string, Intl.DateTimeFormat>();
+const EMPTY_EVENTS = Object.freeze([]);
 
-export function isIntlCalendarId(value: CalendarOverlayId): value is IntlCalendarId {
+export function isIntlCalendarId(value: CalendarExtensionId): value is IntlCalendarId {
   return (INTL_CALENDAR_IDS as readonly string[]).includes(value);
 }
 
@@ -47,7 +48,7 @@ export function getIntlCalendarDay(
   date: LocalDate,
   locale: string,
   calendar: IntlCalendarId,
-): CalendarOverlayResult {
+): CalendarExtensionResult {
   if (!isIntlCalendarSupported(calendar, locale)) {
     throw new RangeError(`Unsupported Intl calendar: ${calendar}`);
   }
@@ -69,8 +70,7 @@ export function getIntlCalendarDay(
 
   return Object.freeze({
     dateText: getFormatter(calendar, locale, style).format(currentDate),
-    eventText: null,
-    eventKind: null,
+    events: EMPTY_EVENTS,
     transition,
     accessibilityText: getFormatter(calendar, locale, "full").format(currentDate),
   });

@@ -210,7 +210,7 @@ function createFixtureFiles(settingsSchemaVersion) {
       schemaVersion: settingsSchemaVersion,
       locale: "en",
       weekStartDay: "monday",
-      calendarOverlays: ["persian", "islamic-umalqura"],
+      calendarExtensions: ["persian", "islamic-umalqura"],
       holidayRegions: ["cn", "sg"],
       showNoteIndicators: true,
       quarterNameMode: "number",

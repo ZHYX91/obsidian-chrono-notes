@@ -1,9 +1,11 @@
 import type {
-  CalendarOverlayDay,
-  CalendarOverlayId,
-  CalendarOverlayProvider,
-  CalendarOverlayResult,
-} from "../../core/calendar/calendar-overlay";
+  CalendarExtensionDay,
+  CalendarExtensionEvent,
+  CalendarExtensionEventSource,
+  CalendarExtensionId,
+  CalendarExtensionProvider,
+  CalendarExtensionResult,
+} from "../../core/calendar/calendar-extension";
 import {
   getChineseLunarDay,
   getChineseLunarDayFromContext,
@@ -23,7 +25,7 @@ import {
 } from "../../core/calendar/intl-calendar";
 import type { MessageKey } from "../../shared/i18n";
 
-export interface CalendarOverlayDefinition extends CalendarOverlayProvider {
+export interface CalendarExtensionDefinition extends CalendarExtensionProvider {
   readonly labelKey: MessageKey;
   readonly descriptionKey: MessageKey;
   readonly usesLunarContext: boolean;
@@ -32,10 +34,10 @@ export interface CalendarOverlayDefinition extends CalendarOverlayProvider {
     date: LocalDate,
     locale: string,
     context?: LunarDateContext,
-  ): CalendarOverlayResult;
+  ): CalendarExtensionResult;
 }
 
-export const CALENDAR_OVERLAY_DEFINITIONS: readonly CalendarOverlayDefinition[] =
+export const CALENDAR_EXTENSION_DEFINITIONS: readonly CalendarExtensionDefinition[] =
   Object.freeze([
     Object.freeze({
       id: "chinese-lunar",
@@ -90,58 +92,94 @@ export const CALENDAR_OVERLAY_DEFINITIONS: readonly CalendarOverlayDefinition[] 
     })),
   ]);
 
-const PROVIDERS = new Map<CalendarOverlayId, CalendarOverlayDefinition>(
-  CALENDAR_OVERLAY_DEFINITIONS.map((provider) => [provider.id, provider]),
+const PROVIDERS = new Map<CalendarExtensionId, CalendarExtensionDefinition>(
+  CALENDAR_EXTENSION_DEFINITIONS.map((provider) => [provider.id, provider]),
 );
 
-export function selectCalendarOverlayDays(
+export function selectCalendarExtensionDays(
   date: LocalDate,
   locale: string,
-  selected: readonly CalendarOverlayId[],
-): readonly CalendarOverlayDay[] {
+  selected: readonly CalendarExtensionId[],
+): readonly CalendarExtensionDay[] {
   const needsLunarContext = selected.some((id) => PROVIDERS.get(id)?.usesLunarContext);
   const context = needsLunarContext ? createLunarDateContext(date) : undefined;
   return Object.freeze(selected.flatMap((id) => {
-    const day = selectCalendarOverlayDay(date, locale, id, context);
+    const day = selectCalendarExtensionDay(date, locale, id, context);
     return day === null ? [] : [day];
   }));
 }
 
-export function selectCalendarOverlayDay(
+export function selectCalendarExtensionDay(
   date: LocalDate,
   locale: string,
-  id: CalendarOverlayId,
+  id: CalendarExtensionId,
   context?: LunarDateContext,
-): CalendarOverlayDay | null {
+): CalendarExtensionDay | null {
   const provider = PROVIDERS.get(id);
-  if (provider === undefined) throw new Error(`Unknown calendar overlay: ${id}`);
+  if (provider === undefined) throw new Error(`Unknown calendar extension: ${id}`);
   if (!provider.isSupported(locale)) return null;
   return Object.freeze({ id, ...provider.getDay(date, locale, context) });
 }
 
-export function isCalendarOverlaySupported(
-  id: CalendarOverlayId,
+export function mergeCalendarExtensionEvents(
+  extensions: readonly CalendarExtensionDay[],
+): readonly CalendarExtensionEvent[] {
+  const merged = new Map<string, {
+    kind: CalendarExtensionEvent["kind"];
+    text: string;
+    sources: CalendarExtensionEventSource[];
+  }>();
+
+  for (const extension of extensions) {
+    for (const event of extension.events) {
+      const existing = merged.get(event.id);
+      if (existing === undefined) {
+        merged.set(event.id, {
+          kind: event.kind,
+          text: event.text,
+          sources: [...event.sources],
+        });
+        continue;
+      }
+      for (const source of event.sources) {
+        if (!existing.sources.some(({ id }) => id === source.id)) {
+          existing.sources.push(source);
+        }
+      }
+    }
+  }
+
+  return Object.freeze(Array.from(merged, ([id, event]) => Object.freeze({
+    id,
+    kind: event.kind,
+    text: event.text,
+    sources: Object.freeze([...event.sources]),
+  })));
+}
+
+export function isCalendarExtensionSupported(
+  id: CalendarExtensionId,
   locale: string,
 ): boolean {
   const provider = PROVIDERS.get(id);
   return provider?.isSupported(locale) ?? false;
 }
 
-export function usesLunarCalendarContext(id: CalendarOverlayId): boolean {
+export function usesLunarCalendarContext(id: CalendarExtensionId): boolean {
   return PROVIDERS.get(id)?.usesLunarContext ?? false;
 }
 
-export function updateCalendarOverlaySlot(
-  selected: readonly CalendarOverlayId[],
+export function updateCalendarExtensionSlot(
+  selected: readonly CalendarExtensionId[],
   slot: 0 | 1,
-  nextId: CalendarOverlayId | null,
-): readonly CalendarOverlayId[] {
-  const slots: [CalendarOverlayId | null, CalendarOverlayId | null] = [
+  nextId: CalendarExtensionId | null,
+): readonly CalendarExtensionId[] {
+  const slots: [CalendarExtensionId | null, CalendarExtensionId | null] = [
     selected[0] ?? null,
     selected[1] ?? null,
   ];
   slots[slot] = nextId;
   return Object.freeze(slots.filter(
-    (id, index): id is CalendarOverlayId => id !== null && slots.indexOf(id) === index,
+    (id, index): id is CalendarExtensionId => id !== null && slots.indexOf(id) === index,
   ));
 }

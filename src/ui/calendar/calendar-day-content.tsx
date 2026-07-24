@@ -62,31 +62,39 @@ export function CalendarDayCalendarDetails({
   const groups = groupHolidayNames(day);
   return (
     <>
-      {day.calendarOverlays.length === 0 ? null : (
+      {day.calendarExtensions.length === 0 ? null : (
         <span
-          className="chrono-notes-calendar-overlays"
-          data-count={day.calendarOverlays.length}
+          className="chrono-notes-calendar-extensions"
+          data-count={day.calendarExtensions.length}
           aria-hidden="true"
         >
-          {day.calendarOverlays.map((overlay) => (
+          {day.calendarExtensions.map((extension) => (
             <span
-              className="chrono-notes-calendar-overlay"
-              data-overlay-id={overlay.id}
-              data-transition={overlay.transition ?? "none"}
-              title={overlay.accessibilityText}
-              key={overlay.id}
+              className="chrono-notes-calendar-extension"
+              data-calendar-extension-id={extension.id}
+              data-transition={extension.transition ?? "none"}
+              key={extension.id}
             >
-              <span className="chrono-notes-calendar-overlay-date">
-                {overlay.dateText}
+              <span className="chrono-notes-calendar-extension-date">
+                {extension.dateText}
               </span>
-              {overlay.eventText === null ? null : (
-                <span
-                  className="chrono-notes-calendar-overlay-event"
-                  data-event-kind={overlay.eventKind ?? "none"}
-                >
-                  {overlay.eventText}
-                </span>
-              )}
+            </span>
+          ))}
+        </span>
+      )}
+      {day.calendarEvents.length === 0 ? null : (
+        <span
+          className="chrono-notes-calendar-extension-events"
+          aria-hidden="true"
+        >
+          {day.calendarEvents.map((event) => (
+            <span
+              className="chrono-notes-calendar-extension-event"
+              data-calendar-event-id={event.id}
+              data-event-kind={event.kind}
+              key={event.id}
+            >
+              {event.text}
             </span>
           ))}
         </span>
@@ -144,14 +152,12 @@ export function CalendarDayEvents({
         <CalendarEventOverflow
           count={mediumHiddenCount}
           variant="medium"
-          t={t}
         />
       ) : null}
       {wideHiddenCount > 0 ? (
         <CalendarEventOverflow
           count={wideHiddenCount}
           variant={responsive ? "wide" : "fixed"}
-          t={t}
         />
       ) : null}
     </span>
@@ -161,16 +167,13 @@ export function CalendarDayEvents({
 function CalendarEventOverflow({
   count,
   variant,
-  t,
 }: Readonly<{
   count: number;
   variant: "fixed" | "medium" | "wide";
-  t: Translator["t"];
 }>) {
   return (
     <span
       className={`chrono-notes-ics-more is-${variant}`}
-      title={t("calendar.ics.moreEvents", { count })}
     >
       +{count}
     </span>

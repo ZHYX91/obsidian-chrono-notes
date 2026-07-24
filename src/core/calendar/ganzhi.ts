@@ -1,7 +1,8 @@
-import type {
-  CalendarOverlayEventKind,
-  CalendarOverlayTransition,
-} from "./calendar-overlay";
+import {
+  createCalendarExtensionEvent,
+  type CalendarExtensionEvent,
+  type CalendarExtensionTransition,
+} from "./calendar-extension";
 import {
   localizeSolarTermName,
   withLunarLibraryLanguage,
@@ -19,9 +20,8 @@ export interface GanzhiDay {
   readonly solarTerm: string | null;
   readonly solarTermTime: string | null;
   readonly dateText: string;
-  readonly eventText: string | null;
-  readonly eventKind: CalendarOverlayEventKind | null;
-  readonly transition: CalendarOverlayTransition | null;
+  readonly events: readonly CalendarExtensionEvent[];
+  readonly transition: CalendarExtensionTransition | null;
   readonly accessibilityText: string;
 }
 
@@ -33,6 +33,10 @@ export function getGanzhiDayFromContext(
   context: LunarDateContext,
   locale: string,
 ): GanzhiDay {
+  const canonicalSolarTerm = withLunarLibraryLanguage(
+    "zh-CN",
+    () => context.lunar.getCurrentJie()?.getName() ?? null,
+  );
   const raw = withLunarLibraryLanguage(locale, () => calculateGanzhiDay(context));
   const solarTerm = raw.solarTerm === null
     ? null
@@ -46,28 +50,36 @@ export function getGanzhiDayFromContext(
         `${raw.yearPillar}年`,
         `${raw.monthPillar}月`,
         `${raw.dayPillar}日`,
-        ...(solarTerm === null ? [] : [`${solarTerm} ${raw.solarTermTime}`]),
       ].join("，")
     : [
         `Year ${raw.yearPillar}`,
         `month ${raw.monthPillar}`,
         `day ${raw.dayPillar}`,
-        ...(solarTerm === null ? [] : [`${solarTerm} ${raw.solarTermTime}`]),
       ].join(", ");
+  const events = solarTerm === null || canonicalSolarTerm === null
+    ? Object.freeze([])
+    : Object.freeze([
+        createCalendarExtensionEvent(
+          `solar-term:${canonicalSolarTerm}`,
+          "solar-term",
+          solarTerm,
+          "ganzhi",
+          raw.solarTermTime,
+        ),
+      ]);
 
   return Object.freeze({
     ...raw,
     solarTerm,
     dateText,
-    eventText: solarTerm,
-    eventKind: solarTerm === null ? null : "solar-term",
+    events,
     accessibilityText,
   });
 }
 
 function calculateGanzhiDay(context: LunarDateContext): Omit<
   GanzhiDay,
-  "dateText" | "eventText" | "eventKind" | "accessibilityText"
+  "dateText" | "events" | "accessibilityText"
 > {
   const { lunar } = context;
   const currentJie = lunar.getCurrentJie();

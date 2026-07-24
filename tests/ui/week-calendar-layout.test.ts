@@ -60,7 +60,7 @@ describe("week calendar layout", () => {
       EMPTY_NOTES,
       readyIcs(Object.freeze({ "2026-02-17": events })),
       weekOptions({
-        calendarOverlays: ["chinese-lunar"],
+        calendarExtensions: ["chinese-lunar"],
         holidayRegions: ["cn"],
       }),
     );
@@ -76,7 +76,7 @@ describe("week calendar layout", () => {
       "chrono-notes-week-day-date",
       "chrono-notes-week-day-content",
     ]);
-    expect(richDay?.querySelector(".chrono-notes-calendar-overlays")).not.toBeNull();
+    expect(richDay?.querySelector(".chrono-notes-calendar-extensions")).not.toBeNull();
     expect(richDay?.querySelector(".chrono-notes-holiday-footer")).not.toBeNull();
     expect(richDay?.querySelectorAll(".chrono-notes-ics-event")).toHaveLength(3);
     expect(richDay?.querySelector(".chrono-notes-ics-more.is-medium")?.textContent).toBe("+3");
@@ -266,7 +266,7 @@ function weekOptions(
     locale: "zh-CN",
     weekStartDay: "monday" as const,
     today: { year: 2026, month: 7, day: 18 },
-    calendarOverlays: [],
+    calendarExtensions: [],
     holidayRegions: [],
     daily: { enabled: false, pattern: "" },
     weekly: { enabled: false, pattern: "" },

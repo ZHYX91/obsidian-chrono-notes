@@ -506,7 +506,7 @@ function monthRequest(
     options: {
       locale: "en-US",
       weekStartDay: "monday",
-      calendarOverlays: [],
+      calendarExtensions: [],
       holidayRegions: [],
       heatmap: null,
       daily: { enabled: true, pattern: "'Daily'/yyyy-MM-dd" },
@@ -530,7 +530,7 @@ function weekRequest(
       locale: "en-US",
       weekStartDay: "monday",
       today: selectedDate,
-      calendarOverlays: [],
+      calendarExtensions: [],
       holidayRegions: [],
       daily: { enabled: true, pattern: "'Daily'/yyyy-MM-dd" },
       weekly: { enabled: true, pattern: "'Weekly'/kkkk-WW" },

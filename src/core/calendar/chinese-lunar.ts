@@ -1,9 +1,10 @@
 import { I18n } from "lunar-typescript";
 
-import type {
-  CalendarOverlayEventKind,
-  CalendarOverlayTransition,
-} from "./calendar-overlay";
+import {
+  createCalendarExtensionEvent,
+  type CalendarExtensionEvent,
+  type CalendarExtensionTransition,
+} from "./calendar-extension";
 import type { LocalDate } from "../periodic/periodic-date";
 import {
   createLunarDateContext,
@@ -20,12 +21,11 @@ export interface ChineseLunarDay {
   readonly isLeapMonth: boolean;
   readonly lunarMonthName: string;
   readonly lunarDayName: string;
-  readonly festival: string | null;
+  readonly festivals: readonly string[];
   readonly solarTerm: string | null;
   readonly dateText: string;
-  readonly eventText: string | null;
-  readonly eventKind: CalendarOverlayEventKind | null;
-  readonly transition: CalendarOverlayTransition | null;
+  readonly events: readonly CalendarExtensionEvent[];
+  readonly transition: CalendarExtensionTransition | null;
   readonly accessibilityText: string;
 }
 
@@ -51,14 +51,23 @@ function buildChineseLunarDay(context: LunarDateContext): ChineseLunarDay {
     ? `${lunar.getMonthInChinese()}月`
     : `${isLeapMonth ? "Leap lunar month" : "Lunar month"} ${lunarMonth}`;
   const lunarDayName = chinese ? lunar.getDayInChinese() : `day ${lunarDay}`;
-  const rawFestival = lunar.getFestivals()[0] ?? null;
+  const rawFestivals = lunar.getFestivals();
+  const canonicalFestivals = withLunarLibraryLanguage(
+    "zh-CN",
+    () => [...lunar.getFestivals()],
+  );
   const language = I18n.getLanguage();
-  const festival = rawFestival === null
-    ? null
-    : language === "en" || rawFestival.length < 3
-      ? rawFestival
-      : rawFestival.slice(0, 2);
+  const festivals = Object.freeze(
+    rawFestivals.map((festival) =>
+      language === "en" || festival.length < 3
+        ? festival
+        : festival.slice(0, 2)),
+  );
   const rawSolarTerm = lunar.getCurrentJieQi()?.getName() ?? null;
+  const canonicalSolarTerm = withLunarLibraryLanguage(
+    "zh-CN",
+    () => lunar.getCurrentJieQi()?.getName() ?? null,
+  );
   const solarTerm = rawSolarTerm === null
     ? null
     : localizeSolarTermName(rawSolarTerm, I18n.getLanguage());
@@ -66,14 +75,26 @@ function buildChineseLunarDay(context: LunarDateContext): ChineseLunarDay {
   const dateText = chinese
     ? lunarDay === 1 ? lunarMonthName : lunarDayName
     : `Lunar ${isLeapMonth ? "L" : ""}${lunarMonth}/${lunarDay}`;
-  const eventText = festival ?? solarTerm;
-  const eventKind = festival !== null
-    ? "festival"
-    : solarTerm !== null ? "solar-term" : null;
+  const events = Object.freeze([
+    ...festivals.map((festival, index) => createCalendarExtensionEvent(
+      `festival:${canonicalFestivals[index] ?? `${signedMonth}:${lunarDay}:${index}`}`,
+      "festival",
+      festival,
+      "chinese-lunar",
+    )),
+    ...(solarTerm === null || canonicalSolarTerm === null
+      ? []
+      : [createCalendarExtensionEvent(
+          `solar-term:${canonicalSolarTerm}`,
+          "solar-term",
+          solarTerm,
+          "chinese-lunar",
+        )]),
+  ]);
   const transition = lunarDay === 1 ? "month" : null;
   const accessibilityText = chinese
-    ? `${lunarMonthName}${lunarDayName}${eventText === null ? "" : `，${eventText}`}`
-    : [lunarMonthName, lunarDayName, ...(eventText === null ? [] : [eventText])].join(", ");
+    ? `${lunarMonthName}${lunarDayName}`
+    : [lunarMonthName, lunarDayName].join(", ");
 
   return Object.freeze({
     lunarMonth,
@@ -81,11 +102,10 @@ function buildChineseLunarDay(context: LunarDateContext): ChineseLunarDay {
     isLeapMonth,
     lunarMonthName,
     lunarDayName,
-    festival,
+    festivals,
     solarTerm,
     dateText,
-    eventText,
-    eventKind,
+    events,
     transition,
     accessibilityText,
   });

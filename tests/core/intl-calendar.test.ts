@@ -7,7 +7,7 @@ import {
   isIntlCalendarSupported,
 } from "../../src/core/calendar/intl-calendar";
 
-describe("Intl calendar overlays", () => {
+describe("Intl calendar extensions", () => {
   afterEach(() => {
     clearIntlCalendarFormatterCache();
   });
@@ -25,8 +25,7 @@ describe("Intl calendar overlays", () => {
 
     expect(day).toMatchObject({
       dateText: "Mordad 1",
-      eventText: null,
-      eventKind: null,
+      events: [],
       transition: "month",
       accessibilityText: "Mordad 1, 1405 AP",
     });

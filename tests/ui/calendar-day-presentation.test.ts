@@ -17,7 +17,8 @@ function cell(overrides: Partial<MonthCalendarDay> = {}): MonthCalendarDay {
     noteState: "has-body",
     preview: "Keep preview unchanged",
     statistics: noteStatistics(),
-    calendarOverlays: [],
+    calendarExtensions: [],
+    calendarEvents: [],
     holidays: [],
     workday: null,
     regionalMarker: null,
@@ -49,21 +50,45 @@ describe("calendar day presentation", () => {
         }),
       ),
     ).toBe(true);
+    expect(
+      canPreviewCalendarDay(
+        cell({
+          notePath: null,
+          noteState: "not-configured",
+          preview: null,
+          calendarExtensions: [{
+            id: "chinese-lunar",
+            dateText: "Lunar 6/1",
+            events: [],
+            transition: "month",
+            accessibilityText: "Lunar month 6, day 1",
+          }],
+        }),
+      ),
+    ).toBe(true);
   });
 
   it("combines localized labels while preserving source calendar text", () => {
-    const t = createTranslator("zh-CN", "en").t;
+    const t = createTranslator("en", "en").t;
     const value = cell({
-      calendarOverlays: [
+      calendarExtensions: [
         {
           id: "chinese-lunar",
-          dateText: "六月",
-          eventText: "初伏",
-          eventKind: "festival",
+          dateText: "Lunar 6/1",
+          events: [],
           transition: "month",
-          accessibilityText: "六月初一，初伏",
+          accessibilityText: "Lunar month 6, day 1",
         },
       ],
+      calendarEvents: [{
+        id: "festival:初伏",
+        kind: "festival",
+        text: "First Fu",
+        sources: [
+          { id: "chinese-lunar", transitionTime: null },
+          { id: "ganzhi", transitionTime: "09:56" },
+        ],
+      }],
       holidays: [{ region: "sg", name: "National Day" }],
       heatmap: { dimension: "word-count", value: 120, level: 2 },
       statistics: noteStatistics({
@@ -73,24 +98,26 @@ describe("calendar day presentation", () => {
       }),
     });
 
-    expect(
-      formatCalendarDayLabel(
-        "2026-07-14",
-        value,
-        {
-          includeCalendarOverlays: true,
-        },
-        t,
-      ),
-    ).toBe(
-      "2026-07-14，六月初一，初伏，公共假日：National Day，字数：120，热力图等级 2/4，含正文的笔记，已完成 1/2 个任务",
+    const label = formatCalendarDayLabel(
+      "2026-07-14",
+      value,
+      {
+        includeCalendarExtensions: true,
+      },
+      t,
     );
+    expect(label).toContain("Lunar month 6, day 1");
+    expect(label).toContain(
+      "First Fu; sources: Chinese lunar calendar, Ganzhi calendar (transition 09:56)",
+    );
+    expect(label).toContain("public holiday: National Day");
+    expect(label).toContain("1/2 tasks complete");
     expect(
       formatCalendarDayLabel(
         "2026-07-14",
         value,
         {
-          includeCalendarOverlays: false,
+          includeCalendarExtensions: false,
         },
         t,
       ),
@@ -110,7 +137,7 @@ describe("calendar day presentation", () => {
         "2026-07-14",
         value,
         {
-          includeCalendarOverlays: true,
+          includeCalendarExtensions: true,
         },
         t,
       ),
@@ -133,7 +160,7 @@ describe("calendar day presentation", () => {
           heatmap: { dimension: "task-completion-rate", value: 75, level: 3 },
         }),
         {
-          includeCalendarOverlays: true,
+          includeCalendarExtensions: true,
         },
         t,
       ),

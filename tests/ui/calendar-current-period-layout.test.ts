@@ -91,7 +91,7 @@ const MONTH_QUERY = selectMonthCalendar(
   {
     locale: "en",
     weekStartDay: "monday",
-    calendarOverlays: [],
+    calendarExtensions: [],
     holidayRegions: [],
     heatmap: null,
     daily: { enabled: false, pattern: "" },
@@ -109,7 +109,7 @@ const HEATMAP_MONTH_QUERY = selectMonthCalendar(
   {
     locale: "en",
     weekStartDay: "monday",
-    calendarOverlays: [],
+    calendarExtensions: [],
     holidayRegions: [],
     heatmap: { dimension: "word-count", valueStep: 2 },
     daily: { enabled: true, pattern: "'Daily'/yyyy-MM-dd" },

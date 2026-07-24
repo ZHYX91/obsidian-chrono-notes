@@ -42,6 +42,45 @@ describe("HostEnvironmentProvider", () => {
                 cell: {
                   noteState: "missing",
                   preview: null,
+                  calendarExtensions: [
+                    {
+                      id: "chinese-lunar",
+                      dateText: "Lunar 5/23",
+                      events: [],
+                      transition: null,
+                      accessibilityText: "Lunar month 5, day 23",
+                    },
+                    {
+                      id: "ganzhi",
+                      dateText: "M YiWei",
+                      events: [],
+                      transition: "month",
+                      accessibilityText:
+                        "Year BingWu, month YiWei, day RenWu",
+                    },
+                  ],
+                  calendarEvents: [{
+                    id: "solar-term:小暑",
+                    kind: "solar-term",
+                    text: "Minor Heat",
+                    sources: [
+                      { id: "chinese-lunar", transitionTime: null },
+                      { id: "ganzhi", transitionTime: "09:56" },
+                    ],
+                  }],
+                  icsEvents: [{
+                    id: "team-sync",
+                    title: "Team sync",
+                    source: "team.ics",
+                    sourceLabel: "Team",
+                    isAllDay: true,
+                    startsOnDate: true,
+                    endsOnDate: true,
+                    continuesBefore: false,
+                    continuesAfter: false,
+                    timeLabel: null,
+                    sortTimestamp: 0,
+                  }],
                   statistics: {
                     linkCount: 0,
                     tagCount: 0,
@@ -60,6 +99,16 @@ describe("HostEnvironmentProvider", () => {
     });
 
     expect(secondaryDocument.querySelector("#owner-preview")).not.toBeNull();
+    expect(secondaryDocument.querySelector("#owner-preview")?.textContent)
+      .toContain("Lunar month 5, day 23");
+    expect(secondaryDocument.querySelector("#owner-preview")?.textContent)
+      .toContain("Year BingWu, month YiWei, day RenWu");
+    expect(secondaryDocument.querySelector("#owner-preview")?.textContent)
+      .toContain(
+        "Minor Heat; sources: Chinese lunar calendar, Ganzhi calendar (transition 09:56)",
+      );
+    expect(secondaryDocument.querySelector("#owner-preview")?.textContent)
+      .toContain("Team sync");
     expect(document.querySelector("#owner-preview")).toBeNull();
     expect(ownerAddEventListener).toHaveBeenCalledWith(
       "resize",

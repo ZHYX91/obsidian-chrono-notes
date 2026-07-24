@@ -574,7 +574,7 @@ function calendarDayOptionsKey(
 ): string {
   return keyOf(
     periodicOptionsKey(options, options.daily),
-    options.calendarOverlays,
+    options.calendarExtensions,
     options.holidayRegions,
     "heatmap" in options ? options.heatmap : null,
   );

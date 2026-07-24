@@ -83,7 +83,7 @@ describe("selectMonthCalendar", () => {
       {
         locale: "en-US",
         weekStartDay: "sunday",
-        calendarOverlays: [],
+        calendarExtensions: [],
         holidayRegions: [],
         heatmap: null,
         daily: { enabled: true, pattern: "'Daily'/yyyy-MM-dd" },
@@ -127,7 +127,7 @@ describe("selectMonthCalendar", () => {
     expect(Object.isFrozen(result.weeks[0]?.days)).toBe(true);
     expect(Object.isFrozen(days(result)[0])).toBe(true);
     expect(Object.isFrozen(days(result)[0]?.statistics)).toBe(true);
-    expect(days(result).every((cell) => cell.calendarOverlays.length === 0)).toBe(true);
+    expect(days(result).every((cell) => cell.calendarExtensions.length === 0)).toBe(true);
   });
 
   it("derives interactive weekly-note rows from the same cross-year NoteIndex snapshot", () => {
@@ -153,7 +153,7 @@ describe("selectMonthCalendar", () => {
       {
         locale: "en-US",
         weekStartDay: "monday",
-        calendarOverlays: [],
+        calendarExtensions: [],
         holidayRegions: [],
         heatmap: null,
         daily: { enabled: false, pattern: "" },
@@ -213,7 +213,7 @@ describe("selectMonthCalendar", () => {
       {
         locale: "en-US",
         weekStartDay: "sunday",
-        calendarOverlays: [],
+        calendarExtensions: [],
         holidayRegions: [],
         heatmap: null,
         daily: { enabled: false, pattern: "" },
@@ -239,7 +239,7 @@ describe("selectMonthCalendar", () => {
       {
         locale: "en-US",
         weekStartDay: "monday",
-        calendarOverlays: [],
+        calendarExtensions: [],
         holidayRegions: [],
         heatmap: null,
         daily: { enabled: false, pattern: "" },
@@ -255,7 +255,7 @@ describe("selectMonthCalendar", () => {
     expect(days(result).every((cell) => cell.preview === null)).toBe(true);
   });
 
-  it("adds frozen calendar overlays in configured slot order", () => {
+  it("adds frozen calendar extensions and shared events in configured slot order", () => {
     const result = selectMonthCalendar(
       { year: 2026, month: 2 },
       snapshot({}),
@@ -263,7 +263,7 @@ describe("selectMonthCalendar", () => {
       {
         locale: "zh-CN",
         weekStartDay: "monday",
-        calendarOverlays: ["ganzhi", "chinese-lunar"],
+        calendarExtensions: ["ganzhi", "chinese-lunar"],
         holidayRegions: [],
         heatmap: null,
         daily: { enabled: false, pattern: "" },
@@ -275,23 +275,32 @@ describe("selectMonthCalendar", () => {
       (cell) => cell.date.year === 2026 && cell.date.month === 2 && cell.date.day === 17,
     );
 
-    expect(springFestival?.calendarOverlays).toMatchObject([
+    expect(springFestival?.calendarExtensions).toMatchObject([
       { id: "ganzhi" },
       {
         id: "chinese-lunar",
         dateText: "正月",
-        eventText: "春节",
-        eventKind: "festival",
+        events: [{
+          id: "festival:春节",
+          kind: "festival",
+          text: "春节",
+        }],
         transition: "month",
       },
     ]);
-    expect(Object.isFrozen(springFestival?.calendarOverlays)).toBe(true);
-    expect(springFestival?.calendarOverlays.every(Object.isFrozen)).toBe(true);
+    expect(springFestival?.calendarEvents).toMatchObject([{
+      id: "festival:春节",
+      kind: "festival",
+      text: "春节",
+      sources: [{ id: "chinese-lunar", transitionTime: null }],
+    }]);
+    expect(Object.isFrozen(springFestival?.calendarExtensions)).toBe(true);
+    expect(springFestival?.calendarExtensions.every(Object.isFrozen)).toBe(true);
     expect(springFestival?.holidays).toEqual([]);
     expect(springFestival?.workday).toBeNull();
   });
 
-  it("adds China holiday metadata independently from the lunar overlay", () => {
+  it("adds China holiday metadata independently from the lunar extension", () => {
     const result = selectMonthCalendar(
       { year: 2026, month: 2 },
       snapshot({}),
@@ -299,7 +308,7 @@ describe("selectMonthCalendar", () => {
       {
         locale: "zh-CN",
         weekStartDay: "monday",
-        calendarOverlays: [],
+        calendarExtensions: [],
         holidayRegions: ["cn"],
         heatmap: null,
         daily: { enabled: false, pattern: "" },
@@ -315,7 +324,7 @@ describe("selectMonthCalendar", () => {
     );
 
     expect(springFestival).toMatchObject({
-      calendarOverlays: [],
+      calendarExtensions: [],
       holidays: [{ region: "cn", name: "春节" }],
       workday: { region: "cn", name: "春节", isWorkday: false },
     });
@@ -335,7 +344,7 @@ describe("selectMonthCalendar", () => {
       {
         locale: "en-US",
         weekStartDay: "monday",
-        calendarOverlays: [],
+        calendarExtensions: [],
         holidayRegions: ["sg", "cn"],
         heatmap: null,
         daily: { enabled: false, pattern: "" },
@@ -374,7 +383,7 @@ describe("selectMonthCalendar", () => {
       {
         locale: "en-US",
         weekStartDay: "sunday",
-        calendarOverlays: [],
+        calendarExtensions: [],
         holidayRegions: [],
         heatmap: { dimension: "word-count", valueStep: 2 },
         daily: { enabled: true, pattern: "'Daily'/yyyy-MM-dd" },
@@ -415,7 +424,7 @@ describe("selectMonthCalendar", () => {
       {
         locale: "en-US",
         weekStartDay: "monday",
-        calendarOverlays: [],
+        calendarExtensions: [],
         holidayRegions: [],
         heatmap: { dimension: "word-count", valueStep: 2 },
         daily: { enabled: true, pattern: "'Daily'/yyyy-MM-dd" },
@@ -451,7 +460,7 @@ describe("selectMonthCalendar", () => {
       {
         locale: "en-US",
         weekStartDay: "monday",
-        calendarOverlays: [],
+        calendarExtensions: [],
         holidayRegions: [],
         heatmap: null,
         daily: { enabled: false, pattern: "" },

@@ -162,7 +162,7 @@ export function WeekView({
               dayKey,
               day,
               {
-                includeCalendarOverlays: true,
+                includeCalendarExtensions: true,
               },
               t,
             );
@@ -170,7 +170,7 @@ export function WeekView({
               dayKey,
               day,
               {
-                includeCalendarOverlays: false,
+                includeCalendarExtensions: false,
               },
               t,
             );
@@ -186,7 +186,7 @@ export function WeekView({
                 className={`chrono-notes-week-day${selected ? " is-selected" : ""}${isToday ? " is-current-period" : ""}${dropTarget === dayKey ? " is-drop-target" : ""}`}
                 data-note-state={day.noteState}
                 data-show-note-indicators={String(showNoteIndicators)}
-                data-overlay-count={day.calendarOverlays.length}
+                data-calendar-extension-count={day.calendarExtensions.length}
                 data-has-ics={String(day.icsEvents.length > 0)}
                 data-regional-marker={day.regionalMarker?.kind ?? "none"}
                 aria-pressed={selected}

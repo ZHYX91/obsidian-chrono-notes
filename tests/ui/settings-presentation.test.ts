@@ -107,4 +107,13 @@ describe("settings presentation", () => {
       t("settings.extensions.holidayRegionSlot3"),
     ]).toEqual(["第一个地区", "第二个地区", "第三个地区"]);
   });
+
+  it("names calendar slots by calendar rather than generic extension", () => {
+    const t = createTranslator("zh-CN", "en").t;
+
+    expect([
+      t("settings.extensions.calendarSlot1"),
+      t("settings.extensions.calendarSlot2"),
+    ]).toEqual(["第一个历法", "第二个历法"]);
+  });
 });

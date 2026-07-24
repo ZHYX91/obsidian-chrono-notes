@@ -921,7 +921,7 @@ body.is-mobile
   height: 100%;
 }
 
-.chrono-notes-calendar-overlays {
+.chrono-notes-calendar-extensions {
   display: grid;
   gap: 2px;
   grid-template-columns: minmax(0, 1fr);
@@ -929,11 +929,11 @@ body.is-mobile
   width: 100%;
 }
 
-.chrono-notes-calendar-overlays[data-count="2"] {
+.chrono-notes-calendar-extensions[data-count="2"] {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
-.chrono-notes-calendar-overlay {
+.chrono-notes-calendar-extension {
   align-items: center;
   color: var(--text-muted);
   display: flex;
@@ -947,14 +947,28 @@ body.is-mobile
   white-space: nowrap;
 }
 
-.chrono-notes-calendar-overlay-date,
-.chrono-notes-calendar-overlay-event {
+.chrono-notes-calendar-extension-date,
+.chrono-notes-calendar-extension-event {
   max-width: 100%;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.chrono-notes-calendar-overlay-event {
+.chrono-notes-calendar-extension-events {
+  align-items: center;
+  display: flex;
+  gap: 4px;
+  justify-content: center;
+  min-width: 0;
+  overflow: hidden;
+  text-align: center;
+  width: 100%;
+}
+
+.chrono-notes-calendar-extension-event {
   color: var(--text-accent);
+  flex: 0 1 auto;
   font-size: 9px;
+  min-width: 0;
+  white-space: nowrap;
 }

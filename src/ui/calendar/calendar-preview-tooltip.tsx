@@ -13,9 +13,16 @@ import type {
   RegionalHoliday,
   RegionalWorkday,
 } from "../../core/calendar/regional-holidays";
+import type {
+  CalendarExtensionDay,
+  CalendarExtensionEvent,
+} from "../../core/calendar/calendar-extension";
+import type { IcsEventOccurrence } from "../../core/calendar/ics-calendar";
 import type { Translator } from "../../shared/i18n";
 import { useHostEnvironment } from "../host-environment";
 import { placeCalendarPreview } from "./calendar-preview";
+import { formatCalendarExtensionEventLabel } from "./calendar-day-presentation";
+import { formatCalendarIcsDayLabel } from "./calendar-ics-presentation";
 import {
   formatCalendarPreviewError,
   formatCalendarPreviewHeatmap,
@@ -32,6 +39,9 @@ export interface CalendarPreviewCell {
   readonly heatmap?: HeatmapMetric | null;
   readonly holidays?: readonly RegionalHoliday[];
   readonly workday?: RegionalWorkday | null;
+  readonly calendarExtensions?: readonly CalendarExtensionDay[];
+  readonly calendarEvents?: readonly CalendarExtensionEvent[];
+  readonly icsEvents?: readonly IcsEventOccurrence[];
   readonly statistics: NoteStatistics;
 }
 
@@ -90,11 +100,54 @@ export function CalendarPreviewTooltip({
       style={style}
     >
       <div className="chrono-notes-calendar-preview-date">{preview.key}</div>
+      <CalendarExtensionContent cell={preview.cell} t={translator.t} />
       <HeatmapContent cell={preview.cell} t={translator.t} />
       <RegionalCalendarContent cell={preview.cell} t={translator.t} />
+      <IcsCalendarContent cell={preview.cell} t={translator.t} />
       <PreviewContent cell={preview.cell} t={translator.t} />
     </div>,
     host.document.body,
+  );
+}
+
+function IcsCalendarContent({ cell, t }: Readonly<{
+  cell: CalendarPreviewCell;
+  t: Translator["t"];
+}>) {
+  const text = formatCalendarIcsDayLabel(cell.icsEvents ?? [], t);
+  return text.length === 0
+    ? null
+    : <div className="chrono-notes-calendar-preview-meta">{text}</div>;
+}
+
+function CalendarExtensionContent({ cell, t }: Readonly<{
+  cell: CalendarPreviewCell;
+  t: Translator["t"];
+}>) {
+  const extensions = cell.calendarExtensions ?? [];
+  const events = cell.calendarEvents ?? [];
+  if (extensions.length === 0 && events.length === 0) return null;
+  return (
+    <div className="chrono-notes-calendar-preview-calendar">
+      {extensions.map((extension) => (
+        <div
+          className="chrono-notes-calendar-preview-meta"
+          data-calendar-extension-id={extension.id}
+          key={extension.id}
+        >
+          {extension.accessibilityText}
+        </div>
+      ))}
+      {events.map((event) => (
+        <div
+          className="chrono-notes-calendar-preview-meta"
+          data-calendar-event-id={event.id}
+          key={event.id}
+        >
+          {formatCalendarExtensionEventLabel(event, t)}
+        </div>
+      ))}
+    </div>
   );
 }
 

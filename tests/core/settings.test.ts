@@ -22,14 +22,14 @@ describe("settings", () => {
       schemaVersion: 0,
       locale: "zh-CN",
       weekStartDay: "sunday",
-      calendarOverlays: ["ganzhi", "chinese-lunar", "ganzhi", "unknown"],
+      calendarExtensions: ["ganzhi", "chinese-lunar", "ganzhi", "unknown"],
       holidayRegions: ["sg", "cn", "sg", "unknown"],
     })).toEqual({
       ...createDefaultSettings(),
       schemaVersion: SETTINGS_SCHEMA_VERSION,
       locale: "zh-CN",
       weekStartDay: "sunday",
-      calendarOverlays: ["ganzhi", "chinese-lunar"],
+      calendarExtensions: ["ganzhi", "chinese-lunar"],
       holidayRegions: ["sg", "cn"],
     });
   });
@@ -40,10 +40,10 @@ describe("settings", () => {
 
   it("preserves explicit empty extension lists", () => {
     expect(normalizeSettings({
-      calendarOverlays: [],
+      calendarExtensions: [],
       holidayRegions: [],
     })).toMatchObject({
-      calendarOverlays: [],
+      calendarExtensions: [],
       holidayRegions: [],
     });
   });
@@ -52,20 +52,20 @@ describe("settings", () => {
     for (const locale of ["ar", "fa", "he", "am", "hi"] as const) {
       expect(normalizeSettings({
         locale,
-        calendarOverlays: ["persian", "islamic-umalqura"],
+        calendarExtensions: ["persian", "islamic-umalqura"],
       })).toMatchObject({
         locale,
-        calendarOverlays: ["persian", "islamic-umalqura"],
+        calendarExtensions: ["persian", "islamic-umalqura"],
       });
     }
     expect(normalizeSettings({
-      calendarOverlays: [
+      calendarExtensions: [
         "ethiopic",
         "hebrew",
         "indian",
         "islamic-civil",
       ],
-    }).calendarOverlays).toEqual(["ethiopic", "hebrew"]);
+    }).calendarExtensions).toEqual(["ethiopic", "hebrew"]);
   });
 
   it("normalizes independent note-creation confirmation flags", () => {
@@ -426,7 +426,7 @@ describe("settings", () => {
       schemaVersion: 1,
       locale: "zh-TW",
       weekStartDay: "sunday",
-      calendarOverlays: [],
+      calendarExtensions: [],
       holidayRegions: ["sg"],
     });
 
@@ -434,7 +434,7 @@ describe("settings", () => {
       schemaVersion: SETTINGS_SCHEMA_VERSION,
       locale: "zh-TW",
       weekStartDay: "sunday",
-      calendarOverlays: [],
+      calendarExtensions: [],
       holidayRegions: ["sg"],
       showHoverPreview: true,
       showNoteNavbar: true,
@@ -452,7 +452,7 @@ describe("settings", () => {
     expect(normalizeSettings(migrated)).toMatchObject({
       locale: "zh-TW",
       weekStartDay: "sunday",
-      calendarOverlays: [],
+      calendarExtensions: [],
       holidayRegions: ["sg"],
     });
   });

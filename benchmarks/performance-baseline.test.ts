@@ -271,7 +271,7 @@ function measureCalendarQueries(
       locale: "zh-CN",
       weekStartDay: "monday",
       today: { year: 2026, month: 7, day: 20 },
-      calendarOverlays: [],
+      calendarExtensions: [],
       holidayRegions: [],
       daily: { enabled: true, pattern: "'Daily'/yyyy-MM-dd" },
       weekly: { enabled: true, pattern: "'Weekly'/kkkk-WW" },
@@ -287,7 +287,7 @@ function measureCalendarQueries(
       locale: "zh-CN",
       weekStartDay: "monday",
       today: { year: 2026, month: 1, day: 1 },
-      calendarOverlays: [],
+      calendarExtensions: [],
       holidayRegions: [],
       daily: { enabled: true, pattern: "'Daily'/yyyy-MM-dd" },
       weekly: { enabled: true, pattern: "'Weekly'/kkkk-WW" },
@@ -302,7 +302,7 @@ function measureCalendarQueries(
     {
       locale: "zh-CN",
       weekStartDay: "monday",
-      calendarOverlays: [],
+      calendarExtensions: [],
       holidayRegions: [],
       heatmap: null,
       daily: { enabled: true, pattern: "'Daily'/yyyy-MM-dd" },
@@ -327,7 +327,7 @@ function measureCalendarQueries(
     {
       locale: "zh-CN",
       weekStartDay: "monday" as const,
-      calendarOverlays: ["chinese-lunar", "ganzhi"] as const,
+      calendarExtensions: ["chinese-lunar", "ganzhi"] as const,
       holidayRegions: ["cn", "sg"] as const,
       heatmap: null,
       daily: { enabled: true, pattern: "'Daily'/yyyy-MM-dd" },
@@ -345,7 +345,7 @@ function measureCalendarQueries(
     {
       locale: "ar",
       weekStartDay: "monday" as const,
-      calendarOverlays: ["persian", "islamic-umalqura"] as const,
+      calendarExtensions: ["persian", "islamic-umalqura"] as const,
       holidayRegions: [] as const,
       heatmap: null,
       daily: { enabled: true, pattern: "'Daily'/yyyy-MM-dd" },
@@ -830,7 +830,7 @@ function createMonthStoreRequest(): MonthCalendarQueryRequest {
     options: Object.freeze({
       locale: "zh-CN",
       weekStartDay: "monday" as const,
-      calendarOverlays: Object.freeze([]),
+      calendarExtensions: Object.freeze([]),
       holidayRegions: Object.freeze([]),
       heatmap: null,
       daily: Object.freeze({ enabled: true, pattern: "'Daily'/yyyy-MM-dd" }),

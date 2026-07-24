@@ -1,4 +1,7 @@
-import type { CalendarOverlayDay } from "../../core/calendar/calendar-overlay";
+import type {
+  CalendarExtensionDay,
+  CalendarExtensionEvent,
+} from "../../core/calendar/calendar-extension";
 import type {
   RegionalHoliday,
   RegionalWorkday,
@@ -11,12 +14,13 @@ import {
   formatLocalDateKey,
   type LocalDate,
 } from "../../core/periodic/periodic-date";
-import type { CalendarOverlay, HolidayRegion } from "../../shared/settings";
+import type { CalendarExtension, HolidayRegion } from "../../shared/settings";
 import {
-  selectCalendarOverlayDay,
-  selectCalendarOverlayDays,
+  mergeCalendarExtensionEvents,
+  selectCalendarExtensionDay,
+  selectCalendarExtensionDays,
   usesLunarCalendarContext,
-} from "./calendar-overlay-registry";
+} from "./calendar-extension-registry";
 import {
   combineRegionalHolidayDays,
   selectRegionalHolidayProviderDay,
@@ -26,7 +30,8 @@ import {
 } from "./holiday-region-registry";
 
 export interface CalendarDecorations {
-  readonly calendarOverlays: readonly CalendarOverlayDay[];
+  readonly calendarExtensions: readonly CalendarExtensionDay[];
+  readonly calendarEvents: readonly CalendarExtensionEvent[];
   readonly holidays: readonly RegionalHoliday[];
   readonly workday: RegionalWorkday | null;
   readonly regionalMarker: RegionalMarker | null;
@@ -41,7 +46,7 @@ export interface CalendarDecorations {
  */
 export class CalendarDecorationCache {
   private readonly entries = new Map<string, CalendarDecorations>();
-  private readonly overlayEntries = new Map<string, CalendarOverlayDay>();
+  private readonly calendarExtensionEntries = new Map<string, CalendarExtensionDay>();
   private readonly regionalEntries = new Map<string, RegionalHolidayProviderDay>();
   private readonly lunarEntries = new Map<string, LunarDateContext>();
   private readonly capacity: number;
@@ -56,12 +61,12 @@ export class CalendarDecorationCache {
   get(
     date: LocalDate,
     locale: string,
-    calendarOverlays: readonly CalendarOverlay[],
+    calendarExtensions: readonly CalendarExtension[],
     holidayRegions: readonly HolidayRegion[],
   ): CalendarDecorations {
     const normalizedLocale = normalizeLocale(locale);
     const dateKey = formatLocalDateKey(date);
-    const key = createCacheKey(dateKey, normalizedLocale, calendarOverlays, holidayRegions);
+    const key = createCacheKey(dateKey, normalizedLocale, calendarExtensions, holidayRegions);
     const existing = this.entries.get(key);
     if (existing !== undefined) {
       this.entries.delete(key);
@@ -69,14 +74,15 @@ export class CalendarDecorationCache {
       return existing;
     }
 
-    const overlays = Object.freeze(calendarOverlays.flatMap((id) => {
-      const overlay = this.getOverlay(date, dateKey, normalizedLocale, id);
-      return overlay === null ? [] : [overlay];
+    const extensions = Object.freeze(calendarExtensions.flatMap((id) => {
+      const extension = this.getCalendarExtension(date, dateKey, normalizedLocale, id);
+      return extension === null ? [] : [extension];
     }));
     const regional = combineRegionalHolidayDays(holidayRegions.map((region) =>
       this.getRegionalDay(date, dateKey, normalizedLocale, region)));
     const result = Object.freeze({
-      calendarOverlays: overlays,
+      calendarExtensions: extensions,
+      calendarEvents: mergeCalendarExtensionEvents(extensions),
       holidays: regional.holidays,
       workday: regional.workday,
       regionalMarker: regional.marker,
@@ -88,7 +94,7 @@ export class CalendarDecorationCache {
 
   clear(): void {
     this.entries.clear();
-    this.overlayEntries.clear();
+    this.calendarExtensionEntries.clear();
     this.regionalEntries.clear();
     this.lunarEntries.clear();
   }
@@ -97,16 +103,16 @@ export class CalendarDecorationCache {
     return this.entries.size;
   }
 
-  private getOverlay(
+  private getCalendarExtension(
     date: LocalDate,
     dateKey: string,
     locale: string,
-    id: CalendarOverlay,
-  ): CalendarOverlayDay | null {
+    id: CalendarExtension,
+  ): CalendarExtensionDay | null {
     const key = JSON.stringify([dateKey, locale, id]);
-    const existing = touchEntry(this.overlayEntries, key);
+    const existing = touchEntry(this.calendarExtensionEntries, key);
     if (existing !== undefined) return existing;
-    const result = selectCalendarOverlayDay(
+    const result = selectCalendarExtensionDay(
       date,
       locale,
       id,
@@ -115,8 +121,8 @@ export class CalendarDecorationCache {
         : undefined,
     );
     if (result === null) return null;
-    this.overlayEntries.set(key, result);
-    evictOverflow(this.overlayEntries, this.capacity);
+    this.calendarExtensionEntries.set(key, result);
+    evictOverflow(this.calendarExtensionEntries, this.capacity);
     return result;
   }
 
@@ -148,12 +154,14 @@ export class CalendarDecorationCache {
 export function selectCalendarDecorations(
   date: LocalDate,
   locale: string,
-  calendarOverlays: readonly CalendarOverlay[],
+  calendarExtensions: readonly CalendarExtension[],
   holidayRegions: readonly HolidayRegion[],
 ): CalendarDecorations {
+  const extensions = selectCalendarExtensionDays(date, locale, calendarExtensions);
   const regional = selectRegionalHolidayDay(date, locale, holidayRegions);
   return Object.freeze({
-    calendarOverlays: selectCalendarOverlayDays(date, locale, calendarOverlays),
+    calendarExtensions: extensions,
+    calendarEvents: mergeCalendarExtensionEvents(extensions),
     holidays: regional.holidays,
     workday: regional.workday,
     regionalMarker: regional.marker,
@@ -163,13 +171,13 @@ export function selectCalendarDecorations(
 function createCacheKey(
   dateKey: string,
   locale: string,
-  calendarOverlays: readonly CalendarOverlay[],
+  calendarExtensions: readonly CalendarExtension[],
   holidayRegions: readonly HolidayRegion[],
 ): string {
   return JSON.stringify([
     dateKey,
     locale,
-    calendarOverlays,
+    calendarExtensions,
     holidayRegions,
   ]);
 }

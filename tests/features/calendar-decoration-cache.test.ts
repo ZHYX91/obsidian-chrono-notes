@@ -22,12 +22,13 @@ describe("CalendarDecorationCache", () => {
 
     expect(second).toBe(first);
     expect(Object.isFrozen(first)).toBe(true);
-    expect(Object.isFrozen(first.calendarOverlays)).toBe(true);
+    expect(Object.isFrozen(first.calendarExtensions)).toBe(true);
+    expect(Object.isFrozen(first.calendarEvents)).toBe(true);
     expect(Object.isFrozen(first.holidays)).toBe(true);
     expect(cache.size).toBe(1);
   });
 
-  it("keeps overlay and region order in the cache identity", () => {
+  it("keeps extension and region order in the cache identity", () => {
     const cache = new CalendarDecorationCache(8);
     const date = { year: 2026, month: 2, day: 17 } as const;
 
@@ -37,7 +38,7 @@ describe("CalendarDecorationCache", () => {
       ["chinese-lunar", "ganzhi"],
       ["cn", "sg"],
     );
-    const reversedOverlays = cache.get(
+    const reversedExtensions = cache.get(
       date,
       "zh-CN",
       ["ganzhi", "chinese-lunar"],
@@ -50,12 +51,12 @@ describe("CalendarDecorationCache", () => {
       ["sg", "cn"],
     );
 
-    expect(reversedOverlays).not.toBe(original);
+    expect(reversedExtensions).not.toBe(original);
     expect(reversedRegions).not.toBe(original);
     expect(cache.size).toBe(3);
   });
 
-  it("reuses provider-level results across different overlay and region selections", () => {
+  it("reuses provider-level results across different extension and region selections", () => {
     const cache = new CalendarDecorationCache(8);
     const date = { year: 2026, month: 2, day: 17 } as const;
 
@@ -67,7 +68,7 @@ describe("CalendarDecorationCache", () => {
     );
     const subsets = cache.get(date, "zh-CN", ["ganzhi"], ["cn"]);
 
-    expect(subsets.calendarOverlays[0]).toBe(combined.calendarOverlays[1]);
+    expect(subsets.calendarExtensions[0]).toBe(combined.calendarExtensions[1]);
     expect(subsets.holidays[0]).toBe(combined.holidays[0]);
     expect(cache.size).toBe(2);
   });
@@ -80,8 +81,8 @@ describe("CalendarDecorationCache", () => {
     const english = cache.get(date, "en", ["chinese-lunar"], ["cn"]);
 
     expect(english).not.toBe(chinese);
-    expect(english.calendarOverlays[0]?.accessibilityText).not.toBe(
-      chinese.calendarOverlays[0]?.accessibilityText,
+    expect(english.calendarExtensions[0]?.accessibilityText).not.toBe(
+      chinese.calendarExtensions[0]?.accessibilityText,
     );
     expect(cache.size).toBe(2);
   });

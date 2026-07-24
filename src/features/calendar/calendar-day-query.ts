@@ -1,4 +1,7 @@
-import type { CalendarOverlayDay } from "../../core/calendar/calendar-overlay";
+import type {
+  CalendarExtensionDay,
+  CalendarExtensionEvent,
+} from "../../core/calendar/calendar-extension";
 import type { IcsEventOccurrence } from "../../core/calendar/ics-calendar";
 import type {
   RegionalHoliday,
@@ -14,7 +17,7 @@ import {
   type HeatmapMetric,
   type StatisticDisplayDimension,
 } from "../../core/statistics/heatmap";
-import type { CalendarOverlay, HolidayRegion } from "../../shared/settings";
+import type { CalendarExtension, HolidayRegion } from "../../shared/settings";
 import type { NoteIndexSnapshot } from "../notes/note-index";
 import {
   selectCalendarDecorations,
@@ -31,7 +34,7 @@ import type { RegionalMarker } from "./holiday-region-registry";
 export interface CalendarDayQueryOptions {
   readonly locale: string;
   readonly weekStartDay: WeekStartDay;
-  readonly calendarOverlays: readonly CalendarOverlay[];
+  readonly calendarExtensions: readonly CalendarExtension[];
   readonly holidayRegions: readonly HolidayRegion[];
   readonly heatmap: Readonly<{
     dimension: StatisticDisplayDimension;
@@ -42,7 +45,8 @@ export interface CalendarDayQueryOptions {
 }
 
 export interface CalendarDay extends IndexedPeriodicNote {
-  readonly calendarOverlays: readonly CalendarOverlayDay[];
+  readonly calendarExtensions: readonly CalendarExtensionDay[];
+  readonly calendarEvents: readonly CalendarExtensionEvent[];
   readonly holidays: readonly RegionalHoliday[];
   readonly workday: RegionalWorkday | null;
   readonly regionalMarker: RegionalMarker | null;
@@ -66,12 +70,12 @@ export function selectCalendarDay(
   const decorations = options.decorationCache?.get(
     date,
     options.locale,
-    options.calendarOverlays,
+    options.calendarExtensions,
     options.holidayRegions,
   ) ?? selectCalendarDecorations(
     date,
     options.locale,
-    options.calendarOverlays,
+    options.calendarExtensions,
     options.holidayRegions,
   );
   const icsEvents = icsSnapshot.enabled
@@ -80,7 +84,8 @@ export function selectCalendarDay(
 
   return Object.freeze({
     ...indexed,
-    calendarOverlays: decorations.calendarOverlays,
+    calendarExtensions: decorations.calendarExtensions,
+    calendarEvents: decorations.calendarEvents,
     holidays: decorations.holidays,
     workday: decorations.workday,
     regionalMarker: decorations.regionalMarker,

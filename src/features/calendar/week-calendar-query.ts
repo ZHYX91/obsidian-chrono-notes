@@ -9,7 +9,7 @@ import {
   type WeekStartDay,
 } from "../../core/periodic/periodic-date";
 import type { RangeNoteSettings } from "../../shared/settings";
-import type { CalendarOverlay, HolidayRegion } from "../../shared/settings";
+import type { CalendarExtension, HolidayRegion } from "../../shared/settings";
 import {
   selectIntervalNotes,
   selectIntervalWeekData,
@@ -36,7 +36,7 @@ export interface WeekCalendarQueryOptions {
   readonly locale: string;
   readonly weekStartDay: WeekStartDay;
   readonly today: LocalDate;
-  readonly calendarOverlays: readonly CalendarOverlay[];
+  readonly calendarExtensions: readonly CalendarExtension[];
   readonly holidayRegions: readonly HolidayRegion[];
   readonly daily: PeriodicNoteRule;
   readonly weekly: PeriodicNoteRule;

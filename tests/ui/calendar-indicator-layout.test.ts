@@ -87,30 +87,46 @@ describe("calendar indicator layout", () => {
     expect(indicatorRules.join("\n")).not.toMatch(/right:\s*[0-9]/);
   });
 
-  it("uses a semantic content track for overlays, indicators, holidays, and ICS", () => {
+  it("uses a semantic content track for extensions, indicators, holidays, and ICS", () => {
     expect(styles).toMatch(
       /\.chrono-notes-day-content\s*\{[^}]*display:\s*flex;[^}]*flex-direction:\s*column;/s,
     );
     expect(styles).toMatch(
-      /\.chrono-notes-calendar-overlays\s*\{[^}]*display:\s*grid;[^}]*grid-template-columns:\s*minmax\(0, 1fr\);/s,
+      /\.chrono-notes-calendar-extensions\s*\{[^}]*display:\s*grid;[^}]*grid-template-columns:\s*minmax\(0, 1fr\);/s,
     );
     expect(styles).toMatch(
-      /\.chrono-notes-calendar-overlays\[data-count="2"\]\s*\{[^}]*grid-template-columns:\s*repeat\(2, minmax\(0, 1fr\)\);/s,
+      /\.chrono-notes-calendar-extensions\[data-count="2"\]\s*\{[^}]*grid-template-columns:\s*repeat\(2, minmax\(0, 1fr\)\);/s,
     );
     expect(styles).toMatch(
-      /@container \(max-width: 460px\)[\s\S]*?\.chrono-notes-calendar-overlays\[data-count="2"\]\s*\{[^}]*grid-template-columns:\s*minmax\(0, 1fr\);/s,
+      /@container \(max-width: 460px\)[\s\S]*?\.chrono-notes-calendar-extensions\[data-count="2"\]\s*\{[^}]*grid-template-columns:\s*minmax\(0, 1fr\);/s,
+    );
+    expect(styles).toMatch(
+      /\.chrono-notes-calendar-extension-events\s*\{[^}]*display:\s*flex;[^}]*justify-content:\s*center;[^}]*width:\s*100%;/s,
     );
   });
 
   it("renders month-cell content in the documented semantic order", () => {
-    const overlays = calendarDayContent.indexOf('className="chrono-notes-calendar-overlays"');
-    const holidays = calendarDayContent.indexOf('className="chrono-notes-holiday-footer"', overlays);
-    const ics = calendarDayContent.indexOf('className="chrono-notes-ics-list"', overlays);
+    const extensions = calendarDayContent.indexOf(
+      'className="chrono-notes-calendar-extensions"',
+    );
+    const holidays = calendarDayContent.indexOf(
+      'className="chrono-notes-holiday-footer"',
+      extensions,
+    );
+    const calendarEvents = calendarDayContent.indexOf(
+      'className="chrono-notes-calendar-extension-events"',
+      extensions,
+    );
+    const ics = calendarDayContent.indexOf(
+      'className="chrono-notes-ics-list"',
+      extensions,
+    );
     const details = monthDayCell.indexOf("<CalendarDayCalendarDetails");
     const events = monthDayCell.indexOf("<CalendarDayEvents", details);
 
-    expect(overlays).toBeGreaterThan(-1);
-    expect(holidays).toBeGreaterThan(overlays);
+    expect(extensions).toBeGreaterThan(-1);
+    expect(calendarEvents).toBeGreaterThan(extensions);
+    expect(holidays).toBeGreaterThan(calendarEvents);
     expect(ics).toBeGreaterThan(holidays);
     expect(details).toBeGreaterThan(-1);
     expect(events).toBeGreaterThan(details);

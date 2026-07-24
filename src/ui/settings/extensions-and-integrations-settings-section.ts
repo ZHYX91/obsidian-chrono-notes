@@ -1,18 +1,18 @@
 import { Setting } from "obsidian";
 
 import {
-  CALENDAR_OVERLAY_DEFINITIONS,
-  isCalendarOverlaySupported,
-  updateCalendarOverlaySlot,
-} from "../../features/calendar/calendar-overlay-registry";
+  CALENDAR_EXTENSION_DEFINITIONS,
+  isCalendarExtensionSupported,
+  updateCalendarExtensionSlot,
+} from "../../features/calendar/calendar-extension-registry";
 import {
   HOLIDAY_REGION_DEFINITIONS,
   updateHolidayRegionSlot,
 } from "../../features/calendar/holiday-region-registry";
 import {
-  isCalendarOverlay,
+  isCalendarExtension,
   isHolidayRegion,
-  type CalendarOverlay,
+  type CalendarExtension,
   type HolidayRegion,
 } from "../../shared/settings";
 import {
@@ -35,8 +35,8 @@ export function renderExtensionsAndIntegrationsSettingsSection(
     cls: "setting-item-description",
     text: t("settings.extensions.calendarExtensionsDesc"),
   });
-  addCalendarOverlaySlot(containerEl, 0, context);
-  addCalendarOverlaySlot(containerEl, 1, context);
+  addCalendarExtensionSlot(containerEl, 0, context);
+  addCalendarExtensionSlot(containerEl, 1, context);
 
   containerEl.createEl("h3", {
     text: t("settings.extensions.holidayExtensions"),
@@ -106,25 +106,25 @@ export function renderExtensionsAndIntegrationsSettingsSection(
   }
 }
 
-function addCalendarOverlaySlot(
+function addCalendarExtensionSlot(
   containerEl: HTMLElement,
   slot: 0 | 1,
   context: SettingsSectionContext,
 ): void {
   const { t } = context.translator;
-  const selected = context.host.settings.calendarOverlays;
+  const selected = context.host.settings.calendarExtensions;
   const current = selected[slot] ?? null;
   const usedByOtherSlot = selected[slot === 0 ? 1 : 0] ?? null;
   const definition = current === null
     ? null
-    : CALENDAR_OVERLAY_DEFINITIONS.find(({ id }) => id === current) ?? null;
+    : CALENDAR_EXTENSION_DEFINITIONS.find(({ id }) => id === current) ?? null;
   const currentSupported = current === null ||
-    isCalendarOverlaySupported(current, context.translator.locale);
+    isCalendarExtensionSupported(current, context.translator.locale);
 
   const setting = new Setting(containerEl)
     .setName(t(slot === 0
-      ? "settings.extensions.calendarExtensionFirst"
-      : "settings.extensions.calendarExtensionSecond"));
+      ? "settings.extensions.calendarSlot1"
+      : "settings.extensions.calendarSlot2"));
   if (definition !== null) {
     setting.setDesc(currentSupported
       ? t(definition.descriptionKey)
@@ -134,21 +134,21 @@ function addCalendarOverlaySlot(
   }
   setting.addDropdown((dropdown) => {
     dropdown.addOption("", t("settings.extensions.calendarExtensionNone"));
-    for (const overlay of CALENDAR_OVERLAY_DEFINITIONS) {
+    for (const extension of CALENDAR_EXTENSION_DEFINITIONS) {
       if (
-        overlay.id !== usedByOtherSlot &&
-        (overlay.id === current ||
-          isCalendarOverlaySupported(overlay.id, context.translator.locale))
+        extension.id !== usedByOtherSlot &&
+        (extension.id === current ||
+          isCalendarExtensionSupported(extension.id, context.translator.locale))
       ) {
-        dropdown.addOption(overlay.id, t(overlay.labelKey));
+        dropdown.addOption(extension.id, t(extension.labelKey));
       }
     }
     dropdown.setValue(current ?? "").onChange(async (value) => {
-      const next: CalendarOverlay | null = value.length === 0
+      const next: CalendarExtension | null = value.length === 0
         ? null
-        : isCalendarOverlay(value) ? value : null;
-      context.host.settings.calendarOverlays = [
-        ...updateCalendarOverlaySlot(context.host.settings.calendarOverlays, slot, next),
+        : isCalendarExtension(value) ? value : null;
+      context.host.settings.calendarExtensions = [
+        ...updateCalendarExtensionSlot(context.host.settings.calendarExtensions, slot, next),
       ];
       await context.persistSettings();
       context.display();

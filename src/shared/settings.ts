@@ -4,7 +4,7 @@ import {
   type WeekStartDay,
 } from "../core/periodic/periodic-date";
 import type { StatisticDisplayDimension } from "../core/statistics/heatmap";
-import type { CalendarOverlayId } from "../core/calendar/calendar-overlay";
+import type { CalendarExtensionId } from "../core/calendar/calendar-extension";
 
 export const SETTINGS_SCHEMA_VERSION = 16;
 
@@ -18,7 +18,7 @@ export type PluginLocale =
   | "he"
   | "am"
   | "hi";
-export type CalendarOverlay = CalendarOverlayId;
+export type CalendarExtension = CalendarExtensionId;
 export type HolidayRegion = "cn" | "sg";
 export type QuarterNameMode = "number" | "chinese";
 export type FontSizeMode = "follow-obsidian" | "follow-widget" | "immutable";
@@ -50,7 +50,7 @@ export interface ChronoNotesSettings {
   schemaVersion: number;
   locale: PluginLocale;
   weekStartDay: WeekStartDay;
-  calendarOverlays: CalendarOverlay[];
+  calendarExtensions: CalendarExtension[];
   holidayRegions: HolidayRegion[];
   showNoteIndicators: boolean;
   quarterNameMode: QuarterNameMode;
@@ -78,7 +78,7 @@ export const DEFAULT_SETTINGS: Readonly<ChronoNotesSettings> = {
   schemaVersion: SETTINGS_SCHEMA_VERSION,
   locale: "auto",
   weekStartDay: "monday",
-  calendarOverlays: ["chinese-lunar"],
+  calendarExtensions: ["chinese-lunar"],
   holidayRegions: ["cn", "sg"],
   showNoteIndicators: true,
   quarterNameMode: "number",
@@ -105,7 +105,7 @@ export const DEFAULT_SETTINGS: Readonly<ChronoNotesSettings> = {
 export function createDefaultSettings(): ChronoNotesSettings {
   return {
     ...DEFAULT_SETTINGS,
-    calendarOverlays: [...DEFAULT_SETTINGS.calendarOverlays],
+    calendarExtensions: [...DEFAULT_SETTINGS.calendarExtensions],
     holidayRegions: [...DEFAULT_SETTINGS.holidayRegions],
     periodicNotes: clonePeriodicNotes(DEFAULT_SETTINGS.periodicNotes),
     rangeNotes: { ...DEFAULT_SETTINGS.rangeNotes },
@@ -206,10 +206,10 @@ export function normalizeSettings(value: unknown): ChronoNotesSettings {
     weekStartDay: isWeekStartDay(value.weekStartDay)
       ? value.weekStartDay
       : defaults.weekStartDay,
-    calendarOverlays: normalizeEnumList(
-      value.calendarOverlays,
-      isCalendarOverlay,
-      defaults.calendarOverlays,
+    calendarExtensions: normalizeEnumList(
+      value.calendarExtensions,
+      isCalendarExtension,
+      defaults.calendarExtensions,
     ).slice(0, 2),
     holidayRegions: normalizeEnumList(
       value.holidayRegions,
@@ -304,7 +304,7 @@ export function isWeekStartDay(value: unknown): value is WeekStartDay {
   return value === "monday" || value === "sunday";
 }
 
-export function isCalendarOverlay(value: unknown): value is CalendarOverlay {
+export function isCalendarExtension(value: unknown): value is CalendarExtension {
   return value === "chinese-lunar" ||
     value === "ganzhi" ||
     value === "persian" ||

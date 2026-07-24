@@ -592,7 +592,7 @@
   .chrono-notes-week-task,
   .chrono-notes-week-interval-item,
   .chrono-notes-month-range,
-  .chrono-notes-calendar-overlay
+  .chrono-notes-calendar-extension
 ) {
   font-size: var(--chrono-notes-font-small);
 }
@@ -600,7 +600,7 @@
 .chrono-notes-calendar[data-font-size-mode] :is(
   .chrono-notes-regional-marker,
   .chrono-notes-holiday-footer,
-  .chrono-notes-calendar-overlay-event,
+  .chrono-notes-calendar-extension-event,
   .chrono-notes-ics-list,
   .chrono-notes-ics-more,
   .chrono-notes-calendar-indicator.is-progress.is-horizontal
@@ -609,7 +609,7 @@
 }
 
 @container (max-width: 460px) {
-  .chrono-notes-calendar-overlays[data-count="2"] {
+  .chrono-notes-calendar-extensions[data-count="2"] {
     grid-template-columns: minmax(0, 1fr);
   }
 }

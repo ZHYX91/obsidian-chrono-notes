@@ -10,7 +10,7 @@ const NOTES = createNoteIndexSnapshot({}, 3);
 const OPTIONS = Object.freeze({
   locale: "en-US",
   weekStartDay: "monday" as const,
-  calendarOverlays: Object.freeze([]),
+  calendarExtensions: Object.freeze([]),
   holidayRegions: Object.freeze([]),
   heatmap: null,
   daily: Object.freeze({ enabled: false, pattern: "" }),
@@ -112,7 +112,7 @@ describe("selectCalendarDay", () => {
     const options = {
       ...OPTIONS,
       locale: "zh-CN",
-      calendarOverlays: ["chinese-lunar" as const],
+      calendarExtensions: ["chinese-lunar" as const],
       holidayRegions: ["cn" as const],
     };
     const holiday = selectCalendarDay(
@@ -128,7 +128,11 @@ describe("selectCalendarDay", () => {
       options,
     );
 
-    expect(holiday.calendarOverlays).toHaveLength(1);
+    expect(holiday.calendarExtensions).toHaveLength(1);
+    expect(holiday.calendarEvents).toMatchObject([{
+      id: "festival:春节",
+      sources: [{ id: "chinese-lunar" }],
+    }]);
     expect(holiday.holidays).toHaveLength(1);
     expect(holiday.workday).toMatchObject({ isWorkday: false });
     expect(holiday.regionalMarker).toMatchObject({ kind: "rest" });
@@ -136,7 +140,8 @@ describe("selectCalendarDay", () => {
     expect(adjustedWorkday.holidays).toEqual([]);
     expect(adjustedWorkday.workday).toMatchObject({ isWorkday: true });
     expect(adjustedWorkday.regionalMarker).toMatchObject({ kind: "work" });
-    expect(Object.isFrozen(holiday.calendarOverlays)).toBe(true);
+    expect(Object.isFrozen(holiday.calendarExtensions)).toBe(true);
+    expect(Object.isFrozen(holiday.calendarEvents)).toBe(true);
     expect(Object.isFrozen(holiday.holidays)).toBe(true);
     expect(Object.isFrozen(holiday.icsEvents)).toBe(true);
   });

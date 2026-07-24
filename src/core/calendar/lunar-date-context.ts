@@ -4,7 +4,7 @@ import type { LocalDate } from "../periodic/periodic-date";
 import { withLunarLibraryLanguage } from "./lunar-library-language";
 
 /**
- * One expensive solar-to-lunar conversion shared by lunar-based overlays.
+ * One expensive solar-to-lunar conversion shared by lunar-based extensions.
  * The library object is scoped to the caller-owned cache, never a module global.
  */
 export interface LunarDateContext {

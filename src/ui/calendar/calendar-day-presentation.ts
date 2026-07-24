@@ -1,4 +1,6 @@
+import type { CalendarExtensionEvent } from "../../core/calendar/calendar-extension";
 import type { CalendarDay } from "../../features/calendar/calendar-day-query";
+import { CALENDAR_EXTENSION_DEFINITIONS } from "../../features/calendar/calendar-extension-registry";
 import type { RegionalMarkerKind } from "../../features/calendar/holiday-region-registry";
 import { hasIndexedPeriodicNote } from "../../features/calendar/indexed-periodic-note";
 import type { Translator } from "../../shared/i18n";
@@ -8,13 +10,17 @@ import { formatCalendarIcsDayLabel } from "./calendar-ics-presentation";
 import { formatCalendarNoteState } from "./calendar-note-presentation";
 
 export interface CalendarDayLabelOptions {
-  readonly includeCalendarOverlays: boolean;
+  readonly includeCalendarExtensions: boolean;
 }
 
 export function canPreviewCalendarDay(day: CalendarDay): boolean {
   return (
     day.heatmap !== null ||
+    day.calendarExtensions.length > 0 ||
+    day.calendarEvents.length > 0 ||
     day.holidays.length > 0 ||
+    day.workday !== null ||
+    day.icsEvents.length > 0 ||
     hasIndexedPeriodicNote(day.noteState)
   );
 }
@@ -29,8 +35,14 @@ export function formatCalendarDayLabel(
   const icsLabel = formatCalendarIcsDayLabel(day.icsEvents, t);
   return [
     dateKey,
-    ...(options.includeCalendarOverlays
-      ? day.calendarOverlays.map((overlay) => overlay.accessibilityText)
+    ...(options.includeCalendarExtensions
+      ? [
+          ...day.calendarExtensions.map(
+            (extension) => extension.accessibilityText,
+          ),
+          ...day.calendarEvents.map((event) =>
+            formatCalendarExtensionEventLabel(event, t)),
+        ]
       : []),
     ...(regional === null ? [] : [regional]),
     ...(day.heatmap === null
@@ -42,6 +54,30 @@ export function formatCalendarDayLabel(
       : [formatNoteTaskProgress(day.statistics, t)]),
     ...(icsLabel.length === 0 ? [] : [icsLabel]),
   ].join(t("calendar.itemSeparator"));
+}
+
+export function formatCalendarExtensionEventLabel(
+  event: CalendarExtensionEvent,
+  t: Translator["t"],
+): string {
+  const sources = event.sources.map((source) => {
+    const definition = CALENDAR_EXTENSION_DEFINITIONS.find(
+      ({ id }) => id === source.id,
+    );
+    const sourceName = definition === undefined
+      ? source.id
+      : t(definition.labelKey);
+    return source.transitionTime === null
+      ? sourceName
+      : t("calendar.calendarEventSourceTransition", {
+          source: sourceName,
+          time: source.transitionTime,
+        });
+  });
+  return t("calendar.calendarEventSources", {
+    event: event.text,
+    sources: sources.join(t("monthView.nameSeparator")),
+  });
 }
 
 export function formatRegionalMarkerLabel(

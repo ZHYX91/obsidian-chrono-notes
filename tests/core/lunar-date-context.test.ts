@@ -11,7 +11,7 @@ import {
 import { createLunarDateContext } from "../../src/core/calendar/lunar-date-context";
 
 describe("LunarDateContext", () => {
-  it("shares one conversion across overlays without coupling locale state", () => {
+  it("shares one conversion across extensions without coupling locale state", () => {
     const date = { year: 2026, month: 2, day: 4 } as const;
     const context = createLunarDateContext(date);
 

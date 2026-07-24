@@ -5,7 +5,7 @@ import type {
 } from "../../core/periodic/periodic-date";
 import type { StatisticDisplayDimension } from "../../core/statistics/heatmap";
 import type {
-  CalendarOverlay,
+  CalendarExtension,
   HolidayRegion,
   RangeNoteSettings,
 } from "../../shared/settings";
@@ -26,7 +26,7 @@ import {
 export interface MonthCalendarQueryOptions {
   readonly locale: string;
   readonly weekStartDay: WeekStartDay;
-  readonly calendarOverlays: readonly CalendarOverlay[];
+  readonly calendarExtensions: readonly CalendarExtension[];
   readonly holidayRegions: readonly HolidayRegion[];
   readonly heatmap: Readonly<{
     dimension: StatisticDisplayDimension;

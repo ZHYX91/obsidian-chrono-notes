@@ -46,6 +46,7 @@ describe("calendar day content", () => {
     expect(markup).toContain('data-wide-overflow="false"');
     expect(markup).toContain("chrono-notes-ics-more is-medium");
     expect(markup).not.toContain("chrono-notes-ics-more is-wide");
+    expect(markup).not.toContain("title=");
   });
 
   it("exposes status layout state without relational CSS selectors", () => {
@@ -88,6 +89,53 @@ describe("calendar day content", () => {
       'class="chrono-notes-regional-marker" aria-hidden="true" dir="rtl"',
     );
   });
+
+  it("renders deduplicated events after all calendar dates without native titles", () => {
+    const day: CalendarDay = Object.freeze({
+      ...emptyDay(),
+      calendarExtensions: Object.freeze([
+        Object.freeze({
+          id: "chinese-lunar",
+          dateText: "廿三",
+          events: Object.freeze([]),
+          transition: null,
+          accessibilityText: "六月廿三",
+        }),
+        Object.freeze({
+          id: "ganzhi",
+          dateText: "戊戌",
+          events: Object.freeze([]),
+          transition: null,
+          accessibilityText: "丙午年，乙未月，戊戌日",
+        }),
+      ]),
+      calendarEvents: Object.freeze([
+        Object.freeze({
+          id: "solar-term:大暑",
+          kind: "solar-term",
+          text: "大暑",
+          sources: Object.freeze([
+            Object.freeze({
+              id: "chinese-lunar",
+              transitionTime: null,
+            }),
+          ]),
+        }),
+      ]),
+    });
+    const markup = renderToStaticMarkup(
+      createElement(CalendarDayCalendarDetails, {
+        day,
+        translator: createTranslator("zh-CN", "en"),
+      }),
+    );
+
+    expect(markup.match(/data-calendar-extension-id=/gu)).toHaveLength(2);
+    expect(markup.match(/>大暑</gu)).toHaveLength(1);
+    expect(markup.indexOf("data-calendar-extension-id=\"ganzhi\""))
+      .toBeLessThan(markup.indexOf("chrono-notes-calendar-extension-events"));
+    expect(markup).not.toContain("title=");
+  });
 });
 
 function emptyDay(): CalendarDay {
@@ -97,7 +145,8 @@ function emptyDay(): CalendarDay {
     noteState: "not-configured",
     preview: null,
     statistics: noteStatistics(),
-    calendarOverlays: [],
+    calendarExtensions: [],
+    calendarEvents: [],
     holidays: [],
     workday: null,
     regionalMarker: null,

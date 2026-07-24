@@ -120,7 +120,7 @@ describe("periodic note settings structure", () => {
   });
 
   it("keeps extensions out of appearance and orders built-in before external data", () => {
-    expect(appearanceSectionSource).not.toContain("addCalendarOverlaySlot");
+    expect(appearanceSectionSource).not.toContain("addCalendarExtensionSlot");
     expect(appearanceSectionSource).not.toContain("addHolidayRegionSlot");
     expect(extensionsAndIntegrationsSectionSource.indexOf(
       't("settings.extensions.calendarExtensions")',

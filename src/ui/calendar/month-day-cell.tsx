@@ -105,10 +105,10 @@ export function MonthDayCell({
   const isRangeEnd = rangePreview !== null && isSameLocalDate(cell.date, rangePreview.end);
   const hasCustomPreview = showHoverPreview && canPreviewCalendarDay(cell);
   const accessibleLabel = formatCalendarDayLabel(key, cell, {
-    includeCalendarOverlays: true,
+    includeCalendarExtensions: true,
   }, translator.t);
   const fallbackTitle = formatCalendarDayLabel(key, cell, {
-    includeCalendarOverlays: false,
+    includeCalendarExtensions: false,
   }, translator.t);
   const touch = bindLongPress(
     longPress,
@@ -126,7 +126,7 @@ export function MonthDayCell({
       data-note-state={cell.noteState}
       data-heatmap-level={cell.heatmap?.level ?? "none"}
       data-has-tasks={String(cell.statistics.taskTotal > 0)}
-      data-overlay-count={cell.calendarOverlays.length}
+      data-calendar-extension-count={cell.calendarExtensions.length}
       data-regional-marker={cell.regionalMarker?.kind ?? "none"}
       aria-hidden={isHiddenHeatmapCell || undefined}
       aria-label={accessibleLabel}
