@@ -537,8 +537,11 @@
   background: var(--background-primary);
   border: 1px solid var(--background-modifier-border);
   border-radius: 6px;
+  box-sizing: border-box;
   box-shadow: var(--shadow-s);
   color: var(--text-normal);
+  display: flex;
+  flex-direction: column;
   font-size: var(--font-ui-small);
   max-height: min(240px, calc(100vh - 24px));
   max-width: min(280px, calc(100vw - 24px));
@@ -549,6 +552,10 @@
   white-space: pre-wrap;
   width: max-content;
   z-index: var(--layer-popover, 1000);
+}
+
+.chrono-notes-calendar-preview > :not(.chrono-notes-calendar-preview-body) {
+  flex: 0 0 auto;
 }
 
 .chrono-notes-calendar-preview-date {
@@ -569,9 +576,11 @@
 
 .chrono-notes-calendar-preview-body {
   display: -webkit-box;
+  flex: 0 1 auto;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 6;
   line-clamp: 6;
+  min-height: 0;
   overflow: hidden;
   overflow-wrap: anywhere;
 }
