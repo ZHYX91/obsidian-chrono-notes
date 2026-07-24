@@ -2,6 +2,7 @@ import type { EventRef, TAbstractFile, TFile, Vault } from "obsidian";
 
 import type {
   NoteSource,
+  NoteSourceFile,
   NoteSourceListener,
 } from "../../core/note/note-source";
 
@@ -10,6 +11,14 @@ export class ObsidianNoteSource implements NoteSource {
 
   listPaths(): readonly string[] {
     return this.vault.getMarkdownFiles().map((file) => file.path);
+  }
+
+  listFiles(): readonly NoteSourceFile[] {
+    return this.vault.getMarkdownFiles().map((file) => Object.freeze({
+      path: file.path,
+      mtime: file.stat?.mtime ?? 0,
+      size: file.stat?.size ?? 0,
+    }));
   }
 
   async read(path: string): Promise<string> {

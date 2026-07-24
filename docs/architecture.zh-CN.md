@@ -33,22 +33,25 @@ Vault create/modify/rename/delete
               ↓
            NoteIndex
               ↓
-      parseNoteDocument()
+ parseNoteDocument() / ParsedNote
               ↓
-          ParsedNote
+          IndexedNote
               ↓
       selectors / React hooks
 ```
 
-`NoteIndex` 是笔记存在性、内容状态、frontmatter、预览、任务和统计的唯一来源。任何视图不得直接读取 Vault，也不得将 `hasNote` 与另一套统计缓存拼接。
+`NoteIndex` 是笔记存在性、内容状态、预览、嵌入计数、任务、区间和统计的唯一查询来源。结构化 frontmatter 与源文本只作为内部解析输入；任何视图不得直接读取 Vault，也不得将 `hasNote` 与另一套统计缓存拼接。
 
 ### 3.1 数据契约
 
 - `NoteSource` 只暴露 Markdown 相对路径枚举、完整文本读取和归一化事件订阅，不泄露 `TFile` 或 Vault。
 - `ParsedNote` 把路径、结构化 frontmatter、解析错误、预览、嵌入类型计数、任务和统计与一次 `parseNoteDocument()` 的结果聚合为递归冻结值。正文摘要与嵌入计数共用一次正文扫描：真正的 `![[...]]` / `![...](...)` 嵌入从摘要移除并分别计入图片、PDF、音频、视频、嵌入笔记或其他附件，普通链接仍保留可见文字；索引只保存数量，不递归读取嵌入笔记。任何派生字段都不能另起读取通道。YAML 根节点必须是 mapping；语法错误、类型错误和别名展开上限作为笔记内解析错误保留，不得误报为 Vault 读取失败。任务只从规范化正文提取，并保留原文件行号与旧项目的 Tasks emoji 日期标记语义。
+- `IndexedNote` 是 `ParsedNote` 面向查询的递归冻结子集，只包含路径、内容状态、区间、预览、嵌入计数、任务与统计；它刻意排除源文档和 frontmatter，确保两者不会进入持久化派生缓存。NoteIndex 只在私有内存中保留规范解析文档，用于实时更新的同文档短路。
 - 区间笔记解析也是 `ParsedNote` 的派生字段。只有同时存在且符合严格语法的 `start`/`end` 才产生冻结区间：边界必须是完整补零的 ISO 公历日期 `YYYY-MM-DD`，或以该日期开头、至少包含小时和分钟的完整 ISO 日期时间；单独时间、缩减精度的年/月、基本格式日期、序数日期和 ISO 周日期一律拒绝。日期与日期时间均保留原值、是否含时间、规范日期键和稳定排序值，天数按首尾日期包含计算。同日范围有效；缺失、非字符串、无效值或反向范围产生笔记内 `NoteIntervalError`，不建立独立 Manager 缓存，也不把整篇笔记误报为 Vault 读取失败。
 - `NoteIndexSnapshot` 使用单调递增版本、显式的 `indexing | ready` 就绪状态和冻结的路径记录。`parsed`、`error` 与查询时派生的 `missing` 是互斥状态，旧快照在新事件后仍保持不变。readiness 为 `indexing` 时，快照中缺少的路径表示未知而不是不存在；selector 返回暂时的 `indexing`，周期笔记命令对该路径延后创建，已有 parsed/error entry 仍可使用。只改变 readiness 的发布复用冻结的 notes 与投影 identity，不重新物化整份 Vault 路径表。
-- `NoteIndex` 在初始扫描前订阅事件，避免启动窗口漏掉文件变化。去重后的初始路径先一次性预留逐路径修订号，再由默认 16 个 worker 受限并发读取；所有 worker 共享默认 8ms 主线程预算，预算耗尽后共同越过一个 host macrotask 再继续，避免已缓存读取形成不间断的解析微任务链。`ObsidianNoteSource` 使用 `Vault.cachedRead()`，但读取结果仍须通过路径修订号与生命周期校验。所有初始结果先进入独立 staging，时间片让步不得发布部分结果；初始读取与启动期间的 live 读取全部成功或显式失败后，才与已经发布的 live entries 原子合并并发布 `ready`。后续 create、未知路径 modify 或 rename 目标会在该路径可能被解释为不存在前把 readiness 恢复为 `indexing`；只有 pending intent、读取、队列和 live batch 全部为空，并越过一个安静的 macrotask checkpoint 后才恢复 `ready`。delete 与 rename 仍是即时公开失效屏障。生命周期编号阻止 stop 或重新启动前的未完成读取迟到提交，卸载时同时停止订阅并丢弃 staging、pending intent、pending commit 与 readiness checkpoint。若订阅、路径枚举或初始化内部抛错，启动事务必须撤销 active/lifecycle、来源订阅、队列、进行中读取、staging、逐路径修订与投影，使同一实例可以干净重试。
+- `NoteIndex` 在启动对账前订阅事件，避免加载设备本地 IndexedDB 缓存或枚举 Vault 元数据期间漏掉变化。版本化缓存项把 `path + mtime + size` 与一个 `IndexedNote` 配对：已删除路径直接丢弃；新增、元数据变化、启动事件触碰、上次读取失败、缓存损坏或未缓存路径必须在 `ready` 前读取。匹配项可以在 readiness 仍为 `indexing` 时立即发布；完整路径清单与所有不可复用路径稳定后，`ready` 表示当前每条路径都已知、周期笔记创建已经安全，但不宣称每个元数据匹配的缓存派生都完成了逐字节校验。
+- 快速 ready 后的下一个 host macrotask 立即使用 `Vault.cachedRead()` 和同一套默认 16-worker、共享 8ms 时间片调度，逐篇校验全部复用路径。派生值未变时不进行公开发布；相同元数据下的外部修改会被修正，待处理或进行中的实时 Vault 事件始终优先于后台校验。每次读取仍须通过路径修订号和生命周期校验。因此缓存缩短的是可用时间，不取消最终校验 I/O。缓存损坏、IndexedDB 不可用或存储失败都 fail-open 到原有完整扫描。只有后台校验和实时工作都空闲后才安静批量写入，按 Vault 身份原子替换一份快照，且绝不进入插件 `data.json` 或 Vault 同步文件。
+- 没有可复用缓存时仍执行完整初扫：去重路径一次性预留逐路径修订号，由相同调度器读取，所有结果在原子 `ready` 发布前留在独立 staging。后续 create、未知路径 modify 或 rename 目标会在该路径可能被解释为不存在前把 readiness 恢复为 `indexing`；只有 pending intent、读取、队列和 live batch 全部为空，并越过一个安静的 macrotask checkpoint 后才恢复 `ready`。delete 与 rename 仍是即时公开失效屏障。生命周期编号阻止 stop 或重新启动前的未完成读取迟到提交；卸载同时丢弃 staging、后台校验、待写缓存、pending intent、pending commit 与 readiness checkpoint。若订阅、路径枚举、缓存加载或初始化内部抛错，启动事务必须撤销 active/lifecycle、来源订阅、队列、进行中读取、staging、逐路径修订与投影，使同一实例可以干净重试。
 
 ## 4. 并发、身份与缓存契约
 
@@ -58,6 +61,7 @@ Vault create/modify/rename/delete
 - 普通 create/modify 在一个 microtask 内按路径归约为最终 `read` 意图，每个终态路径至多发起一次读取。每个归约批次持有独立 live batch token；受限读槽只覆盖读取与解析，计算完成后立即释放，调用方的 `refresh()` promise 则继续等待权威发布。首个完成项安排一个可取消、可注入的有界 macrotask checkpoint：checkpoint 前全部完成只发布一次；存在慢项时先发布已完成项，剩余项全部稳定后再进行至多一次最终发布。stop/restart 必须取消 checkpoint 并使旧 batch 失效。delete/rename 是例外的即时屏障，必须先使旧路径从公开快照消失，不能等待慢读取或普通批次。
 - live read 先生成规范 `ParsedNoteDocument`；若 body、frontmatter 原文、BOM、换行、正文起始行和内容状态均未改变，则复用已发布 entry，跳过 YAML、区间、任务、预览与统计派生，也不增加公开版本或通知订阅者。读取错误恢复和 rename 强制完整解析。
 - 读取失败产生显式错误快照，不继续伪装成旧数据。
+- 持久化条目只能作为可丢弃候选，不能成为第二份事实。缓存 schema 不匹配、嵌套数据非法、路径重复、任务统计不一致或元数据非有限数时，整份快照都必须失效。
 - NoteIndex 仅在调用方显式注入诊断 sink 时读取时钟并记录路径列举、读取、文档/领域解析、初始/实时提交、快照物化和 listener 通知样本；正常插件装配不启用诊断，也不记录路径或正文。诊断时钟或 sink 写入失败必须 fail-open，只停用该实例后续诊断，不能改变快照、发布、listener 或 refresh 完成语义。8/16/32 确定性矩阵固定算法边界，默认 16 仍须由真实桌面/移动端长任务与 heap 验收复核。
 - 设置变化通过依赖标签定向失效，不进行无差别全库重算。
 - Markdown 与非 Markdown 之间的扩展名重命名分别归一化为 delete 或 create，避免旧路径残留。

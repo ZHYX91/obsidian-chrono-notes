@@ -1,7 +1,7 @@
 import type { NoteIntervalBoundary } from "../../core/note/note-interval";
 import type { NoteStatistics } from "../../core/note/note-statistics";
 import type { NoteTask } from "../../core/note/note-tasks";
-import type { ParsedNote } from "../../core/note/parsed-note";
+import type { IndexedNote } from "./indexed-note";
 import {
   parseLocalDateKey,
   type LocalDate,
@@ -69,7 +69,7 @@ export class NoteIndexProjections {
     return this.intervalSnapshot;
   }
 
-  replace(path: string, note: ParsedNote | null): void {
+  replace(path: string, note: IndexedNote | null): void {
     this.replaceBatch([[path, note]]);
   }
 
@@ -78,9 +78,9 @@ export class NoteIndexProjections {
    * Later entries for the same path win, matching the reduced event batch.
    */
   replaceBatch(
-    changes: Iterable<readonly [path: string, note: ParsedNote | null]>,
+    changes: Iterable<readonly [path: string, note: IndexedNote | null]>,
   ): void {
-    const normalized = new Map<string, ParsedNote | null>();
+    const normalized = new Map<string, IndexedNote | null>();
     for (const [path, note] of changes) normalized.set(path, note);
     if (normalized.size === 0) return;
     this.replaceTaskContributions(normalized);
@@ -104,7 +104,7 @@ export class NoteIndexProjections {
     }
   }
 
-  private replaceTaskContributions(changes: ReadonlyMap<string, ParsedNote | null>): void {
+  private replaceTaskContributions(changes: ReadonlyMap<string, IndexedNote | null>): void {
     const replacements: TaskContributionReplacement[] = [];
     const affectedDateKeys = new Set<string>();
     const removedRefs = new Set<TaskDateRef>();
@@ -154,7 +154,7 @@ export class NoteIndexProjections {
   }
 
   private replaceIntervalContributions(
-    changes: ReadonlyMap<string, ParsedNote | null>,
+    changes: ReadonlyMap<string, IndexedNote | null>,
   ): void {
     let changed = false;
     for (const [path, note] of changes) {
@@ -272,7 +272,7 @@ function areNoteTasksEqual(left: NoteTask, right: NoteTask): boolean {
     left.line === right.line;
 }
 
-function collectIntervalNoteRef(note: ParsedNote): IntervalNoteRef | null {
+function collectIntervalNoteRef(note: IndexedNote): IntervalNoteRef | null {
   if (note.interval === null) return null;
   return Object.freeze({
     path: note.path,

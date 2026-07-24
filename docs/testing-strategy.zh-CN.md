@@ -29,6 +29,8 @@ NoteIndex 端口与集成测试固定以下故障模型：去重后的初始路�
 
 readiness 回归还必须固定：初始完成前为 `indexing`，原子启动边界后为 `ready`，后续未知路径事件波次先恢复 `indexing`，且只有可注入的安静 checkpoint 看到 pending intent、读取、队列和 batch 全部为空后才恢复 `ready`。Calendar store 测试证明只改变 readiness 的快照会把可见未知周期路径从 missing 重新计算为 indexing，而不重新物化 notes，已有 parsed/error entry 语义不变。呈现测试区分弱化色虚线索引标记与错误色不存在标记；命令验收必须证明未知路径不能创建周期笔记。
 
+持久化缓存契约使用可提供元数据的 fake source，以及可注入的缓存与调度器。测试必须证明：`path + mtime + size` 匹配项在任何校验读取前恢复；元数据变化或启动事件触碰的路径在 `ready` 前读取；已删除路径不读取并直接消失；损坏快照清理后回退到完整初扫；缓存写入合并且绝不包含源文档或 frontmatter。后台校验必须从后续 host task 开始、复用初扫 8ms 时间片、修正相同元数据下的外部修改、派生值未变时不发布，并主动让位给待处理或进行中的实时修订。schema 非法、路径重复、元数据非有限数、日期非法、路径/任务不一致和任务统计矛盾都必须使快照失效；IndexedDB 缺失与存储错误必须 fail-open。暖缓存基准记录恢复条目数、快速 ready 前读取数和是否已安排完整校验，不得把快速 ready 描述成取消了后续 I/O。
+
 实际 `ObsidianNoteSource` 与可控 fake Vault 的组合回归让 `cachedRead()` 乱序完成，分别覆盖 initial→modify、pending modify→rename 和 pending modify→delete，证明较新结果发布或旧路径失效后，旧读取不能覆盖或复活。该测试只固定 adapter 事件映射与 NoteIndex revision 屏障，不能证明真实 Obsidian 内部缓存对外部同步的失效时序；桌面和移动端快速修改/同步仍是人工发布门禁。`refresh()` 遇到 queued missing 时先提交删除屏障，再以新 revision 执行显式重读；测试固定 listener 先看到 missing，再看到该重读的 parsed 或 error 终态。
 
 设置契约逐项覆盖 Chrono Notes schema v1–v16 的顺序迁移、无版本与非法版本按 v1 处理、未来版本不降级、已有合法值保留、未知字段最终剔除、重复迁移幂等，以及输入、默认数组和嵌套对象不共享可变引用。schema v15 必须证明共享确认字段被删除、不映射旧值，周期与区间两个严格布尔开关独立归一化；schema v16 必须证明旧待办标注的 `none` 映射为关闭、`color` 与 `hole` 映射为开启，删除旧字段，并严格归一化新的布尔值。真实 Obsidian 验收向隔离 Vault 注入代表性旧版本与非法数据，完整重载后检查五个设置 tab 的保留/回退，再保存为当前 schema 并证明数组配置互不串改。
@@ -109,7 +111,7 @@ Templater adapter 测试必须覆盖插件不可用的明确错误、目标周�
 - 架构测试用 TypeScript AST 固定分层方向、core 不依赖 Obsidian/React 及源码无循环。mocked plugin lifecycle 组合测试覆盖 onload/onunload、注册/释放、设置保存串行与 listener 隔离、布局就绪后的 NoteIndex/ICS 后台启动、可见的启动失败、读取/保存失败，以及 stop 后迟到工作不重新激活 UI；adapter 契约另行固定周期笔记删除与回滚必须遵循 Obsidian 配置的回收站行为。
 - 日历查询 store 在构造时绑定不可变请求，`getSnapshot()` 不接收 render-time 请求；测试固定候选与已提交 store 隔离、无 concurrent tearing、来源 identity 快路径、相关更新通知正确、普通笔记更新不重算 Navbar/区间列表，以及所有 source/settings listener 在卸载后释放。独立第二 `Document` 的 UI 测试证明 tooltip portal、窗口监听、视口定位与清理绑定到 React root 的 owner 环境，而不是主窗口全局对象。通用发布 helper 另以订阅者在回调内增删 listener 的样本固定“本轮遍历发布开始时快照、变更从下一轮生效”，同时保持异常与异步拒绝隔离。
 - 设置影响纯契约从上次成功持久化的规范快照计算 calendar/Navbar/interval-list/ICS 四类影响；区间设置 revision 只随 interval-list 影响推进。保存失败不推进基线、不通知，首次引导与确认偏好等仅持久化字段不唤醒查询表面。
-- 生产产物门禁固定 browser/CJS、production define、UTF-8、JS/CSS 压缩、external 白名单、无 React development/process/buffer 残留、桌面 ICS CommonJS 分支、manifest/package/versions 一致、默认插件导出可由 mocked Obsidian 加载，以及 `main.js ≤ 1,250,000 B`。当前 `0.2.1` 显式八语言目录、完整历法组合、初扫时间片、设置重组、统一历法事件呈现、共享周期悬停预览与嵌入统计构建为 1,165,522 B，相对已发布 0.1.2 的 991,182 B 增加 174,340 B；1.25 MB 门禁在该实测产物上保留 84,478 B 余量，用于阻止无解释增长，而不是 Obsidian 的官方文件限制。`pnpm size` 输出相对基线、预算余量和 metafile 主要组成。
+- 生产产物门禁固定 browser/CJS、production define、UTF-8、JS/CSS 压缩、external 白名单、无 React development/process/buffer 残留、桌面 ICS CommonJS 分支、manifest/package/versions 一致、默认插件导出可由 mocked Obsidian 加载，以及 `main.js ≤ 1,250,000 B`。当前 `0.2.1` 显式八语言目录、完整历法组合、初扫时间片、设置重组、统一历法事件呈现、共享周期悬停预览、嵌入统计与持久化启动缓存构建为 1,176,184 B，相对已发布 0.1.2 的 991,182 B 增加 185,002 B；1.25 MB 门禁在该实测产物上保留 73,816 B 余量，用于阻止无解释增长，而不是 Obsidian 的官方文件限制。`pnpm size` 输出相对基线、预算余量和 metafile 主要组成。
 - CI 在 Node 24 / pnpm 11.7.0 上执行 frozen install、`pnpm check`、UTC 与 `America/New_York` 双时区测试、1,000 篇快速算法基准、coverage 报告和 `dist/` 产物上传。coverage 当前用于发现盲区，不以任意百分比替代领域契约。独立 release workflow 只接受与 `manifest.json` 完全一致、无 `v` 前缀的 `x.y.z` 标签；全部自动门禁通过后才从 `dist/` 顶层发布官方安装所需的独立 `main.js`、`manifest.json`、`styles.css`，并额外发布手动安装用的 `chrono-notes-<version>.zip`。压缩包只包含一个 `chrono-notes/` 目录及其中的上述三个文件；四个最终附件都生成 GitHub artifact attestation，同一标签重新运行时替换附件，不重复创建 Release。
 - `pnpm bench:quick` 与 `pnpm bench:large` 分别生成 1,000/10,000 篇确定性内存数据，记录 opt-in 的 list/read/document-parse/note-derivation/initial/live-commit/materialize/notify 阶段计时，以及 month/week/interval/year/heatmap、农历双扩展与 `Intl` 双扩展的冷/热月装饰、事件风暴、多订阅者和 ICS 状态/内容变化；计时报告 p50/p95/max。8/16/32 初扫矩阵使用受控释放并硬性比较峰值并发、逻辑完成轮次、在途内容量、单路径读取、初始发布次数，并深比较排序后的完整 note entry、task date bucket 与 interval 投影语义，不以聚合数量或墙钟代替正确性。process `heapUsed` 只是可选 GC 下的 best-effort 同机线索，不能冒充真实宿主 heap snapshot；读取次数、发布次数、最终路径每批最多一次 read、访问 bucket 数和产物大小才适合硬门禁。
 - `pnpm holiday:check` 检查当前年与下一年，要求每个 release verdict 都有一手来源核验记录；当年缺失、下一年已发布但未补齐、未核验或状态矛盾以非零状态退出，下一年官方尚未发布则保留 unavailable、输出警告并返回成功。`pnpm release:check` 串联自动代码门禁、双时区、快速基准和该节假日门禁；它不代替真实 Obsidian、真实移动端、React Profiler、长任务或 heap snapshot。发布说明必须如实区分自动证据、针对性真实宿主回归和未取得的设备或性能证据。
@@ -131,7 +133,7 @@ Templater adapter 测试必须覆盖插件不可用的明确错误、目标周�
 - `minAppVersion`、Obsidian API/DOM adapter、生命周期、设置页或主要视图交互变化时，在最低支持的 Obsidian 1.12.7 与执行时最新稳定桌面版中重跑相关完整停用/启用、重载和卸载矩阵；次版本发布前重跑完整桌面矩阵。
 - 主题变量、响应式布局、键盘/ARIA、焦点或弹层变化时，在默认浅色、默认深色和至少一个第三方主题下覆盖主区域与约 300–360 px 窄侧栏；未改动的视觉表面不要求补丁版本机械复验。
 - 安全区、周期 Note Navbar、触摸、粗指针、横竖屏或软键盘变化时，在真实移动设备覆盖对应矩阵；没有物理设备证据时可以发布无关补丁，但必须明确只取得模拟器或自动证据，次版本发布前补完整真机矩阵。
-- NoteIndex、查询、缓存、解析、依赖或 bundle 预算发生性能相关变化时，在可再生的 1,000/10,000 篇真实宿主 Vault 上记录安全入口可用、完整 NoteIndex ready、最长主线程任务、read/parse/publish、React render/commit、heap 起点/峰值/稳定值和 stop 后回收量。同机比较，不设置跨机器绝对毫秒阈值；没有 Profiler 证据不引入 `React.memo`。
+- NoteIndex、查询、缓存、解析、依赖或 bundle 预算发生性能相关变化时，在可再生的 1,000/10,000 篇真实宿主 Vault 上记录安全入口可用、元数据安全的快速 ready、后台逐字节校验完成、最长主线程任务、read/parse/publish、React render/commit、缓存体积、heap 起点/峰值/稳定值和 stop 后回收量。冷启动与暖启动必须在同机比较，不设置跨机器绝对毫秒阈值；没有 Profiler 证据不引入 `React.memo`。
 
 未触发或未取得的证据限制对应兼容性、真机或性能结论，不阻止与该表面无关的补丁发布；文档和发布说明不得把缺失证据写成已经验证。
 
@@ -159,5 +161,5 @@ Templater adapter 测试必须覆盖插件不可用的明确错误、目标周�
 - 农历语言适配测试固定同语言零次 `setLanguage()`、跨语言切换与恢复、同/跨语言嵌套、操作抛错、操作内部改写全局状态以及简中/繁中/英文连续调用；冷月装饰基准必须继续覆盖默认农历与大陆/新加坡节假日组合。
 - live event batch 在 `readConcurrency: 4` 下覆盖 4、5、8、64 条快速路径，证明读取槽可继续排空而发布 promise 保持等待，并在注入的 checkpoint 触发后只发布一次。慢项回归允许 checkpoint 与最终稳定边界各发布一次；错误、no-op、旧修订、delete/rename 屏障和 stop/restart 取消继续单独固定。
 - 事件风暴基准必须等待每条相关 `refresh()` promise，而不是只轮询计数；报告先输出再执行最终门禁。10,000 条模式固定每个 create/modify 批次每终态路径一次读取、快速 32 路批次一次发布。
-- 生产产物明细同时输出预算余量、相对记录基线的总增量、按依赖包聚合和最大单输入。发布硬门禁为 `1,250,000 B`：当前 1,165,522 B 产物在已发布 0.1.2 的 991,182 B 基线之上包含显式八语言目录、完整历法、初扫时间片、设置重组、统一历法事件呈现、共享周期悬停预览与嵌入统计，并保留 84,478 B 可审计余量。任何进一步放宽或依赖替换都必须先证明增量来源、语义、移动端兼容和产物 smoke test。
-- 启动性能人工记录至少区分安全入口可用与完整 NoteIndex ready 两个里程碑，并同时记录读取数、最长主线程任务和 heap。未建立显式 readiness 协议前，不以后台索引实验替代现有完整就绪语义。
+- 生产产物明细同时输出预算余量、相对记录基线的总增量、按依赖包聚合和最大单输入。发布硬门禁为 `1,250,000 B`：当前 1,176,184 B 产物在已发布 0.1.2 的 991,182 B 基线之上包含显式八语言目录、完整历法、初扫时间片、设置重组、统一历法事件呈现、共享周期悬停预览、嵌入统计与持久化启动缓存，并保留 73,816 B 可审计余量。任何进一步放宽或依赖替换都必须先证明增量来源、语义、移动端兼容和产物 smoke test。
+- 启动性能人工记录必须区分安全入口可用、元数据安全的快速 ready 与后台逐字节校验完成，并记录各里程碑读取数、最长主线程任务、缓存体积和 heap。任何把暖启动快速 ready 写成取消后续完整校验的说明都属于发布阻断错误。

@@ -5,12 +5,23 @@ import {
 import type {
   NoteSource,
   NoteSourceEvent,
+  NoteSourceFile,
 } from "../../core/note/note-source";
 import {
   parseNoteFromDocument,
-  type ParsedNote,
 } from "../../core/note/parsed-note";
 import { notifyListeners } from "../notify-listeners";
+import {
+  createIndexedNote,
+  type IndexedNote,
+} from "./indexed-note";
+import {
+  createPersistedNoteIndexSnapshot,
+  parsePersistedNoteIndexSnapshot,
+  type NoteIndexCache,
+  type PersistedNoteIndexEntry,
+  type PersistedNoteIndexSnapshot,
+} from "./note-index-cache";
 import {
   EMPTY_INTERVAL_INDEX_SNAPSHOT,
   EMPTY_TASK_DATE_INDEX_SNAPSHOT,
@@ -19,10 +30,10 @@ import {
   type TaskDateIndexSnapshot,
 } from "./note-index-projections";
 
-export interface ParsedNoteIndexEntry {
+export interface IndexedNoteIndexEntry {
   readonly kind: "parsed";
   readonly revision: number;
-  readonly note: ParsedNote;
+  readonly note: IndexedNote;
 }
 
 export interface NoteReadFailure {
@@ -42,7 +53,7 @@ export interface MissingNoteIndexEntry {
   readonly path: string;
 }
 
-export type PresentNoteIndexEntry = ParsedNoteIndexEntry | ErrorNoteIndexEntry;
+export type PresentNoteIndexEntry = IndexedNoteIndexEntry | ErrorNoteIndexEntry;
 export type NoteIndexEntry = PresentNoteIndexEntry | MissingNoteIndexEntry;
 export type NoteIndexReadiness = "indexing" | "ready";
 
@@ -66,6 +77,7 @@ interface InFlightRead {
 interface InitialStaging {
   readonly lifecycle: number;
   readonly entries: Map<string, PresentNoteIndexEntry>;
+  readonly documents: Map<string, ParsedNoteDocument>;
 }
 
 interface InitialReadTask {
@@ -97,6 +109,12 @@ export interface NoteIndexOptions {
   readonly scheduleLiveCommitCheckpoint?: (callback: () => void) => () => void;
   /** Schedules the quiet checkpoint before a live discovery wave becomes ready. */
   readonly scheduleReadinessCheckpoint?: (callback: () => void) => () => void;
+  /** Optional device-local cache for derived index data. */
+  readonly cache?: NoteIndexCache;
+  /** Schedules a quiet, batched cache write after the index becomes idle. */
+  readonly scheduleCacheSave?: (callback: () => void) => () => void;
+  /** Starts full cache verification in the next host task after fast readiness. */
+  readonly scheduleBackgroundVerification?: (callback: () => void) => () => void;
 }
 
 /** Optional mutable counters for deterministic tests and local benchmarks. */
@@ -130,7 +148,7 @@ type NoteIndexDiagnosticCounter = Exclude<keyof NoteIndexDiagnostics, "timings">
 type ReadPublication =
   | { readonly kind: "initial"; readonly staging: InitialStaging }
   | {
-    readonly kind: "live";
+    readonly kind: "live" | "verification";
     readonly forceParse: boolean;
     readonly batch: LiveReadBatch;
   };
@@ -159,6 +177,7 @@ interface PendingLiveCommit {
   readonly revision: number;
   readonly lifecycle: number;
   readonly entry: PresentNoteIndexEntry;
+  readonly document: ParsedNoteDocument | null;
   readonly resolve: () => void;
 }
 
@@ -181,6 +200,8 @@ const INITIAL_SNAPSHOT: NoteIndexSnapshot = Object.freeze({
 
 const DEFAULT_READ_CONCURRENCY = 16;
 const DEFAULT_INITIAL_INDEX_TIME_SLICE_MS = 8;
+const DEFAULT_CACHE_SAVE_DELAY_MS = 2_000;
+const EMPTY_PATH_SET: ReadonlySet<string> = Object.freeze(new Set<string>());
 
 /**
  * Single owner for all Vault-derived note query state.
@@ -193,6 +214,7 @@ const DEFAULT_INITIAL_INDEX_TIME_SLICE_MS = 8;
  */
 export class NoteIndex {
   private readonly entries = new Map<string, PresentNoteIndexEntry>();
+  private readonly documents = new Map<string, ParsedNoteDocument>();
   private readonly projections = new NoteIndexProjections();
   private readonly revisions = new Map<string, number>();
   private readonly inFlight = new Map<string, InFlightRead>();
@@ -218,9 +240,16 @@ export class NoteIndex {
   private readonly diagnosticClock: () => number;
   private readonly scheduleLiveCommitCheckpoint: (callback: () => void) => () => void;
   private readonly scheduleReadinessCheckpoint: (callback: () => void) => () => void;
+  private readonly cache: NoteIndexCache | null;
+  private readonly scheduleCacheSave: (callback: () => void) => () => void;
+  private readonly scheduleBackgroundVerification: (callback: () => void) => () => void;
   private diagnosticsEnabled: boolean;
   private scheduledEventFlush: ScheduledFlush | null = null;
   private cancelReadinessCheckpoint: (() => void) | null = null;
+  private cancelCacheSave: (() => void) | null = null;
+  private cancelBackgroundVerification: (() => void) | null = null;
+  private cacheSaveTail: Promise<void> = Promise.resolve();
+  private backgroundVerificationActive = false;
 
   constructor(
     private readonly source: NoteSource,
@@ -245,6 +274,11 @@ export class NoteIndex {
       ?? scheduleMacrotaskCheckpoint;
     this.scheduleReadinessCheckpoint = options.scheduleReadinessCheckpoint
       ?? scheduleMacrotaskCheckpoint;
+    this.cache = options.cache ?? null;
+    this.scheduleCacheSave = options.scheduleCacheSave
+      ?? ((callback) => scheduleTimeout(callback, DEFAULT_CACHE_SAVE_DELAY_MS));
+    this.scheduleBackgroundVerification = options.scheduleBackgroundVerification
+      ?? scheduleMacrotaskCheckpoint;
     this.diagnosticsEnabled = this.diagnostics !== null;
   }
 
@@ -264,6 +298,7 @@ export class NoteIndex {
     const staging: InitialStaging = {
       lifecycle: startLifecycle,
       entries: new Map(),
+      documents: new Map(),
     };
     this.initialStaging = staging;
     this.bufferedStartupEvents = [];
@@ -271,10 +306,19 @@ export class NoteIndex {
       this.unsubscribeSource = this.source.subscribe(
         (event) => this.handleSourceEvent(event),
       );
+      const cachedSnapshot = this.source.listFiles === undefined
+        ? null
+        : await this.loadCacheSnapshot();
       const listPathsStarted = this.startDiagnosticTiming();
       let initialPaths: string[];
+      let listedFiles: readonly NoteSourceFile[] | null = null;
       try {
-        initialPaths = [...new Set(this.source.listPaths())];
+        listedFiles = this.source.listFiles?.() ?? null;
+        initialPaths = [...new Set(
+          listedFiles === null
+            ? this.source.listPaths()
+            : listedFiles.map((file) => file.path),
+        )];
       } finally {
         this.finishDiagnosticTiming("listPathsMs", listPathsStarted);
       }
@@ -282,7 +326,20 @@ export class NoteIndex {
       this.bufferedStartupEvents = null;
       const knownPaths = reconcileStartupPaths(initialPaths, bufferedEvents ?? []);
       this.initialKnownPaths = knownPaths;
-      const initialIndexing = this.completeInitialIndexing([...knownPaths], staging);
+      const cachedPaths = cachedSnapshot === null || listedFiles === null
+        ? EMPTY_PATH_SET
+        : this.restoreCachedEntries(
+          cachedSnapshot.entries,
+          listedFiles,
+          knownPaths,
+          bufferedEvents ?? [],
+          staging,
+        );
+      if (cachedPaths.size > 0) this.commitInitialStaging(staging, "indexing");
+      const initialIndexing = this.completeInitialIndexing(
+        [...knownPaths].filter((path) => !cachedPaths.has(path)),
+        staging,
+      );
       this.initialIndexing = initialIndexing;
       try {
         await initialIndexing;
@@ -293,6 +350,12 @@ export class NoteIndex {
       if (this.initialStaging === staging) {
         this.initialStaging = null;
         this.initialKnownPaths = null;
+      }
+      if (cachedPaths.size > 0) {
+        this.cancelBackgroundVerification = this.scheduleBackgroundVerification(() => {
+          this.cancelBackgroundVerification = null;
+          void this.verifyCachedEntries([...cachedPaths], startLifecycle);
+        });
       }
     } catch (error) {
       this.rollbackFailedStart(startLifecycle);
@@ -311,11 +374,17 @@ export class NoteIndex {
     this.scheduledEventFlush = null;
     this.cancelReadinessCheckpoint?.();
     this.cancelReadinessCheckpoint = null;
+    this.cancelCacheSave?.();
+    this.cancelCacheSave = null;
+    this.cancelBackgroundVerification?.();
+    this.cancelBackgroundVerification = null;
+    this.backgroundVerificationActive = false;
     this.cancelLiveReadBatches();
     this.cancelQueuedReads();
     this.releaseRunningReadSlots();
     this.inFlight.clear();
     this.initialStaging?.entries.clear();
+    this.initialStaging?.documents.clear();
     this.initialStaging = null;
     this.initialKnownPaths = null;
     this.bufferedStartupEvents = null;
@@ -323,6 +392,7 @@ export class NoteIndex {
     if (this.entries.size > 0 || this.snapshot.readiness !== "indexing") {
       const hadPublishedEntries = Object.keys(this.snapshot.notes).length > 0;
       this.entries.clear();
+      this.documents.clear();
       this.projections.clear();
       if (hadPublishedEntries) this.publish(true, "indexing");
       else this.publish(false, "indexing");
@@ -340,6 +410,112 @@ export class NoteIndex {
   subscribe(listener: NoteIndexListener): () => void {
     this.listeners.add(listener);
     return () => this.listeners.delete(listener);
+  }
+
+  private async loadCacheSnapshot(): Promise<PersistedNoteIndexSnapshot | null> {
+    if (this.cache === null) return null;
+    try {
+      await this.cacheSaveTail;
+      const raw = await this.cache.load();
+      if (raw === null || raw === undefined) return null;
+      const parsed = parsePersistedNoteIndexSnapshot(raw);
+      if (parsed !== null) return parsed;
+      await this.cache.clear();
+    } catch (error) {
+      reportCacheFailure("load", error);
+    }
+    return null;
+  }
+
+  private restoreCachedEntries(
+    cachedEntries: readonly PersistedNoteIndexEntry[],
+    listedFiles: readonly NoteSourceFile[],
+    knownPaths: ReadonlySet<string>,
+    startupEvents: readonly NoteSourceEvent[],
+    staging: InitialStaging,
+  ): ReadonlySet<string> {
+    const files = new Map(listedFiles.map((file) => [file.path, file]));
+    const dirtyPaths = collectStartupDirtyPaths(startupEvents);
+    const restored = new Set<string>();
+    for (const cached of cachedEntries) {
+      const current = files.get(cached.file.path);
+      if (
+        current === undefined ||
+        !knownPaths.has(cached.file.path) ||
+        dirtyPaths.has(cached.file.path) ||
+        current.mtime !== cached.file.mtime ||
+        current.size !== cached.file.size
+      ) {
+        continue;
+      }
+      const revision = this.advanceRevision(cached.file.path);
+      staging.entries.set(cached.file.path, Object.freeze({
+        kind: "parsed",
+        revision,
+        note: cached.note,
+      }));
+      restored.add(cached.file.path);
+    }
+    return restored;
+  }
+
+  private async verifyCachedEntries(
+    paths: readonly string[],
+    lifecycle: number,
+  ): Promise<void> {
+    if (!this.active || this.lifecycle !== lifecycle || paths.length === 0) return;
+    this.backgroundVerificationActive = true;
+    let nextPathIndex = 0;
+    let timeSliceStarted = this.initialIndexClock();
+    let pendingYield: Promise<void> | null = null;
+    const yieldWhenTimeSliceExpires = async (): Promise<void> => {
+      if (this.initialIndexClock() - timeSliceStarted < this.initialIndexTimeSliceMs) {
+        return;
+      }
+      if (pendingYield === null) {
+        const yielding = (async () => {
+          await this.yieldInitialIndex();
+          timeSliceStarted = this.initialIndexClock();
+        })();
+        pendingYield = yielding.finally(() => {
+          pendingYield = null;
+        });
+      }
+      await pendingYield;
+    };
+    const runWorker = async (): Promise<void> => {
+      while (this.active && this.lifecycle === lifecycle && nextPathIndex < paths.length) {
+        const path = paths[nextPathIndex];
+        nextPathIndex += 1;
+        if (path === undefined) continue;
+        const revision = this.revisions.get(path);
+        if (revision === undefined || !this.entries.has(path)) continue;
+        if (this.pendingEventIntents.has(path)) continue;
+        const currentRead = this.inFlight.get(path);
+        if (
+          currentRead?.lifecycle === lifecycle &&
+          currentRead.revision === revision
+        ) {
+          await currentRead.promise;
+          continue;
+        }
+        await this.beginRead(path, revision, {
+          kind: "verification",
+          forceParse: false,
+          batch: this.createLiveReadBatch(1),
+        });
+        await yieldWhenTimeSliceExpires();
+      }
+    };
+    try {
+      const workerCount = Math.min(this.readConcurrency, paths.length);
+      await Promise.all(Array.from({ length: workerCount }, () => runWorker()));
+    } finally {
+      if (this.lifecycle === lifecycle) {
+        this.backgroundVerificationActive = false;
+        this.scheduleCachePersistence();
+      }
+    }
   }
 
   /**
@@ -453,6 +629,7 @@ export class NoteIndex {
   private invalidateAsyncWork(path: string): void {
     this.inFlight.delete(path);
     this.initialStaging?.entries.delete(path);
+    this.initialStaging?.documents.delete(path);
   }
 
   private removePublishedEntry(
@@ -460,6 +637,7 @@ export class NoteIndex {
     readiness: NoteIndexReadiness = this.snapshot.readiness,
   ): boolean {
     if (this.entries.delete(path)) {
+      this.documents.delete(path);
       this.projections.replace(path, null);
       this.publish(true, readiness);
       return true;
@@ -713,6 +891,7 @@ export class NoteIndex {
     }
 
     let entry: PresentNoteIndexEntry;
+    let parsedDocument: ParsedNoteDocument | null = null;
     try {
       this.incrementDiagnostic("reads");
       const readStarted = this.startDiagnosticTiming();
@@ -742,17 +921,26 @@ export class NoteIndex {
       }
       this.incrementDiagnostic("parses");
       const noteParseStarted = this.startDiagnosticTiming();
-      let note: ParsedNote;
+      let note: IndexedNote;
       try {
-        note = parseNoteFromDocument(path, document);
+        note = createIndexedNote(parseNoteFromDocument(path, document));
       } finally {
         this.finishDiagnosticTiming("noteParsesMs", noteParseStarted);
+      }
+      if (
+        publication.kind === "verification" &&
+        !publication.forceParse &&
+        this.isSamePublishedNote(path, note)
+      ) {
+        this.documents.set(path, document);
+        return this.finishRead(publication, null);
       }
       entry = Object.freeze({
         kind: "parsed",
         revision,
         note,
       });
+      parsedDocument = document;
     } catch (error) {
       if (!this.canCommit(path, revision, lifecycle)) {
         return this.finishRead(publication, null);
@@ -763,23 +951,40 @@ export class NoteIndex {
         revision,
         error: toReadFailure(error),
       });
+      parsedDocument = null;
     }
 
-    if (publication.kind === "live") {
-      return this.finishRead(publication, { path, revision, lifecycle, entry });
+    if (publication.kind !== "initial") {
+      return this.finishRead(publication, {
+        path,
+        revision,
+        lifecycle,
+        entry,
+        document: parsedDocument,
+      });
     }
 
     if (this.initialStaging === publication.staging) {
       publication.staging.entries.set(path, entry);
+      if (parsedDocument === null) publication.staging.documents.delete(path);
+      else publication.staging.documents.set(path, parsedDocument);
     }
     return { publication: Promise.resolve() };
   }
 
   private isSamePublishedDocument(path: string, document: ParsedNoteDocument): boolean {
     const current = this.entries.get(path);
+    const currentDocument = this.documents.get(path);
     return current?.kind === "parsed" &&
       current.note.path === path &&
-      areParsedNoteDocumentsEqual(current.note.document, document);
+      currentDocument !== undefined &&
+      areParsedNoteDocumentsEqual(currentDocument, document);
+  }
+
+  private isSamePublishedNote(path: string, note: IndexedNote): boolean {
+    const current = this.entries.get(path);
+    return current?.kind === "parsed" &&
+      areIndexedNotesEqual(current.note, note);
   }
 
   private finishRead(
@@ -795,7 +1000,9 @@ export class NoteIndex {
   }
 
   private skipRead(publication: ReadPublication): void {
-    if (publication.kind === "live") void this.finishLiveRead(publication.batch, null);
+    if (publication.kind !== "initial") {
+      void this.finishLiveRead(publication.batch, null);
+    }
   }
 
   private createLiveReadBatch(pendingReads: number): LiveReadBatch {
@@ -846,10 +1053,12 @@ export class NoteIndex {
     if (this.active && this.lifecycle === batch.lifecycle) {
       const commitStarted = this.startDiagnosticTiming();
       try {
-        const projectionChanges: Array<readonly [string, ParsedNote | null]> = [];
+        const projectionChanges: Array<readonly [string, IndexedNote | null]> = [];
         for (const commit of commits) {
           if (!this.canCommit(commit.path, commit.revision, commit.lifecycle)) continue;
           this.entries.set(commit.path, commit.entry);
+          if (commit.document === null) this.documents.delete(commit.path);
+          else this.documents.set(commit.path, commit.document);
           projectionChanges.push([
             commit.path,
             commit.entry.kind === "parsed" ? commit.entry.note : null,
@@ -895,10 +1104,13 @@ export class NoteIndex {
     const commitStarted = this.startDiagnosticTiming();
     let hasChanges = false;
     try {
-      const projectionChanges: Array<readonly [string, ParsedNote | null]> = [];
+      const projectionChanges: Array<readonly [string, IndexedNote | null]> = [];
       for (const [path, entry] of staging.entries) {
         if (this.revisions.get(path) !== entry.revision) continue;
         this.entries.set(path, entry);
+        const document = staging.documents.get(path);
+        if (document === undefined) this.documents.delete(path);
+        else this.documents.set(path, document);
         projectionChanges.push([
           path,
           entry.kind === "parsed" ? entry.note : null,
@@ -907,6 +1119,7 @@ export class NoteIndex {
       }
       this.projections.replaceBatch(projectionChanges);
       staging.entries.clear();
+      staging.documents.clear();
     } finally {
       this.finishDiagnosticTiming("initialCommitsMs", commitStarted);
     }
@@ -940,11 +1153,17 @@ export class NoteIndex {
     this.scheduledEventFlush = null;
     this.cancelReadinessCheckpoint?.();
     this.cancelReadinessCheckpoint = null;
+    this.cancelCacheSave?.();
+    this.cancelCacheSave = null;
+    this.cancelBackgroundVerification?.();
+    this.cancelBackgroundVerification = null;
+    this.backgroundVerificationActive = false;
     this.cancelLiveReadBatches();
     this.cancelQueuedReads();
     this.releaseRunningReadSlots();
     this.inFlight.clear();
     this.initialStaging?.entries.clear();
+    this.initialStaging?.documents.clear();
     this.initialStaging = null;
     this.initialIndexing = null;
     this.initialKnownPaths = null;
@@ -952,6 +1171,7 @@ export class NoteIndex {
     this.revisions.clear();
     const hadPublishedEntries = this.entries.size > 0;
     this.entries.clear();
+    this.documents.clear();
     this.projections.clear();
     if (hadPublishedEntries || this.snapshot.readiness !== "indexing") {
       this.publish(hadPublishedEntries, "indexing");
@@ -1035,6 +1255,61 @@ export class NoteIndex {
     } finally {
       this.finishDiagnosticTiming("listenerNotificationsMs", notificationStarted);
     }
+    if (readiness === "ready") this.scheduleCachePersistence();
+  }
+
+  private scheduleCachePersistence(): void {
+    if (
+      this.cache === null ||
+      this.source.listFiles === undefined ||
+      !this.active ||
+      this.cancelCacheSave !== null
+    ) {
+      return;
+    }
+    this.cancelCacheSave = this.scheduleCacheSave(() => {
+      this.cancelCacheSave = null;
+      if (
+        !this.active ||
+        this.snapshot.readiness !== "ready" ||
+        this.backgroundVerificationActive ||
+        !this.isLiveWorkIdle()
+      ) {
+        this.scheduleCachePersistence();
+        return;
+      }
+      const snapshot = this.createCacheSnapshot();
+      const save = this.cacheSaveTail.then(async () => {
+        try {
+          await this.cache?.save(snapshot);
+        } catch (error) {
+          reportCacheFailure("save", error);
+        }
+      });
+      this.cacheSaveTail = save;
+    });
+  }
+
+  private createCacheSnapshot(): PersistedNoteIndexSnapshot {
+    const files = new Map(
+      (this.source.listFiles?.() ?? []).map((file) => [file.path, file]),
+    );
+    const persisted: PersistedNoteIndexEntry[] = [];
+    for (const [path, entry] of this.entries) {
+      if (entry.kind !== "parsed") continue;
+      const file = files.get(path);
+      if (file === undefined) continue;
+      persisted.push(Object.freeze({
+        file: Object.freeze({
+          path,
+          mtime: file.mtime,
+          size: file.size,
+        }),
+        note: entry.note,
+      }));
+    }
+    persisted.sort((left, right) => left.file.path.localeCompare(right.file.path));
+    return createPersistedNoteIndexSnapshot(persisted);
   }
 
   private incrementDiagnostic(counter: NoteIndexDiagnosticCounter): void {
@@ -1113,6 +1388,11 @@ function scheduleMacrotaskCheckpoint(callback: () => void): () => void {
   return () => globalThis.clearTimeout(handle);
 }
 
+function scheduleTimeout(callback: () => void, delayMs: number): () => void {
+  const handle = globalThis.setTimeout(callback, delayMs);
+  return () => globalThis.clearTimeout(handle);
+}
+
 function areParsedNoteDocumentsEqual(
   left: ParsedNoteDocument,
   right: ParsedNoteDocument,
@@ -1124,6 +1404,78 @@ function areParsedNoteDocumentsEqual(
     left.bodyStartLine === right.bodyStartLine &&
     left.hadBom === right.hadBom &&
     left.lineEnding === right.lineEnding;
+}
+
+function areIndexedNotesEqual(left: IndexedNote, right: IndexedNote): boolean {
+  return left.path === right.path &&
+    left.state === right.state &&
+    left.preview === right.preview &&
+    areIntervalsEqual(left.interval, right.interval) &&
+    areEmbedStatisticsEqual(left.embeds, right.embeds) &&
+    areTasksEqual(left.tasks, right.tasks) &&
+    areStatisticsEqual(left.statistics, right.statistics);
+}
+
+function areIntervalsEqual(
+  left: IndexedNote["interval"],
+  right: IndexedNote["interval"],
+): boolean {
+  if (left === null || right === null) return left === right;
+  return left.dayCount === right.dayCount &&
+    areIntervalBoundariesEqual(left.start, right.start) &&
+    areIntervalBoundariesEqual(left.end, right.end);
+}
+
+function areIntervalBoundariesEqual(
+  left: NonNullable<IndexedNote["interval"]>["start"],
+  right: NonNullable<IndexedNote["interval"]>["start"],
+): boolean {
+  return left.value === right.value &&
+    left.dateKey === right.dateKey &&
+    left.hasTime === right.hasTime &&
+    left.epochMillis === right.epochMillis;
+}
+
+function areEmbedStatisticsEqual(
+  left: IndexedNote["embeds"],
+  right: IndexedNote["embeds"],
+): boolean {
+  return left.imageCount === right.imageCount &&
+    left.pdfCount === right.pdfCount &&
+    left.audioCount === right.audioCount &&
+    left.videoCount === right.videoCount &&
+    left.noteCount === right.noteCount &&
+    left.otherCount === right.otherCount;
+}
+
+function areTasksEqual(
+  left: IndexedNote["tasks"],
+  right: IndexedNote["tasks"],
+): boolean {
+  return left.length === right.length && left.every((task, index) => {
+    const candidate = right[index];
+    return candidate !== undefined &&
+      task.text === candidate.text &&
+      task.completed === candidate.completed &&
+      task.dueDate === candidate.dueDate &&
+      task.scheduledDate === candidate.scheduledDate &&
+      task.startDate === candidate.startDate &&
+      task.doneDate === candidate.doneDate &&
+      task.path === candidate.path &&
+      task.line === candidate.line;
+  });
+}
+
+function areStatisticsEqual(
+  left: IndexedNote["statistics"],
+  right: IndexedNote["statistics"],
+): boolean {
+  return left.wordCount === right.wordCount &&
+    left.linkCount === right.linkCount &&
+    left.tagCount === right.tagCount &&
+    left.taskTotal === right.taskTotal &&
+    left.taskCompleted === right.taskCompleted &&
+    left.taskCompletionRate === right.taskCompletionRate;
 }
 
 function reconcileStartupPaths(
@@ -1147,6 +1499,32 @@ function reconcileStartupPaths(
     }
   }
   return paths;
+}
+
+function collectStartupDirtyPaths(events: readonly NoteSourceEvent[]): ReadonlySet<string> {
+  const paths = new Set<string>();
+  for (const event of events) {
+    switch (event.type) {
+      case "create":
+      case "modify":
+      case "delete":
+        paths.add(event.path);
+        break;
+      case "rename":
+        paths.add(event.oldPath);
+        paths.add(event.path);
+        break;
+    }
+  }
+  return paths;
+}
+
+function reportCacheFailure(action: "load" | "save", error: unknown): void {
+  try {
+    console.error(`Chrono Notes: failed to ${action} NoteIndex cache`, error);
+  } catch {
+    // Cache failures must never make the live index unavailable.
+  }
 }
 
 function toReadFailure(error: unknown): NoteReadFailure {

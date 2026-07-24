@@ -6,6 +6,7 @@ import type { IcsEventOccurrence } from "../src/core/calendar/ics-calendar";
 import type {
   NoteSource,
   NoteSourceEvent,
+  NoteSourceFile,
   NoteSourceListener,
 } from "../src/core/note/note-source";
 import { parseNote } from "../src/core/note/parsed-note";
@@ -23,11 +24,18 @@ import {
 } from "../src/features/calendar/year-calendar-query";
 import { selectIntervalNotes } from "../src/features/intervals/interval-note-query";
 import {
+  createIndexedNote,
+} from "../src/features/notes/indexed-note";
+import {
   NoteIndex,
   type NoteIndexDiagnostics,
   type NoteIndexSnapshot,
   type NoteIndexTimingDiagnostics,
 } from "../src/features/notes/note-index";
+import {
+  createPersistedNoteIndexSnapshot,
+  type NoteIndexCache,
+} from "../src/features/notes/note-index-cache";
 import type { RangeNoteSettings } from "../src/shared/settings";
 import { createBenchmarkDataset } from "./benchmark-dataset";
 
@@ -55,6 +63,7 @@ describe(`performance baseline (${__CHRONO_BENCHMARK_NOTE_COUNT__} notes)`, () =
   it("reports deterministic indexing, event batching, query, and heap measurements", async () => {
     const dataset = createBenchmarkDataset(__CHRONO_BENCHMARK_NOTE_COUNT__);
     const initialConcurrency = await measureInitialConcurrencyMatrix();
+    const warmCache = await measureWarmCacheReady(dataset.contents);
     const parsableContents = [...dataset.contents.entries()].filter(
       (entry): entry is [string, string] => typeof entry[1] === "string",
     );
@@ -112,6 +121,7 @@ describe(`performance baseline (${__CHRONO_BENCHMARK_NOTE_COUNT__} notes)`, () =
         parseTotal: round(sum(parseTimings)),
         parseChunk: summarizeTimings(parseTimings),
         initialIndex: round(indexMs),
+        warmCacheReady: warmCache,
         noteIndexPhases: summarizeNoteIndexTimings(timingDiagnostics),
         initialConcurrency,
         ...queryMeasurements,
@@ -127,6 +137,7 @@ describe(`performance baseline (${__CHRONO_BENCHMARK_NOTE_COUNT__} notes)`, () =
     expect(source.initialPathCount).toBe(__CHRONO_BENCHMARK_NOTE_COUNT__);
     expect(initialDiagnostics.reads).toBe(__CHRONO_BENCHMARK_NOTE_COUNT__);
     expect(initialDiagnostics.publishes).toBe(1);
+    expect(warmCache.readsBeforeReady).toBe(dataset.errorCount);
     expect(indexedEntries).toBe(__CHRONO_BENCHMARK_NOTE_COUNT__);
     expect(eventMeasurements.algorithm.maxReadsPerFinalPath).toBe(1);
     // An unknown path intentionally publishes one lightweight "indexing" transition
@@ -144,6 +155,54 @@ describe(`performance baseline (${__CHRONO_BENCHMARK_NOTE_COUNT__} notes)`, () =
     expect(icsMeasurements.algorithm.contentChangeNotificationsPerSubscriber).toEqual([1, 1, 1]);
   });
 });
+
+async function measureWarmCacheReady(
+  contents: ReadonlyMap<string, string | Error>,
+): Promise<Readonly<{
+  milliseconds: number;
+  restoredEntries: number;
+  readsBeforeReady: number;
+  verificationScheduled: boolean;
+}>> {
+  const source = new BenchmarkNoteSource(contents);
+  const files = new Map(source.listFiles().map((file) => [file.path, file]));
+  const entries = [...contents]
+    .filter((entry): entry is [string, string] => typeof entry[1] === "string")
+    .map(([path, content]) => {
+      const file = files.get(path);
+      if (file === undefined) throw new Error(`Missing benchmark metadata: ${path}`);
+      return Object.freeze({
+        file,
+        note: createIndexedNote(parseNote(path, content)),
+      });
+    });
+  const cacheSnapshot = createPersistedNoteIndexSnapshot(entries);
+  const cache: NoteIndexCache = {
+    load: async () => cacheSnapshot,
+    save: async () => undefined,
+    clear: async () => undefined,
+  };
+  let verificationScheduled = false;
+  const index = new NoteIndex(source, {
+    cache,
+    scheduleBackgroundVerification: () => {
+      verificationScheduled = true;
+      return () => undefined;
+    },
+  });
+  const milliseconds = await measureAsync(() => index.start());
+  const restoredEntries = Object.values(index.getSnapshot().notes)
+    .filter((entry) => entry.kind === "parsed")
+    .length;
+  const readsBeforeReady = source.readCount;
+  index.stop();
+  return Object.freeze({
+    milliseconds: round(milliseconds),
+    restoredEntries,
+    readsBeforeReady,
+    verificationScheduled,
+  });
+}
 
 interface InitialConcurrencyMeasurement {
   readonly concurrency: number;
@@ -676,6 +735,14 @@ class BenchmarkNoteSource implements NoteSource {
 
   listPaths(): readonly string[] {
     return [...this.contents.keys()];
+  }
+
+  listFiles(): readonly NoteSourceFile[] {
+    return [...this.contents].map(([path, value]) => Object.freeze({
+      path,
+      mtime: 1,
+      size: typeof value === "string" ? value.length : 0,
+    }));
   }
 
   async read(path: string): Promise<string> {

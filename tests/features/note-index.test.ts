@@ -219,7 +219,7 @@ describe("NoteIndex", () => {
 
     expect(index.get("Daily/today.md")).toMatchObject({
       kind: "parsed",
-      note: { document: { body: "content" } },
+      note: { preview: "content" },
     });
     expect(index.getSnapshot().version).toBe(1);
     expect(listener).toHaveBeenCalledOnce();
@@ -246,7 +246,7 @@ describe("NoteIndex", () => {
 
     expect(index.get("Daily/today.md")).toMatchObject({
       kind: "parsed",
-      note: { document: { body: "modified" } },
+      note: { preview: "modified" },
     });
     expect(index.getSnapshot().version).toBe(2);
     expect(listener).toHaveBeenCalledOnce();
@@ -284,7 +284,7 @@ describe("NoteIndex", () => {
     expect(index.getSnapshot()).toMatchObject({
       version: 1,
       notes: {
-        "Daily/first.md": { kind: "parsed", note: { document: { body: "first" } } },
+        "Daily/first.md": { kind: "parsed", note: { preview: "first" } },
         "Daily/second.md": {
           kind: "error",
           revision: 1,
@@ -439,7 +439,7 @@ describe("NoteIndex", () => {
 
     expect(index.get("Daily/discovered.md")).toMatchObject({
       kind: "parsed",
-      note: { document: { body: "discovered during startup" } },
+      note: { preview: "discovered during startup" },
     });
   });
 
@@ -586,7 +586,7 @@ describe("NoteIndex", () => {
       expect(index.get("Daily/queued.md")).toMatchObject({
         kind: "parsed",
         revision: 2,
-        note: { document: { body: "current live revision" } },
+        note: { preview: "current live revision" },
       });
     });
 
@@ -761,7 +761,7 @@ describe("NoteIndex", () => {
     expect(index.get("Daily/today.md")).toMatchObject({
       kind: "parsed",
       revision: 2,
-      note: { document: { body: "current live" } },
+      note: { preview: "current live" },
     });
     expect(index.getSnapshot().version).toBe(2);
   });
@@ -964,7 +964,7 @@ describe("NoteIndex", () => {
       expect(index.get("Daily/today.md")).toMatchObject({
         kind: "parsed",
         revision: 2,
-        note: { document: { body: "live revision" } },
+        note: { preview: "live revision" },
       });
     });
     expect(Object.keys(index.getSnapshot().notes)).toEqual(["Daily/today.md"]);
@@ -974,7 +974,7 @@ describe("NoteIndex", () => {
     expect(index.get("Daily/today.md")).toMatchObject({
       kind: "parsed",
       revision: 2,
-      note: { document: { body: "live revision" } },
+      note: { preview: "live revision" },
     });
     expect(Object.keys(index.getSnapshot().notes).sort()).toEqual([
       "Daily/blocked.md",
@@ -1001,7 +1001,7 @@ describe("NoteIndex", () => {
     await vi.waitFor(() => {
       expect(index.get("Daily/today.md")).toMatchObject({
         kind: "parsed",
-        note: { document: { body: "updated" } },
+        note: { preview: "updated" },
       });
     });
     expect(failingListener).toHaveBeenCalledTimes(3);
@@ -1059,7 +1059,7 @@ describe("NoteIndex", () => {
       expect(index.get("Daily/today.md")).toMatchObject({
         kind: "parsed",
         revision: 2,
-        note: { document: { body: "new revision" } },
+        note: { preview: "new revision" },
       });
     });
 
@@ -1068,7 +1068,7 @@ describe("NoteIndex", () => {
     expect(index.get("Daily/today.md")).toMatchObject({
       kind: "parsed",
       revision: 2,
-      note: { document: { body: "new revision" } },
+      note: { preview: "new revision" },
     });
     expect(index.getSnapshot().version).toBe(2);
     expect(listener).toHaveBeenCalledTimes(2);
@@ -1196,7 +1196,7 @@ describe("NoteIndex", () => {
       expect(index.get("Daily/today.md")).toMatchObject({
         kind: "parsed",
         revision: 2,
-        note: { document: { body: "latest content" } },
+        note: { preview: "latest content" },
       });
     });
     expect(diagnostics).toEqual({
@@ -1272,7 +1272,7 @@ describe("NoteIndex", () => {
       expect(index.get("Daily/today.md")).toMatchObject({
         kind: "parsed",
         revision: 3,
-        note: { document: { body: "after" } },
+        note: { preview: "after" },
       });
     });
     await vi.waitFor(() => {
@@ -1386,11 +1386,11 @@ describe("NoteIndex", () => {
     await vi.waitFor(() => {
       expect(index.get("Daily/A.md")).toMatchObject({
         kind: "parsed",
-        note: { document: { body: "B content" } },
+        note: { preview: "B content" },
       });
       expect(index.get("Daily/B.md")).toMatchObject({
         kind: "parsed",
-        note: { document: { body: "A content" } },
+        note: { preview: "A content" },
       });
     });
     expect(source.read.mock.calls.map(([path]) => path).sort()).toEqual([
@@ -1466,7 +1466,7 @@ describe("NoteIndex", () => {
 
     expect(index.get("Daily/today.md")).toMatchObject({
       kind: "parsed",
-      note: { document: { body: "published content" } },
+      note: { preview: "published content" },
     });
     expect(listener).toHaveBeenCalledTimes(2);
   });
@@ -1512,7 +1512,7 @@ describe("NoteIndex", () => {
     expect(observedKinds).toEqual(["missing", "missing", "parsed"]);
     expect(index.get("Daily/today.md")).toMatchObject({
       kind: "parsed",
-      note: { document: { body: "recreated" } },
+      note: { preview: "recreated" },
     });
   });
 
@@ -1577,7 +1577,7 @@ describe("NoteIndex", () => {
     expect(index.getSnapshot()).not.toBe(before);
     expect(index.getSnapshot().notes["Daily/today.md"]).toMatchObject({
       kind: "parsed",
-      note: { document: { body: "first\nsecond", lineEnding: "crlf" } },
+      note: { preview: "first\nsecond" },
     });
     expect(diagnostics.parses).toBe(2);
     expect(diagnostics.publishes).toBe(2);
@@ -1599,7 +1599,7 @@ describe("NoteIndex", () => {
 
     expect(index.get("Daily/today.md")).toMatchObject({
       kind: "parsed",
-      note: { document: { body: "recovered" } },
+      note: { preview: "recovered" },
     });
     expect(diagnostics).toMatchObject({
       reads: 2,
@@ -1637,7 +1637,6 @@ describe("NoteIndex", () => {
         kind: "parsed",
         revision: 2,
         note: {
-          document: { body: "- [x] new revision\n- [ ] remaining" },
           interval: {
             start: { dateKey: "2026-08-01" },
             end: { dateKey: "2026-08-03" },
@@ -1659,7 +1658,6 @@ describe("NoteIndex", () => {
       kind: "parsed",
       revision: 2,
       note: {
-        document: { body: "- [x] new revision\n- [ ] remaining" },
         interval: {
           start: { dateKey: "2026-08-01" },
           end: { dateKey: "2026-08-03" },
@@ -1689,7 +1687,7 @@ describe("NoteIndex", () => {
     await vi.waitFor(() => {
       expect(index.get("Daily/old.md")).toMatchObject({
         kind: "parsed",
-        note: { document: { body: "modified" } },
+        note: { preview: "modified" },
       });
     });
 

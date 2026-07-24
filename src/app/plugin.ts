@@ -1,6 +1,7 @@
 import { getLanguage, Notice, Plugin, TFolder } from "obsidian";
 
 import { ObsidianIcsSourceReader } from "../adapters/obsidian/obsidian-ics-source-reader";
+import { ObsidianNoteIndexCache } from "../adapters/obsidian/obsidian-note-index-cache";
 import { ObsidianNoteSource } from "../adapters/obsidian/obsidian-note-source";
 import { ObsidianPropertiesDateInterceptor } from "../adapters/obsidian/obsidian-properties-date-interceptor";
 import { openObsidianPluginSettings } from "../adapters/obsidian/obsidian-plugin-settings";
@@ -91,7 +92,9 @@ export default class ChronoNotesPlugin extends Plugin {
       if (!this.isRuntimeCurrent(runtimeRevision)) return;
 
       const commandMessages = getPluginCommandMessages(this.getTranslator().t);
-      const noteIndex = new NoteIndex(new ObsidianNoteSource(this.app.vault));
+      const noteIndex = new NoteIndex(new ObsidianNoteSource(this.app.vault), {
+        cache: new ObsidianNoteIndexCache(this.app.vault),
+      });
       this.noteIndex = noteIndex;
       this.registerRuntimeDisposer(() => noteIndex.stop());
 

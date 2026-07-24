@@ -1,4 +1,5 @@
 import { parseNote } from "../../src/core/note/parsed-note";
+import { createIndexedNote } from "../../src/features/notes/indexed-note";
 import type {
   NoteIndexReadiness,
   NoteIndexSnapshot,
@@ -33,7 +34,7 @@ export function createParsedNoteIndexSnapshot(
     entries[path] = Object.freeze({
       kind: "parsed",
       revision: 1,
-      note: parseNote(path, content),
+      note: createIndexedNote(parseNote(path, content)),
     });
   }
   return createNoteIndexSnapshot(entries, version);

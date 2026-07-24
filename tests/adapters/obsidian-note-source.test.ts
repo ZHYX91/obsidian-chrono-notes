@@ -6,6 +6,10 @@ import { NoteIndex } from "../../src/features/notes/note-index";
 interface FakeFile {
   path: string;
   extension?: string;
+  stat?: {
+    readonly mtime: number;
+    readonly size: number;
+  };
 }
 
 type EventName = "create" | "modify" | "rename" | "delete";
@@ -59,11 +63,20 @@ class FakeVault {
 describe("ObsidianNoteSource", () => {
   it("lists and reads Markdown files without exposing Vault objects", async () => {
     const vault = new FakeVault();
-    vault.files.set("Daily/today.md", { path: "Daily/today.md", extension: "md" });
+    vault.files.set("Daily/today.md", {
+      path: "Daily/today.md",
+      extension: "md",
+      stat: { mtime: 1_721_779_200_000, size: 12 },
+    });
     vault.files.set("assets/icon.png", { path: "assets/icon.png", extension: "png" });
     const source = new ObsidianNoteSource(vault as never);
 
     expect(source.listPaths()).toEqual(["Daily/today.md"]);
+    expect(source.listFiles()).toEqual([{
+      path: "Daily/today.md",
+      mtime: 1_721_779_200_000,
+      size: 12,
+    }]);
     await expect(source.read("Daily/today.md")).resolves.toBe("content:Daily/today.md");
     expect(vault.cachedRead).toHaveBeenCalledWith(vault.files.get("Daily/today.md"));
     await expect(source.read("missing.md")).rejects.toThrow("Markdown note not found: missing.md");
@@ -113,7 +126,7 @@ describe("ObsidianNoteSource", () => {
     await vi.waitFor(() => expect(vault.cachedRead).toHaveBeenCalledTimes(2));
     await vi.waitFor(() => expect(index.get(file.path)).toMatchObject({
       kind: "parsed",
-      note: { document: { body: "newest content" } },
+      note: { preview: "newest content" },
     }));
 
     staleRead.resolve("stale content");
@@ -121,7 +134,7 @@ describe("ObsidianNoteSource", () => {
 
     expect(index.get(file.path)).toMatchObject({
       kind: "parsed",
-      note: { document: { body: "newest content" } },
+      note: { preview: "newest content" },
     });
     index.stop();
   });
@@ -155,7 +168,7 @@ describe("ObsidianNoteSource", () => {
     await vi.waitFor(() => expect(vault.cachedRead).toHaveBeenCalledTimes(3));
     await vi.waitFor(() => expect(index.get(newFile.path)).toMatchObject({
       kind: "parsed",
-      note: { document: { body: "- [ ] moved task 📅 2026-07-20" } },
+      note: { preview: "moved task 📅 2026-07-20" },
     }));
 
     staleRead.resolve("stale old-path content");

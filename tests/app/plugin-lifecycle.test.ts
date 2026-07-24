@@ -810,6 +810,11 @@ function createApp(): Record<string, unknown> {
       : { path: mocks.state.activeFilePath },
   };
   const vault = {
+    adapter: {
+      getResourcePath: () => "app://vault/.obsidian",
+    },
+    configDir: ".obsidian",
+    getName: () => "Test Vault",
     on: (event: string, callback: MockEventCallback) =>
       addCallback(mocks.state.vaultCallbacks, event, callback),
     getAbstractFileByPath: () => null,
