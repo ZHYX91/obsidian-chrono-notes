@@ -12,14 +12,14 @@ describe("periodic note paths", () => {
   const selectedDate: LocalDate = { year: 2026, month: 5, day: 18 };
 
   it.each<PeriodicNotePathRule & { expectedPath: string }>([
-    { noteType: "daily", pattern: "'Daily'/yyyy-MM-dd", expectedPath: "Daily/2026-05-18.md" },
-    { noteType: "monthly", pattern: "'Monthly'/yyyy-MM", expectedPath: "Monthly/2026-05.md" },
+    { noteType: "daily", pattern: "[Daily]/YYYY-MM-DD", expectedPath: "Daily/2026-05-18.md" },
+    { noteType: "monthly", pattern: "[Monthly]/YYYY-MM", expectedPath: "Monthly/2026-05.md" },
     {
       noteType: "quarterly",
-      pattern: "'Quarterly'/yyyy-'Q'q",
+      pattern: "[Quarterly]/YYYY-[Q]Q",
       expectedPath: "Quarterly/2026-Q2.md",
     },
-    { noteType: "yearly", pattern: "'Yearly'/yyyy", expectedPath: "Yearly/2026.md" },
+    { noteType: "yearly", pattern: "[Yearly]/YYYY", expectedPath: "Yearly/2026.md" },
   ])("formats and reverses $noteType paths", (rule) => {
     const path = formatPeriodicNotePath(selectedDate, rule, {
       locale: "en-US",
@@ -52,7 +52,7 @@ describe("periodic note paths", () => {
     ({ weekStartDay, selected, expectedAnchor, expectedPath }) => {
       const rule: PeriodicNotePathRule = {
         noteType: "weekly",
-        pattern: "'Weekly'/kkkk-'W'WW",
+        pattern: "[Weekly]/GGGG-[W]WW",
       };
       expect(formatPeriodicNotePath(selected, rule, { locale: "en-US", weekStartDay })).toBe(
         expectedPath,
@@ -66,7 +66,7 @@ describe("periodic note paths", () => {
   it("does not recognize a path unless the entire configured pattern matches", () => {
     const rule: PeriodicNotePathRule = {
       noteType: "daily",
-      pattern: "'Daily'/yyyy-MM-dd",
+      pattern: "[Daily]/YYYY-MM-DD",
     };
     expect(
       parsePeriodicNotePath("Archive/Daily/2026-05-18.md", rule, {
@@ -87,8 +87,8 @@ describe("periodic note paths", () => {
     const match = findPeriodicNotePathMatch(
       "Notes/2026.md",
       [
-        { noteType: "monthly", pattern: "'Notes'/yyyy" },
-        { noteType: "yearly", pattern: "'Notes'/yyyy" },
+        { noteType: "monthly", pattern: "[Notes]/YYYY" },
+        { noteType: "yearly", pattern: "[Notes]/YYYY" },
       ],
       options,
     );
@@ -111,7 +111,7 @@ describe("periodic note paths", () => {
     expect(
       parsePeriodicNotePath(
         "Daily/2026-05-18.md",
-        { noteType: "daily", pattern: "yyyy-MM-dd HH a" },
+        { noteType: "daily", pattern: "YYYY-MM-DD HH" },
         { locale: "en-US", weekStartDay: "monday" },
       ),
     ).toBeNull();

@@ -9,7 +9,7 @@ import { createParsedNoteIndexSnapshot } from "../support/note-index-snapshot";
 
 const DATE = Object.freeze({ year: 2026, month: 7, day: 20 });
 const CONTEXT = Object.freeze({ locale: "en", weekStartDay: "monday" as const });
-const RULE = Object.freeze({ enabled: true, pattern: "'Daily'/yyyy-MM-dd" });
+const RULE = Object.freeze({ enabled: true, pattern: "[Daily]/YYYY-MM-DD" });
 
 describe("indexed periodic note", () => {
   it("withholds note actions only while a configured path is unknown", () => {

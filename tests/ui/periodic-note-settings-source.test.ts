@@ -82,6 +82,13 @@ describe("periodic note settings structure", () => {
     expect(periodicSectionSource).toContain("getPeriodicNoteTemplatePathExample(noteType)");
     expect(periodicSectionSource).toContain("chrono-notes-periodic-template-setting");
     expect(periodicSectionSource).toContain("chrono-notes-periodic-template-example");
+    expect(periodicSectionSource).toContain("chrono-notes-periodic-template-syntax");
+    expect(periodicSectionSource).toContain(
+      "{{date}}, {{date:YYYY-MM-DD ddd}}, {{time}}",
+    );
+    expect(periodicSectionSource).toContain(
+      't("settings.periodic.templaterTemplateSyntax")',
+    );
     expect(periodicSectionSource).not.toContain('.setPlaceholder("Templates/Daily.md")');
   });
 

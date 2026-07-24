@@ -97,7 +97,7 @@ describe("NoteNavbarManager", () => {
     const settings = createDefaultSettings();
     settings.periodicNotes.daily = {
       enabled: true,
-      pattern: "'Daily'/yyyy-MM-dd",
+      pattern: "[Daily]/YYYY-MM-DD",
       templatePath: "",
     };
     const parent = createElement();
@@ -144,7 +144,7 @@ describe("NoteNavbarManager", () => {
     const settings = createDefaultSettings();
     settings.periodicNotes.daily = {
       enabled: true,
-      pattern: "'Daily'/yyyy-MM-dd",
+      pattern: "[Daily]/YYYY-MM-DD",
       templatePath: "",
     };
     const parent = createElement();
@@ -179,7 +179,7 @@ describe("NoteNavbarManager", () => {
     const settings = createDefaultSettings();
     settings.periodicNotes.daily = {
       enabled: true,
-      pattern: "'Daily'/yyyy-MM-dd",
+      pattern: "[Daily]/YYYY-MM-DD",
       templatePath: "",
     };
     const createLeaf = (path: string) => {

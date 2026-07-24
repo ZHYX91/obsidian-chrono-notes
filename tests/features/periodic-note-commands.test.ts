@@ -69,8 +69,8 @@ describe("PeriodicNoteCommands", () => {
     vi.mocked(ports.templates.populate).mockReturnValueOnce(population.promise);
     const commands = new PeriodicNoteCommands(ports.files, ports.templates, ports.workspace);
     const settings = createSettings({
-      daily: { enabled: true, pattern: "'Daily'/yyyy-MM-dd" },
-      monthly: { enabled: true, pattern: "'Monthly'/yyyy-MM" },
+      daily: { enabled: true, pattern: "[Daily]/YYYY-MM-DD" },
+      monthly: { enabled: true, pattern: "[Monthly]/YYYY-MM" },
     });
     const date = { year: 2026, month: 5, day: 18 } as const;
 
@@ -127,8 +127,8 @@ describe("PeriodicNoteCommands", () => {
     const ports = createPorts(["Daily/2026-05-18.md"]);
     const commands = new PeriodicNoteCommands(ports.files, ports.templates, ports.workspace);
     const settings = createSettings({
-      daily: { enabled: true, pattern: "'Daily'/yyyy-MM-dd" },
-      monthly: { enabled: true, pattern: "'Monthly'/yyyy-MM" },
+      daily: { enabled: true, pattern: "[Daily]/YYYY-MM-DD" },
+      monthly: { enabled: true, pattern: "[Monthly]/YYYY-MM" },
     });
 
     await expect(
@@ -157,7 +157,7 @@ describe("PeriodicNoteCommands", () => {
     const commands = new PeriodicNoteCommands(ports.files, ports.templates, ports.workspace);
     const confirmCreate = vi.fn(async () => false);
     const settings = createSettings({
-      daily: { enabled: true, pattern: "'Daily'/yyyy-MM-dd" },
+      daily: { enabled: true, pattern: "[Daily]/YYYY-MM-DD" },
     });
 
     await expect(
@@ -188,7 +188,7 @@ describe("PeriodicNoteCommands", () => {
     const settings = createSettings({
       quarterly: {
         enabled: true,
-        pattern: "'Quarterly'/yyyy-'Q'q",
+        pattern: "[Quarterly]/YYYY-[Q]Q",
         templatePath: "Templates/Quarterly.md",
       },
     });
@@ -207,6 +207,7 @@ describe("PeriodicNoteCommands", () => {
     expect(ports.files.createEmpty).toHaveBeenCalledWith("Quarterly/2026-Q2.md");
     expect(ports.templates.populate).toHaveBeenCalledWith("Quarterly/2026-Q2.md", {
       date: { year: 2026, month: 4, day: 1 },
+      locale: "en-US",
       noteType: "quarterly",
       path: "Quarterly/2026-Q2.md",
       templatePath: "Templates/Quarterly.md",
@@ -221,7 +222,7 @@ describe("PeriodicNoteCommands", () => {
     vi.mocked(ports.templates.populate).mockRejectedValueOnce(new Error("template boom"));
     const commands = new PeriodicNoteCommands(ports.files, ports.templates, ports.workspace);
     const settings = createSettings({
-      daily: { enabled: true, pattern: "'Daily'/yyyy-MM-dd" },
+      daily: { enabled: true, pattern: "[Daily]/YYYY-MM-DD" },
     });
 
     const promise = commands.openOrCreate(
@@ -246,11 +247,11 @@ describe("PeriodicNoteCommands", () => {
     const commands = new PeriodicNoteCommands(ports.files, ports.templates, ports.workspace);
     const confirmCreate = vi.fn(async () => true);
     const settings = createSettings({
-      daily: { enabled: true, pattern: "'Daily'/yyyy-MM-dd" },
-      weekly: { enabled: true, pattern: "'Weekly'/kkkk-'W'WW" },
-      monthly: { enabled: true, pattern: "'Monthly'/yyyy-MM" },
-      quarterly: { enabled: false, pattern: "'Quarterly'/yyyy-'Q'q" },
-      yearly: { enabled: true, pattern: "'Yearly'/yyyy" },
+      daily: { enabled: true, pattern: "[Daily]/YYYY-MM-DD" },
+      weekly: { enabled: true, pattern: "[Weekly]/GGGG-[W]WW" },
+      monthly: { enabled: true, pattern: "[Monthly]/YYYY-MM" },
+      quarterly: { enabled: false, pattern: "[Quarterly]/YYYY-[Q]Q" },
+      yearly: { enabled: true, pattern: "[Yearly]/YYYY" },
     });
 
     const result = await commands.openOrCreate(
@@ -293,9 +294,9 @@ describe("PeriodicNoteCommands", () => {
       .mockResolvedValueOnce(undefined);
     const commands = new PeriodicNoteCommands(ports.files, ports.templates, ports.workspace);
     const settings = createSettings({
-      daily: { enabled: true, pattern: "'Daily'/yyyy-MM-dd" },
-      weekly: { enabled: true, pattern: "'Weekly'/kkkk-'W'WW" },
-      yearly: { enabled: true, pattern: "'Yearly'/yyyy" },
+      daily: { enabled: true, pattern: "[Daily]/YYYY-MM-DD" },
+      weekly: { enabled: true, pattern: "[Weekly]/GGGG-[W]WW" },
+      yearly: { enabled: true, pattern: "[Yearly]/YYYY" },
     });
 
     const result = await commands.openOrCreate(
@@ -330,7 +331,7 @@ describe("PeriodicNoteCommands", () => {
     vi.mocked(ports.workspace.open).mockRejectedValueOnce(new Error("workspace unavailable"));
     const commands = new PeriodicNoteCommands(ports.files, ports.templates, ports.workspace);
     const settings = createSettings({
-      daily: { enabled: true, pattern: "'Daily'/yyyy-MM-dd" },
+      daily: { enabled: true, pattern: "[Daily]/YYYY-MM-DD" },
     });
 
     await expect(

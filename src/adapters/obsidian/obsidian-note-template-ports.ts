@@ -32,6 +32,7 @@ export class ObsidianBuiltinTemplatePort implements PeriodicNoteTemplatePort {
     const content = await this.vault.read(template);
     const rendered = renderBuiltinTemplate(content, {
       date: context.date,
+      locale: context.locale,
       title: context.title,
       now: this.now(),
       ...(this.timeZone === undefined ? {} : { timeZone: this.timeZone }),

@@ -232,27 +232,27 @@ function createFixtureFiles(settingsSchemaVersion) {
       periodicNotes: {
         daily: {
           enabled: true,
-          pattern: "'Daily'/yyyy-MM-dd",
+          pattern: "[Daily]/YYYY-MM-DD",
           templatePath: "",
         },
         weekly: {
           enabled: true,
-          pattern: "'Weekly'/kkkk-'W'WW",
+          pattern: "[Weekly]/GGGG-[W]WW",
           templatePath: "",
         },
         monthly: {
           enabled: true,
-          pattern: "'Monthly'/yyyy-MM",
+          pattern: "[Monthly]/YYYY-MM",
           templatePath: "",
         },
         quarterly: {
           enabled: true,
-          pattern: "'Quarterly'/yyyy-'Q'q",
+          pattern: "[Quarterly]/YYYY-[Q]Q",
           templatePath: "",
         },
         yearly: {
           enabled: true,
-          pattern: "'Yearly'/yyyy",
+          pattern: "[Yearly]/YYYY",
           templatePath: "",
         },
       },

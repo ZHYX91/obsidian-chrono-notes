@@ -63,14 +63,6 @@ export function renderPeriodicSettingsSection(
   containerEl.createEl("h3", { text: t("settings.periodic.paths") });
   const pathGuideEl = containerEl.createDiv({ cls: "chrono-notes-settings-guide" });
   pathGuideEl.createEl("p", { text: t("settings.periodic.pathsDesc") });
-  const syntaxComparisonEl = pathGuideEl.createDiv({
-    cls: "chrono-notes-settings-syntax-comparison",
-  });
-  syntaxComparisonEl.createSpan({ text: `${t("settings.periodic.obsidianSyntax")}: ` });
-  syntaxComparisonEl.createEl("code", { text: "YYYY-MM-DD" });
-  syntaxComparisonEl.createSpan({ text: " → " });
-  syntaxComparisonEl.createSpan({ text: `${t("settings.periodic.chronoSyntax")}: ` });
-  syntaxComparisonEl.createEl("code", { text: "yyyy-MM-dd" });
 
   for (const noteType of PERIODIC_NOTE_TYPES) {
     renderPeriodicNoteType(containerEl, noteType, context);
@@ -131,9 +123,7 @@ function renderPeriodicNoteType(
     } else {
       pathFeedbackEl?.setText(t(preview.status === "empty"
         ? "settings.periodic.pathPatternEmpty"
-        : preview.reason === "moment-tokens"
-          ? "settings.periodic.pathPatternMomentTokens"
-          : "settings.periodic.pathPatternInvalid"));
+        : "settings.periodic.pathPatternInvalid"));
     }
     pathInputEl?.setAttribute("aria-invalid", String(hasError));
   };
@@ -176,6 +166,18 @@ function renderPeriodicNoteType(
   });
   templateExampleEl.append(`${t("settings.periodic.pathExample")}: `);
   templateExampleEl.createEl("code", { text: templateExample });
+  const templateSyntaxEl = templateSetting.descEl.createDiv({
+    cls: "chrono-notes-periodic-template-syntax",
+  });
+  if (context.host.settings.templateEngine === "builtin") {
+    templateSyntaxEl.append(`${t("settings.periodic.builtinTemplateSyntax")}: `);
+    templateSyntaxEl.createEl("code", {
+      text: "{{date}}, {{date:YYYY-MM-DD ddd}}, {{time}}, "
+        + "{{time:HH:mm:ss}}, {{title}}",
+    });
+  } else {
+    templateSyntaxEl.setText(t("settings.periodic.templaterTemplateSyntax"));
+  }
   templateSetting.addText((text) => {
     text
       .setPlaceholder(templateExample)

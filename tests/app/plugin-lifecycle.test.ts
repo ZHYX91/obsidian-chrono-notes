@@ -471,12 +471,12 @@ describe("ChronoNotesPlugin lifecycle composition", () => {
     await plugin.onload();
     plugin.settings.periodicNotes.daily = {
       enabled: true,
-      pattern: "'Daily'/yyyy-MM-dd",
+      pattern: "[Daily]/YYYY-MM-DD",
       templatePath: "",
     };
     plugin.settings.periodicNotes.monthly = {
       enabled: true,
-      pattern: "'Monthly'/yyyy-MM",
+      pattern: "[Monthly]/YYYY-MM",
       templatePath: "",
     };
     const registration = mocks.state.views[0];

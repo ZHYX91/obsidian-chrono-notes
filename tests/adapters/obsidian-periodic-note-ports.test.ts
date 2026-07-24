@@ -106,6 +106,7 @@ describe("Obsidian periodic note ports", () => {
 
     await templates.populate("Daily/2026-05-18.md", {
       date: { year: 2026, month: 5, day: 18 },
+      locale: "en-US",
       noteType: "daily",
       path: "Daily/2026-05-18.md",
       templatePath: "Templates/Daily.md",
@@ -124,6 +125,7 @@ describe("Obsidian periodic note ports", () => {
     const templates = new ObsidianBuiltinTemplatePort(vault as never);
     const context = {
       date: { year: 2026, month: 5, day: 18 },
+      locale: "en-US",
       noteType: "daily" as const,
       path: "Daily/today.md",
       templatePath: "",
@@ -153,6 +155,7 @@ describe("Obsidian periodic note ports", () => {
     await expect(
       templates.populate("Daily/today.md", {
         date: { year: 2026, month: 5, day: 18 },
+        locale: "en-US",
         noteType: "daily",
         path: "Daily/today.md",
         templatePath: "Templates/Daily.md",
@@ -193,6 +196,7 @@ describe("Obsidian periodic note ports", () => {
 
     await templates.populate(target.path, {
       date: { year: 2026, month: 4, day: 1 },
+      locale: "en-US",
       noteType: "quarterly",
       path: target.path,
       templatePath: template.path,

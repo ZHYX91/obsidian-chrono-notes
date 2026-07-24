@@ -61,7 +61,7 @@ Vault create/modify/rename/delete
 - 普通 create/modify 在一个 microtask 内按路径归约为最终 `read` 意图，每个终态路径至多发起一次读取。每个归约批次持有独立 live batch token；受限读槽只覆盖读取与解析，计算完成后立即释放，调用方的 `refresh()` promise 则继续等待权威发布。首个完成项安排一个可取消、可注入的有界 macrotask checkpoint：checkpoint 前全部完成只发布一次；存在慢项时先发布已完成项，剩余项全部稳定后再进行至多一次最终发布。stop/restart 必须取消 checkpoint 并使旧 batch 失效。delete/rename 是例外的即时屏障，必须先使旧路径从公开快照消失，不能等待慢读取或普通批次。
 - live read 先生成规范 `ParsedNoteDocument`；若 body、frontmatter 原文、BOM、换行、正文起始行和内容状态均未改变，则复用已发布 entry，跳过 YAML、区间、任务、预览与统计派生，也不增加公开版本或通知订阅者。读取错误恢复和 rename 强制完整解析。
 - 读取失败产生显式错误快照，不继续伪装成旧数据。
-- 持久化条目只能作为可丢弃候选，不能成为第二份事实。缓存 schema 不匹配、嵌套数据非法、路径重复、任务统计不一致或元数据非有限数时，整份快照都必须失效。
+- 持久化条目只能作为可丢弃候选，不能成为第二份事实。缓存校验与初扫共用 8ms host 时间片让步预算。缓存 schema 不匹配、嵌套数据非法、路径重复、任务统计不一致、元数据非有限数，或区间边界与天数不符合规范重解析结果时，整份快照都必须失效。任务日期标记字符串保持冷解析器语义；非法公历日期由日期投影忽略，不因其存在而让一份原本有效的快照失效。
 - NoteIndex 仅在调用方显式注入诊断 sink 时读取时钟并记录路径列举、读取、文档/领域解析、初始/实时提交、快照物化和 listener 通知样本；正常插件装配不启用诊断，也不记录路径或正文。诊断时钟或 sink 写入失败必须 fail-open，只停用该实例后续诊断，不能改变快照、发布、listener 或 refresh 完成语义。8/16/32 确定性矩阵固定算法边界，默认 16 仍须由真实桌面/移动端长任务与 heap 验收复核。
 - 设置变化通过依赖标签定向失效，不进行无差别全库重算。
 - Markdown 与非 Markdown 之间的扩展名重命名分别归一化为 delete 或 create，避免旧路径残留。
@@ -83,7 +83,7 @@ Vault create/modify/rename/delete
 
 模板端口按设置显式选择内置引擎或 Templater。内置引擎只支持文档化的 `date/time/title` 占位符；Templater adapter 在目标文件创建后调用 Templater，并注入冻结的 `tp_calendar` 目标周期上下文。Templater 不可用或执行失败时抛出明确错误，不允许静默回退到内置引擎。
 
-周期日期使用不含时区和时间的 `LocalDate` 领域值。core 统一拥有严格补零的日期键解析/格式化、相等/排序、非法民用日期拒绝和无宿主时区漂移的 UTC 格式化桥；日、周、月、季、年都先归一化到唯一锚点，路径格式化、路径反向识别、导航和模板上下文必须复用这些 canonical helper。`isSamePeriod()` 只比较 `getPeriodAnchor()` 产生的 canonical 锚点，并显式接收周起始规则。独立 `calendar-week` core 以 ISO 周一为周年/周号参考；周日起始只把该周边界向前扩一天，不能改用所选周日自身的 ISO 身份。它统一提供周身份、动态 52/53 周枚举、跨年边界、按周选择和按周年选择；后两者保留相对周首的星期偏移，W53 进入 52 周年份时夹到 W52。Luxon 仅封装在 core 的日期算法与 pattern 兼容实现中，不作为 UI 或 adapter 的数据类型。系统时钟读取隔离在 shared 的本地日期时钟中，以本地年/月/日而非 UTC 日期产生今日值并计算下一个本地午夜。日历 root 通过 `useLocalToday()` 在午夜重新同步，页面从后台恢复可见时再校准一次；呈现层再以该值和 core `isSamePeriod()` 即时派生统一的 `is-current-period`，今日标记和依赖今日的逾期查询随之更新，但不重置用户当前选择或导航上下文。current 状态不进入 month/week/year query、NoteIndex/ICS 快照、任何缓存或设置；周期选择器和迷你日历保留各自独立的状态实现。
+周期日期使用不含时区和时间的 `LocalDate` 领域值。core 统一拥有严格补零的日期键解析/格式化、相等/排序、非法民用日期拒绝和无宿主时区漂移的 UTC 格式化桥；日、周、月、季、年都先归一化到唯一锚点，路径格式化、路径反向识别、导航和模板上下文必须复用这些 canonical helper。`isSamePeriod()` 只比较 `getPeriodAnchor()` 产生的 canonical 锚点，并显式接收周起始规则。独立 `calendar-week` core 以 ISO 周一为周年/周号参考；周日起始只把该周边界向前扩一天，不能改用所选周日自身的 ISO 身份。它统一提供周身份、动态 52/53 周枚举、跨年边界、按周选择和按周年选择；后两者保留相对周首的星期偏移，W53 进入 52 周年份时夹到 W52。Luxon 只封装在 core 的日期算法与编译后格式后端中；对外路径与内置模板统一使用明确支持的 Obsidian/Moment 子集，Luxon 和 Moment 都不成为 UI 或 adapter 数据类型。系统时钟读取隔离在 shared 的本地日期时钟中，以本地年/月/日而非 UTC 日期产生今日值并计算下一个本地午夜。日历 root 通过 `useLocalToday()` 在午夜重新同步，页面从后台恢复可见时再校准一次；呈现层再以该值和 core `isSamePeriod()` 即时派生统一的 `is-current-period`，今日标记和依赖今日的逾期查询随之更新，但不重置用户当前选择或导航上下文。current 状态不进入 month/week/year query、NoteIndex/ICS 快照、任何缓存或设置；周期选择器和迷你日历保留各自独立的状态实现。
 
 ## 6. UI 状态
 
@@ -93,7 +93,7 @@ app 组合根通过公开的 `getLanguage()` API 取得 Obsidian 当前界面语
 - Vault 派生数据使用外部 store 快照和 `useSyncExternalStore`。
 - 设置页使用 Obsidian 原生 Setting API，不强制 React。
 
-共享的 `selectCalendarDay()` 以一个无时区 `LocalDate`、单个 `NoteIndexSnapshot` 和单个 `IcsEventIndexSnapshot` 生成冻结 `CalendarDay`：它在统一周期笔记状态、预览与 `ParsedNote.statistics` 之上，附加历法扩展、地区节假日/调休标记、当日的完整 ICS 事件数组和可选热力指标。月查询先由 core 生成与目标月相交的 4–6 个完整周，再返回按周嵌套的 `weeks[]`；每周包含周起点、周历年/周号、一份 `weeklyNote`、七个 `CalendarDay` 派生日格和按模式决定的区间布局，根查询同时显式保留 NoteIndex 与 ICS 快照版本。普通月模式生成真实区间布局，热力月模式则保留同一递归冻结结构但使用空区间布局，且不读取区间投影。周查询复用同一 `CalendarDay` 生成七日详细模型，不建立月专用 ICS 投影、视图级存在性缓存或重复的任务摘要。完整 ICS 数组始终留在查询模型和无障碍文本中，呈现组件才按容器密度决定可见摘要数。React 只渲染该模型，共享指示器按规范化的 `showTaskProgress` 处理任务进度，单元格不查询 Vault 或文件。月视图把语义 selection 与日期 roving tab stop 分离：可见所选日优先，其次是可见今日，再回退到本月第一个或首个可用日期；热力模式的隐藏外月格不参与，因而周/月选择或跨查询选择仍始终只留下一个可见日期 tab stop。周号的 ArrowRight 把日粒度选择与焦点一起移到该周第一个可用日期。悬浮/焦点预览延迟后通过 portal 渲染，根据锚点和视口纯计算定位，并在滚动或缩放时重定位；关闭预览设置时不再调度 tooltip，并立即清理待触发 timer、活动 portal 和 ARIA 关联。年度预览只在热力模式且设置开启时启用；关闭设置、切到概览或切换年份都会取消 timer 与活动 portal，渲染门禁阻止旧 tooltip 短暂复现。
+共享的 `selectCalendarDay()` 以一个无时区 `LocalDate`、单个 `NoteIndexSnapshot` 和单个 `IcsEventIndexSnapshot` 生成冻结 `CalendarDay`：它在统一周期笔记状态、预览与 `ParsedNote.statistics` 之上，附加历法扩展、地区节假日/调休标记、当日的完整 ICS 事件数组和可选热力指标。月查询先由 core 生成与目标月相交的 4–6 个完整周，再返回按周嵌套的 `weeks[]`；每周包含周起点、周历年/周号、一份 `weeklyNote`、七个 `CalendarDay` 派生日格和按模式决定的区间布局，根查询同时显式保留 NoteIndex 与 ICS 快照版本。普通月模式生成真实区间布局，热力月模式则保留同一递归冻结结构但使用空区间布局，且不读取区间投影。周查询复用同一 `CalendarDay` 生成七日详细模型，不建立月专用 ICS 投影、视图级存在性缓存或重复的任务摘要。完整 ICS 数组始终留在查询模型和无障碍文本中，呈现组件才按容器密度决定可见摘要数。React 只渲染该模型，共享指示器按规范化的 `showTaskProgress` 处理任务进度，单元格不查询 Vault 或文件。月视图把语义 selection 与日期 roving tab stop 分离：可见所选日优先，其次是可见今日，再回退到本月第一个或首个可用日期；热力模式的隐藏外月格不参与，因而周/月选择或跨查询选择仍始终只留下一个可见日期 tab stop。周号的 ArrowRight 把日粒度选择与焦点一起移到该周第一个可用日期。悬浮/焦点预览延迟后通过 portal 渲染，根据锚点和视口纯计算定位，并在滚动或缩放时重定位；关闭预览设置时不再调度 tooltip，并立即清理待触发 timer、活动 portal 和 ARIA 关联。年热力图日期与年概览月/季度控件在设置开启时共用该预览生命周期；切换模式、切换显示年份或关闭预览都会取消 timer 与活动 portal，渲染门禁阻止旧 tooltip 短暂复现。
 
 周查询在共享七个 `CalendarDay` 之外，从同一 NoteIndex 快照一次附加规范周起止、weekly 状态、日期任务和区间周段。任务只读取 `taskDates.byDate` 的七个目标日期 bucket，不遍历全部 notes；NoteIndex 在单文件提交时按 due/scheduled/start 增量更新贡献，同一任务同一日期合并 date kinds，并以日期、路径和源行稳定排序。逾期仍在查询时只由未完成任务的有效 due date 相对动态 today 计算，scheduled/start 不得单独制造逾期。React 渲染的七日顺序为状态/调休标记、星期、日期、历法扩展、节假日和 ICS。七日概览使用带可访问名称的原生按钮选择组，每个按钮以 `aria-pressed` 表达选中日期；该组件没有 ARIA grid 所需的行结构或 roving focus，因此不得伪装成 `grid/gridcell`。区间甘特在七个日按钮之后以独立的正常流 sibling section 绘制；它不位于日格内部，交互条仍是日按钮之外的独立按钮，既不产生嵌套交互控件，也不复制区间列表。无区间时不渲染空文案，仅在可创建时保留紧凑创建入口；无任务时保留标题与零计数，不再增加第二层空状态段落。只有自身 due 分组中的任务实例可改期：桌面可拖入七日格，任务行同时提供包含本周七天的原生 select 作为键盘与触摸等价入口；两者都调用同一任务命令并等待 Vault 事件，不能在组件中直接写 Vault。
 
@@ -131,7 +131,7 @@ Note Navbar 的 feature selector 只接受文件路径、`intervals` 子快照�
 
 `calendarExtensions` 是当前 schema v16 唯一的历法选择字段。本次未发布重命名明确不提供迁移或旧字段读取路径：缺失或非法数据回退到当前默认值，已删除字段与其他未知输入一起由归一化丢弃。
 
-周期路径设置只持久化既有 `pattern` 与 `templatePath`，不引入派生文件夹字段。pure UI helper 先识别未引号包裹的常见 Moment token，再用 core 的 `formatPeriodicNotePath()` 与 `parsePeriodicNotePath()` 生成带具体原因的 `empty / invalid / valid` 冻结预览；除明确的 Obsidian 格式纠错外，设置提示与实际索引识别保持同源。Obsidian 原生输入建议只枚举 Vault 文件夹元数据或 `getMarkdownFiles()` 返回的路径：文件夹选择按规范 Luxon 字面量转义后写回同一 pattern 并保留文件名格式，模板选择写回完整 Markdown 路径。该 UI adapter 不读取文件内容、不解析笔记，也不形成 NoteIndex 之外的笔记状态来源。
+周期路径设置只持久化既有 `pattern` 与 `templatePath`，不引入派生文件夹字段。core 为路径和内置模板格式只接受文档列明的 Obsidian/Moment 子集，再编译到内部 Luxon 后端；不支持的 ASCII token 直接无效，不再兼容已移除的 Luxon 路径语法。`formatPeriodicNotePath()` 与 `parsePeriodicNotePath()` 继续构成唯一的格式化/反向识别契约，pure UI helper 从同一契约生成 `empty / invalid / valid` 冻结预览。Obsidian 原生输入建议只枚举 Vault 文件夹元数据或 `getMarkdownFiles()` 返回的路径：文件夹选择以 Moment 方括号字面量写回同一 pattern 并保留文件名格式，模板选择写回完整 Markdown 路径。模板路径说明根据所选引擎展示内置占位符或注入的 `tp_calendar` helper，但不读取模板正文。该 UI adapter 不解析笔记，也不形成 NoteIndex 之外的笔记状态来源。
 
 日期属性打开日记由 pure ISO 日期输入解析器与 Obsidian 捕获阶段适配器组成。适配器仅在设置开启、日记已配置、主键点击命中 `.metadata-properties` 内日期类型属性的打开图标且输入值有效时阻止原事件，并把日期与默认/新标签目标交给统一周期笔记命令。Properties 中的 Wiki/Markdown 链接、正文链接、非日期属性、非主键、未配置日记和非法日期全部透传。适配器不读取 Vault，也不建立第二份笔记状态。
 

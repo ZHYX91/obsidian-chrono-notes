@@ -7,13 +7,14 @@ import {
   formatPeriodicNotePath,
   parsePeriodicNotePath,
 } from "../../core/periodic/periodic-note-path";
+import { quoteMomentLiteral } from "../../core/periodic/moment-format";
 
 export type PeriodicNotePathPreview = Readonly<
   | { status: "empty"; path: null }
   | {
     status: "invalid";
     path: null;
-    reason: "moment-tokens" | "unrecognized";
+    reason: "unrecognized";
   }
   | { status: "valid"; path: string }
 >;
@@ -24,19 +25,19 @@ export interface PeriodicNotePathPreviewOptions {
 }
 
 const DEFAULT_FILENAME_PATTERNS: Readonly<Record<PeriodicNoteType, string>> = Object.freeze({
-  daily: "yyyy-MM-dd",
-  weekly: "kkkk-'W'WW",
-  monthly: "yyyy-MM",
-  quarterly: "yyyy-'Q'q",
-  yearly: "yyyy",
+  daily: "YYYY-MM-DD",
+  weekly: "GGGG-[W]WW",
+  monthly: "YYYY-MM",
+  quarterly: "YYYY-[Q]Q",
+  yearly: "YYYY",
 });
 
 const PATH_PATTERN_EXAMPLES: Readonly<Record<PeriodicNoteType, string>> = Object.freeze({
-  daily: "'diary'/yyyy/yyyy-MM/yyyy-MM-dd",
-  weekly: "'diary'/kkkk/kkkk-'W'WW",
-  monthly: "'diary'/yyyy/yyyy-MM",
-  quarterly: "'diary'/yyyy/yyyy-'Q'q",
-  yearly: "'diary'/yyyy",
+  daily: "[diary]/YYYY/YYYY-MM/YYYY-MM-DD",
+  weekly: "[diary]/GGGG/GGGG-[W]WW",
+  monthly: "[diary]/YYYY/YYYY-MM",
+  quarterly: "[diary]/YYYY/YYYY-[Q]Q",
+  yearly: "[diary]/YYYY",
 });
 
 const TEMPLATE_PATH_EXAMPLES: Readonly<Record<PeriodicNoteType, string>> = Object.freeze({
@@ -55,9 +56,6 @@ export function createPeriodicNotePathPreview(
 ): PeriodicNotePathPreview {
   if (pattern.trim().length === 0) {
     return Object.freeze({ status: "empty", path: null });
-  }
-  if (hasUnquotedMomentTokens(pattern)) {
-    return Object.freeze({ status: "invalid", path: null, reason: "moment-tokens" });
   }
 
   const rule = { noteType, pattern } as const;
@@ -98,7 +96,7 @@ export function setPeriodicNoteFolder(
     : getDefaultPeriodicNoteFilenamePattern(noteType);
   return folder.length === 0
     ? filenamePattern
-    : `${quoteLuxonLiteral(folder)}/${filenamePattern}`;
+    : `${quoteMomentLiteral(folder)}/${filenamePattern}`;
 }
 
 export function getPeriodicNoteFolderQuery(pattern: string): string {
@@ -107,28 +105,30 @@ export function getPeriodicNoteFolderQuery(pattern: string): string {
     const value = pattern.trim();
     return hasPeriodicDateTokens(value)
       ? ""
-      : decodeLuxonLiteral(value);
+      : decodeMomentLiteral(value);
   }
 
-  return decodeLuxonLiteral(pattern.slice(0, separator).trim());
+  return decodeMomentLiteral(pattern.slice(0, separator).trim());
 }
 
-function decodeLuxonLiteral(value: string): string {
-  const literalQuote = "\u0000";
-  return value
-    .replaceAll("''''", literalQuote)
-    .replaceAll("'", "")
-    .replaceAll(literalQuote, "'");
+function decodeMomentLiteral(value: string): string {
+  if (!value.startsWith("[")) return value;
+  const endIndex = value.endsWith("]") ? value.length - 1 : value.length;
+  let decoded = "";
+  for (let index = 1; index < endIndex; index += 1) {
+    const character = value[index] ?? "";
+    if (character === "\\" && index + 1 < endIndex) {
+      decoded += value[index + 1] ?? "";
+      index += 1;
+    } else {
+      decoded += character;
+    }
+  }
+  return decoded;
 }
 
 function hasPeriodicDateTokens(value: string): boolean {
-  return /y{2,}|M{2,}|d{2,}|k{2,}|W{2,}|q/.test(value);
-}
-
-function hasUnquotedMomentTokens(pattern: string): boolean {
-  const withoutLuxonLiterals = pattern.replace(/'(?:[^']|'''')*'/g, "");
-  return /Y{2,4}/.test(withoutLuxonLiterals)
-    || /y{2,4}[-/.]M{1,4}[-/.]D{2,4}/.test(withoutLuxonLiterals);
+  return /Y{2,4}|G{2,4}|M{1,4}|D{1,2}|W{1,2}|Q/.test(value);
 }
 
 function normalizeFolderPath(path: string): string {
@@ -138,8 +138,4 @@ function normalizeFolderPath(path: string): string {
     .map((segment) => segment.trim())
     .filter((segment) => segment.length > 0)
     .join("/");
-}
-
-function quoteLuxonLiteral(value: string): string {
-  return `'${value.replaceAll("'", "''''")}'`;
 }

@@ -12,7 +12,7 @@ describe("settings", () => {
     const first = createDefaultSettings();
     const second = createDefaultSettings();
     first.holidayRegions.pop();
-    first.periodicNotes.daily.pattern = "'Daily'/yyyy-MM-dd";
+    first.periodicNotes.daily.pattern = "[Daily]/YYYY-MM-DD";
     expect(second.holidayRegions).toEqual(["cn", "sg"]);
     expect(second.periodicNotes.daily.pattern).toBe("");
   });
@@ -237,7 +237,7 @@ describe("settings", () => {
       periodicNotes: {
         daily: {
           enabled: true,
-          pattern: "'Daily'/yyyy-MM-dd",
+          pattern: "[Daily]/YYYY-MM-DD",
           templatePath: "Templates/Daily.md",
         },
         weekly: {
@@ -255,7 +255,7 @@ describe("settings", () => {
 
     expect(normalized.periodicNotes.daily).toEqual({
       enabled: true,
-      pattern: "'Daily'/yyyy-MM-dd",
+      pattern: "[Daily]/YYYY-MM-DD",
       templatePath: "Templates/Daily.md",
     });
     expect(normalized.periodicNotes.weekly).toEqual({

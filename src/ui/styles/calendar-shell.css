@@ -89,6 +89,20 @@
   white-space: nowrap;
 }
 
+.chrono-notes-calendar-month-label-stack {
+  display: grid;
+  min-width: 0;
+}
+
+.chrono-notes-calendar-month-label-stack > span {
+  grid-area: 1 / 1;
+  visibility: hidden;
+}
+
+.chrono-notes-calendar-month-label-stack > .is-visible {
+  visibility: visible;
+}
+
 .chrono-notes-calendar-picker-trigger.is-selected {
   box-shadow: inset 0 0 0 2px var(--interactive-accent);
 }

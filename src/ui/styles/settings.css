@@ -75,12 +75,6 @@
   margin: 0;
 }
 
-.chrono-notes-settings-syntax-comparison {
-  color: var(--text-normal);
-  margin-top: 6px;
-  overflow-wrap: anywhere;
-}
-
 .chrono-notes-periodic-section-heading {
   border-top: 1px solid var(--background-modifier-border);
   margin-top: 14px;
@@ -164,10 +158,15 @@
   color: var(--text-error);
 }
 
-.chrono-notes-periodic-template-example {
+.chrono-notes-periodic-template-example,
+.chrono-notes-periodic-template-syntax {
   margin-top: 4px;
   max-width: 100%;
   overflow-wrap: anywhere;
+}
+
+.chrono-notes-periodic-template-syntax code {
+  white-space: normal;
 }
 
 .chrono-notes-wide-input-setting {

@@ -18,6 +18,7 @@ export interface PeriodicNoteFilePort {
 
 export interface PeriodicNoteTemplateContext {
   readonly date: LocalDate;
+  readonly locale: string;
   readonly noteType: PeriodicNoteType;
   readonly path: string;
   readonly templatePath: string;
@@ -234,6 +235,7 @@ export class PeriodicNoteCommands {
       const config = settings.periodicNotes[noteType];
       const context: PeriodicNoteTemplateContext = Object.freeze({
         date: getPeriodAnchor(selectedDate, noteType, settings.weekStartDay),
+        locale: settings.locale,
         noteType,
         path,
         templatePath: config.templatePath,

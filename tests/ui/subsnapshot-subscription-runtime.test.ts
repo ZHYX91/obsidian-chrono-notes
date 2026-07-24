@@ -87,7 +87,7 @@ describe("React sub-snapshot subscriptions", () => {
     const settings = createDefaultSettings();
     settings.periodicNotes.weekly = {
       enabled: true,
-      pattern: "'Weekly'/kkkk-WW",
+      pattern: "[Weekly]/GGGG-WW",
       templatePath: "",
     };
     settings.rangeNotes.scanScope = "entire-vault";

@@ -36,6 +36,27 @@ describe("calendar header layout", () => {
     expect(calendarApp).toContain('kind={openPeriodPicker === "week-year" ? "year" : "week"}');
   });
 
+  it("reserves the widest localized month label without hard-coded sizing", () => {
+    expect(calendarApp).toContain(
+      'className="chrono-notes-calendar-month-label-stack"',
+    );
+    expect(calendarApp).toContain(
+      "() => formatShortMonthLabels(visibleMonth.year, locale)",
+    );
+    expect(calendarApp).toContain(
+      "index + 1 === visibleMonth.month",
+    );
+    expect(styles).toMatch(
+      /\.chrono-notes-calendar-month-label-stack\s*\{[^}]*display:\s*grid;[^}]*min-width:\s*0;/s,
+    );
+    expect(styles).toMatch(
+      /\.chrono-notes-calendar-month-label-stack\s*>\s*span\s*\{[^}]*grid-area:\s*1\s*\/\s*1;[^}]*visibility:\s*hidden;/s,
+    );
+    expect(styles).toMatch(
+      /\.chrono-notes-calendar-month-label-stack\s*>\s*\.is-visible\s*\{[^}]*visibility:\s*visible;/s,
+    );
+  });
+
   it("puts flexible row space before Today with a twelve-pixel minimum gap", () => {
     expect(styles).toMatch(
       /\.chrono-notes-calendar-header,\s*\.chrono-notes-mini-calendar-header\s*\{[^}]*display:\s*flex;[^}]*gap:\s*12px;[^}]*min-width:\s*0;/s,

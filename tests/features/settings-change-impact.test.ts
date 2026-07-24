@@ -44,7 +44,7 @@ describe("getSettingsChangeImpact", () => {
 
     const periodic = createDefaultSettings();
     periodic.periodicNotes.daily.enabled = true;
-    periodic.periodicNotes.daily.pattern = "Daily/yyyy-MM-dd";
+    periodic.periodicNotes.daily.pattern = "[Daily]/YYYY-MM-DD";
     expect(getSettingsChangeImpact(previous, periodic)).toMatchObject({
       calendar: true,
       navbar: true,

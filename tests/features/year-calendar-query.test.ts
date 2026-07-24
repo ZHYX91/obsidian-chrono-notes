@@ -31,7 +31,7 @@ describe("selectYearCalendar", () => {
       {
         locale: "en-US",
         weekStartDay: "monday",
-        monthly: { enabled: true, pattern: "'Monthly'/yyyy-MM" },
+        monthly: { enabled: true, pattern: "[Monthly]/YYYY-MM" },
         quarterly: { enabled: false, pattern: "" },
       },
     );
@@ -124,9 +124,9 @@ describe("selectYearCalendar", () => {
         weekStartDay: "monday",
         statisticDisplayDimension: "word-count",
         statisticValueStep: 2,
-        daily: { enabled: true, pattern: "'Daily'/yyyy-MM-dd" },
-        monthly: { enabled: true, pattern: "'Monthly'/yyyy-MM" },
-        quarterly: { enabled: true, pattern: "'Quarterly'/yyyy-'Q'q" },
+        daily: { enabled: true, pattern: "[Daily]/YYYY-MM-DD" },
+        monthly: { enabled: true, pattern: "[Monthly]/YYYY-MM" },
+        quarterly: { enabled: true, pattern: "[Quarterly]/YYYY-[Q]Q" },
       },
     );
     const thirdQuarter = result.quarters[2];
@@ -169,9 +169,9 @@ describe("selectYearCalendar", () => {
       weekStartDay: "sunday",
       statisticDisplayDimension: "tag-count",
       statisticValueStep: 1,
-      daily: { enabled: true, pattern: "'Daily'/yyyy-MM-dd" },
-      monthly: { enabled: true, pattern: "'Monthly'/yyyy-MM" },
-      quarterly: { enabled: true, pattern: "'Quarterly'/yyyy-'Q'q" },
+      daily: { enabled: true, pattern: "[Daily]/YYYY-MM-DD" },
+      monthly: { enabled: true, pattern: "[Monthly]/YYYY-MM" },
+      quarterly: { enabled: true, pattern: "[Quarterly]/YYYY-[Q]Q" },
     });
     const january = result.quarters[0]?.months[0];
 

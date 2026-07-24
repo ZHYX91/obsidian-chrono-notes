@@ -53,8 +53,8 @@ describe("selectWeekCalendar", () => {
         today: { year: 2026, month: 1, day: 1 },
         calendarExtensions: [],
         holidayRegions: [],
-        daily: { enabled: true, pattern: "'Daily'/yyyy-MM-dd" },
-        weekly: { enabled: true, pattern: "'Weekly'/kkkk-WW" },
+        daily: { enabled: true, pattern: "[Daily]/YYYY-MM-DD" },
+        weekly: { enabled: true, pattern: "[Weekly]/GGGG-WW" },
         rangeNotes: RANGE_SETTINGS,
       },
     );

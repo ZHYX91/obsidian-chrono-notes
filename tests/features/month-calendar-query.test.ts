@@ -86,8 +86,8 @@ describe("selectMonthCalendar", () => {
         calendarExtensions: [],
         holidayRegions: [],
         heatmap: null,
-        daily: { enabled: true, pattern: "'Daily'/yyyy-MM-dd" },
-        weekly: { enabled: true, pattern: "'Weekly'/kkkk-WW" },
+        daily: { enabled: true, pattern: "[Daily]/YYYY-MM-DD" },
+        weekly: { enabled: true, pattern: "[Weekly]/GGGG-WW" },
         rangeNotes: RANGE_NOTES,
       },
     );
@@ -157,7 +157,7 @@ describe("selectMonthCalendar", () => {
         holidayRegions: [],
         heatmap: null,
         daily: { enabled: false, pattern: "" },
-        weekly: { enabled: true, pattern: "'Weekly'/kkkk-WW" },
+        weekly: { enabled: true, pattern: "[Weekly]/GGGG-WW" },
         rangeNotes: RANGE_NOTES,
       },
     );
@@ -217,7 +217,7 @@ describe("selectMonthCalendar", () => {
         holidayRegions: [],
         heatmap: null,
         daily: { enabled: false, pattern: "" },
-        weekly: { enabled: false, pattern: "'Weekly'/kkkk-WW" },
+        weekly: { enabled: false, pattern: "[Weekly]/GGGG-WW" },
         rangeNotes: RANGE_NOTES,
       },
     );
@@ -386,7 +386,7 @@ describe("selectMonthCalendar", () => {
         calendarExtensions: [],
         holidayRegions: [],
         heatmap: { dimension: "word-count", valueStep: 2 },
-        daily: { enabled: true, pattern: "'Daily'/yyyy-MM-dd" },
+        daily: { enabled: true, pattern: "[Daily]/YYYY-MM-DD" },
         weekly: { enabled: false, pattern: "" },
         rangeNotes: RANGE_NOTES,
       },
@@ -427,7 +427,7 @@ describe("selectMonthCalendar", () => {
         calendarExtensions: [],
         holidayRegions: [],
         heatmap: { dimension: "word-count", valueStep: 2 },
-        daily: { enabled: true, pattern: "'Daily'/yyyy-MM-dd" },
+        daily: { enabled: true, pattern: "[Daily]/YYYY-MM-DD" },
         weekly: { enabled: false, pattern: "" },
         rangeNotes: {
           ...RANGE_NOTES,

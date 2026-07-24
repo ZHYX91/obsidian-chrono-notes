@@ -78,7 +78,7 @@ describe("acceptance Vault lifecycle", () => {
       calendarExtensions: ["persian", "islamic-umalqura"],
       ics: { sources: ["Fixtures/acceptance.ics"] },
       locale: "en",
-      periodicNotes: { daily: { pattern: "'Daily'/yyyy-MM-dd" } },
+      periodicNotes: { daily: { pattern: "[Daily]/YYYY-MM-DD" } },
       schemaVersion: 16,
     });
     expect(communityPlugins).toEqual(["chrono-notes"]);

@@ -509,8 +509,8 @@ function monthRequest(
       calendarExtensions: [],
       holidayRegions: [],
       heatmap: null,
-      daily: { enabled: true, pattern: "'Daily'/yyyy-MM-dd" },
-      weekly: { enabled: true, pattern: "'Weekly'/kkkk-WW" },
+      daily: { enabled: true, pattern: "[Daily]/YYYY-MM-DD" },
+      weekly: { enabled: true, pattern: "[Weekly]/GGGG-WW" },
       rangeNotes,
     },
   };
@@ -532,8 +532,8 @@ function weekRequest(
       today: selectedDate,
       calendarExtensions: [],
       holidayRegions: [],
-      daily: { enabled: true, pattern: "'Daily'/yyyy-MM-dd" },
-      weekly: { enabled: true, pattern: "'Weekly'/kkkk-WW" },
+      daily: { enabled: true, pattern: "[Daily]/YYYY-MM-DD" },
+      weekly: { enabled: true, pattern: "[Weekly]/GGGG-WW" },
       rangeNotes: RANGE_NOTES_OFF,
     },
   };
@@ -549,9 +549,9 @@ function yearRequest(): YearCalendarQueryRequest {
       weekStartDay: "monday",
       statisticDisplayDimension: "word-count",
       statisticValueStep: 200,
-      daily: { enabled: true, pattern: "'Daily'/yyyy-MM-dd" },
-      monthly: { enabled: true, pattern: "'Monthly'/yyyy-MM" },
-      quarterly: { enabled: true, pattern: "'Quarterly'/yyyy-'Q'q" },
+      daily: { enabled: true, pattern: "[Daily]/YYYY-MM-DD" },
+      monthly: { enabled: true, pattern: "[Monthly]/YYYY-MM" },
+      quarterly: { enabled: true, pattern: "[Quarterly]/YYYY-[Q]Q" },
     },
   };
 }

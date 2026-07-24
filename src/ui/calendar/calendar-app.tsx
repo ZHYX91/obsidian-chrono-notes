@@ -61,6 +61,7 @@ import { MonthView } from "./month-view";
 import {
   formatNarrowWeekdayLabels,
   formatShortMonthLabel,
+  formatShortMonthLabels,
 } from "../date-presentation";
 import { useHostEnvironment } from "../host-environment";
 
@@ -501,6 +502,10 @@ export function CalendarApp({
     year: today.year,
     month: formatShortMonthLabel(today.year, today.month, locale),
   });
+  const monthTriggerLabels = useMemo(
+    () => formatShortMonthLabels(visibleMonth.year, locale),
+    [locale, visibleMonth.year],
+  );
 
   return (
     <div
@@ -553,7 +558,7 @@ export function CalendarApp({
             {viewMode === "month" ? (
               <button
                 type="button"
-                className={`chrono-notes-calendar-picker-trigger${
+                className={`chrono-notes-calendar-picker-trigger is-month${
                   selectionKind === "month" &&
                   selected.year === visibleMonth.year &&
                   selected.month === visibleMonth.month
@@ -569,12 +574,20 @@ export function CalendarApp({
                   )
                 }
               >
-                <span>
-                  {formatShortMonthLabel(
-                    visibleMonth.year,
-                    visibleMonth.month,
-                    locale,
-                  )}
+                <span
+                  className="chrono-notes-calendar-month-label-stack"
+                  aria-hidden="true"
+                >
+                  {monthTriggerLabels.map((label, index) => (
+                    <span
+                      className={index + 1 === visibleMonth.month
+                        ? "is-visible"
+                        : undefined}
+                      key={index}
+                    >
+                      {label}
+                    </span>
+                  ))}
                 </span>
                 <ChevronDown size={13} aria-hidden="true" />
               </button>

@@ -149,7 +149,7 @@ describe("WeekView task rescheduling", () => {
         today: { year: 2026, month: 7, day: 20 },
         calendarExtensions: [],
         holidayRegions: [],
-        daily: { enabled: true, pattern: "'Daily'/yyyy-MM-dd" },
+        daily: { enabled: true, pattern: "[Daily]/YYYY-MM-DD" },
         weekly: { enabled: false, pattern: "" },
         rangeNotes: {
           showInCalendar: false,

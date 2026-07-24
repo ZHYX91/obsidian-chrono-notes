@@ -88,14 +88,15 @@ describe("settings presentation", () => {
       .toBe(expected);
   });
 
-  it("explains Luxon literals and case sensitivity in the selected locale", () => {
+  it("explains the shared Obsidian/Moment path syntax", () => {
     const english = createTranslator("en", "en").t("settings.periodic.pathsDesc");
     const chinese = createTranslator("zh-CN", "en").t("settings.periodic.pathsDesc");
 
-    expect(english).toContain("case-sensitive Luxon date formatting");
-    expect(english).toContain("single quotes");
-    expect(chinese).toContain("区分大小写");
-    expect(chinese).toContain("纯中文文本通常可以直接写");
+    expect(english).toContain("Obsidian/Moment");
+    expect(english).toContain("[diary]/YYYY/YYYY-MM/YYYY-MM-DD");
+    expect(english).toContain("square brackets");
+    expect(chinese).toContain("Obsidian/Moment");
+    expect(chinese).toContain("英文方括号");
   });
 
   it("names three ordered holiday-extension regions", () => {

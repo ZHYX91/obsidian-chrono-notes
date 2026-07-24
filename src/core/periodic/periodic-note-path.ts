@@ -8,6 +8,7 @@ import {
   type PeriodicNoteType,
   type WeekStartDay,
 } from "./periodic-date";
+import { compileMomentFormat } from "./moment-format";
 
 export interface PeriodicNotePathRule {
   readonly noteType: PeriodicNoteType;
@@ -30,6 +31,8 @@ export function formatPeriodicNotePath(
   options: PeriodicNotePathOptions,
 ): string | null {
   if (rule.pattern.trim().length === 0) return null;
+  const format = compileMomentFormat(rule.pattern, "date");
+  if (format === null) return null;
 
   const anchor = getPeriodAnchor(selectedDate, rule.noteType, options.weekStartDay);
   let filenameDate = toDateTime(anchor);
@@ -38,7 +41,7 @@ export function formatPeriodicNotePath(
   }
 
   try {
-    return `${filenameDate.setLocale(options.locale).toFormat(rule.pattern)}.md`;
+    return `${filenameDate.setLocale(options.locale).toFormat(format)}.md`;
   } catch {
     return null;
   }
@@ -50,9 +53,11 @@ export function parsePeriodicNotePath(
   options: PeriodicNotePathOptions,
 ): LocalDate | null {
   if (rule.pattern.trim().length === 0 || !path.endsWith(".md")) return null;
+  const format = compileMomentFormat(rule.pattern, "date");
+  if (format === null) return null;
 
   try {
-    const parsed = DateTime.fromFormat(path.slice(0, -3), rule.pattern, {
+    const parsed = DateTime.fromFormat(path.slice(0, -3), format, {
       locale: options.locale,
       zone: "UTC",
     });

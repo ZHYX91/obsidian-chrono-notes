@@ -17,14 +17,14 @@ describe("periodic note settings presentation", () => {
       locale: "en-US",
       weekStartDay: "monday",
     });
-    const invalid = createPeriodicNotePathPreview(date, "daily", "yyyy-MM-dd HH a", {
+    const invalid = createPeriodicNotePathPreview(date, "daily", "yyyy-MM-dd", {
       locale: "en-US",
       weekStartDay: "monday",
     });
     const valid = createPeriodicNotePathPreview(
       date,
       "daily",
-      "'Calendar/Daily'/yyyy-MM-dd",
+      "[Calendar/Daily]/YYYY-MM-DD",
       { locale: "en-US", weekStartDay: "monday" },
     );
 
@@ -40,19 +40,23 @@ describe("periodic note settings presentation", () => {
     expect(Object.isFrozen(valid)).toBe(true);
   });
 
-  it("explains common Obsidian Moment tokens without flagging quoted literals", () => {
+  it("accepts Moment tokens and rejects removed Luxon syntax", () => {
     expect(createPeriodicNotePathPreview(date, "daily", "YYYY-MM-DD", {
       locale: "zh-CN",
       weekStartDay: "monday",
-    })).toEqual({ status: "invalid", path: null, reason: "moment-tokens" });
-    expect(createPeriodicNotePathPreview(date, "daily", "'YYYY-DD'/yyyy-MM-dd", {
+    })).toEqual({ status: "valid", path: "2026-07-16.md" });
+    expect(createPeriodicNotePathPreview(date, "daily", "[YYYY-DD]/YYYY-MM-DD", {
       locale: "zh-CN",
       weekStartDay: "monday",
     })).toEqual({ status: "valid", path: "YYYY-DD/2026-07-16.md" });
-    expect(createPeriodicNotePathPreview(date, "daily", "日记/yyyy-MM-dd", {
+    expect(createPeriodicNotePathPreview(date, "daily", "日记/YYYY-MM-DD", {
       locale: "zh-CN",
       weekStartDay: "monday",
     })).toEqual({ status: "valid", path: "日记/2026-07-16.md" });
+    expect(createPeriodicNotePathPreview(date, "daily", "yyyy-MM-dd", {
+      locale: "zh-CN",
+      weekStartDay: "monday",
+    })).toEqual({ status: "invalid", path: null, reason: "unrecognized" });
   });
 
   it("provides distinct full-path and template examples for every note type", () => {
@@ -63,11 +67,11 @@ describe("periodic note settings presentation", () => {
       getPeriodicNotePathExample("quarterly"),
       getPeriodicNotePathExample("yearly"),
     ]).toEqual([
-      "'diary'/yyyy/yyyy-MM/yyyy-MM-dd",
-      "'diary'/kkkk/kkkk-'W'WW",
-      "'diary'/yyyy/yyyy-MM",
-      "'diary'/yyyy/yyyy-'Q'q",
-      "'diary'/yyyy",
+      "[diary]/YYYY/YYYY-MM/YYYY-MM-DD",
+      "[diary]/GGGG/GGGG-[W]WW",
+      "[diary]/YYYY/YYYY-MM",
+      "[diary]/YYYY/YYYY-[Q]Q",
+      "[diary]/YYYY",
     ]);
     expect([
       getPeriodicNoteTemplatePathExample("daily"),
@@ -108,23 +112,23 @@ describe("periodic note settings presentation", () => {
     expect(createPeriodicNotePathPreview(
       { year: 2023, month: 12, day: 31 },
       "weekly",
-      "'Weekly'/kkkk-'W'WW",
+      "[Weekly]/GGGG-[W]WW",
       { locale: "en-US", weekStartDay: "sunday" },
     )).toEqual({ status: "valid", path: "Weekly/2024-W01.md" });
   });
 
   it("selects nested folders without adding a second persisted path setting", () => {
     expect(setPeriodicNoteFolder("", "Calendar\\Daily", "daily"))
-      .toBe("'Calendar/Daily'/yyyy-MM-dd");
+      .toBe("[Calendar/Daily]/YYYY-MM-DD");
     expect(setPeriodicNoteFolder("Cal", "Calendar/Daily", "daily"))
-      .toBe("'Calendar/Daily'/yyyy-MM-dd");
-    expect(setPeriodicNoteFolder("'Old'/yyyy-'Q'q", "/Archive/Quarterly/", "quarterly"))
-      .toBe("'Archive/Quarterly'/yyyy-'Q'q");
-    expect(setPeriodicNoteFolder("yyyy", "", "yearly")).toBe("yyyy");
+      .toBe("[Calendar/Daily]/YYYY-MM-DD");
+    expect(setPeriodicNoteFolder("[Old]/YYYY-[Q]Q", "/Archive/Quarterly/", "quarterly"))
+      .toBe("[Archive/Quarterly]/YYYY-[Q]Q");
+    expect(setPeriodicNoteFolder("YYYY", "", "yearly")).toBe("YYYY");
   });
 
-  it("quotes apostrophes in suggested Vault folders for Luxon round trips", () => {
-    const pattern = setPeriodicNoteFolder("yyyy-MM-dd", "People/Bob's", "daily");
+  it("quotes suggested Vault folders for Moment round trips", () => {
+    const pattern = setPeriodicNoteFolder("YYYY-MM-DD", "People/Bob's", "daily");
     expect(formatPeriodicNotePath(date, { noteType: "daily", pattern }, {
       locale: "en-US",
       weekStartDay: "monday",
@@ -136,10 +140,10 @@ describe("periodic note settings presentation", () => {
   });
 
   it("extracts only the folder portion for inline suggestion filtering", () => {
-    expect(getPeriodicNoteFolderQuery("'Calendar/Daily'/yyyy-MM-dd")).toBe("Calendar/Daily");
-    expect(getPeriodicNoteFolderQuery("'People/Bob''''s'/yyyy-MM-dd")).toBe("People/Bob's");
+    expect(getPeriodicNoteFolderQuery("[Calendar/Daily]/YYYY-MM-DD")).toBe("Calendar/Daily");
+    expect(getPeriodicNoteFolderQuery("[People/Bob's]/YYYY-MM-DD")).toBe("People/Bob's");
     expect(getPeriodicNoteFolderQuery("Cal")).toBe("Cal");
-    expect(getPeriodicNoteFolderQuery("'Cal")).toBe("Cal");
-    expect(getPeriodicNoteFolderQuery("yyyy-MM-dd")).toBe("");
+    expect(getPeriodicNoteFolderQuery("[Cal")).toBe("Cal");
+    expect(getPeriodicNoteFolderQuery("YYYY-MM-DD")).toBe("");
   });
 });

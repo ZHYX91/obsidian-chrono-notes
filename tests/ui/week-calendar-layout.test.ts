@@ -116,7 +116,7 @@ describe("week calendar layout", () => {
       }),
       DISABLED_ICS,
       weekOptions({
-        weekly: { enabled: true, pattern: "'Weekly'/kkkk-'W'WW" },
+        weekly: { enabled: true, pattern: "[Weekly]/GGGG-[W]WW" },
       }),
     );
     const document = renderWeek(query, query.weekStart, query.weekEnd);
