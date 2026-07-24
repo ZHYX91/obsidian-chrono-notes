@@ -191,7 +191,7 @@ describe("calendar indicator layout", () => {
 
   it("keeps the week-number control in a separate rail with a dedicated gap", () => {
     expect(styles).toMatch(
-      /\.chrono-notes-month-grid\s*\{[^}]*grid-template-columns:\s*minmax\(30px, 0\.55fr\) var\(--chrono-notes-week-date-gap\) repeat\(7, minmax\(28px, 1fr\)\);/s,
+      /\.chrono-notes-month-grid\s*\{[^}]*grid-template-columns:\s*minmax\(34px, 0\.6fr\) var\(--chrono-notes-week-date-gap\) repeat\(7, minmax\(28px, 1fr\)\);/s,
     );
     expect(styles).toMatch(
       /\.chrono-notes-week-number\s*\{[^}]*min-width:\s*0;/s,
@@ -287,16 +287,8 @@ describe("calendar indicator layout", () => {
         padding: "0 4px",
       },
       {
-        selector: ".chrono-notes-week-number-button.is-current-period .chrono-notes-week-number-label",
-        padding: "0 3px",
-      },
-      {
         selector: ".chrono-notes-week-day.is-current-period .chrono-notes-week-day-date",
         padding: "0 4px",
-      },
-      {
-        selector: ".chrono-notes-year-period.is-current-period .chrono-notes-year-period-label",
-        padding: "0 2px",
       },
     ]) {
       const labelRule = declarationsForSelector(selector);
@@ -308,6 +300,23 @@ describe("calendar indicator layout", () => {
         "color: var(--chrono-notes-current-period-foreground);",
       );
       expect(labelRule, selector).toContain(`padding: ${padding};`);
+    }
+    for (const selector of [
+      ".chrono-notes-week-number-button.is-current-period .chrono-notes-week-number-label",
+      ".chrono-notes-year-period.is-current-period .chrono-notes-year-period-label",
+    ]) {
+      const labelRule = declarationsForSelector(selector);
+      expect(labelRule, selector).toContain(
+        "background: var(--chrono-notes-current-period-fill);",
+      );
+      expect(labelRule, selector).toContain("border-radius: 4px;");
+      expect(labelRule, selector).toContain(
+        "box-shadow: 0 0 0 2px var(--chrono-notes-current-period-fill);",
+      );
+      expect(labelRule, selector).toContain(
+        "color: var(--chrono-notes-current-period-foreground);",
+      );
+      expect(labelRule, selector).not.toContain("padding:");
     }
     const dayLabelRule = declarationsForSelector(
       ".chrono-notes-day.is-current-period .chrono-notes-day-number",
@@ -364,6 +373,20 @@ describe("calendar indicator layout", () => {
         "s",
       ));
     }
+  });
+
+  it("reserves breathing room for inverse labels in compact period cells", () => {
+    expect(styles).toMatch(
+      /\.chrono-notes-year-summary-row\s*\{[^}]*grid-template-columns:\s*minmax\(64px, 0\.75fr\) repeat\(3, minmax\(0, 1fr\)\);/s,
+    );
+    expect(styles).toMatch(
+      /\.chrono-notes-year-period\s*\{[^}]*min-height:\s*48px;[^}]*padding:\s*10px 4px 6px;/s,
+    );
+    expect(styles).toMatch(
+      /@container \(max-width: 360px\)[\s\S]*?\.chrono-notes-month-grid\s*\{[^}]*grid-template-columns:\s*34px var\(--chrono-notes-week-date-gap\)/s,
+    );
+    expect(styles).not.toContain(".chrono-notes-year-period-selection");
+    expect(yearView).not.toContain("chrono-notes-year-period-selection");
   });
 
   it("keeps focus visible and independent on every selectable calendar cell", () => {

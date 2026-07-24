@@ -200,7 +200,7 @@ describe("calendar current-period layout", () => {
     expect(currentMonth?.classList.contains("is-selected")).toBe(false);
   });
 
-  it("shows the exact active day in year summary mode", () => {
+  it("keeps the active day in the accessible year-summary label", () => {
     const document = renderYear(false, APRIL_18, "day", APRIL_18);
     const selectedMonth = document.querySelector(
       '.chrono-notes-year-period[data-period-kind="month"].is-selected',
@@ -209,11 +209,11 @@ describe("calendar current-period layout", () => {
     expect(selectedMonth?.getAttribute("data-period-month")).toBe("4");
     expect(selectedMonth?.querySelector(
       ".chrono-notes-year-period-selection",
-    )?.textContent).toBe("18");
+    )).toBeNull();
     expect(selectedMonth?.getAttribute("aria-label")).toContain("18");
   });
 
-  it("shows the active week in the containing year-summary month", () => {
+  it("keeps the active week in the accessible year-summary label", () => {
     const document = renderYear(
       false,
       APRIL_18,
@@ -227,7 +227,8 @@ describe("calendar current-period layout", () => {
     expect(selectedMonth?.getAttribute("data-period-month")).toBe("7");
     expect(selectedMonth?.querySelector(
       ".chrono-notes-year-period-selection",
-    )?.textContent).toBe("W29");
+    )).toBeNull();
+    expect(selectedMonth?.getAttribute("aria-label")).toContain("W29");
   });
 
   it("does not mark periods when the displayed year is not current", () => {

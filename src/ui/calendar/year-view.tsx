@@ -538,11 +538,6 @@ function PeriodButton({
         </span>
       ) : null}
       <span className="chrono-notes-year-period-label">{label}</span>
-      {selectionDetail === undefined ? null : (
-        <span className="chrono-notes-year-period-selection">
-          {selectionDetail}
-        </span>
-      )}
     </button>
   );
 }

@@ -2,7 +2,7 @@
   --chrono-notes-week-date-gap: 0px;
   display: grid;
   gap: var(--chrono-notes-cell-gap);
-  grid-template-columns: minmax(30px, 0.55fr) var(--chrono-notes-week-date-gap) repeat(7, minmax(28px, 1fr));
+  grid-template-columns: minmax(34px, 0.6fr) var(--chrono-notes-week-date-gap) repeat(7, minmax(28px, 1fr));
 }
 
 .chrono-notes-month-grid > .chrono-notes-week-row {
@@ -506,7 +506,7 @@ body.is-mobile
   justify-content: center;
   min-height: 44px;
   min-width: 0;
-  padding: 3px 1px;
+  padding: 3px 2px;
   position: relative;
   width: 100%;
 }
@@ -537,10 +537,14 @@ body.is-mobile
 }
 
 .chrono-notes-week-number-label {
+  box-sizing: border-box;
   font-variant-numeric: tabular-nums;
   font-weight: var(--font-semibold);
   line-height: 1.2;
+  max-width: 100%;
+  overflow: hidden;
   position: relative;
+  text-overflow: ellipsis;
   white-space: nowrap;
   z-index: 1;
 }
@@ -549,8 +553,8 @@ body.is-mobile
   .chrono-notes-week-number-label {
   background: var(--chrono-notes-current-period-fill);
   border-radius: 4px;
+  box-shadow: 0 0 0 2px var(--chrono-notes-current-period-fill);
   color: var(--chrono-notes-current-period-foreground);
-  padding: 0 3px;
 }
 
 .chrono-notes-day {

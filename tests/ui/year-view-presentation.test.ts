@@ -27,7 +27,7 @@ describe("year view presentation", () => {
     const styles = readPluginStyles();
 
     expect(styles).toMatch(
-      /@container \(max-width: 360px\)[\s\S]*?\.chrono-notes-year-summary-row\s*{[^}]*grid-template-columns:\s*minmax\(60px,\s*0\.6fr\)/,
+      /@container \(max-width: 360px\)[\s\S]*?\.chrono-notes-year-summary-row\s*{[^}]*grid-template-columns:\s*minmax\(64px,\s*0\.75fr\)/,
     );
   });
 
