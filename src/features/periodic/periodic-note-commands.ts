@@ -7,6 +7,10 @@ import {
 } from "../../core/periodic/periodic-date";
 import { formatPeriodicNotePath } from "../../core/periodic/periodic-note-path";
 import type { PeriodicNoteSettings, TemplateEngine } from "../../shared/settings";
+import type {
+  NoteTemplatePort,
+  PeriodicNoteTemplateContext,
+} from "../templates/note-template-port";
 
 export type NoteOpenTarget = "default" | "tab";
 
@@ -14,20 +18,6 @@ export interface PeriodicNoteFilePort {
   exists(path: string): boolean;
   createEmpty(path: string): Promise<void>;
   delete(path: string): Promise<void>;
-}
-
-export interface PeriodicNoteTemplateContext {
-  readonly date: LocalDate;
-  readonly locale: string;
-  readonly noteType: PeriodicNoteType;
-  readonly path: string;
-  readonly templatePath: string;
-  readonly templateEngine: TemplateEngine;
-  readonly title: string;
-}
-
-export interface PeriodicNoteTemplatePort {
-  populate(path: string, context: PeriodicNoteTemplateContext): Promise<void>;
 }
 
 export interface PeriodicNoteWorkspacePort {
@@ -100,7 +90,7 @@ export class PeriodicNoteCommands {
 
   constructor(
     private readonly files: PeriodicNoteFilePort,
-    private readonly templates: PeriodicNoteTemplatePort,
+    private readonly templates: NoteTemplatePort,
     private readonly workspace: PeriodicNoteWorkspacePort,
   ) {}
 
@@ -234,6 +224,7 @@ export class PeriodicNoteCommands {
       created = true;
       const config = settings.periodicNotes[noteType];
       const context: PeriodicNoteTemplateContext = Object.freeze({
+        kind: "periodic",
         date: getPeriodAnchor(selectedDate, noteType, settings.weekStartDay),
         locale: settings.locale,
         noteType,

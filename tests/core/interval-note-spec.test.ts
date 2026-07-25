@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  applyIntervalNoteMetadata,
   buildIntervalNoteContent,
   buildIntervalNoteSpec,
   normalizeIntervalNoteDates,
@@ -51,5 +52,56 @@ describe("interval note spec", () => {
     expect(() => buildIntervalNoteSpec(spec.start, spec.end, " / ")).toThrow(
       "Range note folder must not be empty",
     );
+  });
+
+  it("injects canonical boundaries while preserving template metadata and body", () => {
+    const spec = buildIntervalNoteSpec(
+      { year: 2026, month: 7, day: 1 },
+      { year: 2026, month: 7, day: 7 },
+      "Ranges",
+    );
+    expect(applyIntervalNoteMetadata([
+      "---",
+      "start: wrong",
+      "tags:",
+      "  - trip",
+      "---",
+      "",
+      "# Custom title",
+      "",
+    ].join("\n"), spec)).toBe([
+      "---",
+      "start: 2026-07-01",
+      "tags:",
+      "  - trip",
+      "end: 2026-07-07",
+      "---",
+      "",
+      "# Custom title",
+      "",
+    ].join("\n"));
+  });
+
+  it("adds required frontmatter and rejects malformed template frontmatter", () => {
+    const spec = buildIntervalNoteSpec(
+      { year: 2026, month: 7, day: 1 },
+      { year: 2026, month: 7, day: 7 },
+      "Ranges",
+    );
+    expect(applyIntervalNoteMetadata("# Body", spec)).toBe([
+      "---",
+      "start: 2026-07-01",
+      "end: 2026-07-07",
+      "---",
+      "",
+      "# Body",
+      "",
+    ].join("\n"));
+    expect(() => applyIntervalNoteMetadata("---\ninvalid: [\n---\nBody", spec))
+      .toThrow("invalid frontmatter");
+    expect(() => applyIntervalNoteMetadata("---\n- invalid\n---\nBody", spec))
+      .toThrow("must be a mapping");
+    expect(() => applyIntervalNoteMetadata("---\nstart: 2026-07-01", spec))
+      .toThrow("unterminated frontmatter");
   });
 });

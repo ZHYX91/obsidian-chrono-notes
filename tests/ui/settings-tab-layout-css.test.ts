@@ -49,13 +49,13 @@ describe("settings tab layout CSS", () => {
 
   it("always stacks periodic path and template inputs at full width", () => {
     expect(styles).toMatch(
-      /:is\(\s*\.chrono-notes-periodic-path-setting,\s*\.chrono-notes-periodic-template-setting\s*\)\s*\{[^}]*flex-direction:\s*column;/s,
+      /:is\(\s*\.chrono-notes-periodic-path-setting,\s*\.chrono-notes-template-path-setting\s*\)\s*\{[^}]*flex-direction:\s*column;/s,
     );
     expect(styles).toMatch(
-      /\.chrono-notes-periodic-template-setting\s*\) \.setting-item-control\s*\{[^}]*flex:\s*none;[^}]*flex-direction:\s*column;[^}]*width:\s*100%;/s,
+      /\.chrono-notes-template-path-setting\s*\) \.setting-item-control\s*\{[^}]*flex:\s*none;[^}]*flex-direction:\s*column;[^}]*width:\s*100%;/s,
     );
     expect(styles).toMatch(
-      /\.chrono-notes-periodic-template-setting\s*\) \.setting-item-control input\s*\{[^}]*width:\s*100%;/s,
+      /\.chrono-notes-template-path-setting\s*\) \.setting-item-control input\s*\{[^}]*width:\s*100%;/s,
     );
     expect(styles).not.toContain("flex: 0 1 420px");
     expect(styles).not.toContain("@container (max-width: 520px)");
@@ -71,12 +71,9 @@ describe("settings tab layout CSS", () => {
     expect(styles).not.toContain("width: min(320px, 48vw)");
   });
 
-  it("styles periodic type labels as toggle headings without another title row", () => {
-    expect(styles).toMatch(
-      /\.chrono-notes-periodic-section-heading\s*\{[^}]*border-top:[^}]*margin-top:[^}]*padding-top:/s,
-    );
-    expect(styles).toMatch(
-      /\.chrono-notes-periodic-section-heading \.setting-item-name\s*\{[^}]*font-size:[^}]*font-weight:/s,
-    );
+  it("does not add custom dividers or nesting to native periodic headings", () => {
+    expect(styles).not.toContain(".chrono-notes-periodic-note-group");
+    expect(styles).not.toContain(".chrono-notes-periodic-note-fields");
+    expect(styles).not.toContain(".chrono-notes-periodic-section-heading");
   });
 });

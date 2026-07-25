@@ -1,8 +1,10 @@
 import { Setting } from "obsidian";
 
+import { normalizeIntervalNoteFolder } from "../../core/note/interval-note-spec";
 import { isRangeNoteScanScope } from "../../shared/settings";
 import { preparePathInput } from "./path-input";
 import type { SettingsSectionContext } from "./settings-section-context";
+import { renderTemplatePathSetting } from "./template-settings";
 import { VaultFolderSuggest } from "./vault-path-suggest";
 
 export function renderRangeSettingsSection(
@@ -45,12 +47,25 @@ export function renderRangeSettingsSection(
     .setName(t("settings.ranges.folder"))
     .setDesc(t("settings.ranges.folderDesc"));
   folderSetting.settingEl.addClass("chrono-notes-wide-input-setting");
+  const pathExampleEl = folderSetting.descEl.createDiv({
+    cls: "chrono-notes-range-path-example",
+  });
+  const updatePathExample = (): void => {
+    const folder = normalizeIntervalNoteFolder(settings.folder);
+    pathExampleEl.empty();
+    pathExampleEl.append(`${t("settings.ranges.pathExample")}: `);
+    pathExampleEl.createEl("code", {
+      text: `${folder.length === 0 ? "Ranges" : folder}/`
+        + "2026-07-01 - 2026-07-07.md",
+    });
+  };
   folderSetting.addText((text) => {
     text
       .setPlaceholder("Ranges")
       .setValue(settings.folder)
       .onChange((value) => {
         settings.folder = value;
+        updatePathExample();
         context.scheduleSettingsSave();
       });
     preparePathInput(text.inputEl);
@@ -61,6 +76,17 @@ export function renderRangeSettingsSection(
       context.vaultPathSuggestionCatalog,
     );
   });
+  updatePathExample();
+  renderTemplatePathSetting(
+    containerEl,
+    t("settings.templates.path"),
+    "Templates/Range.md",
+    settings.templatePath,
+    (value) => {
+      settings.templatePath = value;
+    },
+    context,
+  );
   new Setting(containerEl).setName(t("settings.ranges.scanScope")).addDropdown((dropdown) => {
     dropdown
       .addOption("range-folder", t("settings.ranges.rangeFolder"))

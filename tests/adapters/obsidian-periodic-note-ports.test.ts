@@ -3,8 +3,8 @@ import { describe, expect, it, vi } from "vitest";
 import {
   ObsidianBuiltinTemplatePort,
   ObsidianIntervalNoteFilePort,
+  ObsidianNoteTemplatePort,
   ObsidianPeriodicNoteFilePort,
-  ObsidianPeriodicNoteTemplatePort,
   ObsidianPeriodicNoteWorkspacePort,
   ObsidianTaskFilePort,
   ObsidianTaskWorkspacePort,
@@ -47,12 +47,31 @@ class FakeVault {
 describe("Obsidian periodic note ports", () => {
   it("creates interval note content after ensuring parent folders", async () => {
     const vault = new FakeVault();
-    const files = new ObsidianIntervalNoteFilePort(vault as never);
+    const fileManager = {
+      trashFile: vi.fn(async (file: FakeFile) => {
+        vault.files.delete(file.path);
+        vault.contents.delete(file.path);
+      }),
+    };
+    const files = new ObsidianIntervalNoteFilePort(
+      vault as never,
+      fileManager as never,
+    );
 
     await files.create("Calendar/Range Notes/trip.md", "---\nstart: 2026-05-01\n---");
     expect([...vault.folders]).toEqual(["Calendar", "Calendar/Range Notes"]);
     expect(vault.contents.get("Calendar/Range Notes/trip.md")).toContain("start: 2026-05-01");
     expect(files.exists("Calendar/Range Notes/trip.md")).toBe(true);
+
+    await files.process("Calendar/Range Notes/trip.md", (content) =>
+      content.replace("2026-05-01", "2026-05-02"));
+    expect(vault.contents.get("Calendar/Range Notes/trip.md")).toContain("start: 2026-05-02");
+
+    await files.delete("Calendar/Range Notes/trip.md");
+    expect(files.exists("Calendar/Range Notes/trip.md")).toBe(false);
+    expect(fileManager.trashFile).toHaveBeenCalledWith(expect.objectContaining({
+      path: "Calendar/Range Notes/trip.md",
+    }));
   });
 
   it("creates missing parent folders and deletes only the addressed Markdown note", async () => {
@@ -105,6 +124,7 @@ describe("Obsidian periodic note ports", () => {
     );
 
     await templates.populate("Daily/2026-05-18.md", {
+      kind: "periodic",
       date: { year: 2026, month: 5, day: 18 },
       locale: "en-US",
       noteType: "daily",
@@ -119,11 +139,40 @@ describe("Obsidian periodic note ports", () => {
     );
   });
 
+  it("renders built-in range placeholders through the shared template port", async () => {
+    const vault = new FakeVault();
+    vault.files.set("Templates/Range.md", { path: "Templates/Range.md", extension: "md" });
+    vault.contents.set(
+      "Templates/Range.md",
+      "# {{title}}\n{{start:YYYY/MM/DD}} – {{end}} · {{days}}",
+    );
+    vault.files.set("Ranges/trip.md", { path: "Ranges/trip.md", extension: "md" });
+    vault.contents.set("Ranges/trip.md", "");
+    const templates = new ObsidianBuiltinTemplatePort(vault as never);
+
+    await templates.populate("Ranges/trip.md", {
+      kind: "interval",
+      start: { year: 2026, month: 7, day: 1 },
+      end: { year: 2026, month: 7, day: 7 },
+      dayCount: 7,
+      locale: "en-US",
+      path: "Ranges/trip.md",
+      templatePath: "Templates/Range.md",
+      templateEngine: "builtin",
+      title: "trip",
+    });
+
+    expect(vault.contents.get("Ranges/trip.md")).toBe(
+      "# trip\n2026/07/01 – 2026-07-07 · 7",
+    );
+  });
+
   it("does nothing without a template and fails explicitly for a missing template", async () => {
     const vault = new FakeVault();
     vault.files.set("Daily/today.md", { path: "Daily/today.md", extension: "md" });
     const templates = new ObsidianBuiltinTemplatePort(vault as never);
     const context = {
+      kind: "periodic" as const,
       date: { year: 2026, month: 5, day: 18 },
       locale: "en-US",
       noteType: "daily" as const,
@@ -147,13 +196,14 @@ describe("Obsidian periodic note ports", () => {
     const vault = new FakeVault();
     vault.files.set("Templates/Daily.md", { path: "Templates/Daily.md", extension: "md" });
     vault.files.set("Daily/today.md", { path: "Daily/today.md", extension: "md" });
-    const templates = new ObsidianPeriodicNoteTemplatePort(
+    const templates = new ObsidianNoteTemplatePort(
       { plugins: { getPlugin: () => null } } as never,
       vault as never,
     );
 
     await expect(
       templates.populate("Daily/today.md", {
+        kind: "periodic",
         date: { year: 2026, month: 5, day: 18 },
         locale: "en-US",
         noteType: "daily",
@@ -192,9 +242,10 @@ describe("Obsidian periodic note ports", () => {
         }),
       },
     };
-    const templates = new ObsidianPeriodicNoteTemplatePort(app as never, vault as never);
+    const templates = new ObsidianNoteTemplatePort(app as never, vault as never);
 
     await templates.populate(target.path, {
+      kind: "periodic",
       date: { year: 2026, month: 4, day: 1 },
       locale: "en-US",
       noteType: "quarterly",
@@ -213,6 +264,50 @@ describe("Obsidian periodic note ports", () => {
     expect(injected).toContain('targetDate: "2026-04-01"');
     expect(injected).toContain("<% tp_calendar.targetDate %>");
     expect(vault.contents.get(target.path)).toBe("rendered by templater");
+  });
+
+  it("injects range context for Templater", async () => {
+    const vault = new FakeVault();
+    const template = { path: "Templates/Range.md", extension: "md" };
+    const target = { path: "Ranges/trip.md", extension: "md" };
+    vault.files.set(template.path, template);
+    vault.contents.set(template.path, "<% tp_calendar.startDate %>");
+    vault.files.set(target.path, target);
+    const parseTemplate = vi.fn(
+      async (_config: unknown, _content: string): Promise<unknown> =>
+        "rendered range",
+    );
+    const app = {
+      plugins: {
+        getPlugin: () => ({
+          templater: {
+            create_running_config: vi.fn(() => ({})),
+            parse_template: parseTemplate,
+          },
+        }),
+      },
+    };
+    const templates = new ObsidianNoteTemplatePort(app as never, vault as never);
+
+    await templates.populate(target.path, {
+      kind: "interval",
+      start: { year: 2026, month: 7, day: 1 },
+      end: { year: 2026, month: 7, day: 7 },
+      dayCount: 7,
+      locale: "en-US",
+      path: target.path,
+      templatePath: template.path,
+      templateEngine: "templater",
+      title: "trip",
+    });
+
+    const injected = parseTemplate.mock.calls[0]?.[1] ?? "";
+    expect(injected).toContain('kind: "interval"');
+    expect(injected).toContain('startDate: "2026-07-01"');
+    expect(injected).toContain('endDate: "2026-07-07"');
+    expect(injected).toContain("dayCount: 7");
+    expect(injected).toContain("<% tp_calendar.startDate %>");
+    expect(vault.contents.get(target.path)).toBe("rendered range");
   });
 
   it("reuses an already open Markdown leaf or opens a new tab", async () => {

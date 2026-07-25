@@ -44,6 +44,7 @@ declare const __CHRONO_BENCHMARK_NOTE_COUNT__: number;
 const RANGE_SETTINGS: RangeNoteSettings = Object.freeze({
   showInCalendar: true,
   folder: "Ranges",
+  templatePath: "",
   scanScope: "entire-vault",
   customFolder: "",
   monthViewLimit: 3,

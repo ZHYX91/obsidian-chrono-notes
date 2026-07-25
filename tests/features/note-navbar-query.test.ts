@@ -5,7 +5,11 @@ import {
   selectNoteNavbarContextFromProjection,
 } from "../../src/features/periodic/note-navbar-query";
 import type { NoteIndexSnapshot } from "../../src/features/notes/note-index";
-import { createDefaultSettings } from "../../src/shared/settings";
+import {
+  createDefaultSettings,
+  migrateSettings,
+  normalizeSettings,
+} from "../../src/shared/settings";
 import { createParsedNoteIndexSnapshot } from "../support/note-index-snapshot";
 
 function snapshot(contents: Record<string, string>): NoteIndexSnapshot {
@@ -23,6 +27,57 @@ function settings() {
 }
 
 describe("selectNoteNavbarContext", () => {
+  it.each([
+    ["diary/2026/2026-07/2026-07-24.md", "daily"],
+    ["diary/2026/2026-W30.md", "weekly"],
+    ["diary/2026/2026-07.md", "monthly"],
+    ["diary/2026/2026-Q3.md", "quarterly"],
+    ["diary/2026.md", "yearly"],
+  ] as const)("recognizes %s after migrating a released Luxon configuration", (
+    path,
+    noteType,
+  ) => {
+    const migrated = normalizeSettings(migrateSettings({
+      schemaVersion: 15,
+      calendarOverlays: ["chinese-lunar"],
+      todoAnnotationMode: "hole",
+      periodicNotes: {
+        daily: {
+          enabled: true,
+          pattern: "'diary'/yyyy/yyyy-MM/yyyy-MM-dd",
+          templatePath: "",
+        },
+        weekly: {
+          enabled: true,
+          pattern: "'diary'/kkkk/kkkk-'W'WW",
+          templatePath: "",
+        },
+        monthly: {
+          enabled: true,
+          pattern: "'diary'/yyyy/yyyy-MM",
+          templatePath: "",
+        },
+        quarterly: {
+          enabled: true,
+          pattern: "'diary'/yyyy/yyyy-'Q'q",
+          templatePath: "",
+        },
+        yearly: {
+          enabled: true,
+          pattern: "'diary'/yyyy",
+          templatePath: "",
+        },
+      },
+    }));
+
+    expect(selectNoteNavbarContext(path, snapshot({}), {
+      locale: "en-US",
+      weekStartDay: "monday",
+      periodicNotes: migrated.periodicNotes,
+      rangeNotes: migrated.rangeNotes,
+    })?.noteType).toBe(noteType);
+  });
+
   it("recognizes an enabled exact periodic path and derives stable navigation targets", () => {
     const value = settings();
     const result = selectNoteNavbarContext("Weekly/2026-01.md", snapshot({}), {

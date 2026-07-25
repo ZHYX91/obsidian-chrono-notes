@@ -287,6 +287,7 @@ function weekOptions(
     rangeNotes: {
       showInCalendar: true,
       folder: "Ranges",
+      templatePath: "",
       scanScope: "range-folder" as const,
       customFolder: "",
       monthViewLimit: 2,

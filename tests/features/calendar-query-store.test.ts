@@ -23,6 +23,7 @@ import {
 const RANGE_NOTES_OFF: RangeNoteSettings = Object.freeze({
   showInCalendar: false,
   folder: "",
+  templatePath: "",
   scanScope: "range-folder",
   customFolder: "",
   monthViewLimit: 2,

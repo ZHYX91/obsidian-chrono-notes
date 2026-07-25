@@ -6,6 +6,7 @@ import {
 } from "../../shared/settings";
 import { PLUGIN_LANGUAGE_OPTIONS } from "../../shared/plugin-languages";
 import type { SettingsSectionContext } from "./settings-section-context";
+import { renderTemplateEngineSettings } from "./template-settings";
 
 export function renderGeneralSettingsSection(
   containerEl: HTMLElement,
@@ -75,4 +76,6 @@ export function renderGeneralSettingsSection(
         .setButtonText(t("settings.general.showFirstUseGuide"))
         .onClick(() => context.host.openFirstUseGuide());
     });
+
+  renderTemplateEngineSettings(containerEl, context);
 }

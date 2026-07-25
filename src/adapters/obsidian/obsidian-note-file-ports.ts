@@ -27,7 +27,10 @@ export class ObsidianPeriodicNoteFilePort implements PeriodicNoteFilePort {
 }
 
 export class ObsidianIntervalNoteFilePort implements IntervalNoteFilePort {
-  constructor(private readonly vault: Vault) {}
+  constructor(
+    private readonly vault: Vault,
+    private readonly fileManager: FileManager,
+  ) {}
 
   exists(path: string): boolean {
     return isMarkdownFile(this.vault.getAbstractFileByPath(path));
@@ -36,6 +39,17 @@ export class ObsidianIntervalNoteFilePort implements IntervalNoteFilePort {
   async create(path: string, content: string): Promise<void> {
     await ensureParentFolders(this.vault, path);
     await this.vault.create(path, content);
+  }
+
+  async process(path: string, update: (content: string) => string): Promise<void> {
+    const file = this.vault.getAbstractFileByPath(path);
+    if (!isMarkdownFile(file)) throw new Error(`Markdown note not found: ${path}`);
+    await this.vault.process(file, update);
+  }
+
+  async delete(path: string): Promise<void> {
+    const file = this.vault.getAbstractFileByPath(path);
+    if (isMarkdownFile(file)) await this.fileManager.trashFile(file);
   }
 }
 

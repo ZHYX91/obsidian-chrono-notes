@@ -75,20 +75,13 @@
   margin: 0;
 }
 
-.chrono-notes-periodic-section-heading {
-  border-top: 1px solid var(--background-modifier-border);
-  margin-top: 14px;
-  padding-top: 14px;
-}
-
-.chrono-notes-periodic-section-heading .setting-item-name {
-  font-size: var(--font-ui-medium);
-  font-weight: var(--font-semibold);
+.chrono-notes-settings-guide p + p {
+  margin-top: 6px;
 }
 
 :is(
   .chrono-notes-periodic-path-setting,
-  .chrono-notes-periodic-template-setting
+  .chrono-notes-template-path-setting
 ) {
   align-items: stretch;
   flex-direction: column;
@@ -97,7 +90,7 @@
 
 :is(
   .chrono-notes-periodic-path-setting,
-  .chrono-notes-periodic-template-setting
+  .chrono-notes-template-path-setting
 ) .setting-item-info {
   min-width: 0;
   width: 100%;
@@ -105,7 +98,7 @@
 
 :is(
   .chrono-notes-periodic-path-setting,
-  .chrono-notes-periodic-template-setting
+  .chrono-notes-template-path-setting
 ) .setting-item-control {
   align-items: stretch;
   flex: none;
@@ -117,7 +110,7 @@
 
 :is(
   .chrono-notes-periodic-path-setting,
-  .chrono-notes-periodic-template-setting
+  .chrono-notes-template-path-setting
 ) .setting-item-control input {
   box-sizing: border-box;
   max-width: 100%;
@@ -158,14 +151,16 @@
   color: var(--text-error);
 }
 
-.chrono-notes-periodic-template-example,
-.chrono-notes-periodic-template-syntax {
+.chrono-notes-template-path-example,
+.chrono-notes-range-path-example {
   margin-top: 4px;
   max-width: 100%;
   overflow-wrap: anywhere;
 }
 
-.chrono-notes-periodic-template-syntax code {
+.chrono-notes-template-path-example code,
+.chrono-notes-range-path-example code,
+.chrono-notes-settings-guide code {
   white-space: normal;
 }
 

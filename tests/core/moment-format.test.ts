@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   compileMomentFormat,
+  migrateLuxonDateFormatToMoment,
   quoteMomentLiteral,
 } from "../../src/core/periodic/moment-format";
 
@@ -35,5 +36,25 @@ describe("Moment format compilation", () => {
     expect(quoted).toBe("[People/Bob's/[Archive\\]]");
     expect(compileMomentFormat(`${quoted}/YYYY`, "date"))
       .toBe("'People/Bob''''s/[Archive]''/'yyyy");
+  });
+
+  it("migrates the documented Luxon path grammar without changing valid Moment input", () => {
+    expect(migrateLuxonDateFormatToMoment(
+      "'diary'/yyyy/yyyy-MM/yyyy-MM-dd",
+    )).toBe("[diary]/YYYY/YYYY-MM/YYYY-MM-DD");
+    expect(migrateLuxonDateFormatToMoment(
+      "'diary'/kkkk/kkkk-'W'WW",
+    )).toBe("[diary]/GGGG/GGGG-[W]WW");
+    expect(migrateLuxonDateFormatToMoment(
+      "yyyy-MM-dd ccc cccc 'Q'q",
+    )).toBe("YYYY-MM-DD ddd dddd [Q]Q");
+    expect(migrateLuxonDateFormatToMoment(
+      "[diary]/YYYY/YYYY-MM/YYYY-MM-DD",
+    )).toBe("[diary]/YYYY/YYYY-MM/YYYY-MM-DD");
+  });
+
+  it("rejects malformed or undocumented Luxon formats during migration", () => {
+    expect(migrateLuxonDateFormatToMoment("'unterminated/yyyy")).toBeNull();
+    expect(migrateLuxonDateFormatToMoment("yyyy-MM-dd o")).toBeNull();
   });
 });

@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 
-import { renderBuiltinTemplate } from "../../src/core/template/builtin-template";
+import {
+  renderBuiltinIntervalTemplate,
+  renderBuiltinTemplate,
+} from "../../src/core/template/builtin-template";
 
 describe("renderBuiltinTemplate", () => {
   it("renders target-period dates separately from the current time", () => {
@@ -57,5 +60,51 @@ describe("renderBuiltinTemplate", () => {
         timeZone: "UTC",
       }),
     ).toBe("{{unknown}} 2026-05-18 {{date:yyyy-MM-dd}}");
+  });
+});
+
+describe("renderBuiltinIntervalTemplate", () => {
+  it("renders range boundaries, inclusive day count, title, and creation time", () => {
+    expect(
+      renderBuiltinIntervalTemplate(
+        [
+          "# {{title}}",
+          "{{start}} to {{end:MMM D, YYYY}}",
+          "{{days}} days",
+          "created {{time:HH:mm:ss}}",
+        ].join("\n"),
+        {
+          start: { year: 2026, month: 7, day: 1 },
+          end: { year: 2026, month: 7, day: 7 },
+          dayCount: 7,
+          title: "2026-07-01 - 2026-07-07",
+          now: new Date("2030-08-09T10:11:12Z"),
+          locale: "en-US",
+          timeZone: "UTC",
+        },
+      ),
+    ).toBe([
+      "# 2026-07-01 - 2026-07-07",
+      "2026-07-01 to Jul 7, 2026",
+      "7 days",
+      "created 10:11:12",
+    ].join("\n"));
+  });
+
+  it("does not reinterpret periodic or unsupported interval placeholders", () => {
+    expect(
+      renderBuiltinIntervalTemplate(
+        "{{date}} {{start:yyyy-MM-dd}} {{unknown}}",
+        {
+          start: { year: 2026, month: 7, day: 1 },
+          end: { year: 2026, month: 7, day: 7 },
+          dayCount: 7,
+          title: "Range",
+          now: new Date("2030-08-09T10:11:12Z"),
+          locale: "en-US",
+          timeZone: "UTC",
+        },
+      ),
+    ).toBe("{{date}} {{start:yyyy-MM-dd}} {{unknown}}");
   });
 });

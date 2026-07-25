@@ -93,6 +93,7 @@ function rangeSettings(
   return {
     showInCalendar: true,
     folder: "Ranges",
+    templatePath: "",
     scanScope: "range-folder",
     customFolder: "",
     monthViewLimit: 2,

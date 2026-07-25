@@ -5,7 +5,7 @@ export {
 } from "./obsidian-note-file-ports";
 export {
   ObsidianBuiltinTemplatePort,
-  ObsidianPeriodicNoteTemplatePort,
+  ObsidianNoteTemplatePort,
 } from "./obsidian-note-template-ports";
 export {
   ObsidianPeriodicNoteWorkspacePort,

@@ -89,6 +89,7 @@ function sameSettings(
       right.periodicNotes[noteType],
     )) &&
     sameRangeNotes(left.rangeNotes, right.rangeNotes) &&
+    left.rangeNotes.templatePath === right.rangeNotes.templatePath &&
     sameIcs(left.ics, right.ics);
 }
 

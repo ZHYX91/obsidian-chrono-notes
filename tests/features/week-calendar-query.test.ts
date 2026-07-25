@@ -30,6 +30,7 @@ function snapshot(contents: Record<string, string>): NoteIndexSnapshot {
 const RANGE_SETTINGS: RangeNoteSettings = {
   showInCalendar: true,
   folder: "Ranges",
+  templatePath: "",
   scanScope: "range-folder",
   customFolder: "",
   monthViewLimit: 2,

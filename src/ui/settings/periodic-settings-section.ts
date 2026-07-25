@@ -5,7 +5,6 @@ import {
   type PeriodicNoteType,
 } from "../../core/periodic/periodic-date";
 import { getCurrentLocalDate } from "../../shared/local-date-clock";
-import { isTemplateEngine } from "../../shared/settings";
 import {
   createPeriodicNotePathPreview,
   getPeriodicNotePathExample,
@@ -14,10 +13,8 @@ import {
 import { periodicNoteLabel } from "./settings-presentation";
 import type { SettingsSectionContext } from "./settings-section-context";
 import { preparePathInput } from "./path-input";
-import {
-  MarkdownFileSuggest,
-  PeriodicNoteFolderSuggest,
-} from "./vault-path-suggest";
+import { renderTemplatePathSetting } from "./template-settings";
+import { PeriodicNoteFolderSuggest } from "./vault-path-suggest";
 
 export function renderPeriodicSettingsSection(
   containerEl: HTMLElement,
@@ -45,21 +42,6 @@ export function renderPeriodicSettingsSection(
         await context.persistSettings();
       });
     });
-  new Setting(containerEl)
-    .setName(t("settings.periodic.templateEngine"))
-    .setDesc(t("settings.periodic.templateEngineDesc"))
-    .addDropdown((dropdown) => {
-      dropdown
-        .addOption("builtin", t("settings.periodic.builtinEngine"))
-        .addOption("templater", t("settings.periodic.templaterEngine"))
-        .setValue(context.host.settings.templateEngine)
-        .onChange(async (value) => {
-          if (!isTemplateEngine(value)) return;
-          context.host.settings.templateEngine = value;
-          await context.persistSettings();
-        });
-    });
-
   containerEl.createEl("h3", { text: t("settings.periodic.paths") });
   const pathGuideEl = containerEl.createDiv({ cls: "chrono-notes-settings-guide" });
   pathGuideEl.createEl("p", { text: t("settings.periodic.pathsDesc") });
@@ -76,21 +58,29 @@ function renderPeriodicNoteType(
 ): void {
   const { t } = context.translator;
   const config = context.host.settings.periodicNotes[noteType];
-  const headerSetting = new Setting(containerEl)
-    .setName(periodicNoteLabel(noteType, t));
-  headerSetting.settingEl.addClass("chrono-notes-periodic-section-heading");
-  headerSetting.addToggle((toggle) => {
-    toggle.setValue(config.enabled).onChange(async (value) => {
-      config.enabled = value;
-      await context.persistSettings();
-      context.display();
-    });
+  const headingId = `chrono-notes-${noteType}-settings-heading`;
+  const sectionEl = containerEl.createEl("section", {
+    cls: "chrono-notes-periodic-note-section",
+    attr: { "aria-labelledby": headingId },
   });
+  sectionEl.createEl("h3", {
+    text: periodicNoteLabel(noteType, t),
+    attr: { id: headingId },
+  });
+  new Setting(sectionEl)
+    .setName(t("settings.periodic.enabled"))
+    .addToggle((toggle) => {
+      toggle.setValue(config.enabled).onChange(async (value) => {
+        config.enabled = value;
+        await context.persistSettings();
+        context.display();
+      });
+    });
   if (!config.enabled) return;
 
   const previewDate = getCurrentLocalDate();
   const pathExample = getPeriodicNotePathExample(noteType);
-  const pathSetting = new Setting(containerEl)
+  const pathSetting = new Setting(sectionEl)
     .setName(t("settings.periodic.pathPattern"));
   pathSetting.settingEl.addClass("chrono-notes-periodic-path-setting");
   const pathExampleId = `chrono-notes-${noteType}-path-example`;
@@ -156,42 +146,15 @@ function renderPeriodicNoteType(
     },
   });
   updatePathDescription();
-  const templateSetting = new Setting(containerEl)
-    .setName(t("settings.periodic.templatePath"))
-    .setDesc(t("settings.periodic.templatePathDesc"));
-  templateSetting.settingEl.addClass("chrono-notes-periodic-template-setting");
-  const templateExample = getPeriodicNoteTemplatePathExample(noteType);
-  const templateExampleEl = templateSetting.descEl.createDiv({
-    cls: "chrono-notes-periodic-template-example",
-  });
-  templateExampleEl.append(`${t("settings.periodic.pathExample")}: `);
-  templateExampleEl.createEl("code", { text: templateExample });
-  const templateSyntaxEl = templateSetting.descEl.createDiv({
-    cls: "chrono-notes-periodic-template-syntax",
-  });
-  if (context.host.settings.templateEngine === "builtin") {
-    templateSyntaxEl.append(`${t("settings.periodic.builtinTemplateSyntax")}: `);
-    templateSyntaxEl.createEl("code", {
-      text: "{{date}}, {{date:YYYY-MM-DD ddd}}, {{time}}, "
-        + "{{time:HH:mm:ss}}, {{title}}",
-    });
-  } else {
-    templateSyntaxEl.setText(t("settings.periodic.templaterTemplateSyntax"));
-  }
-  templateSetting.addText((text) => {
-    text
-      .setPlaceholder(templateExample)
-      .setValue(config.templatePath)
-      .onChange((value) => {
-        config.templatePath = value;
-        context.scheduleSettingsSave();
-      });
-    preparePathInput(text.inputEl);
-    context.flushSettingsSaveOnBlur(text.inputEl);
-    new MarkdownFileSuggest(
-      context.app,
-      text.inputEl,
-      context.vaultPathSuggestionCatalog,
-    );
-  });
+
+  renderTemplatePathSetting(
+    sectionEl,
+    t("settings.templates.path"),
+    getPeriodicNoteTemplatePathExample(noteType),
+    config.templatePath,
+    (value) => {
+      config.templatePath = value;
+    },
+    context,
+  );
 }

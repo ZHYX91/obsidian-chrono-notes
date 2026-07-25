@@ -57,7 +57,9 @@ pnpm install
 pnpm check
 ```
 
-开发环境需要 Node.js 22.13 及以上的 22.x 版本，或 Node.js 24 及更高版本，以及 pnpm 11.7.0。架构与测试细节见[开发者文档](https://github.com/ZHYX91/obsidian-chrono-notes/blob/main/docs/architecture.zh-CN.md)。问题与功能建议可提交到 [GitHub Issues](https://github.com/ZHYX91/obsidian-chrono-notes/issues)。
+开发环境需要 Node.js 22.13 及以上的 22.x 版本，或 Node.js 24 及更高版本，以及 pnpm 11.7.0。架构与测试细节见[开发者文档](https://github.com/ZHYX91/obsidian-chrono-notes/blob/main/docs/architecture.zh-CN.md)。
+
+一般问题与使用反馈可在 [GitHub Discussions](https://github.com/ZHYX91/obsidian-chrono-notes/discussions) 中交流；可复现缺陷和明确的功能建议请使用结构化的 [GitHub Issue 表单](https://github.com/ZHYX91/obsidian-chrono-notes/issues/new/choose)。发布前请移除 Vault、笔记、任务、日历和 ICS 中的隐私数据。
 
 ## 致谢
 

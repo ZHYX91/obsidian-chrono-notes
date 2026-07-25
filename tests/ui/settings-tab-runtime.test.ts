@@ -104,6 +104,17 @@ describe("ChronoNotesSettingTab save orchestration", () => {
     expect(mocks.renderIntegrations).not.toHaveBeenCalled();
     expect(tab.containerEl.querySelector('[data-tab-id="appearance"]')
       ?.getAttribute("aria-selected")).toBe("true");
+
+    const integrationsTab = tab.containerEl.querySelector<HTMLButtonElement>(
+      '[role="tab"][data-tab-id="extensions-and-integrations"]',
+    );
+    integrationsTab?.click();
+
+    expect(integrationsTab).not.toBeNull();
+    expect(mocks.renderIntegrations).toHaveBeenCalledOnce();
+    expect(tab.containerEl.querySelector('[data-tab-id="extensions-and-integrations"]')
+      ?.getAttribute("aria-selected")).toBe("true");
+    expect(tab.containerEl.querySelector('[data-tab-id="templates"]')).toBeNull();
   });
 
   it("sets the settings surface direction from the selected locale", () => {

@@ -33,6 +33,7 @@ const DISABLED_ICS: IcsEventIndexSnapshot = Object.freeze({
 const RANGE_NOTES: RangeNoteSettings = Object.freeze({
   showInCalendar: false,
   folder: "",
+  templatePath: "",
   scanScope: "range-folder",
   customFolder: "",
   monthViewLimit: 2,

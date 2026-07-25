@@ -19,6 +19,7 @@ function items() {
   const settings: RangeNoteSettings = {
     showInCalendar: true,
     folder: "Ranges",
+    templatePath: "",
     scanScope: "entire-vault",
     customFolder: "",
     monthViewLimit: 2,

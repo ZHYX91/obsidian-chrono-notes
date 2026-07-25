@@ -1,3 +1,6 @@
+import { isMap, parseDocument } from "yaml";
+
+import { parseNoteDocument } from "../document/parse-note-document";
 import {
   formatLocalDateKey,
   toDateTime,
@@ -56,6 +59,37 @@ export function buildIntervalNoteContent(spec: IntervalNoteSpec): string {
     "---",
     "",
     `# ${spec.title}`,
+    "",
+  ].join("\n");
+}
+
+export function applyIntervalNoteMetadata(
+  content: string,
+  spec: IntervalNoteSpec,
+): string {
+  const parsed = parseNoteDocument(content);
+  if (parsed.frontmatterStatus === "unterminated") {
+    throw new RangeError("Interval note template has unterminated frontmatter");
+  }
+
+  const frontmatter = parseDocument(parsed.frontmatterText ?? "");
+  const yamlError = frontmatter.errors[0];
+  if (yamlError !== undefined) {
+    throw new RangeError(`Interval note template has invalid frontmatter: ${yamlError.message}`);
+  }
+  if (frontmatter.contents !== null && !isMap(frontmatter.contents)) {
+    throw new RangeError("Interval note template frontmatter must be a mapping");
+  }
+
+  frontmatter.set("start", formatLocalDateKey(spec.start));
+  frontmatter.set("end", formatLocalDateKey(spec.end));
+  const yaml = frontmatter.toString({ lineWidth: 0 }).trimEnd();
+  const body = parsed.body.replace(/^\n+/, "").replace(/\n+$/, "");
+  return [
+    "---",
+    yaml,
+    "---",
+    ...(body.length === 0 ? [] : ["", body]),
     "",
   ].join("\n");
 }

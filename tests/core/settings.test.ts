@@ -150,14 +150,14 @@ describe("settings", () => {
     expect(normalizeSettings({ showTaskProgress: null }).showTaskProgress).toBe(true);
   });
 
-  it("defaults Properties date interception off and accepts only booleans", () => {
-    expect(createDefaultSettings().interceptPropertyDateClicks).toBe(false);
+  it("defaults Properties date interception on and accepts only booleans", () => {
+    expect(createDefaultSettings().interceptPropertyDateClicks).toBe(true);
     expect(normalizeSettings({ interceptPropertyDateClicks: true }).interceptPropertyDateClicks)
       .toBe(true);
     expect(normalizeSettings({ interceptPropertyDateClicks: false }).interceptPropertyDateClicks)
       .toBe(false);
     expect(normalizeSettings({ interceptPropertyDateClicks: "true" }).interceptPropertyDateClicks)
-      .toBe(false);
+      .toBe(true);
   });
 
   it("persists the first-use guide marker through schema normalization", () => {
@@ -279,6 +279,7 @@ describe("settings", () => {
     expect(createDefaultSettings().rangeNotes).toEqual({
       showInCalendar: true,
       folder: "Calendar/Range Notes",
+      templatePath: "",
       scanScope: "range-folder",
       customFolder: "",
       monthViewLimit: 2,
@@ -288,6 +289,7 @@ describe("settings", () => {
       rangeNotes: {
         showInCalendar: false,
         folder: "Projects/Ranges",
+        templatePath: "Templates/Range.md",
         scanScope: "entire-vault",
         customFolder: 42,
         monthViewLimit: 3.8,
@@ -297,6 +299,7 @@ describe("settings", () => {
     expect(normalized.rangeNotes).toEqual({
       showInCalendar: false,
       folder: "Projects/Ranges",
+      templatePath: "Templates/Range.md",
       scanScope: "entire-vault",
       customFolder: "",
       monthViewLimit: 3,
@@ -407,17 +410,136 @@ describe("settings", () => {
     expect(migrated).not.toHaveProperty("todoAnnotationMode");
   });
 
-  it("adds disabled Properties date interception at schema 13", () => {
+  it("migrates released schema 15 calendar selections and periodic paths at schema 17", () => {
+    const raw = {
+      schemaVersion: 15,
+      locale: "zh-CN",
+      calendarOverlays: ["ganzhi", "chinese-lunar"],
+      holidayRegions: ["sg", "cn"],
+      todoAnnotationMode: "hole",
+      periodicNotes: {
+        daily: {
+          enabled: true,
+          pattern: "'Daily'/yyyy-MM-dd",
+          templatePath: "Templates/Daily.md",
+        },
+        weekly: {
+          enabled: true,
+          pattern: "'Weekly'/kkkk-'W'WW",
+          templatePath: "Templates/Weekly.md",
+        },
+        monthly: {
+          enabled: true,
+          pattern: "'Monthly'/yyyy-MM",
+          templatePath: "Templates/Monthly.md",
+        },
+        quarterly: {
+          enabled: true,
+          pattern: "'Quarterly'/yyyy-'Q'q",
+          templatePath: "Templates/Quarterly.md",
+        },
+        yearly: {
+          enabled: true,
+          pattern: "'Yearly'/yyyy",
+          templatePath: "Templates/Yearly.md",
+        },
+      },
+      ics: {
+        enabled: true,
+        sources: ["Calendar/team.ics"],
+      },
+    };
+    const before = structuredClone(raw);
+    const migrated = migrateSettings(raw);
+
+    expect(raw).toEqual(before);
+    expect(migrated).toMatchObject({
+      schemaVersion: SETTINGS_SCHEMA_VERSION,
+      calendarExtensions: ["ganzhi", "chinese-lunar"],
+      showTaskProgress: true,
+      periodicNotes: {
+        daily: {
+          enabled: true,
+          pattern: "[Daily]/YYYY-MM-DD",
+          templatePath: "Templates/Daily.md",
+        },
+        weekly: {
+          enabled: true,
+          pattern: "[Weekly]/GGGG-[W]WW",
+          templatePath: "Templates/Weekly.md",
+        },
+        monthly: {
+          enabled: true,
+          pattern: "[Monthly]/YYYY-MM",
+          templatePath: "Templates/Monthly.md",
+        },
+        quarterly: {
+          enabled: true,
+          pattern: "[Quarterly]/YYYY-[Q]Q",
+          templatePath: "Templates/Quarterly.md",
+        },
+        yearly: {
+          enabled: true,
+          pattern: "[Yearly]/YYYY",
+          templatePath: "Templates/Yearly.md",
+        },
+      },
+      holidayRegions: ["sg", "cn"],
+      ics: {
+        enabled: true,
+        sources: ["Calendar/team.ics"],
+      },
+    });
+    expect(migrated).not.toHaveProperty("calendarOverlays");
+    expect(migrated).not.toHaveProperty("todoAnnotationMode");
+    expect(migrateSettings(migrated)).toEqual(migrated);
+  });
+
+  it("preserves current Moment and unrecognized custom patterns during schema 17 migration", () => {
+    const migrated = migrateSettings({
+      schemaVersion: 16,
+      calendarExtensions: ["persian"],
+      calendarOverlays: ["ganzhi"],
+      periodicNotes: {
+        daily: {
+          enabled: true,
+          pattern: "[Journal]/YYYY-MM-DD",
+          templatePath: "",
+        },
+        weekly: {
+          enabled: true,
+          pattern: "yyyy-oo",
+          templatePath: "",
+        },
+      },
+    });
+
+    expect(migrated).toMatchObject({
+      schemaVersion: SETTINGS_SCHEMA_VERSION,
+      calendarExtensions: ["persian"],
+      periodicNotes: {
+        daily: {
+          pattern: "[Journal]/YYYY-MM-DD",
+        },
+        weekly: {
+          pattern: "yyyy-oo",
+        },
+      },
+    });
+    expect(migrated).not.toHaveProperty("calendarOverlays");
+  });
+
+  it("adds enabled Properties date interception at schema 13 without replacing a valid value", () => {
     expect(migrateSettings({ schemaVersion: 12 })).toMatchObject({
       schemaVersion: SETTINGS_SCHEMA_VERSION,
-      interceptPropertyDateClicks: false,
+      interceptPropertyDateClicks: true,
     });
     expect(migrateSettings({
       schemaVersion: 12,
-      interceptPropertyDateClicks: true,
+      interceptPropertyDateClicks: false,
     })).toMatchObject({
       schemaVersion: SETTINGS_SCHEMA_VERSION,
-      interceptPropertyDateClicks: true,
+      interceptPropertyDateClicks: false,
     });
   });
 

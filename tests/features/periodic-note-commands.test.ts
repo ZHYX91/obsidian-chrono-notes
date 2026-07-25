@@ -6,9 +6,9 @@ import {
   PeriodicNoteCreationError,
   type PeriodicNoteCommandSettings,
   type PeriodicNoteFilePort,
-  type PeriodicNoteTemplatePort,
   type PeriodicNoteWorkspacePort,
 } from "../../src/features/periodic/periodic-note-commands";
+import type { NoteTemplatePort } from "../../src/features/templates/note-template-port";
 import type { PeriodicNoteSettings } from "../../src/shared/settings";
 
 function deferred<T>() {
@@ -53,7 +53,7 @@ function createPorts(existing: readonly string[] = []) {
       paths.delete(path);
     }),
   };
-  const templates: PeriodicNoteTemplatePort = {
+  const templates: NoteTemplatePort = {
     populate: vi.fn(async () => undefined),
   };
   const workspace: PeriodicNoteWorkspacePort = {
@@ -206,6 +206,7 @@ describe("PeriodicNoteCommands", () => {
     });
     expect(ports.files.createEmpty).toHaveBeenCalledWith("Quarterly/2026-Q2.md");
     expect(ports.templates.populate).toHaveBeenCalledWith("Quarterly/2026-Q2.md", {
+      kind: "periodic",
       date: { year: 2026, month: 4, day: 1 },
       locale: "en-US",
       noteType: "quarterly",

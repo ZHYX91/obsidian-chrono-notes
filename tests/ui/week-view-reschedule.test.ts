@@ -77,6 +77,7 @@ describe("WeekView task rescheduling", () => {
         rangeNotes: {
           showInCalendar: false,
           folder: "Ranges",
+          templatePath: "",
           scanScope: "range-folder",
           customFolder: "",
           monthViewLimit: 2,
@@ -154,6 +155,7 @@ describe("WeekView task rescheduling", () => {
         rangeNotes: {
           showInCalendar: false,
           folder: "",
+          templatePath: "",
           scanScope: "range-folder",
           customFolder: "",
           monthViewLimit: 2,

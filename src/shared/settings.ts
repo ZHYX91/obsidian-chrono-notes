@@ -3,10 +3,11 @@ import {
   type PeriodicNoteType,
   type WeekStartDay,
 } from "../core/periodic/periodic-date";
+import { migrateLuxonDateFormatToMoment } from "../core/periodic/moment-format";
 import type { StatisticDisplayDimension } from "../core/statistics/heatmap";
 import type { CalendarExtensionId } from "../core/calendar/calendar-extension";
 
-export const SETTINGS_SCHEMA_VERSION = 16;
+export const SETTINGS_SCHEMA_VERSION = 17;
 
 export type PluginLocale =
   | "auto"
@@ -35,6 +36,7 @@ export interface PeriodicNoteSettings {
 export interface RangeNoteSettings {
   showInCalendar: boolean;
   folder: string;
+  templatePath: string;
   scanScope: RangeNoteScanScope;
   customFolder: string;
   monthViewLimit: number;
@@ -85,7 +87,7 @@ export const DEFAULT_SETTINGS: Readonly<ChronoNotesSettings> = {
   fontSizeMode: "immutable",
   immutableFontSizeFactor: 10,
   showTaskProgress: true,
-  interceptPropertyDateClicks: false,
+  interceptPropertyDateClicks: true,
   showHoverPreview: true,
   showNoteNavbar: true,
   relatedIntervalNotesCollapsed: false,
@@ -178,6 +180,15 @@ const SETTINGS_MIGRATIONS: Readonly<Record<number, SettingsMigration>> = {
           : DEFAULT_SETTINGS.showTaskProgress,
     });
     delete migrated.todoAnnotationMode;
+    return migrated;
+  },
+  16: (settings) => {
+    const migrated = addSettingsFields(settings, 17, {});
+    if (!("calendarExtensions" in settings) && Array.isArray(settings.calendarOverlays)) {
+      migrated.calendarExtensions = cloneRawValue(settings.calendarOverlays);
+    }
+    delete migrated.calendarOverlays;
+    migrated.periodicNotes = migratePeriodicNotePatterns(settings.periodicNotes);
     return migrated;
   },
 };
@@ -372,6 +383,7 @@ function createDefaultRangeNotes(): RangeNoteSettings {
   return {
     showInCalendar: true,
     folder: "Calendar/Range Notes",
+    templatePath: "",
     scanScope: "range-folder",
     customFolder: "",
     monthViewLimit: 2,
@@ -389,6 +401,19 @@ function clonePeriodicNotes(
   return Object.fromEntries(
     PERIODIC_NOTE_TYPES.map((noteType) => [noteType, { ...notes[noteType] }]),
   ) as Record<PeriodicNoteType, PeriodicNoteSettings>;
+}
+
+function migratePeriodicNotePatterns(value: unknown): unknown {
+  if (!isRecord(value)) return cloneRawValue(value);
+
+  const migrated = cloneRawSettings(value);
+  for (const noteType of PERIODIC_NOTE_TYPES) {
+    const candidate = migrated[noteType];
+    if (!isRecord(candidate) || typeof candidate.pattern !== "string") continue;
+    const pattern = migrateLuxonDateFormatToMoment(candidate.pattern);
+    if (pattern !== null) candidate.pattern = pattern;
+  }
+  return migrated;
 }
 
 function normalizePeriodicNotes(
@@ -432,6 +457,9 @@ function normalizeRangeNotes(
       ? value.showInCalendar
       : defaults.showInCalendar,
     folder: typeof value.folder === "string" ? value.folder : defaults.folder,
+    templatePath: typeof value.templatePath === "string"
+      ? value.templatePath
+      : defaults.templatePath,
     scanScope: isRangeNoteScanScope(value.scanScope) ? value.scanScope : defaults.scanScope,
     customFolder: typeof value.customFolder === "string"
       ? value.customFolder

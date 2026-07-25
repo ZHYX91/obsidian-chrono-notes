@@ -1789,6 +1789,7 @@ describe("NoteIndex", () => {
     expect(selectIntervalNotes(renamedSnapshot, {
       showInCalendar: true,
       folder: "Ranges",
+      templatePath: "",
       scanScope: "range-folder",
       customFolder: "",
       monthViewLimit: 2,

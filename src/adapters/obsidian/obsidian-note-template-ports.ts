@@ -1,21 +1,24 @@
 import type { App, TFile, Vault } from "obsidian";
 
 import { formatLocalDateKey } from "../../core/periodic/periodic-date";
-import { renderBuiltinTemplate } from "../../core/template/builtin-template";
+import {
+  renderBuiltinIntervalTemplate,
+  renderBuiltinTemplate,
+} from "../../core/template/builtin-template";
 import type {
-  PeriodicNoteTemplateContext,
-  PeriodicNoteTemplatePort,
-} from "../../features/periodic/periodic-note-commands";
+  NoteTemplateContext,
+  NoteTemplatePort,
+} from "../../features/templates/note-template-port";
 import { isMarkdownFile } from "./obsidian-markdown-files";
 
-export class ObsidianBuiltinTemplatePort implements PeriodicNoteTemplatePort {
+export class ObsidianBuiltinTemplatePort implements NoteTemplatePort {
   constructor(
     private readonly vault: Vault,
     private readonly now: () => Date = () => new Date(),
     private readonly timeZone?: string,
   ) {}
 
-  async populate(path: string, context: PeriodicNoteTemplateContext): Promise<void> {
+  async populate(path: string, context: NoteTemplateContext): Promise<void> {
     const configuredPath = context.templatePath.trim();
     if (configuredPath.length === 0) return;
 
@@ -30,18 +33,28 @@ export class ObsidianBuiltinTemplatePort implements PeriodicNoteTemplatePort {
     }
 
     const content = await this.vault.read(template);
-    const rendered = renderBuiltinTemplate(content, {
-      date: context.date,
+    const baseContext = {
       locale: context.locale,
       title: context.title,
       now: this.now(),
       ...(this.timeZone === undefined ? {} : { timeZone: this.timeZone }),
-    });
+    };
+    const rendered = context.kind === "periodic"
+      ? renderBuiltinTemplate(content, {
+          ...baseContext,
+          date: context.date,
+        })
+      : renderBuiltinIntervalTemplate(content, {
+          ...baseContext,
+          start: context.start,
+          end: context.end,
+          dayCount: context.dayCount,
+        });
     await this.vault.modify(target, rendered);
   }
 }
 
-export class ObsidianPeriodicNoteTemplatePort implements PeriodicNoteTemplatePort {
+export class ObsidianNoteTemplatePort implements NoteTemplatePort {
   private readonly builtin: ObsidianBuiltinTemplatePort;
   private readonly templater: ObsidianTemplaterTemplatePort;
 
@@ -55,20 +68,20 @@ export class ObsidianPeriodicNoteTemplatePort implements PeriodicNoteTemplatePor
     this.templater = new ObsidianTemplaterTemplatePort(app, vault);
   }
 
-  populate(path: string, context: PeriodicNoteTemplateContext): Promise<void> {
+  populate(path: string, context: NoteTemplateContext): Promise<void> {
     return context.templateEngine === "templater"
       ? this.templater.populate(path, context)
       : this.builtin.populate(path, context);
   }
 }
 
-class ObsidianTemplaterTemplatePort implements PeriodicNoteTemplatePort {
+class ObsidianTemplaterTemplatePort implements NoteTemplatePort {
   constructor(
     private readonly app: App,
     private readonly vault: Vault,
   ) {}
 
-  async populate(path: string, context: PeriodicNoteTemplateContext): Promise<void> {
+  async populate(path: string, context: NoteTemplateContext): Promise<void> {
     const configuredPath = context.templatePath.trim();
     if (configuredPath.length === 0) return;
 
@@ -134,19 +147,48 @@ function getTemplaterPlugin(app: App): TemplaterPlugin | null {
 
 function buildTemplaterTemplate(
   rawTemplate: string,
-  context: PeriodicNoteTemplateContext,
+  context: NoteTemplateContext,
 ): string {
-  const targetDate = formatLocalDateKey(context.date);
+  const contextLines = context.kind === "periodic"
+    ? buildPeriodicTemplaterContext(context)
+    : buildIntervalTemplaterContext(context);
   return [
     "<%*",
     "const tp_calendar = Object.freeze({",
+    ...contextLines,
+    "});",
+    "_%>",
+    rawTemplate,
+  ].join("\n");
+}
+
+function buildPeriodicTemplaterContext(
+  context: Extract<NoteTemplateContext, { kind: "periodic" }>,
+): readonly string[] {
+  const targetDate = formatLocalDateKey(context.date);
+  return [
+    '  kind: "periodic",',
     `  noteType: ${JSON.stringify(context.noteType)},`,
     `  title: ${JSON.stringify(context.title)},`,
     `  targetDate: ${JSON.stringify(targetDate)},`,
     `  date: (format = "YYYY-MM-DD", offset = 0) => tp.date.now(format, offset, ${JSON.stringify(targetDate)}, "YYYY-MM-DD"),`,
     '  time: (format = "HH:mm") => tp.date.now(format),',
-    "});",
-    "_%>",
-    rawTemplate,
-  ].join("\n");
+  ];
+}
+
+function buildIntervalTemplaterContext(
+  context: Extract<NoteTemplateContext, { kind: "interval" }>,
+): readonly string[] {
+  const startDate = formatLocalDateKey(context.start);
+  const endDate = formatLocalDateKey(context.end);
+  return [
+    '  kind: "interval",',
+    `  title: ${JSON.stringify(context.title)},`,
+    `  startDate: ${JSON.stringify(startDate)},`,
+    `  endDate: ${JSON.stringify(endDate)},`,
+    `  dayCount: ${context.dayCount},`,
+    `  start: (format = "YYYY-MM-DD") => tp.date.now(format, 0, ${JSON.stringify(startDate)}, "YYYY-MM-DD"),`,
+    `  end: (format = "YYYY-MM-DD") => tp.date.now(format, 0, ${JSON.stringify(endDate)}, "YYYY-MM-DD"),`,
+    '  time: (format = "HH:mm") => tp.date.now(format),',
+  ];
 }

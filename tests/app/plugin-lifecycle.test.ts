@@ -281,7 +281,7 @@ vi.mock("../../src/adapters/obsidian/obsidian-periodic-note-ports", () => {
   return {
     ObsidianIntervalNoteFilePort: MockPort,
     ObsidianPeriodicNoteFilePort: MockPort,
-    ObsidianPeriodicNoteTemplatePort: MockPort,
+    ObsidianNoteTemplatePort: MockPort,
     ObsidianPeriodicNoteWorkspacePort: MockPort,
     ObsidianTaskFilePort: MockPort,
     ObsidianTaskWorkspacePort: MockPort,

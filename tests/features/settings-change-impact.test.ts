@@ -17,18 +17,39 @@ describe("getSettingsChangeImpact", () => {
 
   it("keeps persistence-only settings away from query consumers", () => {
     const previous = createDefaultSettings();
-    const next = createDefaultSettings();
-    next.firstUseGuideSeen = true;
-    next.confirmPeriodicNoteCreation = false;
-    next.templateEngine = "templater";
+    const candidates = [
+      (() => {
+        const next = createDefaultSettings();
+        next.firstUseGuideSeen = true;
+        next.confirmPeriodicNoteCreation = false;
+        return next;
+      })(),
+      (() => {
+        const next = createDefaultSettings();
+        next.templateEngine = "templater";
+        return next;
+      })(),
+      (() => {
+        const next = createDefaultSettings();
+        next.periodicNotes.daily.templatePath = "Templates/Daily.md";
+        return next;
+      })(),
+      (() => {
+        const next = createDefaultSettings();
+        next.rangeNotes.templatePath = "Templates/Range.md";
+        return next;
+      })(),
+    ];
 
-    expect(getSettingsChangeImpact(previous, next)).toEqual({
-      changed: true,
-      calendar: false,
-      navbar: false,
-      intervalList: false,
-      ics: false,
-    });
+    for (const next of candidates) {
+      expect(getSettingsChangeImpact(previous, next)).toEqual({
+        changed: true,
+        calendar: false,
+        navbar: false,
+        intervalList: false,
+        ics: false,
+      });
+    }
   });
 
   it("routes calendar appearance and periodic path changes precisely", () => {

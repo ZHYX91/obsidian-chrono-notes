@@ -9,12 +9,20 @@ const appearanceSectionSource = readFileSync(
   new URL("../../src/ui/settings/appearance-settings-section.ts", import.meta.url),
   "utf8",
 );
+const generalSectionSource = readFileSync(
+  new URL("../../src/ui/settings/general-settings-section.ts", import.meta.url),
+  "utf8",
+);
 const periodicSectionSource = readFileSync(
   new URL("../../src/ui/settings/periodic-settings-section.ts", import.meta.url),
   "utf8",
 );
 const rangeSectionSource = readFileSync(
   new URL("../../src/ui/settings/range-settings-section.ts", import.meta.url),
+  "utf8",
+);
+const templateSectionSource = readFileSync(
+  new URL("../../src/ui/settings/template-settings.ts", import.meta.url),
   "utf8",
 );
 const extensionsAndIntegrationsSectionSource = readFileSync(
@@ -45,18 +53,21 @@ describe("periodic note settings structure", () => {
 
   it("uses native keyboard suggestions for folders and Markdown templates", () => {
     expect(periodicSectionSource).toContain("new PeriodicNoteFolderSuggest");
-    expect(periodicSectionSource).toContain("new MarkdownFileSuggest");
+    expect(templateSectionSource).toContain("new MarkdownFileSuggest");
     expect(rangeSectionSource.match(/new VaultFolderSuggest/g)).toHaveLength(2);
     expect(suggestSource).toContain("extends AbstractInputSuggest<TFolder>");
     expect(suggestSource).toContain("extends AbstractInputSuggest<TFile>");
     expect(suggestSource).toContain("getMarkdownFiles()");
   });
 
-  it("combines each periodic heading with its enable toggle", () => {
-    expect(periodicSectionSource).toContain("chrono-notes-periodic-section-heading");
-    expect(periodicSectionSource).toContain(".setName(periodicNoteLabel(noteType, t))");
-    expect(periodicSectionSource).not.toContain('containerEl.createEl("h4"');
-    expect(periodicSectionSource).not.toContain('.setName(t("settings.periodic.enabled"))');
+  it("groups each periodic type under its own level-three heading", () => {
+    expect(periodicSectionSource).toContain('containerEl.createEl("section"');
+    expect(periodicSectionSource).toContain('"chrono-notes-periodic-note-section"');
+    expect(periodicSectionSource).toContain('attr: { "aria-labelledby": headingId }');
+    expect(periodicSectionSource).toContain('sectionEl.createEl("h3"');
+    expect(periodicSectionSource).toContain("text: periodicNoteLabel(noteType, t)");
+    expect(periodicSectionSource).toContain('.setName(t("settings.periodic.enabled"))');
+    expect(periodicSectionSource).not.toContain('createEl("h4"');
   });
 
   it("keeps path examples visible and exposes live validation accessibly", () => {
@@ -68,7 +79,8 @@ describe("periodic note settings structure", () => {
     expect(periodicSectionSource).toContain("`${pathExampleId} ${pathFeedbackId}`");
     expect(periodicSectionSource).toContain('setAttribute("aria-invalid", String(hasError))');
     expect(periodicSectionSource).toContain('setAttribute("aria-required", "true")');
-    expect(periodicSectionSource.match(/preparePathInput\(text\.inputEl\)/g)).toHaveLength(2);
+    expect(periodicSectionSource.match(/preparePathInput\(text\.inputEl\)/g)).toHaveLength(1);
+    expect(templateSectionSource.match(/preparePathInput\(text\.inputEl\)/g)).toHaveLength(1);
     expect(rangeSectionSource.match(/preparePathInput\(text\.inputEl\)/g)).toHaveLength(2);
     expect(
       extensionsAndIntegrationsSectionSource.match(/preparePathInput\(text\.inputEl\)/g),
@@ -78,25 +90,29 @@ describe("periodic note settings structure", () => {
     expect(pathInputSource).toContain("inputEl.spellcheck = false");
   });
 
-  it("uses note-type-specific template placeholders", () => {
+  it("keeps template paths with their note types and global syntax under General", () => {
+    expect(generalSectionSource).toContain("renderTemplateEngineSettings(containerEl, context)");
     expect(periodicSectionSource).toContain("getPeriodicNoteTemplatePathExample(noteType)");
-    expect(periodicSectionSource).toContain("chrono-notes-periodic-template-setting");
-    expect(periodicSectionSource).toContain("chrono-notes-periodic-template-example");
-    expect(periodicSectionSource).toContain("chrono-notes-periodic-template-syntax");
-    expect(periodicSectionSource).toContain(
-      "{{date}}, {{date:YYYY-MM-DD ddd}}, {{time}}",
-    );
-    expect(periodicSectionSource).toContain(
-      't("settings.periodic.templaterTemplateSyntax")',
-    );
-    expect(periodicSectionSource).not.toContain('.setPlaceholder("Templates/Daily.md")');
+    expect(periodicSectionSource).toContain("config.templatePath");
+    expect(rangeSectionSource).toContain("settings.templatePath");
+    expect(templateSectionSource).toContain("{{date:FORMAT}}");
+    expect(templateSectionSource).toContain("{{start:FORMAT}}");
+    expect(templateSectionSource).toContain("GGGG, GG, W, WW, Q, H, HH");
+    expect(templateSectionSource).toContain("tp_calendar.targetDate");
+    expect(templateSectionSource).toContain("tp_calendar.date()");
+    expect(templateSectionSource).toContain("tp_calendar.startDate");
+    expect(templateSectionSource).toContain("tp_calendar.endDate");
+    expect(templateSectionSource).not.toContain("PERIODIC_NOTE_TYPES");
+    expect(settingsTabSource).not.toContain('case "templates"');
   });
 
   it("debounces text persistence while serializing at the shared persistence boundary", () => {
     const textSettingsSource = [
       appearanceSectionSource,
+      generalSectionSource,
       periodicSectionSource,
       rangeSectionSource,
+      templateSectionSource,
       extensionsAndIntegrationsSectionSource,
     ].join("\n");
     expect(settingsTabSource).toContain("TEXT_SAVE_DELAY_MS = 300");
@@ -123,6 +139,7 @@ describe("periodic note settings structure", () => {
     expect(settingsTabSource).toContain("renderPeriodicSettingsSection(panelEl, sectionContext)");
     expect(settingsTabSource).toContain("renderRangeSettingsSection(panelEl, sectionContext)");
     expect(settingsTabSource).toContain("renderExtensionsAndIntegrationsSettingsSection(panelEl, sectionContext)");
+    expect(settingsTabSource).not.toContain("renderTemplateSettingsSection");
     expect(settingsTabSource).not.toContain("new Setting(");
   });
 

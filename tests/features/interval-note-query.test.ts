@@ -25,6 +25,7 @@ function range(start: string, end: string): string {
 const SETTINGS: RangeNoteSettings = {
   showInCalendar: true,
   folder: "Ranges",
+  templatePath: "",
   scanScope: "range-folder",
   customFolder: "Projects",
   monthViewLimit: 2,

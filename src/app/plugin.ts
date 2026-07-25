@@ -9,7 +9,7 @@ import { showObsidianDateContextMenu } from "../adapters/obsidian/obsidian-date-
 import {
   ObsidianIntervalNoteFilePort,
   ObsidianPeriodicNoteFilePort,
-  ObsidianPeriodicNoteTemplatePort,
+  ObsidianNoteTemplatePort,
   ObsidianPeriodicNoteWorkspacePort,
   ObsidianTaskFilePort,
   ObsidianTaskWorkspacePort,
@@ -105,9 +105,10 @@ export default class ChronoNotesPlugin extends Plugin {
         this.app.vault,
         this.app.workspace,
       );
+      const noteTemplates = new ObsidianNoteTemplatePort(this.app, this.app.vault);
       this.periodicNoteCommands = new PeriodicNoteCommands(
         new ObsidianPeriodicNoteFilePort(this.app.vault, this.app.fileManager),
-        new ObsidianPeriodicNoteTemplatePort(this.app, this.app.vault),
+        noteTemplates,
         this.noteWorkspace,
       );
       const propertiesDateInterceptor = new ObsidianPropertiesDateInterceptor({
@@ -125,7 +126,8 @@ export default class ChronoNotesPlugin extends Plugin {
         { capture: true },
       );
       this.intervalNoteCommands = new IntervalNoteCommands(
-        new ObsidianIntervalNoteFilePort(this.app.vault),
+        new ObsidianIntervalNoteFilePort(this.app.vault, this.app.fileManager),
+        noteTemplates,
         this.noteWorkspace,
       );
       this.taskCommands = new TaskCommands(
@@ -408,26 +410,33 @@ export default class ChronoNotesPlugin extends Plugin {
   private async openIntervalNote(start: LocalDate, end: LocalDate): Promise<void> {
     if (this.intervalNoteCommands === null) return;
     try {
-      const result = await this.intervalNoteCommands.openOrCreate({
-        start,
-        end,
-        folder: this.settings.rangeNotes.folder,
-        ...(this.settings.confirmIntervalNoteCreation
-          ? {
-              confirmCreate: (spec) => resolveNoteCreationConfirmation(
-                () => new ConfirmIntervalNoteModal(
-                  this.app,
-                  spec,
-                  this.getTranslator(),
-                ).confirm(),
-                async () => {
-                  this.settings.confirmIntervalNoteCreation = false;
-                  await this.saveSettings();
-                },
-              ),
-            }
-          : {}),
-      });
+      const result = await this.intervalNoteCommands.openOrCreate(
+        {
+          start,
+          end,
+          folder: this.settings.rangeNotes.folder,
+          ...(this.settings.confirmIntervalNoteCreation
+            ? {
+                confirmCreate: (spec) => resolveNoteCreationConfirmation(
+                  () => new ConfirmIntervalNoteModal(
+                    this.app,
+                    spec,
+                    this.getTranslator(),
+                  ).confirm(),
+                  async () => {
+                    this.settings.confirmIntervalNoteCreation = false;
+                    await this.saveSettings();
+                  },
+                ),
+              }
+            : {}),
+        },
+        {
+          locale: this.getTranslator().locale,
+          templateEngine: this.settings.templateEngine,
+          templatePath: this.settings.rangeNotes.templatePath,
+        },
+      );
       if (result.status === "not-configured") {
         new Notice(getRangeNotConfiguredNotice(this.getTranslator().t));
       } else if (result.status === "invalid-range") {

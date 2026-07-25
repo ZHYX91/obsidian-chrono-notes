@@ -57,7 +57,9 @@ pnpm install
 pnpm check
 ```
 
-Development requires Node.js 22.13 or later in the 22.x line, or Node.js 24 and later, plus pnpm 11.7.0. See the [developer documentation](https://github.com/ZHYX91/obsidian-chrono-notes/blob/main/docs/architecture.md) for architecture and testing details. Bugs and feature requests are welcome in [GitHub Issues](https://github.com/ZHYX91/obsidian-chrono-notes/issues).
+Development requires Node.js 22.13 or later in the 22.x line, or Node.js 24 and later, plus pnpm 11.7.0. See the [developer documentation](https://github.com/ZHYX91/obsidian-chrono-notes/blob/main/docs/architecture.md) for architecture and testing details.
+
+Questions and general feedback are welcome in [GitHub Discussions](https://github.com/ZHYX91/obsidian-chrono-notes/discussions). Please use the structured [GitHub issue forms](https://github.com/ZHYX91/obsidian-chrono-notes/issues/new/choose) for reproducible bugs and concrete feature requests. Remove private Vault, note, task, calendar, and ICS data before posting.
 
 ## Acknowledgements
 
