@@ -17,7 +17,10 @@ export function getSettingsTabLabels(t: Translator["t"]): readonly SettingsTabLa
     Object.freeze({ id: "appearance", label: t("settings.tab.appearance") }),
     Object.freeze({ id: "periodic", label: t("settings.tab.periodic") }),
     Object.freeze({ id: "ranges", label: t("settings.tab.ranges") }),
-    Object.freeze({ id: "integrations", label: t("settings.tab.integrations") }),
+    Object.freeze({
+      id: "extensions-and-integrations",
+      label: t("settings.tab.extensionsAndIntegrations"),
+    }),
   ]);
 }
 

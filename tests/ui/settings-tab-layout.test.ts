@@ -13,7 +13,7 @@ const tabs: readonly SettingsTabDefinition[] = [
   { id: "appearance", label: "Appearance" },
   { id: "periodic", label: "Periodic notes" },
   { id: "ranges", label: "Range notes" },
-  { id: "integrations", label: "Extensions & integrations" },
+  { id: "extensions-and-integrations", label: "Extensions & integrations" },
 ];
 
 describe("createSettingsTabLayout", () => {
@@ -52,9 +52,9 @@ describe("createSettingsTabLayout", () => {
 
   it.each([
     ["ArrowRight", "general", "appearance"],
-    ["ArrowLeft", "general", "integrations"],
+    ["ArrowLeft", "general", "extensions-and-integrations"],
     ["Home", "ranges", "general"],
-    ["End", "appearance", "integrations"],
+    ["End", "appearance", "extensions-and-integrations"],
   ] as Array<[string, SettingsTabId, SettingsTabId]>)(
     "maps %s from %s to %s",
     (key, initialTab, expectedTab) => {

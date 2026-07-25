@@ -183,7 +183,7 @@ export const FA_MESSAGES = Object.freeze({
   "settings.tab.appearance": "ظاهر و نماها",
   "settings.tab.periodic": "یادداشت های دوره ای",
   "settings.tab.ranges": "یادداشت های محدوده",
-  "settings.tab.integrations": "افزونه‌ها و یکپارچه‌سازی‌ها",
+  "settings.tab.extensionsAndIntegrations": "افزونه‌ها و یکپارچه‌سازی‌ها",
   "settings.tabsLabel": "دسته بندی تنظیمات Chrono Notes",
   "settings.general.title": "ژنرال",
   "settings.general.language": "زبان",

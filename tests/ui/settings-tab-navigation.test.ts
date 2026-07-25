@@ -9,13 +9,13 @@ import {
 describe("moveSettingsTab", () => {
   it("moves and wraps with horizontal arrow keys", () => {
     expect(moveSettingsTab("general", "ArrowRight")).toBe("appearance");
-    expect(moveSettingsTab("integrations", "ArrowRight")).toBe("general");
-    expect(moveSettingsTab("general", "ArrowLeft")).toBe("integrations");
+    expect(moveSettingsTab("extensions-and-integrations", "ArrowRight")).toBe("general");
+    expect(moveSettingsTab("general", "ArrowLeft")).toBe("extensions-and-integrations");
   });
 
   it("jumps to the first or last tab", () => {
     expect(moveSettingsTab("periodic", "Home")).toBe("general");
-    expect(moveSettingsTab("periodic", "End")).toBe("integrations");
+    expect(moveSettingsTab("periodic", "End")).toBe("extensions-and-integrations");
   });
 
   it("preserves the current tab for unrelated keys", () => {
@@ -25,7 +25,7 @@ describe("moveSettingsTab", () => {
       "appearance",
       "periodic",
       "ranges",
-      "integrations",
+      "extensions-and-integrations",
     ]);
   });
 });

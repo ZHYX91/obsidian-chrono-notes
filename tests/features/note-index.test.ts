@@ -1004,6 +1004,9 @@ describe("NoteIndex", () => {
         note: { preview: "updated" },
       });
     });
+    await vi.waitFor(() => {
+      expect(index.getSnapshot().readiness).toBe("ready");
+    });
     expect(failingListener).toHaveBeenCalledTimes(3);
     expect(remainingListener).toHaveBeenCalledTimes(3);
     expect(reportError).toHaveBeenCalledWith(

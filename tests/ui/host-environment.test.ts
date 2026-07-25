@@ -3,16 +3,21 @@
 import { Window } from "happy-dom";
 import { act, createElement } from "react";
 import { createRoot } from "react-dom/client";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { CalendarPreviewTooltip } from "../../src/ui/calendar/calendar-preview-tooltip";
 import { HostEnvironmentProvider } from "../../src/ui/host-environment";
 import { createTranslator } from "../../src/shared/i18n";
 
 describe("HostEnvironmentProvider", () => {
+  beforeEach(() => {
+    vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
+  });
+
   afterEach(() => {
     document.body.replaceChildren();
     vi.restoreAllMocks();
+    vi.unstubAllGlobals();
   });
 
   it("keeps calendar portals and listeners inside the owner document", async () => {
@@ -106,19 +111,29 @@ describe("HostEnvironmentProvider", () => {
       );
     });
 
-    expect(secondaryDocument.querySelector("#owner-preview")).not.toBeNull();
-    expect(secondaryDocument.querySelector("#owner-preview")?.textContent)
+    const renderedPreview = secondaryDocument.querySelector("#owner-preview");
+    expect(renderedPreview).not.toBeNull();
+    expect(renderedPreview?.textContent)
       .toContain("Lunar month 5, day 23");
-    expect(secondaryDocument.querySelector("#owner-preview")?.textContent)
+    expect(renderedPreview?.textContent)
       .toContain("Year BingWu, month YiWei, day RenWu");
-    expect(secondaryDocument.querySelector("#owner-preview")?.textContent)
+    expect(renderedPreview?.textContent)
       .toContain(
         "Minor Heat; sources: Chinese lunar calendar, Ganzhi calendar (transition 09:56)",
       );
-    expect(secondaryDocument.querySelector("#owner-preview")?.textContent)
+    expect(renderedPreview?.textContent)
       .toContain("Team sync");
-    expect(secondaryDocument.querySelector("#owner-preview")?.textContent)
+    expect(renderedPreview?.textContent)
       .toContain("Images 2 · PDFs 1 · Embedded notes 1");
+    expect(renderedPreview?.querySelector(
+      ":scope > .chrono-notes-calendar-preview-main",
+    )).not.toBeNull();
+    expect(renderedPreview?.querySelector(
+      ".chrono-notes-calendar-preview-main > .chrono-notes-calendar-preview-details",
+    )).not.toBeNull();
+    expect(renderedPreview?.lastElementChild?.classList.contains(
+      "chrono-notes-calendar-preview-embeds",
+    )).toBe(true);
     expect(document.querySelector("#owner-preview")).toBeNull();
     expect(ownerAddEventListener).toHaveBeenCalledWith(
       "resize",

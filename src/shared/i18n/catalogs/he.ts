@@ -191,7 +191,7 @@ export const HE_MESSAGES = Object.freeze({
   "settings.tab.appearance": "מראה וצפיות",
   "settings.tab.periodic": "הערות תקופתיות",
   "settings.tab.ranges": "הערות טווח",
-  "settings.tab.integrations": "הרחבות ואינטגרציות",
+  "settings.tab.extensionsAndIntegrations": "הרחבות ואינטגרציות",
   "settings.tabsLabel": "Chrono Notes קטגוריות הגדרות",
   "settings.general.title": "כללי",
   "settings.general.language": "שפה",

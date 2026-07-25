@@ -174,7 +174,7 @@ export const ZH_CN_MESSAGES = {
   "settings.tab.appearance": "外观与视图",
   "settings.tab.periodic": "周期笔记",
   "settings.tab.ranges": "区间笔记",
-  "settings.tab.integrations": "扩展与集成",
+  "settings.tab.extensionsAndIntegrations": "扩展与集成",
   "settings.tabsLabel": "Chrono Notes 设置分类",
   "settings.general.title": "常规",
   "settings.general.language": "语言",

@@ -151,14 +151,21 @@ export function WeekView({
     weekStartDay,
   );
   const weeklyPreviewKey = weeklyPreview.previewTitle;
+  const overviewLabelId = `${previewId}-week-overview-label`;
 
   return (
     <div className="chrono-notes-week-view">
       <div className="chrono-notes-week-calendar">
+        <span
+          id={overviewLabelId}
+          className="chrono-notes-visually-hidden"
+        >
+          {messages.overview}
+        </span>
         <div
           className="chrono-notes-week-overview"
           role="group"
-          aria-label={messages.overview}
+          aria-labelledby={overviewLabelId}
         >
           {query.days.map((day) => {
             const dayKey = formatLocalDateKey(day.date);

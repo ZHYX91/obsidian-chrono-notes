@@ -143,6 +143,7 @@ describe("week calendar layout", () => {
     const calendar = document.querySelector(".chrono-notes-week-calendar");
 
     expect(Array.from(calendar!.children, (child) => child.className)).toEqual([
+      "chrono-notes-visually-hidden",
       "chrono-notes-week-overview",
       "chrono-notes-week-ranges",
     ]);
@@ -251,7 +252,11 @@ describe("week calendar layout", () => {
     const buttons = overview?.querySelectorAll(".chrono-notes-week-day");
 
     expect(overview?.getAttribute("role")).toBe("group");
-    expect(overview?.getAttribute("aria-label")).toBeTruthy();
+    expect(overview?.getAttribute("aria-label")).toBeNull();
+    const overviewLabelId = overview?.getAttribute("aria-labelledby");
+    expect(overviewLabelId).toBeTruthy();
+    expect(document.getElementById(overviewLabelId ?? "")?.textContent)
+      .toBe("Week note overview");
     expect(overview?.querySelector('[role="gridcell"]')).toBeNull();
     expect(buttons).toHaveLength(7);
     expect(Array.from(buttons ?? [], (button) => button.getAttribute("aria-pressed")))

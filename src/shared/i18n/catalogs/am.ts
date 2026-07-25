@@ -183,7 +183,7 @@ export const AM_MESSAGES = Object.freeze({
   "settings.tab.appearance": "መልክ እና እይታዎች",
   "settings.tab.periodic": "ወቅታዊ ማስታወሻዎች",
   "settings.tab.ranges": "ክልል ማስታወሻዎች",
-  "settings.tab.integrations": "ቅጥያዎች እና ውህደቶች",
+  "settings.tab.extensionsAndIntegrations": "ቅጥያዎች እና ውህደቶች",
   "settings.tabsLabel": "Chrono Notes ቅንብሮች ምድቦች",
   "settings.general.title": "አጠቃላይ",
   "settings.general.language": "ቋንቋ",

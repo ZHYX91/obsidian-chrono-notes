@@ -50,10 +50,16 @@ describe("calendar host tooltip contract", () => {
       /\.chrono-notes-calendar-preview\s*\{[^}]*box-sizing:\s*border-box;[^}]*display:\s*flex;[^}]*flex-direction:\s*column;[^}]*overflow:\s*hidden;[^}]*pointer-events:\s*none;/s,
     );
     expect(yearAndWeekStyles).toMatch(
-      /\.chrono-notes-calendar-preview\s*>\s*:not\(\.chrono-notes-calendar-preview-body\)\s*\{[^}]*flex:\s*0 0 auto;/s,
+      /\.chrono-notes-calendar-preview-date,\s*\.chrono-notes-calendar-preview-embeds\s*\{[^}]*flex:\s*0 0 auto;/s,
     );
     expect(yearAndWeekStyles).toMatch(
-      /\.chrono-notes-calendar-preview-body\s*\{[^}]*flex:\s*0 1 auto;[^}]*-webkit-line-clamp:\s*6;[^}]*min-height:\s*0;[^}]*overflow:\s*hidden;/s,
+      /\.chrono-notes-calendar-preview-main\s*\{[^}]*display:\s*flex;[^}]*flex:\s*1 1 auto;[^}]*min-height:\s*0;[^}]*overflow:\s*hidden;/s,
+    );
+    expect(yearAndWeekStyles).toMatch(
+      /\.chrono-notes-calendar-preview-details\s*\{[^}]*flex:\s*0 1 auto;[^}]*min-height:\s*0;[^}]*overflow:\s*hidden;/s,
+    );
+    expect(yearAndWeekStyles).toMatch(
+      /\.chrono-notes-calendar-preview-body\s*\{[^}]*flex:\s*1 100 auto;[^}]*-webkit-line-clamp:\s*6;[^}]*min-height:\s*0;[^}]*overflow:\s*hidden;/s,
     );
     expect(yearAndWeekStyles).toMatch(
       /\.chrono-notes-calendar-preview-embeds\s*\{[^}]*color:\s*var\(--text-muted\);[^}]*font-size:\s*var\(--font-ui-smaller\);/s,

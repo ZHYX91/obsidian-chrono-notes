@@ -215,7 +215,7 @@ export const AR_MESSAGES = Object.freeze({
   "settings.tab.appearance": "المظهر وطرق العرض",
   "settings.tab.periodic": "ملاحظات دورية",
   "settings.tab.ranges": "ملاحظات النطاق",
-  "settings.tab.integrations": "الملحقات وعمليات التكامل",
+  "settings.tab.extensionsAndIntegrations": "الملحقات وعمليات التكامل",
   "settings.tabsLabel": "فئات إعدادات Chrono Notes",
   "settings.general.title": "عام",
   "settings.general.language": "اللغة",

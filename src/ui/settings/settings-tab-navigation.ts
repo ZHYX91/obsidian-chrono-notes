@@ -3,7 +3,7 @@ export const SETTINGS_TAB_IDS = [
   "appearance",
   "periodic",
   "ranges",
-  "integrations",
+  "extensions-and-integrations",
 ] as const;
 
 export type SettingsTabId = (typeof SETTINGS_TAB_IDS)[number];

@@ -650,15 +650,21 @@ function HeatmapQuarter(props: LazyQuarterProps) {
               onDismissPreview={onDismissPreview}
               longPress={longPress}
             />
+            <span
+              id={`${previewId}-year-heatmap-${month.month}-label`}
+              className="chrono-notes-visually-hidden"
+            >
+              {formatYearHeatmapGridLabel(
+                monthLabels[month.month - 1] ?? "",
+                translator.t,
+              )}
+            </span>
             <div
               className="chrono-notes-year-heatmap-grid"
               role="grid"
               aria-rowcount={7}
               aria-colcount={Math.ceil(month.heatmapCells.length / 7)}
-              aria-label={formatYearHeatmapGridLabel(
-                monthLabels[month.month - 1] ?? "",
-                translator.t,
-              )}
+              aria-labelledby={`${previewId}-year-heatmap-${month.month}-label`}
             >
               {Array.from({ length: 7 }, (_, rowIndex) => (
                 <div

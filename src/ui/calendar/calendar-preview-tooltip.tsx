@@ -108,19 +108,23 @@ export function CalendarPreviewTooltip({
       <div className="chrono-notes-calendar-preview-date">
         {preview.cell.previewTitle ?? preview.key}
       </div>
-      {preview.cell.previewSubtitle === null ||
-          preview.cell.previewSubtitle === undefined
-        ? null
-        : (
-          <div className="chrono-notes-calendar-preview-meta">
-            {preview.cell.previewSubtitle}
-          </div>
-        )}
-      <CalendarExtensionContent cell={preview.cell} t={translator.t} />
-      <HeatmapContent cell={preview.cell} t={translator.t} />
-      <RegionalCalendarContent cell={preview.cell} t={translator.t} />
-      <IcsCalendarContent cell={preview.cell} t={translator.t} />
-      <PreviewContent cell={preview.cell} t={translator.t} />
+      <div className="chrono-notes-calendar-preview-main">
+        <div className="chrono-notes-calendar-preview-details">
+          {preview.cell.previewSubtitle === null ||
+              preview.cell.previewSubtitle === undefined
+            ? null
+            : (
+              <div className="chrono-notes-calendar-preview-meta">
+                {preview.cell.previewSubtitle}
+              </div>
+            )}
+          <CalendarExtensionContent cell={preview.cell} t={translator.t} />
+          <HeatmapContent cell={preview.cell} t={translator.t} />
+          <RegionalCalendarContent cell={preview.cell} t={translator.t} />
+          <IcsCalendarContent cell={preview.cell} t={translator.t} />
+        </div>
+        <PreviewContent cell={preview.cell} t={translator.t} />
+      </div>
       <EmbedStatisticsContent cell={preview.cell} t={translator.t} />
     </div>,
     host.document.body,

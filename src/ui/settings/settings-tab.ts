@@ -85,7 +85,7 @@ export class ChronoNotesSettingTab extends PluginSettingTab {
       case "ranges":
         renderRangeSettingsSection(panelEl, sectionContext);
         break;
-      case "integrations":
+      case "extensions-and-integrations":
         renderExtensionsAndIntegrationsSettingsSection(panelEl, sectionContext);
         break;
       case "general":

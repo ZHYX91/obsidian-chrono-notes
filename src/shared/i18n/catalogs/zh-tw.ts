@@ -175,7 +175,7 @@ export const ZH_TW_MESSAGES = {
   "settings.tab.appearance": "外觀與檢視",
   "settings.tab.periodic": "週期筆記",
   "settings.tab.ranges": "區間筆記",
-  "settings.tab.integrations": "擴充與整合",
+  "settings.tab.extensionsAndIntegrations": "擴充與整合",
   "settings.tabsLabel": "Chrono Notes 設定分類",
   "settings.general.title": "一般",
   "settings.general.language": "語言",

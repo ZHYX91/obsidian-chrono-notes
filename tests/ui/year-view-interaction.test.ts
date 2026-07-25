@@ -86,12 +86,18 @@ describe("YearView interactions", () => {
     await renderYear(getQuery(2026));
     const day = getDay("2026-01-01");
     const accessibleLabelId = day.getAttribute("aria-labelledby");
+    const grid = day.closest(".chrono-notes-year-heatmap-grid");
+    const gridLabelId = grid?.getAttribute("aria-labelledby");
 
     expect(day.getAttribute("aria-label")).toBeNull();
     expect(accessibleLabelId).toBeTruthy();
     expect(document.getElementById(accessibleLabelId ?? "")?.textContent)
       .toContain("2026-01-01");
     expect(day.getAttribute("title")).toBeNull();
+    expect(grid?.getAttribute("aria-label")).toBeNull();
+    expect(gridLabelId).toBeTruthy();
+    expect(document.getElementById(gridLabelId ?? "")?.textContent)
+      .toContain("Jan heatmap");
 
     await renderYear(getQuery(2026), { showHoverPreview: false });
     expect(getDay("2026-01-01").getAttribute("aria-label")).toBeNull();

@@ -176,7 +176,7 @@ export const EN_MESSAGES = {
   "settings.tab.appearance": "Appearance & views",
   "settings.tab.periodic": "Periodic notes",
   "settings.tab.ranges": "Range notes",
-  "settings.tab.integrations": "Extensions & integrations",
+  "settings.tab.extensionsAndIntegrations": "Extensions & integrations",
   "settings.tabsLabel": "Chrono Notes settings categories",
   "settings.general.title": "General",
   "settings.general.language": "Language",

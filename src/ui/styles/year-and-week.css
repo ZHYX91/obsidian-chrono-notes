@@ -554,8 +554,23 @@
   z-index: var(--layer-popover, 1000);
 }
 
-.chrono-notes-calendar-preview > :not(.chrono-notes-calendar-preview-body) {
+.chrono-notes-calendar-preview-date,
+.chrono-notes-calendar-preview-embeds {
   flex: 0 0 auto;
+}
+
+.chrono-notes-calendar-preview-main {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.chrono-notes-calendar-preview-details {
+  flex: 0 1 auto;
+  min-height: 0;
+  overflow: hidden;
 }
 
 .chrono-notes-calendar-preview-date {
@@ -576,7 +591,7 @@
 
 .chrono-notes-calendar-preview-body {
   display: -webkit-box;
-  flex: 0 1 auto;
+  flex: 1 100 auto;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 6;
   line-clamp: 6;

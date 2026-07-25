@@ -30,7 +30,7 @@ Chrono Notes is an Obsidian calendar workspace for periodic notes, optional cale
 - Local, read-only ICS calendar sources.
 - English, Simplified Chinese, Traditional Chinese, Arabic, Persian, Hebrew, Amharic, and Hindi UI, including right-to-left layout where applicable.
 
-Calendar information and plugin settings stay inside the Vault. Chrono Notes does not require an account or send calendar and note data to a remote service.
+Source notes, calendar files, and plugin settings stay inside the Vault. Chrono Notes keeps only a derived NoteIndex cache in device-local IndexedDB; that cache is not written into the Vault or sent to a remote service. No account is required.
 
 ## Getting started
 

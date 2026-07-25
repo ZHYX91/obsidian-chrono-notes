@@ -183,7 +183,7 @@ export const HI_MESSAGES = Object.freeze({
   "settings.tab.appearance": "रूप और दृश्य",
   "settings.tab.periodic": "आवधिक नोट्स",
   "settings.tab.ranges": "रेंज नोट्स",
-  "settings.tab.integrations": "एक्सटेंशन और एकीकरण",
+  "settings.tab.extensionsAndIntegrations": "एक्सटेंशन और एकीकरण",
   "settings.tabsLabel": "Chrono Notes सेटिंग्स श्रेणियाँ",
   "settings.general.title": "सामान्य",
   "settings.general.language": "भाषा",
