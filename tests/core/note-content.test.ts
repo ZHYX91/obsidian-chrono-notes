@@ -54,6 +54,24 @@ describe("note content derivation", () => {
     expect(Object.isFrozen(derived.embeds)).toBe(true);
   });
 
+  it("keeps balanced Markdown destinations out of the excerpt", () => {
+    expect(deriveNotePreview([
+      "Before ![local](assets/image_(1).png) after",
+      "![remote](https://example.com/image_(2).svg \"Preview (large)\")",
+      String.raw`![escaped](assets/image_\(3\).webp)`,
+    ].join("\n"))).toEqual({
+      text: "Before after",
+      embeds: {
+        imageCount: 3,
+        pdfCount: 0,
+        audioCount: 0,
+        videoCount: 0,
+        noteCount: 0,
+        otherCount: 0,
+      },
+    });
+  });
+
   it("parses legacy task date markers with normalized source line positions", () => {
     const tasks = parseNoteTasks([
       "  - [ ] Ship round 7 📅 2026-05-06 ⏳ 2026-05-05 🛫 2026-05-04",

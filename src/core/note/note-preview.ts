@@ -1,9 +1,6 @@
 const NOTE_PREVIEW_MAX_LINES = 4;
 const NOTE_PREVIEW_MAX_LENGTH = 280;
 
-const WIKI_EMBED_PATTERN = /!\[\[([^\]]+)\]\]/g;
-const MARKDOWN_EMBED_PATTERN = /!\[([^\]]*)\]\((.*?)\)/g;
-
 const IMAGE_EXTENSIONS = new Set([
   "avif",
   "bmp",
@@ -130,18 +127,95 @@ function stripAndCountEmbeds(
   line: string,
   counts: MutableNoteEmbedStatistics,
 ): string {
-  return line
-    .replace(WIKI_EMBED_PATTERN, (_match, target: string) => {
-      incrementEmbedCount(counts, classifyEmbed(target, true));
-      return "";
-    })
-    .replace(MARKDOWN_EMBED_PATTERN, (_match, _alt: string, target: string) => {
-      incrementEmbedCount(
-        counts,
-        classifyEmbed(extractMarkdownDestination(target), false),
-      );
-      return "";
-    });
+  let output = "";
+  let cursor = 0;
+  while (cursor < line.length) {
+    const embed = parseEmbedAt(line, cursor);
+    if (embed === null) {
+      output += line[cursor] ?? "";
+      cursor += 1;
+      continue;
+    }
+    incrementEmbedCount(counts, classifyEmbed(embed.target, embed.wiki));
+    cursor = embed.nextIndex;
+  }
+  return output;
+}
+
+function parseEmbedAt(
+  line: string,
+  startIndex: number,
+): Readonly<{ target: string; wiki: boolean; nextIndex: number }> | null {
+  if (line.startsWith("![[", startIndex)) {
+    const endIndex = findWikiEmbedEnd(line, startIndex + 3);
+    return endIndex === null
+      ? null
+      : Object.freeze({
+          target: line.slice(startIndex + 3, endIndex),
+          wiki: true,
+          nextIndex: endIndex + 2,
+        });
+  }
+  if (!line.startsWith("![", startIndex)) return null;
+  const altEnd = findUnescapedCharacter(line, startIndex + 2, "]");
+  if (altEnd === null || line[altEnd + 1] !== "(") return null;
+  const destinationEnd = findBalancedDestinationEnd(line, altEnd + 2);
+  return destinationEnd === null
+    ? null
+    : Object.freeze({
+        target: extractMarkdownDestination(
+          line.slice(altEnd + 2, destinationEnd),
+        ),
+        wiki: false,
+        nextIndex: destinationEnd + 1,
+      });
+}
+
+function findWikiEmbedEnd(line: string, startIndex: number): number | null {
+  for (let index = startIndex; index < line.length - 1; index += 1) {
+    if (line[index] === "\\") {
+      index += 1;
+      continue;
+    }
+    if (line[index] === "]" && line[index + 1] === "]") return index;
+  }
+  return null;
+}
+
+function findUnescapedCharacter(
+  line: string,
+  startIndex: number,
+  target: string,
+): number | null {
+  for (let index = startIndex; index < line.length; index += 1) {
+    if (line[index] === "\\") {
+      index += 1;
+      continue;
+    }
+    if (line[index] === target) return index;
+  }
+  return null;
+}
+
+function findBalancedDestinationEnd(
+  line: string,
+  startIndex: number,
+): number | null {
+  let depth = 1;
+  for (let index = startIndex; index < line.length; index += 1) {
+    const character = line[index];
+    if (character === "\\") {
+      index += 1;
+      continue;
+    }
+    if (character === "(") {
+      depth += 1;
+    } else if (character === ")") {
+      depth -= 1;
+      if (depth === 0) return index;
+    }
+  }
+  return null;
 }
 
 function extractMarkdownDestination(target: string): string {

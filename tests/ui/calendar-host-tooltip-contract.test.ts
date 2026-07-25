@@ -9,8 +9,21 @@ const yearAndWeekStyles = readFileSync(
   new URL("../../src/ui/styles/year-and-week.css", import.meta.url),
   "utf8",
 );
+const calendarAppSource = readFileSync(
+  new URL("../../src/ui/calendar/calendar-app.tsx", import.meta.url),
+  "utf8",
+);
 
 describe("calendar host tooltip contract", () => {
+  it("does not expose a direct label on the calendar ancestor", () => {
+    expect(calendarAppSource).toContain(
+      "aria-labelledby={calendarLabelId}",
+    );
+    expect(calendarAppSource).not.toContain(
+      'aria-label={t("calendar.ariaLabel")}',
+    );
+  });
+
   it("suppresses Obsidian host tooltips on every previewable date surface", () => {
     expect(monthStyles).toMatch(
       /\.chrono-notes-day\s*\{[^}]*--no-tooltip:\s*true;/s,

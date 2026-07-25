@@ -506,15 +506,23 @@ export function CalendarApp({
     () => formatShortMonthLabels(visibleMonth.year, locale),
     [locale, visibleMonth.year],
   );
+  const calendarLabelId = `${previewId}-calendar-label`;
 
   return (
     <div
       className="chrono-notes-calendar"
+      role="region"
       dir={translator.direction}
       data-font-size-mode={settings.fontSizeMode}
       style={fontVariables}
-      aria-label={t("calendar.ariaLabel")}
+      aria-labelledby={calendarLabelId}
     >
+      <span
+        id={calendarLabelId}
+        className="chrono-notes-visually-hidden"
+      >
+        {t("calendar.ariaLabel")}
+      </span>
       <header className="chrono-notes-calendar-header">
         <div className="chrono-notes-calendar-navigation">
           <button

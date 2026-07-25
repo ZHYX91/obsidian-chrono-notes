@@ -211,6 +211,27 @@ describe("CalendarApp active query", () => {
     expect(icsUnsubscribe).toHaveBeenCalledTimes(4);
   });
 
+  it("labels the calendar without exposing a host tooltip trigger", async () => {
+    const props = createProps(() => () => undefined, () => () => undefined);
+    const container = document.createElement("div");
+    document.body.append(container);
+    const root = createRoot(container);
+
+    await act(async () => {
+      root.render(createElement(CalendarApp, props));
+    });
+
+    const calendar = container.querySelector(".chrono-notes-calendar");
+    const labelId = calendar?.getAttribute("aria-labelledby");
+    expect(calendar?.getAttribute("role")).toBe("region");
+    expect(calendar?.getAttribute("aria-label")).toBeNull();
+    expect(labelId).toBe("calendar-preview-test-calendar-label");
+    expect(document.getElementById(labelId ?? "")?.textContent)
+      .toBe("Chrono Notes calendar");
+
+    await act(async () => root.unmount());
+  });
+
   it("uses the configured Sunday boundary for the current week number", async () => {
     selectors.month.mockReturnValueOnce({
       year: 2026,

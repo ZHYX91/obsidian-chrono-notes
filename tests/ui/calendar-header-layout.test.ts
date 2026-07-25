@@ -16,7 +16,7 @@ const miniCalendar = readFileSync(
 describe("calendar header layout", () => {
   it("applies the resolved writing direction at the calendar root", () => {
     expect(calendarApp).toMatch(
-      /className="chrono-notes-calendar"\s*dir=\{translator\.direction\}/s,
+      /className="chrono-notes-calendar"\s*role="region"\s*dir=\{translator\.direction\}/s,
     );
   });
 
