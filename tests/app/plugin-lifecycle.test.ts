@@ -339,7 +339,10 @@ describe("ChronoNotesPlugin lifecycle composition", () => {
     vi.clearAllMocks();
     resetCollections();
     mocks.state.appLanguage = "en";
-    mocks.state.loadData.mockResolvedValue({ firstUseGuideSeen: true });
+    mocks.state.loadData.mockResolvedValue({
+      ...createDefaultSettings(),
+      firstUseGuideSeen: true,
+    });
     mocks.state.saveData.mockResolvedValue(undefined);
     mocks.state.noteListPaths.mockReturnValue([]);
     mocks.state.noteRead.mockResolvedValue("");
@@ -426,6 +429,65 @@ describe("ChronoNotesPlugin lifecycle composition", () => {
     expect(navbar.handleFileRename).not.toHaveBeenCalled();
   });
 
+  it("persists a migrated released configuration before composing the runtime", async () => {
+    mocks.state.loadData.mockResolvedValue({
+      schemaVersion: 15,
+      firstUseGuideSeen: true,
+      calendarOverlays: ["persian", "islamic-umalqura"],
+      todoAnnotationMode: "hole",
+      periodicNotes: {
+        daily: {
+          enabled: true,
+          pattern: "'Daily'/yyyy-MM-dd/yyyy-MM-dd",
+          templatePath: "",
+        },
+      },
+    });
+    const plugin = createPlugin();
+
+    await plugin.onload();
+
+    expect(mocks.state.saveData).toHaveBeenCalledOnce();
+    expect(mocks.state.saveData).toHaveBeenCalledWith(expect.objectContaining({
+      schemaVersion: 17,
+      calendarExtensions: ["persian", "islamic-umalqura"],
+      showTaskProgress: true,
+      periodicNotes: expect.objectContaining({
+        daily: expect.objectContaining({
+          pattern: "[Daily]/YYYY-MM-DD/YYYY-MM-DD",
+        }),
+      }),
+    }));
+    plugin.unload();
+  });
+
+  it("keeps migrated runtime settings usable when persistence fails", async () => {
+    mocks.state.loadData.mockResolvedValue({
+      schemaVersion: 16,
+      firstUseGuideSeen: true,
+      periodicNotes: {
+        weekly: {
+          enabled: true,
+          pattern: "'Weekly'/kkkk-'W'WW",
+          templatePath: "",
+        },
+      },
+    });
+    mocks.state.saveData.mockRejectedValue(new Error("disk full"));
+    const error = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    const plugin = createPlugin();
+
+    await expect(plugin.onload()).resolves.toBeUndefined();
+
+    expect(plugin.settings.schemaVersion).toBe(17);
+    expect(plugin.settings.periodicNotes.weekly.pattern).toBe("[Weekly]/GGGG-[W]WW");
+    expect(error).toHaveBeenCalledWith(
+      "Chrono Notes Calendar: failed to persist migrated settings",
+      expect.any(Error),
+    );
+    plugin.unload();
+  });
+
   it("resolves Auto from Obsidian's configured language instead of the system locale", async () => {
     mocks.state.appLanguage = "ar";
     vi.stubGlobal("navigator", { language: "zh-CN" });
@@ -456,7 +518,7 @@ describe("ChronoNotesPlugin lifecycle composition", () => {
     await vi.waitFor(() => expect(mocks.state.noteListPaths).toHaveBeenCalledOnce());
     expect(mocks.state.noteSourceUnsubscribes[0]).toHaveBeenCalledOnce();
     await vi.waitFor(() => expect(error).toHaveBeenCalledWith(
-      "Chrono Notes: deferred indexing failed",
+      "Chrono Notes Calendar: deferred indexing failed",
       expect.any(Error),
     ));
     expect(plugin.noteIndex).not.toBeNull();
@@ -668,7 +730,7 @@ describe("ChronoNotesPlugin lifecycle composition", () => {
       expect(navbar.update).toHaveBeenCalledTimes(2);
       expect(modalHost.getSettingsRevision()).toBe(1);
       expect(reportError).toHaveBeenCalledWith(
-        "Chrono Notes: listener notification failed",
+        "Chrono Notes Calendar: listener notification failed",
         expect.any(Error),
       );
 
@@ -730,7 +792,10 @@ describe("ChronoNotesPlugin lifecycle composition", () => {
   it("does not open the first-use guide when its save settles after unload", async () => {
     vi.useFakeTimers();
     const save = mocks.createDeferred<void>();
-    mocks.state.loadData.mockResolvedValue({ firstUseGuideSeen: false });
+    mocks.state.loadData.mockResolvedValue({
+      ...createDefaultSettings(),
+      firstUseGuideSeen: false,
+    });
     mocks.state.saveData.mockReturnValue(save.promise);
     const plugin = createPlugin();
     await plugin.onload();
@@ -752,7 +817,10 @@ describe("ChronoNotesPlugin lifecycle composition", () => {
 
   it("does not open the first-use guide when persisting its seen marker fails", async () => {
     vi.useFakeTimers();
-    mocks.state.loadData.mockResolvedValue({ firstUseGuideSeen: false });
+    mocks.state.loadData.mockResolvedValue({
+      ...createDefaultSettings(),
+      firstUseGuideSeen: false,
+    });
     mocks.state.saveData.mockRejectedValue(new Error("disk full"));
     const error = vi.spyOn(console, "error").mockImplementation(() => undefined);
     const plugin = createPlugin();
@@ -769,7 +837,7 @@ describe("ChronoNotesPlugin lifecycle composition", () => {
     expect(mocks.state.firstUseGuideOpen).not.toHaveBeenCalled();
     expect(plugin.settings.firstUseGuideSeen).toBe(false);
     expect(error).toHaveBeenCalledWith(
-      "Chrono Notes: failed to persist first-use guide state",
+      "Chrono Notes Calendar: failed to persist first-use guide state",
       expect.any(Error),
     );
     plugin.unload();

@@ -205,7 +205,7 @@ async function createHarness(): Promise<{
     path.join(sourceRoot, "manifest.json"),
     `${JSON.stringify({
       id: "chrono-notes",
-      name: "Chrono Notes",
+      name: "Chrono Notes Calendar",
       version: "9.8.7",
       minAppVersion: "1.12.7",
       description: "Acceptance test",

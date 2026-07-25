@@ -1,12 +1,12 @@
 name: Feature request
-description: Suggest an improvement within Chrono Notes' scope
+description: Suggest an improvement within Chrono Notes Calendar' scope
 title: "[Feature]: "
 labels:
   - enhancement
 body:
   - type: markdown
     attributes:
-      value: Use Discussions for questions and early workflow ideas. This public form is for a concrete Chrono Notes feature proposal; remove private Vault, note, task, calendar, and ICS data before posting.
+      value: Use Discussions for questions and early workflow ideas. This public form is for a concrete Chrono Notes Calendar feature proposal; remove private Vault, note, task, calendar, and ICS data before posting.
   - type: textarea
     id: problem
     attributes:

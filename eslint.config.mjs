@@ -47,7 +47,7 @@ export default defineConfig([
       "src/ui/settings/periodic-settings-section.ts",
     ],
     rules: {
-      // Preserve the Chrono Notes brand and case-sensitive date patterns.
+      // Preserve the Chrono Notes Calendar brand and case-sensitive date patterns.
       "obsidianmd/ui/sentence-case": "off",
     },
   },

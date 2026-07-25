@@ -10,7 +10,7 @@ describe("first-use guide presentation", () => {
       "Ctrl",
     );
 
-    expect(messages.title).toBe("快速上手 Chrono Notes");
+    expect(messages.title).toBe("快速上手 Chrono Notes Calendar");
     expect(messages.intro).toBe("这些常用操作可能不太显眼：");
     expect(messages.hints).toEqual([
       "单击日期或周期只会选中，不会打开笔记。",

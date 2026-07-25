@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   SETTINGS_SCHEMA_VERSION,
   createDefaultSettings,
+  isSettingsMigrationRequired,
   migrateSettings,
   normalizeSettings,
 } from "../../src/shared/settings";
@@ -603,6 +604,16 @@ describe("settings", () => {
       ...createDefaultSettings(),
       locale: "en",
     });
+  });
+
+  it("requests persistence only for existing settings that require migration", () => {
+    expect(isSettingsMigrationRequired(null)).toBe(false);
+    expect(isSettingsMigrationRequired({ schemaVersion: SETTINGS_SCHEMA_VERSION }))
+      .toBe(false);
+    expect(isSettingsMigrationRequired({ schemaVersion: SETTINGS_SCHEMA_VERSION + 1 }))
+      .toBe(false);
+    expect(isSettingsMigrationRequired({ schemaVersion: 15 })).toBe(true);
+    expect(isSettingsMigrationRequired({ locale: "en" })).toBe(true);
   });
 
   it("migrates idempotently without mutating or sharing input values", () => {

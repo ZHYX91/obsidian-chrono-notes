@@ -108,7 +108,7 @@ describe("IcsEventIndex", () => {
     expect(remainingListener).toHaveBeenCalledTimes(2);
     expect(reportError).toHaveBeenCalledTimes(2);
     expect(reportError).toHaveBeenCalledWith(
-      "Chrono Notes: listener notification failed",
+      "Chrono Notes Calendar: listener notification failed",
       listenerError,
     );
     reportError.mockRestore();

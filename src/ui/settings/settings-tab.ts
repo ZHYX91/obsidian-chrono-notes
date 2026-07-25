@@ -34,7 +34,7 @@ export class ChronoNotesSettingTab extends PluginSettingTab {
       {
         delayMs: ChronoNotesSettingTab.TEXT_SAVE_DELAY_MS,
         onError: (error) => {
-          console.error("Chrono Notes: failed to save settings", error);
+          console.error("Chrono Notes Calendar: failed to save settings", error);
         },
       },
     );

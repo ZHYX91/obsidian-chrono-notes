@@ -1,6 +1,6 @@
-# Chrono Notes（时序笔记）
+# Chrono Notes Calendar（时序笔记）
 
-Chrono Notes 是一个面向 Obsidian 周期笔记工作流的日历插件，整合周期笔记、可选历法扩展、地区节假日、任务、统计和区间笔记。
+Chrono Notes Calendar 是一个面向 Obsidian 周期笔记工作流的日历插件，整合周期笔记、可选历法扩展、地区节假日、任务、统计和区间笔记。
 
 ## 界面截图
 
@@ -13,8 +13,8 @@ Chrono Notes 是一个面向 Obsidian 周期笔记工作流的日历插件，整
   </thead>
   <tbody>
     <tr>
-      <td width="70%"><img src="https://raw.githubusercontent.com/ZHYX91/obsidian-chrono-notes/main/docs/assets/chrono-notes-desktop-en.png" alt="Chrono Notes 桌面端区间笔记与月历"></td>
-      <td width="30%"><img src="https://raw.githubusercontent.com/ZHYX91/obsidian-chrono-notes/main/docs/assets/chrono-notes-android-en.png" alt="Chrono Notes Android 月历"></td>
+      <td width="70%"><img src="https://raw.githubusercontent.com/ZHYX91/obsidian-chrono-notes/main/docs/assets/chrono-notes-desktop-en.png" alt="Chrono Notes Calendar 桌面端区间笔记与月历"></td>
+      <td width="30%"><img src="https://raw.githubusercontent.com/ZHYX91/obsidian-chrono-notes/main/docs/assets/chrono-notes-android-en.png" alt="Chrono Notes Calendar Android 月历"></td>
     </tr>
   </tbody>
 </table>
@@ -30,11 +30,11 @@ Chrono Notes 是一个面向 Obsidian 周期笔记工作流的日历插件，整
 - 本地只读 ICS 日历来源；
 - 英文、简体中文、繁体中文、阿拉伯语、波斯语、希伯来语、阿姆哈拉语和印地语界面，并为相应语言提供从右到左布局。
 
-源笔记、日历文件和插件设置都保留在 Vault 内。Chrono Notes 只会在设备本地 IndexedDB 中保存派生的 NoteIndex 缓存；该缓存不会写入 Vault，也不会发送到远程服务。插件不要求账号。
+源笔记、日历文件和插件设置都保留在 Vault 内。Chrono Notes Calendar 只会在设备本地 IndexedDB 中保存派生的 NoteIndex 缓存；该缓存不会写入 Vault，也不会发送到远程服务。插件不要求账号。
 
 ## 开始使用
 
-1. 在 Chrono Notes 设置中启用需要的周期笔记类型，并确认路径格式；
+1. 在 Chrono Notes Calendar 设置中启用需要的周期笔记类型，并确认路径格式；
 2. 从侧边栏图标或命令面板打开日历；
 3. 按需启用历法、节假日扩展或添加本地 ICS 来源；
 4. 选择日期以打开或创建对应周期笔记。
@@ -48,7 +48,7 @@ Chrono Notes 是一个面向 Obsidian 周期笔记工作流的日历插件，整
 
 ## 手动安装
 
-从[最新版本](https://github.com/ZHYX91/obsidian-chrono-notes/releases/latest)下载 `chrono-notes-<version>.zip`，解压到 `Vault/.obsidian/plugins/`。压缩包已经包含 `chrono-notes/` 目录和三个插件文件。重新加载 Obsidian 后，在第三方插件中启用 Chrono Notes。
+从[最新版本](https://github.com/ZHYX91/obsidian-chrono-notes/releases/latest)下载 `chrono-notes-<version>.zip`，解压到 `Vault/.obsidian/plugins/`。压缩包已经包含 `chrono-notes/` 目录和三个插件文件。重新加载 Obsidian 后，在第三方插件中启用 Chrono Notes Calendar。
 
 ## 开发
 
@@ -63,7 +63,7 @@ pnpm check
 
 ## 致谢
 
-Chrono Notes 受到以下项目的启发：
+Chrono Notes Calendar 受到以下项目的启发：
 
 - Liam Cain：[Calendar](https://github.com/liamcain/obsidian-calendar-plugin)
 - 纳米级尘埃（a-nano-dust）：[Dust Calendar](https://github.com/a-nano-dust/dust-obsidian-calendar)

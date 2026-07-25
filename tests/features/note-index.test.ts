@@ -1010,7 +1010,7 @@ describe("NoteIndex", () => {
     expect(failingListener).toHaveBeenCalledTimes(3);
     expect(remainingListener).toHaveBeenCalledTimes(3);
     expect(reportError).toHaveBeenCalledWith(
-      "Chrono Notes: listener notification failed",
+      "Chrono Notes Calendar: listener notification failed",
       listenerError,
     );
     reportError.mockRestore();

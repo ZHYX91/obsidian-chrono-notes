@@ -36,6 +36,7 @@ import { createTranslator, type Translator } from "../shared/i18n";
 import { getCurrentLocalDate } from "../shared/local-date-clock";
 import {
   createDefaultSettings,
+  isSettingsMigrationRequired,
   migrateSettings,
   normalizeSettings,
   type ChronoNotesSettings,
@@ -206,9 +207,17 @@ export default class ChronoNotesPlugin extends Plugin {
   }
 
   async loadSettings(): Promise<void> {
-    const migrated = migrateSettings(await this.loadData());
+    const loaded: unknown = await this.loadData();
+    const migrationRequired = isSettingsMigrationRequired(loaded);
+    const migrated = migrateSettings(loaded);
     this.settings = normalizeSettings(migrated);
     this.persistedSettings = normalizeSettings(this.settings);
+    if (!migrationRequired) return;
+    try {
+      await this.saveData(this.persistedSettings);
+    } catch (error) {
+      console.error("Chrono Notes Calendar: failed to persist migrated settings", error);
+    }
   }
 
   async saveSettings(): Promise<void> {
@@ -378,7 +387,7 @@ export default class ChronoNotesPlugin extends Plugin {
       } else if (result.status === "opened") {
         for (const item of result.cascade) {
           if (item.status === "failed") {
-            console.error(`Chrono Notes: failed to create ${item.noteType} note`, item.error);
+            console.error(`Chrono Notes Calendar: failed to create ${item.noteType} note`, item.error);
           }
         }
       }
@@ -573,7 +582,7 @@ export default class ChronoNotesPlugin extends Plugin {
     } catch (error) {
       if (!this.isRuntimeCurrent(runtimeRevision) || this.icsEventIndex !== index) return;
       const message = error instanceof Error ? error.message : String(error);
-      console.error("Chrono Notes: ICS refresh failed", error);
+      console.error("Chrono Notes Calendar: ICS refresh failed", error);
       if (showNotice) new Notice(formatPluginErrorNotice(message, this.getTranslator().t));
     }
   }
@@ -606,7 +615,7 @@ export default class ChronoNotesPlugin extends Plugin {
     } catch (error) {
       if (!this.isRuntimeCurrent(runtimeRevision) || this.noteIndex !== noteIndex) return;
       const message = error instanceof Error ? error.message : String(error);
-      console.error("Chrono Notes: deferred indexing failed", error);
+      console.error("Chrono Notes Calendar: deferred indexing failed", error);
       new Notice(formatPluginErrorNotice(message, this.getTranslator().t));
     }
   }
@@ -657,7 +666,7 @@ export default class ChronoNotesPlugin extends Plugin {
       await this.saveSettings();
     } catch (error) {
       this.settings.firstUseGuideSeen = false;
-      console.error("Chrono Notes: failed to persist first-use guide state", error);
+      console.error("Chrono Notes Calendar: failed to persist first-use guide state", error);
       return;
     }
     if (!this.isRuntimeCurrent(runtimeRevision)) return;
@@ -700,7 +709,7 @@ export default class ChronoNotesPlugin extends Plugin {
       try {
         dispose();
       } catch (error) {
-        console.error("Chrono Notes: runtime cleanup failed", error);
+        console.error("Chrono Notes Calendar: runtime cleanup failed", error);
       }
     };
     this.runtimeDisposers.add(disposeOnce);

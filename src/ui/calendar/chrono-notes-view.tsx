@@ -57,7 +57,7 @@ export class ChronoNotesView extends ItemView {
   }
 
   getDisplayText(): string {
-    return "Chrono Notes";
+    return "Chrono Notes Calendar";
   }
 
   getIcon(): string {

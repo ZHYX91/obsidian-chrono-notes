@@ -1,6 +1,6 @@
 {
   "id": "chrono-notes",
-  "name": "Chrono Notes",
+  "name": "Chrono Notes Calendar",
   "version": "0.2.1",
   "minAppVersion": "1.12.7",
   "description": "A calendar workspace for periodic notes, calendar extensions, regional holidays, tasks, and time ranges.",

@@ -180,7 +180,7 @@ function bindMobileKeyboardInsets(modalEl: HTMLElement): () => void {
   };
   const removeHandle = (handle: MobileKeyboardListenerHandle) => {
     void handle.remove().catch((error: unknown) => {
-      console.error("Chrono Notes: mobile keyboard listener cleanup failed", error);
+      console.error("Chrono Notes Calendar: mobile keyboard listener cleanup failed", error);
     });
   };
   const trackHandle = (promise: Promise<MobileKeyboardListenerHandle>) => {
@@ -191,7 +191,7 @@ function bindMobileKeyboardInsets(modalEl: HTMLElement): () => void {
         handles.push(handle);
       }
     }).catch((error: unknown) => {
-      console.error("Chrono Notes: mobile keyboard listener failed", error);
+      console.error("Chrono Notes Calendar: mobile keyboard listener failed", error);
     });
   };
   trackHandle(keyboard.addListener("keyboardDidShow", (info) => {

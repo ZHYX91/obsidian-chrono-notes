@@ -2,7 +2,7 @@
 
 ## Project Scope
 
-Chrono Notes is a clean rewrite of the unpublished `My Calendar` Obsidian plugin. The sibling legacy project at `../obsidian-calendar` is read-only reference material. Do not modify it while working in this repository.
+Chrono Notes Calendar is a clean rewrite of the unpublished `My Calendar` Obsidian plugin. The sibling legacy project at `../obsidian-calendar` is read-only reference material. Do not modify it while working in this repository.
 
 The rewrite must reach functional parity before adding unrelated product scope. UI and UX may improve, but established date, note, task, template, interval-note, holiday, and ICS semantics must be preserved unless a documented decision changes them.
 

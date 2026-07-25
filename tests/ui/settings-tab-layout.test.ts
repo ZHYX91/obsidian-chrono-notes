@@ -28,13 +28,13 @@ describe("createSettingsTabLayout", () => {
       container,
       tabs,
       "periodic",
-      "Chrono Notes settings categories",
+      "Chrono Notes Calendar settings categories",
       vi.fn(),
     );
     const tabList = container.querySelector<HTMLElement>("[role=tablist]");
     const tabElements = Array.from(container.querySelectorAll<HTMLElement>("[role=tab]"));
 
-    expect(tabList?.getAttribute("aria-label")).toBe("Chrono Notes settings categories");
+    expect(tabList?.getAttribute("aria-label")).toBe("Chrono Notes Calendar settings categories");
     expect(tabList?.getAttribute("aria-orientation")).toBe("horizontal");
     expect(tabElements.map((tab) => tab.getAttribute("aria-selected"))).toEqual([
       "false",
@@ -65,7 +65,7 @@ describe("createSettingsTabLayout", () => {
         container,
         tabs,
         initialTab,
-        "Chrono Notes settings categories",
+        "Chrono Notes Calendar settings categories",
         onSelect,
       );
       const activeTab = container.querySelector<HTMLElement>("[role=tab][aria-selected=true]");
@@ -83,7 +83,7 @@ describe("createSettingsTabLayout", () => {
       container,
       tabs,
       "general",
-      "Chrono Notes settings categories",
+      "Chrono Notes Calendar settings categories",
       onSelect,
     );
 
@@ -104,7 +104,7 @@ describe("createSettingsTabLayout", () => {
         container,
         tabs,
         activeTab,
-        "Chrono Notes settings categories",
+        "Chrono Notes Calendar settings categories",
         (tabId) => {
           activeTab = tabId;
           render(true);
