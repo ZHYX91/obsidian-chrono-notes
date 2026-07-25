@@ -6,13 +6,13 @@ labels:
 body:
   - type: markdown
     attributes:
-      value: Thanks for helping improve Chrono Notes. Remove private note and calendar content before attaching files or screenshots.
+      value: Thanks for helping improve Chrono Notes. Security vulnerabilities belong in private vulnerability reporting, not this public form. Remove or replace private Vault paths, note and task content, calendar and ICS data, source URLs, credentials, and personal information before attaching files, logs, or screenshots.
   - type: input
     id: versions
     attributes:
       label: Versions
       description: Chrono Notes, Obsidian, and operating-system versions
-      placeholder: Chrono Notes 0.1.2; Obsidian 1.12.7; Android 15
+      placeholder: Chrono Notes version; Obsidian version; operating system and version
     validations:
       required: true
   - type: dropdown
@@ -48,7 +48,7 @@ body:
     id: sample
     attributes:
       label: Minimal sample and logs
-      description: Include sanitized settings, note frontmatter, ICS content, console errors, or screenshots when useful.
+      description: Include only sanitized settings, note frontmatter, task text, calendar or ICS excerpts, console errors, screenshots, or a minimal test Vault when useful.
       render: shell
   - type: checkboxes
     id: checks
@@ -57,5 +57,5 @@ body:
       options:
         - label: I reproduced this with the latest Chrono Notes release.
           required: true
-        - label: I removed private Vault, task, and calendar data.
+        - label: I removed or replaced private Vault paths, note and task content, calendar and ICS data, source URLs, credentials, and personal information.
           required: true

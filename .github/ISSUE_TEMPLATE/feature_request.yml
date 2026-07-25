@@ -4,6 +4,9 @@ title: "[Feature]: "
 labels:
   - enhancement
 body:
+  - type: markdown
+    attributes:
+      value: Use Discussions for questions and early workflow ideas. This public form is for a concrete Chrono Notes feature proposal; remove private Vault, note, task, calendar, and ICS data before posting.
   - type: textarea
     id: problem
     attributes:

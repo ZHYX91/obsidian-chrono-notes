@@ -3,6 +3,6 @@ contact_links:
   - name: Questions and general feedback
     url: https://github.com/ZHYX91/obsidian-chrono-notes/discussions
     about: Ask questions and share your Chrono Notes experience in English or Chinese.
-  - name: Security policy
-    url: https://github.com/ZHYX91/obsidian-chrono-notes/security/policy
-    about: Do not disclose a vulnerability or private Vault or calendar data in a public issue.
+  - name: Private security report
+    url: https://github.com/ZHYX91/obsidian-chrono-notes/security/advisories/new
+    about: Report vulnerabilities privately; never disclose private Vault, note, task, calendar, or ICS data publicly.

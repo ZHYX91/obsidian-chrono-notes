@@ -2,6 +2,10 @@
 
 Security fixes are provided for the latest released version of Chrono Notes.
 
-Please use GitHub's **Report a vulnerability** action on the repository Security page when private vulnerability reporting is available. If that action is unavailable, open a public issue containing only a request for private contact; do not include exploit details, credentials, private notes, Vault paths, tasks, or calendar data.
+## Report a vulnerability privately
 
-Include the plugin version, Obsidian version, operating system, impact, and the smallest safe reproduction you can provide. Ordinary bugs and feature requests belong in the issue forms.
+Use GitHub's [private vulnerability reporting](https://github.com/ZHYX91/obsidian-chrono-notes/security/advisories/new). The report is visible only to the repository maintainers.
+
+Do not disclose a vulnerability in a public issue or discussion. Never attach real private Vault paths, note or task content, calendar or ICS data, source URLs, credentials, screenshots, logs, or personal information to a public report.
+
+Include the Chrono Notes version, Obsidian version, operating system, impact, and the smallest safe reproduction you can provide. Sanitize every sample before submitting it privately. Ordinary bugs and concrete feature requests belong in the [issue forms](https://github.com/ZHYX91/obsidian-chrono-notes/issues/new/choose); questions and general feedback belong in [Discussions](https://github.com/ZHYX91/obsidian-chrono-notes/discussions).
