@@ -476,12 +476,15 @@ describe("calendar indicator layout", () => {
     );
   });
 
-  it("uses a breathable base month height and lets each week stretch as one row", () => {
+  it("adds breathing room only when month cells show calendar extensions", () => {
     expect(styles).toMatch(
       /\.chrono-notes-week-block\s*\{[^}]*align-items:\s*stretch;/s,
     );
     expect(styles).toMatch(
-      /\.chrono-notes-day-main\s*\{[^}]*min-height:\s*56px;/s,
+      /\.chrono-notes-day-main\s*\{[^}]*min-height:\s*44px;/s,
+    );
+    expect(styles).toMatch(
+      /\.chrono-notes-day\[data-calendar-extension-count="1"\] \.chrono-notes-day-main,\s*\.chrono-notes-day\[data-calendar-extension-count="2"\] \.chrono-notes-day-main\s*\{[^}]*min-height:\s*56px;/s,
     );
   });
 

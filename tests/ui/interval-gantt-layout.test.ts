@@ -176,7 +176,7 @@ button:not(.clickable-icon) {
     expect(dayMainRule).toContain("display: flex;");
     expect(dayMainRule).toContain("flex-direction: column;");
     expect(dayMainRule).toContain("grid-row: 1;");
-    expect(dayMainRule).toContain("min-height: 56px;");
+    expect(dayMainRule).toContain("min-height: 44px;");
     expect(dayMainRule).toContain("padding: 5px;");
     expect(dayMainRule).toContain("z-index: 1;");
     expect(styles).not.toMatch(
