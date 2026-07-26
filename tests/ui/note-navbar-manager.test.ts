@@ -36,8 +36,9 @@ const EMPTY_NOTE_SNAPSHOT = createNoteIndexSnapshot({}, 1);
 
 interface FakeElement {
   readonly classList: Pick<DOMTokenList, "add" | "contains" | "remove">;
-  readonly ownerDocument: { createElement(): FakeElement };
+  readonly ownerDocument: Record<string, never>;
   className: string;
+  createDiv(): FakeElement;
   nextElementSibling: FakeElement | null;
   parentElement: FakeElement | null;
   previousElementSibling: FakeElement | null;
@@ -54,8 +55,9 @@ function createElement(): FakeElement {
       contains: (token) => classes.has(token),
       remove: (...tokens) => tokens.forEach((token) => classes.delete(token)),
     },
-    ownerDocument: { createElement: vi.fn(createElement) },
+    ownerDocument: {},
     className: "",
+    createDiv: vi.fn(createElement),
     nextElementSibling: null,
     parentElement: null,
     previousElementSibling: null,
@@ -127,7 +129,7 @@ describe("NoteNavbarManager", () => {
 
     manager.update();
     expect(mocks.createRoot).toHaveBeenCalledOnce();
-    expect(content.ownerDocument.createElement).toHaveBeenCalledOnce();
+    expect(content.parentElement?.createDiv).toHaveBeenCalledOnce();
     expect(document.createElement).not.toHaveBeenCalled();
     expect(mocks.roots[0]?.render).toHaveBeenCalledOnce();
     expect(content.previousElementSibling?.nextElementSibling).toBe(content);

@@ -94,7 +94,7 @@ describe("ObsidianIcsSourceReader", () => {
       if (moduleId === "node:path") return { resolve };
       throw new Error(`Unexpected module: ${moduleId}`);
     });
-    vi.stubGlobal("require", desktopRequire);
+    vi.stubGlobal("window", { require: desktopRequire });
     const vault = new FakeVault({ getBasePath: () => "D:/Vault" });
     const reader = new ObsidianIcsSourceReader(vault as never);
 

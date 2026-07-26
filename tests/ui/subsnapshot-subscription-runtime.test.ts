@@ -64,12 +64,14 @@ import {
   createNoteIndexSnapshot,
   createParsedNoteIndexSnapshot,
 } from "../support/note-index-snapshot";
+import { installObsidianDomFactories } from "../setup/obsidian-dom";
 
 describe("React sub-snapshot subscriptions", () => {
   beforeEach(() => {
     selectorSpies.intervalList.mockClear();
     selectorSpies.navbar.mockClear();
     const testWindow = new Window();
+    installObsidianDomFactories(testWindow.document as unknown as Document);
     vi.stubGlobal("window", testWindow);
     vi.stubGlobal("document", testWindow.document);
     vi.stubGlobal("navigator", testWindow.navigator);

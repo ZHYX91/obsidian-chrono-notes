@@ -21,8 +21,7 @@ export function createSettingsTabLayout(
   ariaLabel: string,
   onSelect: (tabId: SettingsTabId) => void,
 ): SettingsTabLayout {
-  const document = containerEl.ownerDocument;
-  const tabListEl = document.createElement("div");
+  const tabListEl = containerEl.createDiv();
   tabListEl.className = "chrono-notes-settings-tabs";
   tabListEl.setAttribute("role", "tablist");
   tabListEl.setAttribute("aria-label", ariaLabel);
@@ -30,7 +29,7 @@ export function createSettingsTabLayout(
   containerEl.appendChild(tabListEl);
 
   const buttons = tabs.map((tab) => {
-    const buttonEl = document.createElement("button");
+    const buttonEl = tabListEl.createEl("button");
     const active = tab.id === activeTab;
     buttonEl.className = active
       ? "chrono-notes-settings-tab is-active"
@@ -56,7 +55,6 @@ export function createSettingsTabLayout(
       event.preventDefault();
       onSelect(next);
     });
-    tabListEl.appendChild(buttonEl);
     return buttonEl;
   });
 
@@ -65,13 +63,12 @@ export function createSettingsTabLayout(
     throw new Error("Settings tab layout requires at least one tab.");
   }
 
-  const panelEl = document.createElement("div");
+  const panelEl = containerEl.createDiv();
   panelEl.className = "chrono-notes-settings-panel";
   panelEl.id = getPanelElementId(activeTab);
   panelEl.setAttribute("role", "tabpanel");
   panelEl.setAttribute("aria-labelledby", getTabElementId(activeTab));
   panelEl.tabIndex = 0;
-  containerEl.appendChild(panelEl);
 
   const tabListRect = tabListEl.getBoundingClientRect();
   const activeTabRect = activeTabEl.getBoundingClientRect();

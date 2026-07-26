@@ -1367,13 +1367,13 @@ export class NoteIndex {
 }
 
 function defaultDiagnosticClock(): number {
-  return globalThis.performance?.now() ?? Date.now();
+  return typeof performance === "undefined" ? Date.now() : performance.now();
 }
 
 function yieldInitialIndexToHost(): Promise<void> {
-  if (typeof globalThis.MessageChannel === "function") {
+  if (typeof MessageChannel === "function") {
     return new Promise((resolve) => {
-      const channel = new globalThis.MessageChannel();
+      const channel = new MessageChannel();
       channel.port1.onmessage = () => {
         channel.port1.close();
         channel.port2.close();
@@ -1383,18 +1383,17 @@ function yieldInitialIndexToHost(): Promise<void> {
     });
   }
   return new Promise((resolve) => {
-    globalThis.setTimeout(resolve, 0);
+    scheduleTimeout(resolve, 0);
   });
 }
 
 function scheduleMacrotaskCheckpoint(callback: () => void): () => void {
-  const handle = globalThis.setTimeout(callback, 0);
-  return () => globalThis.clearTimeout(handle);
+  return scheduleTimeout(callback, 0);
 }
 
 function scheduleTimeout(callback: () => void, delayMs: number): () => void {
-  const handle = globalThis.setTimeout(callback, delayMs);
-  return () => globalThis.clearTimeout(handle);
+  const handle = window.setTimeout(callback, delayMs);
+  return () => window.clearTimeout(handle);
 }
 
 function areParsedNoteDocumentsEqual(

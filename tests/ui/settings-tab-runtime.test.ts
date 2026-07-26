@@ -59,12 +59,14 @@ import type {
   SettingsHost,
   SettingsSectionContext,
 } from "../../src/ui/settings/settings-section-context";
+import { installObsidianDomFactories } from "../setup/obsidian-dom";
 
 describe("ChronoNotesSettingTab save orchestration", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.useFakeTimers();
     const testWindow = new Window();
+    installObsidianDomFactories(testWindow.document as unknown as Document);
     Object.assign(testWindow, {
       setTimeout: (callback: () => void, delayMs: number) =>
         globalThis.setTimeout(callback, delayMs),

@@ -67,7 +67,7 @@ async function resolveLocalPath(basePath: string, source: string): Promise<strin
 }
 
 function getDesktopRequire(): (moduleId: string) => unknown {
-  const runtimeRequire = (globalThis as { require?: unknown }).require;
+  const runtimeRequire = (window as Window & { require?: unknown }).require;
   if (typeof runtimeRequire !== "function") {
     throw new Error("Local ICS files require desktop filesystem access");
   }

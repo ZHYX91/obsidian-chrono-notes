@@ -6,14 +6,14 @@
   "main": "dist/main.js",
   "scripts": {
     "dev": "node esbuild.config.mjs",
-    "build": "pnpm typecheck && pnpm build:bundle && pnpm artifact:check",
+    "build": "npm run typecheck && npm run build:bundle && npm run artifact:check",
     "build:bundle": "node esbuild.config.mjs production",
     "artifact:check": "node scripts/check-production-bundle.mjs",
-    "acceptance:vault:create": "pnpm build && node scripts/acceptance-vault.mjs create",
+    "acceptance:vault:create": "npm run build && node scripts/acceptance-vault.mjs create",
     "acceptance:vault:verify": "node scripts/acceptance-vault.mjs verify",
     "acceptance:vault:clean": "node scripts/acceptance-vault.mjs clean",
     "acceptance:vault:prune": "node scripts/acceptance-vault.mjs prune",
-    "size": "pnpm build:bundle && node scripts/check-production-bundle.mjs --details",
+    "size": "npm run build:bundle && node scripts/check-production-bundle.mjs --details",
     "bench:quick": "vitest run --config vitest.performance.config.ts --mode quick --reporter=verbose",
     "bench:large": "vitest run --config vitest.performance.config.ts --mode large --reporter=verbose",
     "holiday:check": "node scripts/check-holiday-coverage.mjs",
@@ -23,8 +23,8 @@
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
     "test:timezones": "node scripts/run-tests-in-timezones.mjs",
-    "check": "pnpm lint && pnpm format:check && pnpm typecheck && pnpm test && pnpm build:bundle && pnpm artifact:check",
-    "release:check": "pnpm check && pnpm test:timezones && pnpm bench:quick && pnpm holiday:check"
+    "check": "npm run lint && npm run format:check && npm run typecheck && npm run test && npm run build:bundle && npm run artifact:check",
+    "release:check": "npm run check && npm run test:timezones && npm run bench:quick && npm run holiday:check"
   },
   "keywords": [
     "obsidian",

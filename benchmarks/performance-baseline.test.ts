@@ -78,7 +78,10 @@ describe(`performance baseline (${__CHRONO_BENCHMARK_NOTE_COUNT__} notes)`, () =
     const source = new BenchmarkNoteSource(dataset.contents);
     const timingDiagnostics = createTimingDiagnostics();
     const diagnostics = createDiagnostics(timingDiagnostics);
-    const index = new NoteIndex(source, { diagnostics });
+    const index = new NoteIndex(source, {
+      ...NODE_NOTE_INDEX_RUNTIME,
+      diagnostics,
+    });
     let publishCount = 0;
     const unsubscribePublishCounter = index.subscribe(() => {
       publishCount += 1;
@@ -185,6 +188,7 @@ async function measureWarmCacheReady(
   };
   let verificationScheduled = false;
   const index = new NoteIndex(source, {
+    ...NODE_NOTE_INDEX_RUNTIME,
     cache,
     scheduleBackgroundVerification: () => {
       verificationScheduled = true;
@@ -230,6 +234,7 @@ async function measureInitialConcurrencyMatrix(): Promise<
     const source = new ConcurrentBenchmarkNoteSource(dataset.contents);
     const diagnostics = createDiagnostics();
     const index = new NoteIndex(source, {
+      ...NODE_NOTE_INDEX_RUNTIME,
       diagnostics,
       readConcurrency: concurrency,
       // This matrix isolates worker-pool semantics. Cooperative host yielding is
@@ -272,6 +277,25 @@ async function measureInitialConcurrencyMatrix(): Promise<
   }
 
   return Object.freeze(results);
+}
+
+const NODE_NOTE_INDEX_RUNTIME = Object.freeze({
+  yieldInitialIndex: yieldNodeTask,
+  scheduleLiveCommitCheckpoint: scheduleNodeTask,
+  scheduleReadinessCheckpoint: scheduleNodeTask,
+  scheduleCacheSave: () => () => undefined,
+  scheduleBackgroundVerification: scheduleNodeTask,
+});
+
+function yieldNodeTask(): Promise<void> {
+  return new Promise((resolve) => {
+    setTimeout(resolve, 0);
+  });
+}
+
+function scheduleNodeTask(callback: () => void): () => void {
+  const handle = setTimeout(callback, 0);
+  return () => clearTimeout(handle);
 }
 
 function describeIndexSemantics(snapshot: NoteIndexSnapshot): Readonly<{
