@@ -4,20 +4,25 @@ Chrono Notes Calendar 是一个面向 Obsidian 周期笔记工作流的日历插
 
 ## 界面截图
 
-<table>
-  <thead>
-    <tr>
-      <th>PC</th>
-      <th>Android</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td width="70%"><img src="https://raw.githubusercontent.com/ZHYX91/obsidian-chrono-notes/main/docs/assets/chrono-notes-desktop-en.png" alt="Chrono Notes Calendar 桌面端区间笔记与月历"></td>
-      <td width="30%"><img src="https://raw.githubusercontent.com/ZHYX91/obsidian-chrono-notes/main/docs/assets/chrono-notes-android-en.png" alt="Chrono Notes Calendar Android 月历"></td>
-    </tr>
-  </tbody>
-</table>
+### 周期笔记导航
+
+无需离开笔记，即可切换相邻周期笔记、跳转到上级周期或返回日历。
+
+![Chrono Notes Calendar 周期笔记导航与月历](https://raw.githubusercontent.com/ZHYX91/obsidian-chrono-notes/main/docs/assets/chrono-notes-navigation-en.png)
+
+### 日历工作区
+
+在月历中集中查看笔记状态、任务、本地 ICS 事件、节假日和区间笔记。
+
+![Chrono Notes Calendar 桌面端区间笔记与月历](https://raw.githubusercontent.com/ZHYX91/obsidian-chrono-notes/main/docs/assets/chrono-notes-desktop-en.png)
+
+### Android
+
+同一套日历工作区会适配触控操作和窄屏布局。
+
+<p align="center">
+  <img src="https://raw.githubusercontent.com/ZHYX91/obsidian-chrono-notes/main/docs/assets/chrono-notes-android-en.png" alt="Chrono Notes Calendar Android 月历" width="360">
+</p>
 
 ## 功能特性
 

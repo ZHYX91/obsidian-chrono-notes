@@ -120,7 +120,7 @@ Templater adapter 测试必须覆盖插件不可用的明确错误、周期与�
 
 桌面与 Android 模拟器验收使用同一套自动生成的确定性 Vault。`pnpm acceptance:vault:create` 先构建当前生产产物，再在系统临时目录的 `chrono-notes-acceptance/<run-id>/` 下生成唯一 Vault；生成内容包括五类周期笔记、正文与仅 frontmatter 状态、任务进度、调休组合、三条重叠区间、全天/定时/跨日/重复 ICS，以及多语言历法参考文本，并默认启用太阳希吉拉历与乌姆库拉历以覆盖多个非公历 provider。`.obsidian` 只启用 Chrono Notes Calendar，并部署当前构建的 `main.js`、`manifest.json` 与 `styles.css`。
 
-每个生成目录都有专用标记和逐文件 SHA-256 清单。`pnpm acceptance:vault:verify -- --target <path>` 检查标记、生产版本和所有预期文件；Obsidian 可以增加自己的工作区文件，但不得静默改变生成夹具或插件产物。`pnpm acceptance:vault:clean -- --target <path>` 只允许删除指定临时根目录下、不是符号链接且带有效标记的单个 Vault。每次创建前还会清理超过七天且满足相同安全条件的残留；无标记目录和根目录外路径始终跳过。失败 Vault 可以暂留诊断，验收闭环成功后必须显式清理。
+每个生成目录都有专用标记和逐文件 SHA-256 清单。`pnpm acceptance:vault:verify -- --target <path>` 检查标记、生产版本和所有预期文件；夹具与插件产物仍按字节严格核验，Obsidian 管理的 JSON 改按语义核验，以允许宿主重写格式。核心插件的必需值不得改变，但允许宿主补充自己管理的键。Obsidian 可以增加自己的工作区文件，但不得静默改变生成夹具、插件设置或插件产物。`pnpm acceptance:vault:clean -- --target <path>` 只允许删除指定临时根目录下、不是符号链接且带有效标记的单个 Vault。每次创建前还会清理超过七天且满足相同安全条件的残留；无标记目录和根目录外路径始终跳过。失败 Vault 可以暂留诊断，验收闭环成功后必须显式清理。
 
 固定的用户 Vault、OneDrive Vault、私有 ICS、个人设置和旧工作区不得作为生成输入或提交进仓库。桌面与 Android 必须部署同一个已验证生成目录；模拟器传输、真实 UI 操作、日志采集和结果判定仍属于宿主验收，不因夹具可再生而宣称已自动化。
 

@@ -61,6 +61,12 @@
   min-width: 0;
 }
 
+.chrono-notes-periodic-note-section
+  + .chrono-notes-periodic-note-section
+  > h3 {
+  margin-top: var(--size-4-6);
+}
+
 .chrono-notes-settings-guide {
   background: var(--background-secondary);
   border-inline-start: 3px solid var(--interactive-accent);

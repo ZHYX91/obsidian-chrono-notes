@@ -18,8 +18,15 @@ import { artifactPaths } from "./build-contract.mjs";
 
 export const ACCEPTANCE_MARKER_NAME = ".chrono-notes-acceptance.json";
 export const ACCEPTANCE_MARKER_KIND = "chrono-notes-acceptance-vault";
-export const ACCEPTANCE_MARKER_VERSION = 1;
+export const ACCEPTANCE_MARKER_VERSION = 2;
 export const DEFAULT_RETENTION_HOURS = 7 * 24;
+
+const generatedJsonModes = {
+  ".obsidian/app.json": "exact",
+  ".obsidian/appearance.json": "exact",
+  ".obsidian/core-plugins.json": "subset",
+  ".obsidian/plugins/chrono-notes/data.json": "exact",
+};
 
 const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -97,10 +104,21 @@ export async function createAcceptanceVault({
       );
     }
 
+    const generatedJsonFiles = Object.fromEntries(
+      Object.entries(generatedJsonModes).map(([relativePath, mode]) => [
+        relativePath,
+        {
+          mode,
+          expected: JSON.parse(files[relativePath]),
+        },
+      ]),
+    );
+
     await writeJson(markerPath, {
       ...creatingMarker,
       state: "ready",
       generatedFiles,
+      generatedJsonFiles,
     });
     await verifyAcceptanceVault({ acceptanceRoot: safeRoot, target });
     return target;
@@ -124,11 +142,20 @@ export async function verifyAcceptanceVault({
     isRecord(marker.generatedFiles),
     "Acceptance Vault marker is missing generated file hashes",
   );
+  assert.ok(
+    isRecord(marker.generatedJsonFiles),
+    "Acceptance Vault marker is missing generated JSON contracts",
+  );
 
   for (const [relativePath, expectedHash] of Object.entries(marker.generatedFiles)) {
     assert.equal(typeof expectedHash, "string", `Invalid hash for ${relativePath}`);
     const generatedPath = resolveGeneratedPath(safeTarget, relativePath);
     await assertRegularFile(generatedPath, `Missing generated file: ${relativePath}`);
+    const jsonContract = marker.generatedJsonFiles[relativePath];
+    if (jsonContract !== undefined) {
+      await verifyGeneratedJson(generatedPath, relativePath, jsonContract);
+      continue;
+    }
     assert.equal(
       await hashFile(generatedPath),
       expectedHash,
@@ -259,6 +286,7 @@ function createFixtureFiles(settingsSchemaVersion) {
       rangeNotes: {
         showInCalendar: true,
         folder: "Intervals",
+        templatePath: "",
         scanScope: "range-folder",
         customFolder: "",
         monthViewLimit: 2,
@@ -467,6 +495,46 @@ async function assertRegularFile(filePath, message) {
 async function hashFile(filePath) {
   const content = await readFile(filePath);
   return createHash("sha256").update(content).digest("hex");
+}
+
+async function verifyGeneratedJson(filePath, relativePath, contract) {
+  assert.ok(isRecord(contract), `Invalid JSON contract for ${relativePath}`);
+  assert.ok(
+    contract.mode === "exact" || contract.mode === "subset",
+    `Invalid JSON contract mode for ${relativePath}`,
+  );
+  assert.ok("expected" in contract, `Missing JSON contract value for ${relativePath}`);
+
+  let actual;
+  try {
+    actual = await readJson(filePath);
+  } catch {
+    assert.fail(`Generated JSON is invalid: ${relativePath}`);
+  }
+
+  if (contract.mode === "exact") {
+    assert.deepEqual(actual, contract.expected, `Generated JSON changed: ${relativePath}`);
+    return;
+  }
+  assert.ok(
+    containsJsonSubset(actual, contract.expected),
+    `Generated JSON required values changed: ${relativePath}`,
+  );
+}
+
+function containsJsonSubset(actual, expected) {
+  if (Array.isArray(expected)) {
+    return Array.isArray(actual) && JSON.stringify(actual) === JSON.stringify(expected);
+  }
+  if (isRecord(expected)) {
+    return (
+      isRecord(actual) &&
+      Object.entries(expected).every(
+        ([key, value]) => key in actual && containsJsonSubset(actual[key], value),
+      )
+    );
+  }
+  return Object.is(actual, expected);
 }
 
 async function readJson(filePath) {

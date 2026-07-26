@@ -4,20 +4,25 @@ Chrono Notes Calendar is an Obsidian calendar workspace for periodic notes, opti
 
 ## Screenshots
 
-<table>
-  <thead>
-    <tr>
-      <th>Desktop</th>
-      <th>Android</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td width="70%"><img src="https://raw.githubusercontent.com/ZHYX91/obsidian-chrono-notes/main/docs/assets/chrono-notes-desktop-en.png" alt="Chrono Notes Calendar desktop interval note and month calendar"></td>
-      <td width="30%"><img src="https://raw.githubusercontent.com/ZHYX91/obsidian-chrono-notes/main/docs/assets/chrono-notes-android-en.png" alt="Chrono Notes Calendar Android month calendar"></td>
-    </tr>
-  </tbody>
-</table>
+### Periodic note navigation
+
+Move between adjacent periodic notes, jump to the parent period, or return to the calendar without leaving the note.
+
+![Chrono Notes Calendar periodic note navigation and month calendar](https://raw.githubusercontent.com/ZHYX91/obsidian-chrono-notes/main/docs/assets/chrono-notes-navigation-en.png)
+
+### Calendar workspace
+
+See note state, tasks, local ICS events, holidays, and range notes together in the month calendar.
+
+![Chrono Notes Calendar desktop range note and month calendar](https://raw.githubusercontent.com/ZHYX91/obsidian-chrono-notes/main/docs/assets/chrono-notes-desktop-en.png)
+
+### Android
+
+The same calendar workspace adapts to touch interaction and narrow screens.
+
+<p align="center">
+  <img src="https://raw.githubusercontent.com/ZHYX91/obsidian-chrono-notes/main/docs/assets/chrono-notes-android-en.png" alt="Chrono Notes Calendar Android month calendar" width="360">
+</p>
 
 ## Features
 

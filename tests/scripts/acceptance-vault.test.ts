@@ -56,6 +56,7 @@ describe("acceptance Vault lifecycle", () => {
       ics: { sources: string[] };
       locale: string;
       periodicNotes: { daily: { pattern: string } };
+      rangeNotes: { templatePath: string };
       schemaVersion: number;
     };
     const communityPlugins = JSON.parse(
@@ -79,6 +80,7 @@ describe("acceptance Vault lifecycle", () => {
       ics: { sources: ["Fixtures/acceptance.ics"] },
       locale: "en",
       periodicNotes: { daily: { pattern: "[Daily]/YYYY-MM-DD" } },
+      rangeNotes: { templatePath: "" },
       schemaVersion: 16,
     });
     expect(communityPlugins).toEqual(["chrono-notes"]);
@@ -110,6 +112,75 @@ describe("acceptance Vault lifecycle", () => {
         target,
       }),
     ).rejects.toThrow("Generated file changed: Daily/2026-07-14.md");
+  });
+
+  it("accepts host JSON normalization while preserving required values", async () => {
+    const harness = await createHarness();
+    const target = await createAcceptanceVault({
+      acceptanceRoot: harness.acceptanceRoot,
+      sourceRoot: harness.sourceRoot,
+    });
+    const jsonPaths = [
+      ".obsidian/app.json",
+      ".obsidian/appearance.json",
+      ".obsidian/core-plugins.json",
+      ".obsidian/plugins/chrono-notes/data.json",
+    ];
+
+    for (const relativePath of jsonPaths) {
+      const filePath = path.join(target, relativePath);
+      const value = JSON.parse(await readFile(filePath, "utf8")) as Record<
+        string,
+        unknown
+      >;
+      if (relativePath === ".obsidian/core-plugins.json") {
+        value.switcher = true;
+      }
+      await writeFile(filePath, JSON.stringify(value), "utf8");
+    }
+
+    await expect(
+      verifyAcceptanceVault({
+        acceptanceRoot: harness.acceptanceRoot,
+        target,
+      }),
+    ).resolves.toMatchObject({ state: "ready" });
+
+    const corePluginsPath = path.join(target, ".obsidian", "core-plugins.json");
+    const corePlugins = JSON.parse(
+      await readFile(corePluginsPath, "utf8"),
+    ) as Record<string, unknown>;
+    corePlugins["file-explorer"] = false;
+    await writeFile(corePluginsPath, JSON.stringify(corePlugins), "utf8");
+    await expect(
+      verifyAcceptanceVault({
+        acceptanceRoot: harness.acceptanceRoot,
+        target,
+      }),
+    ).rejects.toThrow(
+      "Generated JSON required values changed: .obsidian/core-plugins.json",
+    );
+  });
+
+  it("rejects changes to required generated JSON values", async () => {
+    const harness = await createHarness();
+    const target = await createAcceptanceVault({
+      acceptanceRoot: harness.acceptanceRoot,
+      sourceRoot: harness.sourceRoot,
+    });
+    const appearancePath = path.join(target, ".obsidian", "appearance.json");
+    const appearance = JSON.parse(
+      await readFile(appearancePath, "utf8"),
+    ) as Record<string, unknown>;
+    appearance.theme = "moonstone";
+    await writeFile(appearancePath, JSON.stringify(appearance), "utf8");
+
+    await expect(
+      verifyAcceptanceVault({
+        acceptanceRoot: harness.acceptanceRoot,
+        target,
+      }),
+    ).rejects.toThrow("Generated JSON changed: .obsidian/appearance.json");
   });
 
   it("accepts pnpm's literal argument separator in CLI commands", async () => {

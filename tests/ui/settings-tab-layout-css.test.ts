@@ -76,4 +76,10 @@ describe("settings tab layout CSS", () => {
     expect(styles).not.toContain(".chrono-notes-periodic-note-fields");
     expect(styles).not.toContain(".chrono-notes-periodic-section-heading");
   });
+
+  it("restores native spacing between periodic note headings", () => {
+    expect(styles).toMatch(
+      /\.chrono-notes-periodic-note-section\s*\+\s*\.chrono-notes-periodic-note-section\s*>\s*h3\s*\{[^}]*margin-top:\s*var\(--size-4-6\);/s,
+    );
+  });
 });

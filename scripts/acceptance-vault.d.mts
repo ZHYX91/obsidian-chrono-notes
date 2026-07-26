@@ -16,6 +16,13 @@ export interface AcceptanceVaultMarker {
   createdAt: string;
   pluginVersion: string;
   generatedFiles: Record<string, string>;
+  generatedJsonFiles: Record<
+    string,
+    {
+      mode: "exact" | "subset";
+      expected: unknown;
+    }
+  >;
 }
 
 export const ACCEPTANCE_MARKER_NAME: string;
