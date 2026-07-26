@@ -2,9 +2,9 @@
 
 ## Project Scope
 
-Chrono Notes Calendar is a clean rewrite of the unpublished `My Calendar` Obsidian plugin. The sibling legacy project at `../obsidian-calendar` is read-only reference material. Do not modify it while working in this repository.
+Chrono Notes Calendar is an Obsidian workspace for periodic notes, calendar extensions, regional holidays, tasks, statistics, and time ranges. The sibling project at `../obsidian-calendar` is read-only reference material. Do not modify it while working in this repository.
 
-The rewrite must reach functional parity before adding unrelated product scope. UI and UX may improve, but established date, note, task, template, interval-note, holiday, and ICS semantics must be preserved unless a documented decision changes them.
+Current date, note, task, template, interval-note, holiday, and ICS semantics are defined by the stable product, architecture, UX, and testing documents. Preserve them unless a documented decision changes them; do not expand the plugin into unrelated product scope.
 
 ## Architecture
 
@@ -17,7 +17,7 @@ Source code lives in `src/`:
 - `src/ui/`: React calendar UI and native Obsidian settings UI.
 - `src/shared/`: plugin-local settings, i18n, and small cross-feature types.
 
-The future `NoteIndex` is the single source of truth for note existence, parsed document state, tasks, previews, and statistics. Views must not read Vault files directly.
+`NoteIndex` is the single source of truth for note existence, parsed document state, tasks, previews, statistics, and range-note projections. Views must not read Vault files directly.
 
 ## Commands
 
@@ -25,7 +25,8 @@ The future `NoteIndex` is the single source of truth for note existence, parsed 
 - `pnpm typecheck`: strict TypeScript validation.
 - `pnpm test`: run Vitest once.
 - `pnpm build`: type-check and create the standard plugin assets at `dist/`.
-- `pnpm check`: type-check, test, and production build.
+- `pnpm check`: lint, source-format checks, strict type checking, the complete Vitest suite, production bundling, and artifact contracts.
+- `pnpm release:check`: `pnpm check` plus time-zone tests, the quick benchmark, and the annual holiday-data gate.
 
 ## Code Style
 
@@ -41,7 +42,9 @@ Vault indexing must handle `create`, `modify`, `rename`, and `delete`, deduplica
 
 ## Documentation
 
-Simplified Chinese is the source language for product and architecture decisions. Stable user and design documents have separate English translations. Plans, ADRs, and the live parity checklist may remain Chinese-only. Never place two full languages in the same Markdown document.
+Simplified Chinese is the source language for product and architecture decisions. Stable user and design documents use paired `.zh-CN.md` and `.en.md` files with matching section structure and translation metadata. The root `README.md` is English; its Simplified Chinese counterpart lives at `docs/i18n/README.zh-CN.md`, and their language links use absolute GitHub URLs so they also work in the Obsidian plugin catalog. The current capability checklist may remain Chinese-only. Never place two full languages in the same Markdown document.
+
+Documentation describes current behavior and current verification requirements. Remove superseded plans, handoff notes, progress logs, dated audit narratives, and obsolete alternatives after their durable decisions have been incorporated into stable documents.
 
 When changing a paired stable document, update its translation in the same change or mark its `translation_status` as `outdated`.
 

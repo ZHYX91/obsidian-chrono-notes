@@ -7,9 +7,9 @@ translation_status: source
 
 ## 1. 架构目标
 
-新架构优先保证数据只有一个所有者、解析口径一致、外部边界可替换、异步结果不会倒退，以及核心规则可以脱离 Obsidian 测试。
+当前架构优先保证数据只有一个所有者、解析口径一致、外部边界可替换、异步结果不会倒退，以及核心规则可以脱离 Obsidian 测试。
 
-当前插件 ID 为 `chrono-notes`，标准生产产物为 `dist/main.js`、`dist/manifest.json` 与 `dist/styles.css`，构建分析文件为 `dist/chrono-notes.meta.json`。相邻旧项目只作为只读需求、算法和回归样例来源，不属于运行时依赖，不接收本仓库修改，也不承担已发布版本兼容；产品范围以当前需求与功能对等清单为准。
+插件 ID 为 `chrono-notes`，标准生产产物为 `dist/main.js`、`dist/manifest.json` 与 `dist/styles.css`，构建分析文件为 `dist/chrono-notes.meta.json`。相邻参考项目只作为只读需求、算法和回归样例来源，不属于运行时依赖，也不接收本仓库修改；产品范围以当前需求与功能清单为准。
 
 ## 2. 分层
 
@@ -45,7 +45,7 @@ Vault create/modify/rename/delete
 ### 3.1 数据契约
 
 - `NoteSource` 只暴露 Markdown 相对路径枚举、完整文本读取和归一化事件订阅，不泄露 `TFile` 或 Vault。
-- `ParsedNote` 把路径、结构化 frontmatter、解析错误、预览、嵌入类型计数、任务和统计与一次 `parseNoteDocument()` 的结果聚合为递归冻结值。正文摘要与嵌入计数共用一次正文扫描：真正的 `![[...]]` / `![...](...)` 嵌入从摘要移除并分别计入图片、PDF、音频、视频、嵌入笔记或其他附件，普通链接仍保留可见文字；索引只保存数量，不递归读取嵌入笔记。任何派生字段都不能另起读取通道。YAML 根节点必须是 mapping；语法错误、类型错误和别名展开上限作为笔记内解析错误保留，不得误报为 Vault 读取失败。任务只从规范化正文提取，并保留原文件行号与旧项目的 Tasks emoji 日期标记语义。
+- `ParsedNote` 把路径、结构化 frontmatter、解析错误、预览、嵌入类型计数、任务和统计与一次 `parseNoteDocument()` 的结果聚合为递归冻结值。正文摘要与嵌入计数共用一次正文扫描：真正的 `![[...]]` / `![...](...)` 嵌入从摘要移除并分别计入图片、PDF、音频、视频、嵌入笔记或其他附件，普通链接仍保留可见文字；索引只保存数量，不递归读取嵌入笔记。任何派生字段都不能另起读取通道。YAML 根节点必须是 mapping；语法错误、类型错误和别名展开上限作为笔记内解析错误保留，不得误报为 Vault 读取失败。任务只从规范化正文提取，并保留原文件行号与受支持的 Tasks emoji 日期标记语义。
 - `IndexedNote` 是 `ParsedNote` 面向查询的递归冻结子集，只包含路径、内容状态、区间、预览、嵌入计数、任务与统计；它刻意排除源文档和 frontmatter，确保两者不会进入持久化派生缓存。NoteIndex 只在私有内存中保留规范解析文档，用于实时更新的同文档短路。
 - 区间笔记解析也是 `ParsedNote` 的派生字段。只有同时存在且符合严格语法的 `start`/`end` 才产生冻结区间：边界必须是完整补零的 ISO 公历日期 `YYYY-MM-DD`，或以该日期开头、至少包含小时和分钟的完整 ISO 日期时间；单独时间、缩减精度的年/月、基本格式日期、序数日期和 ISO 周日期一律拒绝。日期与日期时间均保留原值、是否含时间、规范日期键和稳定排序值，天数按首尾日期包含计算。同日范围有效；缺失、非字符串、无效值或反向范围产生笔记内 `NoteIntervalError`，不建立独立 Manager 缓存，也不把整篇笔记误报为 Vault 读取失败。
 - `NoteIndexSnapshot` 使用单调递增版本、显式的 `indexing | ready` 就绪状态和冻结的路径记录。`parsed`、`error` 与查询时派生的 `missing` 是互斥状态，旧快照在新事件后仍保持不变。readiness 为 `indexing` 时，快照中缺少的路径表示未知而不是不存在；selector 返回暂时的 `indexing`，周期笔记命令对该路径延后创建，已有 parsed/error entry 仍可使用。只改变 readiness 的发布复用冻结的 notes 与投影 identity，不重新物化整份 Vault 路径表。
@@ -67,7 +67,7 @@ Vault create/modify/rename/delete
 - Markdown 与非 Markdown 之间的扩展名重命名分别归一化为 delete 或 create，避免旧路径残留。
 - `NoteIndexSnapshot.taskDates` 与 `NoteIndexSnapshot.intervals` 是 NoteIndex 独占维护的增量、不可变子快照；initial 与 live publication 都把该批最终逐路径贡献一次交给 `replaceBatch()`，任务投影只复制并排序受影响 bucket 一次，区间投影只在整批贡献替换完成后统一排序一次，避免逐文件反复复制。只有对应领域贡献真实变化时才更换自身 revision/identity；无变化批次保留既有 bucket、数组和子快照身份。它们不是独立 Manager，也不拥有第二份 Vault 事实。
 
-## 5. 命令与查询分离
+## 5. 命令、查询与 UI
 
 - 查询侧由 NoteIndex 和其他只读索引提供不可变快照。
 - 命令侧由用例处理创建、打开、模板、任务改期和区间笔记写入。
@@ -77,7 +77,7 @@ Vault create/modify/rename/delete
 
 区间笔记创建由 `IntervalNoteCommands` 负责反向日期归一化、至少两日校验、确定性路径、已有文件打开、确认、模板渲染和规范区间元数据写入。命令实例按确定性路径协调正在进行的创建，同路径并发请求只写入一次，等待者返回 `created: false` 且仍按各自 target 打开；创建或模板失败时清理协调项并把新文件移入回收站后允许重试，成功写入后若仅打开失败则不得删除用户内容。文件端口负责存在性、父目录、原子创建/process 和回滚删除；模板与工作区端口和周期创建共用。日期右键 adapter 只启动输入 Modal，最终仍调用该用例，不能直接操作 Vault。
 
-区间查询直接消费单个 `NoteIndexSnapshot.intervals` 子快照中的稳定排序冻结数组，按区间目录、自定义目录或整个 Vault 过滤；普通非区间笔记不参与扫描。NoteIndex 按路径增量移除/加入区间贡献，并保持开始 epoch、结束 epoch、标题和路径全序；目录匹配必须使用完整路径段。显式时区偏移可能使 epoch 顺序与本地 `dateKey` 顺序相反，因此窗口过滤和泳道分配不得按本地日期提前终止；普通月视图每周的结构共享依赖必须覆盖实际泳道迭代中截至最后一个本周相关项的完整数组前缀。pure feature 布局先在可见时间窗内按包含首尾的日期重叠贪心分配稳定泳道，不重叠区间复用最低可用泳道；路径的确定性哈希映射到固定八色分类索引。普通月 selector 一次覆盖 core 生成的完整 4–6 周边界窗口，使同一区间跨周保留泳道和颜色，再生成列截断、前后延续、泳道上限和隐藏标题；热力月 selector 不访问 `NoteIndexSnapshot.intervals`、不执行区间筛选或泳道分配，并为每周返回冻结空区间布局。周查询继续复用普通区间布局函数。普通月与周 React 共享渲染这些冻结段并通过统一工作区端口打开路径；不得恢复旧 `IntervalNoteManager`、视图私有日期索引或两套条带算法。
+区间查询直接消费单个 `NoteIndexSnapshot.intervals` 子快照中的稳定排序冻结数组，按区间目录、自定义目录或整个 Vault 过滤；普通非区间笔记不参与扫描。NoteIndex 按路径增量移除/加入区间贡献，并保持开始 epoch、结束 epoch、标题和路径全序；目录匹配必须使用完整路径段。显式时区偏移可能使 epoch 顺序与本地 `dateKey` 顺序相反，因此窗口过滤和泳道分配不得按本地日期提前终止；普通月视图每周的结构共享依赖必须覆盖实际泳道迭代中截至最后一个本周相关项的完整数组前缀。pure feature 布局先在可见时间窗内按包含首尾的日期重叠贪心分配稳定泳道，不重叠区间复用最低可用泳道；路径的确定性哈希映射到固定八色分类索引。普通月 selector 一次覆盖 core 生成的完整 4–6 周边界窗口，使同一区间跨周保留泳道和颜色，再生成列截断、前后延续、泳道上限和隐藏标题；热力月 selector 不访问 `NoteIndexSnapshot.intervals`、不执行区间筛选或泳道分配，并为每周返回冻结空区间布局。周查询继续复用普通区间布局函数。普通月与周 React 共享渲染这些冻结段并通过统一工作区端口打开路径；区间渲染不使用视图私有日期索引、并行 Manager 缓存或重复条带算法。
 
 区间列表继续消费上述冻结结果，并由纯 feature selector 完成标题/路径不区分大小写搜索、与当前月/年相交的范围筛选和升降序稳定排序。原生 Modal 的 `useSyncExternalStore` 只从 NoteIndex 返回稳定的 `intervals` 子快照，并另行订阅区间扫描范围设置修订号；普通非区间笔记或仅持久化设置变化不会唤醒列表。列表打开和创建仍经统一工作区与命令端口，不维护手动刷新缓存。
 
@@ -85,7 +85,7 @@ Vault create/modify/rename/delete
 
 周期日期使用不含时区和时间的 `LocalDate` 领域值。core 统一拥有严格补零的日期键解析/格式化、相等/排序、非法民用日期拒绝和无宿主时区漂移的 UTC 格式化桥；日、周、月、季、年都先归一化到唯一锚点，路径格式化、路径反向识别、导航和模板上下文必须复用这些 canonical helper。`isSamePeriod()` 只比较 `getPeriodAnchor()` 产生的 canonical 锚点，并显式接收周起始规则。独立 `calendar-week` core 以 ISO 周一为周年/周号参考；周日起始只把该周边界向前扩一天，不能改用所选周日自身的 ISO 身份。它统一提供周身份、动态 52/53 周枚举、跨年边界、按周选择和按周年选择；后两者保留相对周首的星期偏移，W53 进入 52 周年份时夹到 W52。Luxon 只封装在 core 的日期算法与编译后格式后端中；对外路径与内置模板统一使用明确支持的 Obsidian/Moment 子集，Luxon 和 Moment 都不成为 UI 或 adapter 数据类型。系统时钟读取隔离在 shared 的本地日期时钟中，以本地年/月/日而非 UTC 日期产生今日值并计算下一个本地午夜。日历 root 通过 `useLocalToday()` 在午夜重新同步，页面从后台恢复可见时再校准一次；呈现层再以该值和 core `isSamePeriod()` 即时派生统一的 `is-current-period`，今日标记和依赖今日的逾期查询随之更新，但不重置用户当前选择或导航上下文。current 状态不进入 month/week/year query、NoteIndex/ICS 快照、任何缓存或设置；周期选择器和迷你日历保留各自独立的状态实现。
 
-## 6. UI 状态
+**UI 状态**
 
 app 组合根通过公开的 `getLanguage()` API 取得 Obsidian 当前界面语言，并把同一 translator 契约注入设置页、日历、Navbar、命令与 Modal。`auto` 只以宿主界面语言为准，不读取浏览器或操作系统 locale；下文所称系统 locale 均指该 Obsidian locale。
 
@@ -107,7 +107,7 @@ app 组合根通过公开的 `getLanguage()` API 取得 Obsidian 当前界面语
 
 中国农历 provider 使用 `lunar-typescript` 同步计算月日、闰月、节气与传统节日，结构日期不会被事件覆盖；干支 provider 平日输出日柱，交节日输出新月柱并保留完整年/月/日柱。太阳希吉拉历、埃塞俄比亚历、希伯来历、印度国定历、伊斯兰民用历和乌姆库拉历共享一个无依赖的 core `Intl.DateTimeFormat` 适配器，把无时区的公历 `LocalDate` 统一按 UTC 解释后查询宿主 ICU/Unicode 历法数据。适配器先检查 `resolvedOptions().calendar`，运行时不支持时设置页保留明确不可用状态且 selector fail open；formatter 使用容量 64 的 LRU，普通日只显示日期号，换月显示月日，换年显示年月日，完整值始终进入无障碍文本。伊斯兰民用历与乌姆库拉历保持独立 provider，不推导宗教节日，也不扩充法定节假日数据。
 
-core 的 caller-owned `LunarDateContext` 封装一次公历到农历的基础转换，农历与干支的 from-context 入口共享它；直接 registry 同时选择两种 extension 时也只为该日期创建一次 context，不建立模块全局缓存。第三方库的全局语言切换封装在独立 core 适配层中，只围绕单次同步调用切换并在 `finally` 恢复。旧项目按模块长期存活、职责混杂的 LRU/Manager 缓存不迁移；新的 `CalendarDecorationCache` 只缓存与笔记/ICS 无关的冻结装饰，并分为最终组合、单一 extension provider、单一 holiday-region provider 和按日期的 lunar context 四层 LRU。最终组合 key 包含日期、规范 locale 和两类有序槽位，provider key 只包含日期、规范 locale 与单个 provider ID，context key 只包含日期；因此切换槽位组合可复用 provider 结果和同日基础转换，同时保持选择顺序与对象身份。四层各自使用相同的默认 2048 上限，由单个已挂载日历视图拥有并在卸载时一起清空；`size` 只表示最终组合层。底层 provider 仍可脱离缓存纯测试。
+core 的 caller-owned `LunarDateContext` 封装一次公历到农历的基础转换，农历与干支的 from-context 入口共享它；直接 registry 同时选择两种 extension 时也只为该日期创建一次 context，不建立模块全局缓存。第三方库的全局语言切换封装在独立 core 适配层中，只围绕单次同步调用切换并在 `finally` 恢复。`CalendarDecorationCache` 只缓存与笔记/ICS 无关的冻结装饰，并分为最终组合、单一 extension provider、单一 holiday-region provider 和按日期的 lunar context 四层 LRU；代码中不存在模块级长期存活、职责混杂的 LRU 或 Manager 缓存。最终组合 key 包含日期、规范 locale 和两类有序槽位，provider key 只包含日期、规范 locale 与单个 provider ID，context key 只包含日期；因此切换槽位组合可复用 provider 结果和同日基础转换，同时保持选择顺序与对象身份。四层各自使用相同的默认 2048 上限，由单个已挂载日历视图拥有并在卸载时一起清空；`size` 只表示最终组合层。底层 provider 仍可脱离缓存纯测试。
 
 中国大陆节假日由独立 core provider 读取 `lunar-typescript` 的法定放假与补班数据，返回冻结的地区假日、调休标记和显式数据覆盖状态。普通工作日与数据未覆盖年份不得使用同一语义表示；繁体名称在 provider 边界完成映射。共享日 selector 仅在 `holidayRegions` 包含 `cn` 时附加大陆元数据，与 `calendarExtensions` 无关；React 只显示 `CalendarDay` 结果中的 `休/班` 标记、无障碍名称和预览元信息，不直接调用节假日库。
 
@@ -121,11 +121,11 @@ Obsidian `ItemView` 只负责 React root 生命周期和插件用例桥接。每
 
 Note Navbar 的 feature selector 只接受文件路径、`intervals` 子快照和周期/区间设置。只有已启用周期规则的完整反向路径匹配才能生成冻结上下文；前后与上级目标复用统一周期锚点，上级目标不仅跳过未启用或空 pattern 的类型，也跳过目标路径无法 `format → parse` 往返的配置，避免呈现不可打开的上级入口。周记/月记相关区间从同一增量区间投影按周期边界相交筛选。Obsidian manager 按 `WorkspaceLeaf` 管理挂载表，以每个周期 `MarkdownView` 公开的 `contentEl` 为稳定锚点，在它前方挂载独立 React root，并监听 active-leaf-change、layout-change、file-open、Vault rename 与定向设置变化；父级 mounted class 与容器在重挂载、叶关闭、设置关闭或文件移出完整周期路径时一并清理，侧边栏获得焦点不会删除仍打开的 Markdown 挂载。Navbar 作为 `flex: 0 0 auto` 的正文外工具条，后续 `view-content` 以可收缩 flex item 保持编辑/阅读区滚动；仅 phone 的 floating-nav/auto-full-screen 模式复用宿主 `--view-header-top-offset + --view-header-height` 把 Navbar 放到固定原生头下方，并归零宿主的外层顶部占位、恢复普通 Markdown 内距与不透明顶部 mask，避免重复 safe-area/header 留白。普通手机、平板和桌面不额外叠加 `env(safe-area-inset-top)`。组件的 `useSyncExternalStore` 只返回稳定 interval 子快照，普通非区间笔记变化不会重渲染 Navbar，也不读取 Vault。呈现层用三列对称 CSS grid 把前后/选日与可选上级周期组成整体居中的导航组，把打开日历保留在末列；窄容器只收起上级文字，不创建第二套 DOM 或命令路径。
 
-日期选择由 pure feature 模型验证 `LocalDate`、月份移动和旧版四种文本格式，并复用 core 的 4–6 周边界月网格。React 迷你日历只维护显示月份、焦点和提交锁；标题行把前月、固定宽度年月入口、后月和今天组成居中操作组，日期 grid 声明六个固定高度数据行轨道，但只渲染模型实际提供的边界周，因此弹窗高度稳定且不会制造完全无关的周。Obsidian Modal 将选中日期回调给主日历导航请求或周期笔记命令；主视图的全局日期跳转仍切换到目标月，Navbar 以同一 Modal 打开当前类型笔记。主周视图不经过该 Modal，而由纯周模型驱动互斥的周历年/周 Popover；选择只更新当前日期、月上下文和日粒度选择，不修改视图类型。命令面板的迷你日历和直接跳转继续复用原链路，不解析路径或读取 Vault。
+日期选择由 pure feature 模型验证 `LocalDate`、月份移动和四种受支持的文本格式，并复用 core 的 4–6 周边界月网格。React 迷你日历只维护显示月份、焦点和提交锁；标题行把前月、固定宽度年月入口、后月和今天组成居中操作组，日期 grid 声明六个固定高度数据行轨道，但只渲染模型实际提供的边界周，因此弹窗高度稳定且不会制造完全无关的周。Obsidian Modal 将选中日期回调给主日历导航请求或周期笔记命令；主视图的全局日期跳转切换到目标月，Navbar 以同一 Modal 打开当前类型笔记。主周视图不经过该 Modal，而由纯周模型驱动互斥的周历年/周 Popover；选择只更新当前日期、月上下文和日粒度选择，不修改视图类型。命令面板的迷你日历和直接跳转使用同一链路，不解析路径或读取 Vault。
 
 日期右键菜单先由 feature 层根据配置与 NoteIndex 存在状态生成冻结 action 模型，再由 Obsidian adapter 映射为 `Menu`、剪贴板和 `Notice`。adapter 显式使用 Obsidian 的 HTML 菜单模式（`setUseNativeMenu(false)`），保证当前桌面版中菜单、分组和图标可见。React 只传递日期与快照状态；打开/创建仍调用周期笔记命令，菜单不得直接读写 Vault。
 
-## 7. 设置
+**设置**
 
 设置结构带 `schemaVersion`；当前 schema v17 在统一历法和周期路径契约时保留已发布 Chrono Notes Calendar 配置：新字段缺失时把 `calendarOverlays` 移入 `calendarExtensions` 并删除旧字段，把能够确认的 0.2.1 之前 Luxon 周期路径转换为文档化的 Obsidian/Moment 语法，同时保持已经合法的 Moment 格式和无法识别的自定义字符串，不用默认值覆盖。schema v16 把旧三档待办标注迁移为 `showTaskProgress: boolean`：`none` 迁移为 `false`，`color` 与 `hole` 迁移为 `true`，并删除旧字段。schema v15 使用 `confirmPeriodicNoteCreation` 与 `confirmIntervalNoteCreation` 分别表达周期笔记和区间笔记的创建确认，删除共享的 `confirmBeforeCreate`，不把旧值翻译为任一新开关。schema v14 使用 `showNoteIndicators: boolean` 表达可见状态，已删除 `indicatorPosition` 运行时字段和校验器，且不把旧位置值翻译为新开关；schema v10–v13 依次加入季度命名、字体模式/固定因子、任务标注和 Properties 日期接管。`calendarExtensions` 归一化只接受静态注册表中的 ID，保持首次出现顺序、去重并截取最多两项；设置 UI 用两个有序下拉槽位排除另一槽已选项。`holidayRegions` 同样只保留已知静态 provider ID、首次顺序与前三项，设置 UI 使用“第一个地区 / 第二个地区 / 第三个地区”三个有序槽位、排除重复并在清空前槽后自动前移。非法枚举回退，因子取整并夹在 `0–20`，布尔字段只接受真实布尔值。加载流程是“读取原始数据 → 按版本迁移 → 校验归一化 → 生成运行时设置”；最终归一化丢弃已删除字段。缺失、非法或早于 v1 的版本按 v1 处理，未来版本只复制原始数据而不由旧迁移器降级。未发布且使用不同插件 ID 的 My Calendar 扁平设置不属于自动迁移输入。保存设置后按字段差异触发定向 effect。
 
@@ -137,7 +137,7 @@ Note Navbar 的 feature selector 只接受文件路径、`intervals` 子快照�
 
 日期属性打开日记由 pure ISO 日期输入解析器与 Obsidian 捕获阶段适配器组成。适配器仅在设置开启、日记已配置、主键点击命中 `.metadata-properties` 内日期类型属性的打开图标且输入值有效时阻止原事件，并把日期与默认/新标签目标交给统一周期笔记命令。Properties 中的 Wiki/Markdown 链接、正文链接、非日期属性、非主键、未配置日记和非法日期全部透传。适配器不读取 Vault，也不建立第二份笔记状态。
 
-## 8. CSS
+**CSS**
 
 月视图把每个周序号按钮作为独立格渲染，其四角统一使用与日期格相同的 `5px` 圆角；不再保留旧连续周轨道仅左侧圆角、右侧直角的形状。年概览的月/季度状态叠加层固定在 `top: 4px`，在不改变入口格高或标签几何中心的前提下，与标签形成约 `2px` 可见间距。
 
@@ -155,11 +155,11 @@ Note Navbar 的 feature selector 只接受文件路径、`intervals` 子快照�
 
 源样式按 feature 拆分，生产构建合并为一个 `styles.css`。所有选择器以 `chrono-notes-` 或插件根节点为作用域，避免污染其他插件；状态规则必须绑定具体日历控件类，不得新增无插件作用域的全局 `.is-current-period` 或 `.is-selected` 选择器。
 
-## 9. 复用旧项目的规则
+**相邻项目边界**
 
-旧项目只提供需求、算法和回归样例。可以迁移纯日期算法、节假日数据和经过验证的解析器，但不得照搬分散 Manager 缓存、旧 CSS 结构或重复文件读取路径。
+相邻参考项目保持只读，只提供经过验证的需求、纯算法、数据和回归样例。本仓库不包含该项目的分散 Manager 缓存、CSS 结构或重复文件读取路径。
 
-## 10. 性能与就绪边界
+## 6. 性能与就绪边界
 
 `lunar-typescript` 的语言作用域只包围同步调用。目标语言与当前语言相同时不得触发库的全量消息更新；操作内部即使改写全局语言或抛错，`finally` 仍须按需恢复进入作用域前的语言，且作用域绝不跨越 `await`。
 

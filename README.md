@@ -57,7 +57,7 @@ pnpm install
 pnpm check
 ```
 
-Development requires Node.js 22.13 or later in the 22.x line, or Node.js 24 and later, plus pnpm 11.7.0. See the [developer documentation](https://github.com/ZHYX91/obsidian-chrono-notes/blob/main/docs/architecture.md) for architecture and testing details.
+Development requires Node.js 22.13 or later in the 22.x line, or Node.js 24 and later, plus pnpm 11.7.0. See the [developer documentation](https://github.com/ZHYX91/obsidian-chrono-notes/blob/main/docs/architecture.en.md) for architecture and testing details.
 
 Questions, usage help, and general feedback are welcome in [GitHub Discussions](https://github.com/ZHYX91/obsidian-chrono-notes/discussions). Please use the structured [GitHub issue forms](https://github.com/ZHYX91/obsidian-chrono-notes/issues/new/choose) for reproducible bugs and concrete feature requests. Report vulnerabilities only through GitHub's [private vulnerability reporting](https://github.com/ZHYX91/obsidian-chrono-notes/security/advisories/new); see the [security policy](https://github.com/ZHYX91/obsidian-chrono-notes/security/policy) for details. Never post real private Vault paths, note or task content, calendar or ICS data, source URLs, credentials, or personal information publicly.
 
@@ -70,4 +70,4 @@ Chrono Notes Calendar draws inspiration from:
 
 ## 中文
 
-查看[简体中文说明](https://github.com/ZHYX91/obsidian-chrono-notes/blob/main/README.zh-CN.md)。
+查看[简体中文说明](https://github.com/ZHYX91/obsidian-chrono-notes/blob/main/docs/i18n/README.zh-CN.md)。
