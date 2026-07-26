@@ -9,13 +9,13 @@ export type HolidayOfficialPublicationStatus =
 
 export type HolidayCoverageDisposition = "available" | "warning" | "blocking";
 
-export interface HolidayPublicationVerification {
+interface HolidayPublicationVerification {
   readonly status: Exclude<HolidayOfficialPublicationStatus, "unverified">;
   readonly verifiedOn: string;
   readonly sourceUrl: string;
 }
 
-export interface HolidayRegionYearCoverage {
+interface HolidayRegionYearCoverage {
   readonly region: HolidayRegion;
   readonly year: number;
   readonly coverage: HolidayDataCoverage;

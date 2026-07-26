@@ -7,7 +7,7 @@ import {
 import { parseNoteInterval } from "../../core/note/note-interval";
 import type { IndexedNote } from "./indexed-note";
 
-export const NOTE_INDEX_CACHE_SCHEMA = 1;
+const NOTE_INDEX_CACHE_SCHEMA = 1;
 
 export interface PersistedNoteIndexEntry {
   readonly file: NoteSourceFile;

@@ -76,7 +76,7 @@ export interface ChronoNotesSettings {
   ics: IcsSettings;
 }
 
-export const DEFAULT_SETTINGS: Readonly<ChronoNotesSettings> = {
+const DEFAULT_SETTINGS: Readonly<ChronoNotesSettings> = {
   schemaVersion: SETTINGS_SCHEMA_VERSION,
   locale: "auto",
   weekStartDay: "monday",

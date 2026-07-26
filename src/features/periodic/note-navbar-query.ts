@@ -28,7 +28,7 @@ export interface NoteNavbarQueryOptions {
   readonly rangeNotes: Readonly<RangeNoteSettings>;
 }
 
-export interface NoteNavbarTarget {
+interface NoteNavbarTarget {
   readonly noteType: PeriodicNoteType;
   readonly date: LocalDate;
 }

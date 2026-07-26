@@ -17,7 +17,7 @@ export interface IcsParseOptions {
   readonly displayZone: string;
 }
 
-export interface IcsDateValue {
+interface IcsDateValue {
   readonly date: LocalDate;
   readonly timeMinutes: number | null;
   readonly timestamp: number;

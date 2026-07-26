@@ -39,13 +39,13 @@ export interface OpenOrCreatePeriodicNoteRequest {
   readonly confirmCreate?: (context: PeriodicNoteCreateConfirmation) => Promise<boolean>;
 }
 
-export interface PeriodicNoteCreateConfirmation {
+interface PeriodicNoteCreateConfirmation {
   readonly date: LocalDate;
   readonly noteType: PeriodicNoteType;
   readonly path: string;
 }
 
-export interface CascadeFailure {
+interface CascadeFailure {
   readonly name: string;
   readonly message: string;
 }

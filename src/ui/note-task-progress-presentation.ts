@@ -1,7 +1,7 @@
 import type { NoteStatistics } from "../core/note/note-statistics";
 import type { Translator } from "../shared/i18n";
 
-export type NoteTaskProgressState =
+type NoteTaskProgressState =
   | "none"
   | "not-started"
   | "in-progress"

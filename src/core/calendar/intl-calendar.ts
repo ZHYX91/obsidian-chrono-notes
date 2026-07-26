@@ -29,10 +29,6 @@ const FORMATTER_CAPACITY = 64;
 const FORMATTERS = new Map<string, Intl.DateTimeFormat>();
 const EMPTY_EVENTS = Object.freeze([]);
 
-export function isIntlCalendarId(value: CalendarExtensionId): value is IntlCalendarId {
-  return (INTL_CALENDAR_IDS as readonly string[]).includes(value);
-}
-
 export function isIntlCalendarSupported(
   calendar: IntlCalendarId,
   locale: string,

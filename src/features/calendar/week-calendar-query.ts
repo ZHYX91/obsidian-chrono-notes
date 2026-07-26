@@ -44,7 +44,7 @@ export interface WeekCalendarQueryOptions {
   readonly decorationCache?: CalendarDecorationCache;
 }
 
-export interface WeekTaskOccurrence {
+interface WeekTaskOccurrence {
   readonly date: LocalDate;
   readonly dateKey: string;
   readonly dateKinds: readonly WeekTaskDateKind[];

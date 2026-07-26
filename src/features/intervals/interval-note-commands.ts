@@ -43,7 +43,7 @@ export type OpenOrCreateIntervalNoteResult =
   | Readonly<{ status: "cancelled"; path: string }>
   | Readonly<{ status: "opened"; path: string; created: boolean }>;
 
-export class IntervalNoteCreationError extends Error {
+class IntervalNoteCreationError extends Error {
   override readonly name = "IntervalNoteCreationError";
 
   constructor(

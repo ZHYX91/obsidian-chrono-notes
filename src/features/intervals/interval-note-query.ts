@@ -1,12 +1,8 @@
-import {
-  buildMonthGrid,
-  type MonthGrid,
-} from "../../core/calendar/month-grid";
+import type { MonthGrid } from "../../core/calendar/month-grid";
 import {
   shiftPeriod,
   toDateTime,
   type LocalDate,
-  type WeekStartDay,
 } from "../../core/periodic/periodic-date";
 import type { RangeNoteSettings } from "../../shared/settings";
 import type { NoteIndexSnapshot } from "../notes/note-index";
@@ -23,7 +19,7 @@ export interface IntervalNoteQuery {
   readonly items: readonly IntervalNoteItem[];
 }
 
-export interface IntervalWeekSegment extends IntervalNoteItem {
+interface IntervalWeekSegment extends IntervalNoteItem {
   readonly lane: number;
   readonly colorIndex: number;
   readonly startColumn: number;
@@ -32,7 +28,7 @@ export interface IntervalWeekSegment extends IntervalNoteItem {
   readonly endsAfterWeek: boolean;
 }
 
-export type IntervalHiddenItem = IntervalNoteItem;
+type IntervalHiddenItem = IntervalNoteItem;
 
 export interface IntervalWeekData {
   readonly items: readonly IntervalWeekSegment[];
@@ -102,19 +98,6 @@ export function selectIntervalWeekData(
   const window = createDayWindow(weekStart, weekEnd);
   const lanes = allocateIntervalLanes(items, window);
   return buildWeekData(lanes, window, maxItems);
-}
-
-export function selectMonthIntervalRows(
-  target: Readonly<{ year: number; month: number }>,
-  weekStartDay: WeekStartDay,
-  snapshot: NoteIndexSnapshot,
-  settings: Readonly<RangeNoteSettings>,
-): MonthIntervalRows {
-  return selectMonthIntervalRowsForGrid(
-    buildMonthGrid(target.year, target.month, weekStartDay),
-    snapshot,
-    settings,
-  );
 }
 
 export function selectMonthIntervalRowsForGrid(

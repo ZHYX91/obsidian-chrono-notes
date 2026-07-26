@@ -1,17 +1,14 @@
 import type { LocalDate } from "../periodic/periodic-date";
 
-export const CALENDAR_EXTENSION_IDS = [
-  "chinese-lunar",
-  "ganzhi",
-  "persian",
-  "ethiopic",
-  "hebrew",
-  "indian",
-  "islamic-civil",
-  "islamic-umalqura",
-] as const;
-
-export type CalendarExtensionId = typeof CALENDAR_EXTENSION_IDS[number];
+export type CalendarExtensionId =
+  | "chinese-lunar"
+  | "ganzhi"
+  | "persian"
+  | "ethiopic"
+  | "hebrew"
+  | "indian"
+  | "islamic-civil"
+  | "islamic-umalqura";
 export type CalendarExtensionEventKind = "festival" | "solar-term";
 export type CalendarExtensionTransition = "month" | "year-month";
 

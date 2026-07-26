@@ -1,6 +1,6 @@
 export type NoteContentState = "empty" | "yaml-only" | "has-body";
-export type FrontmatterStatus = "none" | "valid" | "unterminated";
-export type LineEnding = "lf" | "crlf" | "cr" | "none" | "mixed";
+type FrontmatterStatus = "none" | "valid" | "unterminated";
+type LineEnding = "lf" | "crlf" | "cr" | "none" | "mixed";
 
 export interface ParsedNoteDocument {
   readonly state: NoteContentState;

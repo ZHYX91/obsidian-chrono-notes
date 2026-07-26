@@ -1,4 +1,4 @@
-export const YEAR_QUARTER_COUNT = 4;
+const YEAR_QUARTER_COUNT = 4;
 export const INITIAL_RENDERED_QUARTERS = Object.freeze([1, 2]);
 
 export function clampQuarter(quarter: number): number {

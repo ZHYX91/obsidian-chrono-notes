@@ -7,12 +7,12 @@ import {
   type WeekStartDay,
 } from "../periodic/periodic-date";
 
-export interface MonthGridDay {
+interface MonthGridDay {
   readonly date: LocalDate;
   readonly inCurrentMonth: boolean;
 }
 
-export interface MonthGridWeek {
+interface MonthGridWeek {
   readonly weekNumber: number;
   readonly weekYear: number;
   readonly days: readonly MonthGridDay[];

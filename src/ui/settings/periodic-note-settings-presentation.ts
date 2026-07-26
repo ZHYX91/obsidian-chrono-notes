@@ -70,7 +70,7 @@ export function createPeriodicNotePathPreview(
   return Object.freeze({ status: "valid", path });
 }
 
-export function getDefaultPeriodicNoteFilenamePattern(noteType: PeriodicNoteType): string {
+function getDefaultPeriodicNoteFilenamePattern(noteType: PeriodicNoteType): string {
   return DEFAULT_FILENAME_PATTERNS[noteType];
 }
 

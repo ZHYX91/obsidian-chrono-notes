@@ -1,5 +1,5 @@
 export type HolidayDataCoverage = "available" | "unavailable";
-export type RegionalHolidayRegion = "cn" | "sg";
+type RegionalHolidayRegion = "cn" | "sg";
 export type RegionalHolidayLocale = "en" | "zh-CN" | "zh-TW";
 
 export interface RegionalHoliday {

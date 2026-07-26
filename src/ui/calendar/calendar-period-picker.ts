@@ -6,7 +6,7 @@ export interface YearPickerWindow {
   readonly years: readonly number[];
 }
 
-export interface MonthPickerItem {
+interface MonthPickerItem {
   readonly month: number;
   readonly label: string;
 }

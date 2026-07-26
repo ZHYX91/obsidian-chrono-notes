@@ -2,7 +2,7 @@ import { DateTime } from "luxon";
 
 import { toDateTime, type LocalDate } from "../periodic/periodic-date";
 
-export type NoteIntervalErrorReason =
+type NoteIntervalErrorReason =
   | "missing-boundary"
   | "invalid-type"
   | "invalid-value"

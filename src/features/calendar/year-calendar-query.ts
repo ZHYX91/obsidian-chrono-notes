@@ -38,7 +38,7 @@ export interface YearHeatmapDay extends IndexedPeriodicNote {
   readonly heatmap: HeatmapMetric;
 }
 
-export interface YearCalendarMonth {
+interface YearCalendarMonth {
   readonly month: number;
   readonly summary: YearPeriodicSummary;
   readonly heatmapCells: readonly (YearHeatmapDay | null)[];

@@ -30,25 +30,25 @@ import {
   type TaskDateIndexSnapshot,
 } from "./note-index-projections";
 
-export interface IndexedNoteIndexEntry {
+interface IndexedNoteIndexEntry {
   readonly kind: "parsed";
   readonly revision: number;
   readonly note: IndexedNote;
 }
 
-export interface NoteReadFailure {
+interface NoteReadFailure {
   readonly name: string;
   readonly message: string;
 }
 
-export interface ErrorNoteIndexEntry {
+interface ErrorNoteIndexEntry {
   readonly kind: "error";
   readonly path: string;
   readonly revision: number;
   readonly error: NoteReadFailure;
 }
 
-export interface MissingNoteIndexEntry {
+interface MissingNoteIndexEntry {
   readonly kind: "missing";
   readonly path: string;
 }
