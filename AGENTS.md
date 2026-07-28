@@ -42,7 +42,7 @@ Vault indexing must handle `create`, `modify`, `rename`, and `delete`, deduplica
 
 ## Documentation
 
-Simplified Chinese is the source language for product and architecture decisions. Stable user and design documents use paired `.zh-CN.md` and `.en.md` files with matching section structure and translation metadata. The root `README.md` is English; its Simplified Chinese counterpart lives at `docs/i18n/README.zh-CN.md`, and their language links use absolute GitHub URLs so they also work in the Obsidian plugin catalog. The current capability checklist may remain Chinese-only. Never place two full languages in the same Markdown document.
+Simplified Chinese is the source language for product and architecture decisions. Stable user and design documents use paired `.zh-CN.md` and `.en.md` files with matching section structure and translation metadata. The root `README.md` is English; translations use `docs/i18n/README.<locale>.md`. Every README variant starts with the canonical product title followed by the same native-language navigation order, using absolute GitHub `blob/main` links so navigation also works in the Obsidian plugin catalog. The current capability checklist may remain Chinese-only. Never place two full languages in the same Markdown document.
 
 Documentation describes current behavior and current verification requirements. Remove superseded plans, handoff notes, progress logs, dated audit narratives, and obsolete alternatives after their durable decisions have been incorporated into stable documents.
 

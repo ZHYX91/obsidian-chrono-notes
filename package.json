@@ -19,11 +19,12 @@
     "holiday:check": "node scripts/check-holiday-coverage.mjs",
     "lint": "eslint main.ts src --max-warnings 0",
     "format:check": "node scripts/check-source-style.mjs",
+    "check:readme-i18n": "node scripts/check-readme-i18n.mjs",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
     "test:timezones": "node scripts/run-tests-in-timezones.mjs",
-    "check": "npm run lint && npm run format:check && npm run typecheck && npm run test && npm run build:bundle && npm run artifact:check",
+    "check": "npm run lint && npm run format:check && npm run check:readme-i18n && npm run typecheck && npm run test && npm run build:bundle && npm run artifact:check",
     "release:check": "npm run check && npm run test:timezones && npm run bench:quick && npm run holiday:check"
   },
   "keywords": [

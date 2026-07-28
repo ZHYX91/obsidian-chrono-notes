@@ -1,4 +1,6 @@
-# Chrono Notes Calendar（时序笔记）
+# Chrono Notes Calendar
+
+[English](https://github.com/ZHYX91/obsidian-chrono-notes/blob/main/README.md) · [简体中文](https://github.com/ZHYX91/obsidian-chrono-notes/blob/main/docs/i18n/README.zh-CN.md)
 
 Chrono Notes Calendar 是一个面向 Obsidian 周期笔记工作流的日历插件，整合周期笔记、可选历法扩展、地区节假日、任务、统计和区间笔记。
 
@@ -72,7 +74,3 @@ Chrono Notes Calendar 受到以下项目的启发：
 
 - Liam Cain：[Calendar](https://github.com/liamcain/obsidian-calendar-plugin)
 - 纳米级尘埃（a-nano-dust）：[Dust Calendar](https://github.com/a-nano-dust/dust-obsidian-calendar)
-
-## English
-
-See the [English README](https://github.com/ZHYX91/obsidian-chrono-notes/blob/main/README.md).

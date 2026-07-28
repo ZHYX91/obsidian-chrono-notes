@@ -1,5 +1,7 @@
 # Chrono Notes Calendar
 
+[English](https://github.com/ZHYX91/obsidian-chrono-notes/blob/main/README.md) · [简体中文](https://github.com/ZHYX91/obsidian-chrono-notes/blob/main/docs/i18n/README.zh-CN.md)
+
 Chrono Notes Calendar is an Obsidian calendar workspace for periodic notes, optional calendar extensions, regional holidays, tasks, statistics, and time-range notes.
 
 ## Screenshots
@@ -72,7 +74,3 @@ Chrono Notes Calendar draws inspiration from:
 
 - Liam Cain: [Calendar](https://github.com/liamcain/obsidian-calendar-plugin)
 - a-nano-dust (纳米级尘埃): [Dust Calendar](https://github.com/a-nano-dust/dust-obsidian-calendar)
-
-## 中文
-
-查看[简体中文说明](https://github.com/ZHYX91/obsidian-chrono-notes/blob/main/docs/i18n/README.zh-CN.md)。
