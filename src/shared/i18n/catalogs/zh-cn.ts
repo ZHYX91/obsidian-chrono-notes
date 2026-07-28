@@ -179,7 +179,7 @@ export const ZH_CN_MESSAGES = {
   "settings.general.title": "常规",
   "settings.general.language": "语言",
   "settings.general.languageDesc": "跟随 Obsidian 或选择插件语言。",
-  "settings.general.auto": "自动",
+  "settings.general.auto": "跟随 Obsidian",
   "settings.general.languageEnglish": "English",
   "settings.general.languageSimplifiedChinese": "简体中文",
   "settings.general.languageTraditionalChinese": "繁體中文",

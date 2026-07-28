@@ -188,7 +188,7 @@ export const HI_MESSAGES = Object.freeze({
   "settings.general.title": "सामान्य",
   "settings.general.language": "भाषा",
   "settings.general.languageDesc": "Obsidian का अनुसरण करें या एक प्लगइन भाषा चुनें।",
-  "settings.general.auto": "ऑटो",
+  "settings.general.auto": "Obsidian का अनुसरण करें",
   "settings.general.languageEnglish": "अंग्रेजी",
   "settings.general.languageSimplifiedChinese": "简体中文",
   "settings.general.languageTraditionalChinese": "繁體中文",

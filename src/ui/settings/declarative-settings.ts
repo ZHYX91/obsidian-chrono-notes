@@ -209,7 +209,7 @@ export function applyDeclarativeControlValue(
     case "weekStartDay":
       assertValue(isWeekStartDay(value), "week start day");
       settings.weekStartDay = value;
-      return immediateUpdate();
+      return immediateNone();
     case "showNoteNavbar":
     case "interceptPropertyDateClicks":
     case "showHoverPreview":
@@ -275,7 +275,7 @@ export function applyDeclarativeControlValue(
     case "ics.enabled":
       assertValue(typeof value === "boolean", key);
       settings.ics.enabled = value;
-      return immediateUpdate();
+      return immediateNone();
     case "ics.sources":
       assertValue(typeof value === "string", key);
       settings.ics.sources = normalizeSourceInput(value);
@@ -369,6 +369,7 @@ function getGeneralDefinitions(
     {
       type: "group",
       heading: t("settings.general.obsidianProperties"),
+      cls: "chrono-notes-property-format-settings",
       items: [
         {
           name: t("settings.general.propertyDateDisplayFormat"),

@@ -167,6 +167,12 @@
   color: var(--text-error);
 }
 
+.chrono-notes-property-format-settings .setting-item-control select {
+  box-sizing: border-box;
+  inline-size: 22rem;
+  max-inline-size: 100%;
+}
+
 .chrono-notes-template-path-example,
 .chrono-notes-range-path-example {
   margin-top: 4px;

@@ -147,6 +147,11 @@ describe("periodic note settings structure", () => {
     expect(generalSectionSource).toContain("isValidPropertyDateFormat");
     expect(generalSectionSource).toContain("isValidPropertyTimeFormat");
     expect(generalSectionSource).toContain("PROPERTY_FORMAT_PREVIEW_VALUE");
+    expect(
+      generalSectionSource.match(
+        /settingEl\.addClass\("chrono-notes-property-format-settings"\)/g,
+      ),
+    ).toHaveLength(2);
   });
 
   it("debounces text persistence while serializing at the shared persistence boundary", () => {

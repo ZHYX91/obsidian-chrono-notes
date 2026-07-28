@@ -56,6 +56,12 @@ describe("declarative settings", () => {
       "Extensions & integrations",
     ]);
     expect(new Set(pages.map(({ name }) => name)).size).toBe(pages.length);
+    expect(pages[0]?.items).toEqual(expect.arrayContaining([
+      expect.objectContaining({
+        type: "group",
+        cls: "chrono-notes-property-format-settings",
+      }),
+    ]));
     expect(getControlKeys(pages)).toEqual([
       "locale",
       "weekStartDay",
@@ -123,6 +129,11 @@ describe("declarative settings", () => {
     });
     expect(settings.locale).toBe("zh-CN");
 
+    expect(applyDeclarativeControlValue(settings, "weekStartDay", "sunday")).toEqual({
+      persistence: "immediate",
+      refresh: "none",
+    });
+
     expect(applyDeclarativeControlValue(
       settings,
       "periodicNotes.daily.enabled",
@@ -162,6 +173,11 @@ describe("declarative settings", () => {
     )).toEqual({ persistence: "scheduled", refresh: "none" });
     expect(settings.ics.sources).toEqual(["Calendars/team.ics", "other.ics"]);
 
+    expect(applyDeclarativeControlValue(settings, "ics.enabled", true)).toEqual({
+      persistence: "immediate",
+      refresh: "none",
+    });
+
     expect(() => applyDeclarativeControlValue(
       settings,
       "rangeNotes.monthViewLimit",
@@ -195,6 +211,27 @@ describe("declarative settings", () => {
     expect(cleanup).toBeTypeOf("function");
     cleanup?.();
     expect(obsidianMocks.closeSuggest).toHaveBeenCalledOnce();
+    expect(context.flushSettingsSave).toHaveBeenCalledOnce();
+  });
+
+  it("renders custom property formats and flushes pending saves on cleanup", () => {
+    const { context } = createContext();
+    context.host.settings.propertyDateDisplayFormat = "custom";
+    const pages = getPages(getDeclarativeSettingDefinitions(context, "general"));
+    const formatDefinition = getRenderDefinition(
+      pages,
+      context.translator.t("settings.general.propertyDateCustomFormat"),
+    );
+    const harness = createSettingHarness();
+
+    const cleanup = formatDefinition.render(harness.setting, {} as never);
+    harness.changeText("YYYY/MM/DD");
+
+    expect(context.host.settings.propertyDateCustomFormat).toBe("YYYY/MM/DD");
+    expect(context.scheduleSettingsSave).toHaveBeenCalledOnce();
+    expect(context.flushSettingsSaveOnBlur).toHaveBeenCalledOnce();
+
+    cleanup?.();
     expect(context.flushSettingsSave).toHaveBeenCalledOnce();
   });
 });
@@ -302,6 +339,7 @@ function createSettingHarness(): {
     createSpan: vi.fn(() => element()),
     empty: vi.fn(),
     setText: vi.fn(),
+    toggleClass: vi.fn(),
   });
   const inputEl = {
     setAttribute: vi.fn(),

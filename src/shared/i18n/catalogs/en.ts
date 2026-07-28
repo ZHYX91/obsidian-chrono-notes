@@ -181,7 +181,7 @@ export const EN_MESSAGES = {
   "settings.general.title": "General",
   "settings.general.language": "Language",
   "settings.general.languageDesc": "Follow Obsidian or choose a plugin language.",
-  "settings.general.auto": "Auto",
+  "settings.general.auto": "Follow Obsidian",
   "settings.general.languageEnglish": "English",
   "settings.general.languageSimplifiedChinese": "简体中文",
   "settings.general.languageTraditionalChinese": "繁體中文",

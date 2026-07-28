@@ -80,7 +80,9 @@ export function renderGeneralSettingsSection(
     });
 
   containerEl.createEl("h3", { text: t("settings.general.obsidianProperties") });
-  new Setting(containerEl)
+  const dateFormatSetting = new Setting(containerEl);
+  dateFormatSetting.settingEl.addClass("chrono-notes-property-format-settings");
+  dateFormatSetting
     .setName(t("settings.general.propertyDateDisplayFormat"))
     .setDesc(t("settings.general.propertyDateDisplayFormatDesc"))
     .addDropdown((dropdown) => {
@@ -108,7 +110,9 @@ export function renderGeneralSettingsSection(
     configurePropertyFormatSetting(new Setting(containerEl), context, "date");
   }
 
-  new Setting(containerEl)
+  const timeFormatSetting = new Setting(containerEl);
+  timeFormatSetting.settingEl.addClass("chrono-notes-property-format-settings");
+  timeFormatSetting
     .setName(t("settings.general.propertyTimeDisplayFormat"))
     .setDesc(t("settings.general.propertyTimeDisplayFormatDesc"))
     .addDropdown((dropdown) => {

@@ -44,6 +44,14 @@ describe("resolvePluginLocale", () => {
 });
 
 describe("createTranslator", () => {
+  it("labels the automatic language choice as following Obsidian in every locale", () => {
+    for (const catalog of Object.values(MESSAGE_CATALOGS)) {
+      expect(catalog["settings.general.auto"]).toEqual(
+        expect.stringContaining("Obsidian"),
+      );
+    }
+  });
+
   it("translates and interpolates the three complete runtime catalogs", () => {
     expect(createTranslator("en", "zh-CN").t("calendar.previous", {
       period: "month",

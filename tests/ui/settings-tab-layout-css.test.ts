@@ -71,6 +71,12 @@ describe("settings tab layout CSS", () => {
     expect(styles).not.toContain("width: min(320px, 48vw)");
   });
 
+  it("gives both localized property format dropdowns one responsive width", () => {
+    expect(styles).toMatch(
+      /\.chrono-notes-property-format-settings \.setting-item-control select\s*\{[^}]*box-sizing:\s*border-box;[^}]*inline-size:\s*22rem;[^}]*max-inline-size:\s*100%;/s,
+    );
+  });
+
   it("does not add custom dividers or nesting to native periodic headings", () => {
     expect(styles).not.toContain(".chrono-notes-periodic-note-group");
     expect(styles).not.toContain(".chrono-notes-periodic-note-fields");

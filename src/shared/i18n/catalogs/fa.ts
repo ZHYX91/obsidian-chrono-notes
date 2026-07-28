@@ -188,7 +188,7 @@ export const FA_MESSAGES = Object.freeze({
   "settings.general.title": "ژنرال",
   "settings.general.language": "زبان",
   "settings.general.languageDesc": "Obsidian را دنبال کنید یا یک زبان افزونه را انتخاب کنید.",
-  "settings.general.auto": "خودکار",
+  "settings.general.auto": "پیروی از Obsidian",
   "settings.general.languageEnglish": "انگلیسی",
   "settings.general.languageSimplifiedChinese": "简体中文",
   "settings.general.languageTraditionalChinese": "繁體中文",

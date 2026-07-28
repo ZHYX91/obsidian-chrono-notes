@@ -188,7 +188,7 @@ export const AM_MESSAGES = Object.freeze({
   "settings.general.title": "አጠቃላይ",
   "settings.general.language": "ቋንቋ",
   "settings.general.languageDesc": "Obsidian ይከተሉ ወይም ተሰኪ ቋንቋ ይምረጡ።",
-  "settings.general.auto": "መኪና",
+  "settings.general.auto": "Obsidianን ተከተል",
   "settings.general.languageEnglish": "እንግሊዝኛ",
   "settings.general.languageSimplifiedChinese": "简体中文",
   "settings.general.languageTraditionalChinese": "繁體中文",

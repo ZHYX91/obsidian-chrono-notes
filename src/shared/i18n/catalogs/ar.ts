@@ -220,7 +220,7 @@ export const AR_MESSAGES = Object.freeze({
   "settings.general.title": "عام",
   "settings.general.language": "اللغة",
   "settings.general.languageDesc": "اتبع Obsidian أو اختر لغة البرنامج المساعد.",
-  "settings.general.auto": "تلقائي",
+  "settings.general.auto": "اتباع Obsidian",
   "settings.general.languageEnglish": "العربية",
   "settings.general.languageSimplifiedChinese": "简体中文",
   "settings.general.languageTraditionalChinese": "繁體中文",

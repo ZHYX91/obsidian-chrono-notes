@@ -196,7 +196,7 @@ export const HE_MESSAGES = Object.freeze({
   "settings.general.title": "כללי",
   "settings.general.language": "שפה",
   "settings.general.languageDesc": "עקוב אחר Obsidian או בחר שפת תוסף.",
-  "settings.general.auto": "אוטומטי",
+  "settings.general.auto": "לפי Obsidian",
   "settings.general.languageEnglish": "אנגלית",
   "settings.general.languageSimplifiedChinese": "简体中文",
   "settings.general.languageTraditionalChinese": "繁體中文",
