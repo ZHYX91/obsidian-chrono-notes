@@ -191,7 +191,7 @@ function addHolidayRegionSlot(
   });
 }
 
-function normalizeSourceInput(value: string): string[] {
+export function normalizeSourceInput(value: string): string[] {
   return Array.from(new Set(value
     .split(/\r\n|\r|\n/)
     .map((source) => source.trim())

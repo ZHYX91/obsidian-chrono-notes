@@ -22,6 +22,7 @@ export interface SettingsSectionContext {
   readonly vaultPathSuggestionCatalog: VaultPathSuggestionCatalog;
   persistSettings(): Promise<void>;
   scheduleSettingsSave(): void;
+  flushSettingsSave(): void;
   flushSettingsSaveOnBlur(inputEl: HTMLInputElement | HTMLTextAreaElement): void;
   display(): void;
 }

@@ -31,6 +31,9 @@ const mocks = vi.hoisted(() => {
     settingTabs: [] as unknown[],
     removedSettingTabs: [] as unknown[],
     workspaceLeaves: [] as Array<{ readonly view: unknown }>,
+    workspaceAllLeaves: [] as Array<{
+      readonly view: { readonly containerEl: { readonly ownerDocument: Document } };
+    }>,
     layoutReadyCallbacks: [] as Array<() => void>,
     workspaceCallbacks: new Map<string, Array<MockEventCallback>>(),
     vaultCallbacks: new Map<string, Array<MockEventCallback>>(),
@@ -43,6 +46,7 @@ const mocks = vi.hoisted(() => {
     noteSourceUnsubscribes: [] as Array<ReturnType<typeof vi.fn>>,
     noteEventListeners: [] as Array<(event: unknown) => void>,
     navbarInstances: [] as MockNoteNavbarManager[],
+    propertiesDateDisplayInstances: [] as MockPropertiesDateDisplay[],
     settingsTabInstances: [] as MockSettingsTab[],
     intervalModalHosts: [] as unknown[],
     firstUseGuideOpen: vi.fn(),
@@ -224,6 +228,17 @@ const mocks = vi.hoisted(() => {
     constructor(_options: unknown) {}
   }
 
+  class MockPropertiesDateDisplay {
+    readonly addDocument = vi.fn();
+    readonly removeDocument = vi.fn();
+    readonly setSettings = vi.fn();
+    readonly dispose = vi.fn();
+
+    constructor(readonly initialSettings: unknown) {
+      state.propertiesDateDisplayInstances.push(this);
+    }
+  }
+
   const createEventRef = (): { off(): void } => {
     const off = vi.fn();
     state.eventUnsubscribes.push(off);
@@ -246,11 +261,13 @@ const mocks = vi.hoisted(() => {
     MockFirstUseGuideModal,
     MockModal,
     MockPropertiesDateInterceptor,
+    MockPropertiesDateDisplay,
   };
 });
 
 vi.mock("obsidian", () => ({
   getLanguage: () => mocks.state.appLanguage,
+  moment: vi.fn(),
   Notice: mocks.MockNotice,
   Plugin: mocks.MockPlugin,
   TFolder: mocks.MockTFolder,
@@ -266,6 +283,10 @@ vi.mock("../../src/adapters/obsidian/obsidian-ics-source-reader", () => ({
 
 vi.mock("../../src/adapters/obsidian/obsidian-properties-date-interceptor", () => ({
   ObsidianPropertiesDateInterceptor: mocks.MockPropertiesDateInterceptor,
+}));
+
+vi.mock("../../src/adapters/obsidian/obsidian-properties-date-display", () => ({
+  ObsidianPropertiesDateDisplay: mocks.MockPropertiesDateDisplay,
 }));
 
 vi.mock("../../src/adapters/obsidian/obsidian-plugin-settings", () => ({
@@ -372,6 +393,10 @@ describe("ChronoNotesPlugin lifecycle composition", () => {
   });
 
   it("registers the composition root and releases every registered runtime resource", async () => {
+    const existingPopoutDocument = {} as Document;
+    mocks.state.workspaceAllLeaves.push({
+      view: { containerEl: { ownerDocument: existingPopoutDocument } },
+    });
     const plugin = createPlugin();
     await plugin.onload();
 
@@ -390,6 +415,19 @@ describe("ChronoNotesPlugin lifecycle composition", () => {
     expect(mocks.state.ribbons).toHaveLength(1);
     expect(mocks.state.settingTabs).toHaveLength(1);
     expect(mocks.state.navbarInstances).toHaveLength(1);
+    expect(mocks.state.propertiesDateDisplayInstances).toHaveLength(1);
+    expect(mocks.state.propertiesDateDisplayInstances[0]).toMatchObject({
+      initialSettings: {
+        locale: "en",
+        dateFormat: "system",
+        timeFormat: "system",
+        dateCustomFormat: "YYYY-MM-DD",
+        timeCustomFormat: "HH:mm",
+      },
+    });
+    expect(mocks.state.propertiesDateDisplayInstances[0]?.addDocument).toHaveBeenCalledTimes(2);
+    expect(mocks.state.propertiesDateDisplayInstances[0]?.addDocument)
+      .toHaveBeenCalledWith(existingPopoutDocument);
     expect(plugin.noteIndex).not.toBeNull();
     expect(plugin.icsEventIndex).not.toBeNull();
 
@@ -412,6 +450,7 @@ describe("ChronoNotesPlugin lifecycle composition", () => {
     expect(stopNotes).toHaveBeenCalledOnce();
     expect(stopIcs).toHaveBeenCalledOnce();
     expect(navbar.unmount).toHaveBeenCalledOnce();
+    expect(mocks.state.propertiesDateDisplayInstances[0]?.dispose).toHaveBeenCalledOnce();
     expect(mocks.state.noteSourceUnsubscribes[0]).toHaveBeenCalledOnce();
     expect(mocks.state.removedViews).toEqual(["chrono-notes-calendar"]);
     expect(mocks.state.removedCommands).toHaveLength(mocks.state.commands.length);
@@ -449,7 +488,7 @@ describe("ChronoNotesPlugin lifecycle composition", () => {
 
     expect(mocks.state.saveData).toHaveBeenCalledOnce();
     expect(mocks.state.saveData).toHaveBeenCalledWith(expect.objectContaining({
-      schemaVersion: 17,
+      schemaVersion: 18,
       calendarExtensions: ["persian", "islamic-umalqura"],
       showTaskProgress: true,
       periodicNotes: expect.objectContaining({
@@ -479,7 +518,7 @@ describe("ChronoNotesPlugin lifecycle composition", () => {
 
     await expect(plugin.onload()).resolves.toBeUndefined();
 
-    expect(plugin.settings.schemaVersion).toBe(17);
+    expect(plugin.settings.schemaVersion).toBe(18);
     expect(plugin.settings.periodicNotes.weekly.pattern).toBe("[Weekly]/GGGG-[W]WW");
     expect(error).toHaveBeenCalledWith(
       "Chrono Notes Calendar: failed to persist migrated settings",
@@ -698,6 +737,10 @@ describe("ChronoNotesPlugin lifecycle composition", () => {
     const navbar = mocks.state.navbarInstances[0];
     if (navbar === undefined) throw new Error("Expected the navbar to be composed.");
     const refreshIcs = vi.spyOn(plugin, "refreshIcs");
+    const propertiesDateDisplay = mocks.state.propertiesDateDisplayInstances[0];
+    if (propertiesDateDisplay === undefined) {
+      throw new Error("Expected the Properties date display adapter to be composed.");
+    }
 
     try {
       expect(modalHost.getSettingsRevision()).toBe(0);
@@ -708,6 +751,21 @@ describe("ChronoNotesPlugin lifecycle composition", () => {
       expect(navbar.update).not.toHaveBeenCalled();
       expect(refreshIcs).not.toHaveBeenCalled();
       expect(modalHost.getSettingsRevision()).toBe(0);
+      expect(propertiesDateDisplay.setSettings).not.toHaveBeenCalled();
+
+      plugin.settings.propertyDateDisplayFormat = "dmy-slash";
+      await plugin.saveSettings();
+      expect(propertiesDateDisplay.setSettings).toHaveBeenCalledOnce();
+      expect(propertiesDateDisplay.setSettings).toHaveBeenCalledWith({
+        locale: "en",
+        dateFormat: "dmy-slash",
+        timeFormat: "system",
+        dateCustomFormat: "YYYY-MM-DD",
+        timeCustomFormat: "HH:mm",
+      });
+      expect(view.refresh).not.toHaveBeenCalled();
+      expect(remainingListener).not.toHaveBeenCalled();
+      expect(navbar.update).not.toHaveBeenCalled();
 
       plugin.settings.showTaskProgress = false;
       await plugin.saveSettings();
@@ -869,6 +927,13 @@ function createApp(): Record<string, unknown> {
     },
     on: (event: string, callback: MockEventCallback) =>
       addCallback(mocks.state.workspaceCallbacks, event, callback),
+    iterateAllLeaves: (
+      callback: (leaf: {
+        readonly view: { readonly containerEl: { readonly ownerDocument: Document } };
+      }) => void,
+    ) => {
+      for (const leaf of mocks.state.workspaceAllLeaves) callback(leaf);
+    },
     getLeavesOfType: () => mocks.state.workspaceLeaves,
     getRightLeaf: () => null,
     getLeaf: () => ({ setViewState: vi.fn() }),
@@ -900,6 +965,7 @@ function resetCollections(): void {
   mocks.state.settingTabs.length = 0;
   mocks.state.removedSettingTabs.length = 0;
   mocks.state.workspaceLeaves.length = 0;
+  mocks.state.workspaceAllLeaves.length = 0;
   mocks.state.layoutReadyCallbacks.length = 0;
   mocks.state.workspaceCallbacks.clear();
   mocks.state.vaultCallbacks.clear();
@@ -913,6 +979,7 @@ function resetCollections(): void {
   mocks.state.noteSourceUnsubscribes.length = 0;
   mocks.state.noteEventListeners.length = 0;
   mocks.state.navbarInstances.length = 0;
+  mocks.state.propertiesDateDisplayInstances.length = 0;
   mocks.state.settingsTabInstances.length = 0;
   mocks.state.intervalModalHosts.length = 0;
 }

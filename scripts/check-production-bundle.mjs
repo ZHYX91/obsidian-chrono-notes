@@ -23,6 +23,7 @@ const [
   packageSource,
   versionsSource,
   metafileSource,
+  settingsTabSource,
   mainStats,
 ] = await Promise.all([
   readFile(resolveProjectPath(artifactPaths.main), "utf8"),
@@ -32,6 +33,7 @@ const [
   readFile(resolveProjectPath("package.json"), "utf8"),
   readFile(resolveProjectPath("versions.json"), "utf8"),
   readFile(resolveProjectPath(artifactPaths.metafile), "utf8"),
+  readFile(resolveProjectPath("src/ui/settings/settings-tab.ts"), "utf8"),
   stat(resolveProjectPath(artifactPaths.main)),
 ]);
 
@@ -50,7 +52,11 @@ assert.match(
   /^\d+\.\d+\.\d+$/,
   "The Obsidian API dependency must be pinned to an exact version",
 );
-assertCompatibleObsidianVersions(obsidianApiVersion, sourceManifest.minAppVersion);
+assertCompatibleObsidianVersions(
+  obsidianApiVersion,
+  sourceManifest.minAppVersion,
+  settingsTabSource,
+);
 
 assert.ok(mainSource.length > 0, "Production main.js must not be empty");
 assert.ok(stylesSource.length > 0, "Production styles.css must not be empty");
@@ -145,17 +151,36 @@ function formatSignedBytes(bytes) {
   return `${bytes >= 0 ? "+" : ""}${bytes} B`;
 }
 
-function assertCompatibleObsidianVersions(apiVersion, minimumAppVersion) {
+function assertCompatibleObsidianVersions(
+  apiVersion,
+  minimumAppVersion,
+  settingTabSource,
+) {
   const api = parseNumericVersion(apiVersion, "Obsidian API dependency");
   const app = parseNumericVersion(minimumAppVersion, "minimum Obsidian app version");
+  if (compareNumericVersions(api, app) > 0) {
+    assert.equal(
+      api[0],
+      app[0],
+      "Obsidian API typings and minAppVersion must use the same major release line",
+    );
+    assert.equal(
+      api[1],
+      13,
+      "Newer Obsidian API typings are allowed only for the 1.13 declarative settings bridge",
+    );
+    assert.ok(
+      compareNumericVersions(app, [1, 13, 0]) < 0 &&
+        settingTabSource.includes("override getSettingDefinitions()") &&
+        settingTabSource.includes("override display()"),
+      "Newer Obsidian API typings require explicit pre-1.13 display() and 1.13 getSettingDefinitions() paths",
+    );
+    return;
+  }
   assert.deepEqual(
     api.slice(0, 2),
     app.slice(0, 2),
     "Obsidian API typings and minAppVersion must use the same major/minor release line",
-  );
-  assert.ok(
-    compareNumericVersions(api, app) <= 0,
-    "Obsidian API typings must not be newer than minAppVersion",
   );
 }
 

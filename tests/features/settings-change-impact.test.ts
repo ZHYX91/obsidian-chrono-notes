@@ -12,6 +12,7 @@ describe("getSettingsChangeImpact", () => {
       navbar: false,
       intervalList: false,
       ics: false,
+      propertiesDateDisplay: false,
     });
   });
 
@@ -39,6 +40,11 @@ describe("getSettingsChangeImpact", () => {
         next.rangeNotes.templatePath = "Templates/Range.md";
         return next;
       })(),
+      (() => {
+        const next = createDefaultSettings();
+        next.propertyDateDisplayFormat = "dmy-slash";
+        return next;
+      })(),
     ];
 
     for (const next of candidates) {
@@ -48,8 +54,42 @@ describe("getSettingsChangeImpact", () => {
         navbar: false,
         intervalList: false,
         ics: false,
+        propertiesDateDisplay: next.propertyDateDisplayFormat === "dmy-slash",
       });
     }
+  });
+
+  it("refreshes the Properties display for each date and time format field", () => {
+    const previous = createDefaultSettings();
+    const candidates = [
+      ["propertyDateDisplayFormat", "custom"],
+      ["propertyTimeDisplayFormat", "12-hour"],
+      ["propertyDateCustomFormat", "YYYY年M月D日"],
+      ["propertyTimeCustomFormat", "h:mm A"],
+    ] as const;
+    for (const [key, value] of candidates) {
+      const next = createDefaultSettings();
+      Object.assign(next, { [key]: value });
+      expect(getSettingsChangeImpact(previous, next)).toMatchObject({
+        changed: true,
+        calendar: false,
+        navbar: false,
+        intervalList: false,
+        ics: false,
+        propertiesDateDisplay: true,
+      });
+    }
+  });
+
+  it("refreshes localized Moment output when the plugin language changes", () => {
+    const previous = createDefaultSettings();
+    const next = createDefaultSettings();
+    next.locale = "zh-CN";
+    expect(getSettingsChangeImpact(previous, next)).toMatchObject({
+      calendar: true,
+      navbar: true,
+      propertiesDateDisplay: true,
+    });
   });
 
   it("routes calendar appearance and periodic path changes precisely", () => {

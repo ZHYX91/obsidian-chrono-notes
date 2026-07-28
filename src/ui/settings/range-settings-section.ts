@@ -43,40 +43,7 @@ export function renderRangeSettingsSection(
         await context.persistSettings();
       });
     });
-  const folderSetting = new Setting(containerEl)
-    .setName(t("settings.ranges.folder"))
-    .setDesc(t("settings.ranges.folderDesc"));
-  folderSetting.settingEl.addClass("chrono-notes-wide-input-setting");
-  const pathExampleEl = folderSetting.descEl.createDiv({
-    cls: "chrono-notes-range-path-example",
-  });
-  const updatePathExample = (): void => {
-    const folder = normalizeIntervalNoteFolder(settings.folder);
-    pathExampleEl.empty();
-    pathExampleEl.append(`${t("settings.ranges.pathExample")}: `);
-    pathExampleEl.createEl("code", {
-      text: `${folder.length === 0 ? "Ranges" : folder}/`
-        + "2026-07-01 - 2026-07-07.md",
-    });
-  };
-  folderSetting.addText((text) => {
-    text
-      .setPlaceholder("Ranges")
-      .setValue(settings.folder)
-      .onChange((value) => {
-        settings.folder = value;
-        updatePathExample();
-        context.scheduleSettingsSave();
-      });
-    preparePathInput(text.inputEl);
-    context.flushSettingsSaveOnBlur(text.inputEl);
-    new VaultFolderSuggest(
-      context.app,
-      text.inputEl,
-      context.vaultPathSuggestionCatalog,
-    );
-  });
-  updatePathExample();
+  configureRangeFolderSetting(new Setting(containerEl), context);
   renderTemplatePathSetting(
     containerEl,
     t("settings.templates.path"),
@@ -100,26 +67,8 @@ export function renderRangeSettingsSection(
         context.display();
       });
   });
-  const customFolder = new Setting(containerEl)
-    .setName(t("settings.ranges.customScanFolder"))
-    .setDesc(t("settings.ranges.customScanFolderDesc"));
-  customFolder.settingEl.addClass("chrono-notes-wide-input-setting");
-  customFolder.addText((text) => {
-    text
-      .setPlaceholder("Projects")
-      .setValue(settings.customFolder)
-      .onChange((value) => {
-        settings.customFolder = value;
-        context.scheduleSettingsSave();
-      });
-    preparePathInput(text.inputEl);
-    context.flushSettingsSaveOnBlur(text.inputEl);
-    new VaultFolderSuggest(
-      context.app,
-      text.inputEl,
-      context.vaultPathSuggestionCatalog,
-    );
-  });
+  const customFolder = new Setting(containerEl);
+  configureCustomRangeFolderSetting(customFolder, context);
   customFolder.setDisabled(settings.scanScope !== "custom-folder");
   addPositiveIntegerSetting(
     containerEl,
@@ -139,6 +88,80 @@ export function renderRangeSettingsSection(
     },
     context,
   );
+}
+
+export function configureRangeFolderSetting(
+  folderSetting: Setting,
+  context: SettingsSectionContext,
+): () => void {
+  const { t } = context.translator;
+  const settings = context.host.settings.rangeNotes;
+  folderSetting
+    .setName(t("settings.ranges.folder"))
+    .setDesc(t("settings.ranges.folderDesc"));
+  folderSetting.settingEl.addClass("chrono-notes-wide-input-setting");
+  const pathExampleEl = folderSetting.descEl.createDiv({
+    cls: "chrono-notes-range-path-example",
+  });
+  const updatePathExample = (): void => {
+    const folder = normalizeIntervalNoteFolder(settings.folder);
+    pathExampleEl.empty();
+    pathExampleEl.append(`${t("settings.ranges.pathExample")}: `);
+    pathExampleEl.createEl("code", {
+      text: `${folder.length === 0 ? "Ranges" : folder}/`
+        + "2026-07-01 - 2026-07-07.md",
+    });
+  };
+  let suggest: VaultFolderSuggest | null = null;
+  folderSetting.addText((text) => {
+    text
+      .setPlaceholder("Ranges")
+      .setValue(settings.folder)
+      .onChange((value) => {
+        settings.folder = value;
+        updatePathExample();
+        context.scheduleSettingsSave();
+      });
+    preparePathInput(text.inputEl);
+    context.flushSettingsSaveOnBlur(text.inputEl);
+    suggest = new VaultFolderSuggest(
+      context.app,
+      text.inputEl,
+      context.vaultPathSuggestionCatalog,
+    );
+  });
+  updatePathExample();
+  return () => suggest?.close();
+}
+
+export function configureCustomRangeFolderSetting(
+  customFolder: Setting,
+  context: SettingsSectionContext,
+): () => void {
+  const { t } = context.translator;
+  const settings = context.host.settings.rangeNotes;
+  customFolder
+    .setName(t("settings.ranges.customScanFolder"))
+    .setDesc(t("settings.ranges.customScanFolderDesc"));
+  customFolder.settingEl.addClass("chrono-notes-wide-input-setting");
+  let suggest: VaultFolderSuggest | null = null;
+  customFolder.addText((text) => {
+    text
+      .setPlaceholder("Projects")
+      .setValue(settings.customFolder)
+      .onChange((value) => {
+        settings.customFolder = value;
+        context.scheduleSettingsSave();
+      });
+    preparePathInput(text.inputEl);
+    context.flushSettingsSaveOnBlur(text.inputEl);
+    suggest = new VaultFolderSuggest(
+      context.app,
+      text.inputEl,
+      context.vaultPathSuggestionCatalog,
+    );
+  });
+  return () => suggest?.close();
 }
 
 function addPositiveIntegerSetting(

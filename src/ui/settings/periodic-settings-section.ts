@@ -78,10 +78,30 @@ function renderPeriodicNoteType(
     });
   if (!config.enabled) return;
 
+  const pathSetting = new Setting(sectionEl);
+  configurePeriodicPathSetting(pathSetting, noteType, context);
+  renderTemplatePathSetting(
+    sectionEl,
+    t("settings.templates.path"),
+    getPeriodicNoteTemplatePathExample(noteType),
+    config.templatePath,
+    (value) => {
+      config.templatePath = value;
+    },
+    context,
+  );
+}
+
+export function configurePeriodicPathSetting(
+  pathSetting: Setting,
+  noteType: PeriodicNoteType,
+  context: SettingsSectionContext,
+): () => void {
+  const { t } = context.translator;
+  const config = context.host.settings.periodicNotes[noteType];
   const previewDate = getCurrentLocalDate();
   const pathExample = getPeriodicNotePathExample(noteType);
-  const pathSetting = new Setting(sectionEl)
-    .setName(t("settings.periodic.pathPattern"));
+  pathSetting.setName(t("settings.periodic.pathPattern"));
   pathSetting.settingEl.addClass("chrono-notes-periodic-path-setting");
   const pathExampleId = `chrono-notes-${noteType}-path-example`;
   const pathFeedbackId = `chrono-notes-${noteType}-path-feedback`;
@@ -117,6 +137,7 @@ function renderPeriodicNoteType(
     }
     pathInputEl?.setAttribute("aria-invalid", String(hasError));
   };
+  let suggest: PeriodicNoteFolderSuggest | null = null;
   pathSetting.addText((text) => {
     pathInputEl = text.inputEl;
     text
@@ -131,7 +152,7 @@ function renderPeriodicNoteType(
     text.inputEl.setAttribute("aria-required", "true");
     preparePathInput(text.inputEl);
     context.flushSettingsSaveOnBlur(text.inputEl);
-    new PeriodicNoteFolderSuggest(
+    suggest = new PeriodicNoteFolderSuggest(
       context.app,
       text.inputEl,
       noteType,
@@ -146,15 +167,5 @@ function renderPeriodicNoteType(
     },
   });
   updatePathDescription();
-
-  renderTemplatePathSetting(
-    sectionEl,
-    t("settings.templates.path"),
-    getPeriodicNoteTemplatePathExample(noteType),
-    config.templatePath,
-    (value) => {
-      config.templatePath = value;
-    },
-    context,
-  );
+  return () => suggest?.close();
 }

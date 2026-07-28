@@ -97,6 +97,7 @@ describe("extensions and integrations settings runtime", () => {
       translator: { t: (key: string) => key },
       persistSettings,
       scheduleSettingsSave: vi.fn(),
+      flushSettingsSave: vi.fn(),
       flushSettingsSaveOnBlur: vi.fn(),
       display,
     } as unknown as SettingsSectionContext;

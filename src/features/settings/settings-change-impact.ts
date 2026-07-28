@@ -12,6 +12,7 @@ export interface SettingsChangeImpact {
   readonly navbar: boolean;
   readonly intervalList: boolean;
   readonly ics: boolean;
+  readonly propertiesDateDisplay: boolean;
 }
 
 export function getSettingsChangeImpact(
@@ -55,6 +56,12 @@ export function getSettingsChangeImpact(
       intervalScopeChanged,
     intervalList: intervalScopeChanged,
     ics: !sameIcs(previous.ics, next.ics),
+    propertiesDateDisplay:
+      previous.locale !== next.locale ||
+      previous.propertyDateDisplayFormat !== next.propertyDateDisplayFormat ||
+      previous.propertyTimeDisplayFormat !== next.propertyTimeDisplayFormat ||
+      previous.propertyDateCustomFormat !== next.propertyDateCustomFormat ||
+      previous.propertyTimeCustomFormat !== next.propertyTimeCustomFormat,
   });
 }
 
@@ -72,6 +79,10 @@ function sameSettings(
     left.fontSizeMode === right.fontSizeMode &&
     left.immutableFontSizeFactor === right.immutableFontSizeFactor &&
     left.showTaskProgress === right.showTaskProgress &&
+    left.propertyDateDisplayFormat === right.propertyDateDisplayFormat &&
+    left.propertyTimeDisplayFormat === right.propertyTimeDisplayFormat &&
+    left.propertyDateCustomFormat === right.propertyDateCustomFormat &&
+    left.propertyTimeCustomFormat === right.propertyTimeCustomFormat &&
     left.interceptPropertyDateClicks === right.interceptPropertyDateClicks &&
     left.showHoverPreview === right.showHoverPreview &&
     left.showNoteNavbar === right.showNoteNavbar &&

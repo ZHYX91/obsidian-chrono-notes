@@ -25,6 +25,7 @@ const generatedJsonModes = {
   ".obsidian/app.json": "exact",
   ".obsidian/appearance.json": "exact",
   ".obsidian/core-plugins.json": "subset",
+  ".obsidian/types.json": "subset",
   ".obsidian/plugins/chrono-notes/data.json": "exact",
 };
 
@@ -233,6 +234,14 @@ function createFixtureFiles(settingsSchemaVersion) {
       "command-palette": true,
       "file-recovery": true,
     }),
+    ".obsidian/types.json": jsonText({
+      types: {
+        aliases: "aliases",
+        cssclasses: "multitext",
+        tags: "tags",
+        date_time: "datetime",
+      },
+    }),
     ".obsidian/plugins/chrono-notes/data.json": jsonText({
       schemaVersion: settingsSchemaVersion,
       locale: "en",
@@ -244,6 +253,10 @@ function createFixtureFiles(settingsSchemaVersion) {
       fontSizeMode: "immutable",
       immutableFontSizeFactor: 10,
       showTaskProgress: true,
+      propertyDateDisplayFormat: "custom",
+      propertyTimeDisplayFormat: "12-hour-seconds",
+      propertyDateCustomFormat: "YYYY年MM月DD日",
+      propertyTimeCustomFormat: "h:mm:ss A",
       interceptPropertyDateClicks: true,
       showHoverPreview: true,
       showNoteNavbar: true,
@@ -304,6 +317,17 @@ This Vault is generated. Do not store personal notes here.
 Primary calendar window: July 2026.
 Layout combinations: February 17 and February 28, 2026.
 Future calendar locale samples: March 20 and September 11, 2026.
+`,
+    "Date display.md": `---
+date: 2026-07-31
+date_time: 2026-07-31T14:05:06
+---
+# Date property display
+
+The unfocused values use the plugin formats. Focusing either value must restore
+Obsidian's native segmented editor and picker.
+
+The YAML values above must remain exactly ISO after every display-format change.
 `,
     "Daily/2026-02-17.md": `---
 category: acceptance-layout

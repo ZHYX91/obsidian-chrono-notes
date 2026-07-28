@@ -161,6 +161,49 @@ describe("settings", () => {
       .toBe(true);
   });
 
+  it("normalizes the Properties date display format independently of YAML", () => {
+    expect(createDefaultSettings()).toMatchObject({
+      propertyDateDisplayFormat: "system",
+      propertyTimeDisplayFormat: "system",
+      propertyDateCustomFormat: "YYYY-MM-DD",
+      propertyTimeCustomFormat: "HH:mm",
+    });
+    for (const format of [
+      "system",
+      "ymd-dash",
+      "ymd-slash",
+      "ymd-slash-padded",
+      "dmy-slash",
+      "mdy-slash",
+      "custom",
+    ] as const) {
+      expect(normalizeSettings({ propertyDateDisplayFormat: format })
+        .propertyDateDisplayFormat).toBe(format);
+    }
+    for (const format of [
+      "system",
+      "24-hour",
+      "24-hour-seconds",
+      "12-hour",
+      "12-hour-seconds",
+      "custom",
+    ] as const) {
+      expect(normalizeSettings({ propertyTimeDisplayFormat: format })
+        .propertyTimeDisplayFormat).toBe(format);
+    }
+    expect(normalizeSettings({ propertyDateDisplayFormat: "locale" })
+      .propertyDateDisplayFormat).toBe("system");
+    expect(normalizeSettings({ propertyTimeDisplayFormat: "locale" })
+      .propertyTimeDisplayFormat).toBe("system");
+    expect(normalizeSettings({
+      propertyDateCustomFormat: "YYYY年M月D日",
+      propertyTimeCustomFormat: "h:mm A",
+    })).toMatchObject({
+      propertyDateCustomFormat: "YYYY年M月D日",
+      propertyTimeCustomFormat: "h:mm A",
+    });
+  });
+
   it("persists the first-use guide marker through schema normalization", () => {
     expect(createDefaultSettings().firstUseGuideSeen).toBe(false);
     expect(normalizeSettings({ firstUseGuideSeen: true }).firstUseGuideSeen).toBe(true);
@@ -541,6 +584,29 @@ describe("settings", () => {
     })).toMatchObject({
       schemaVersion: SETTINGS_SCHEMA_VERSION,
       interceptPropertyDateClicks: false,
+    });
+  });
+
+  it("adds system Properties date and time display formats at schema 18", () => {
+    expect(migrateSettings({ schemaVersion: 17 })).toMatchObject({
+      schemaVersion: SETTINGS_SCHEMA_VERSION,
+      propertyDateDisplayFormat: "system",
+      propertyTimeDisplayFormat: "system",
+      propertyDateCustomFormat: "YYYY-MM-DD",
+      propertyTimeCustomFormat: "HH:mm",
+    });
+    expect(migrateSettings({
+      schemaVersion: 17,
+      propertyDateDisplayFormat: "dmy-slash",
+      propertyTimeDisplayFormat: "12-hour",
+      propertyDateCustomFormat: "DD.MM.YYYY",
+      propertyTimeCustomFormat: "h:mm A",
+    })).toMatchObject({
+      schemaVersion: SETTINGS_SCHEMA_VERSION,
+      propertyDateDisplayFormat: "dmy-slash",
+      propertyTimeDisplayFormat: "12-hour",
+      propertyDateCustomFormat: "DD.MM.YYYY",
+      propertyTimeCustomFormat: "h:mm A",
     });
   });
 

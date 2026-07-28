@@ -106,6 +106,49 @@ describe("periodic note settings structure", () => {
     expect(settingsTabSource).not.toContain('case "templates"');
   });
 
+  it("groups independent Obsidian Properties integrations under General", () => {
+    const heading = generalSectionSource.indexOf(
+      't("settings.general.obsidianProperties")',
+    );
+    const displayFormat = generalSectionSource.indexOf(
+      'setName(t("settings.general.propertyDateDisplayFormat"))',
+    );
+    const timeFormat = generalSectionSource.indexOf(
+      'setName(t("settings.general.propertyTimeDisplayFormat"))',
+    );
+    const openDate = generalSectionSource.indexOf(
+      'setName(t("settings.general.interceptPropertyDateClicks"))',
+    );
+    const guide = generalSectionSource.indexOf(
+      'setName(t("settings.general.firstUseGuide"))',
+    );
+    expect(heading).toBeGreaterThan(-1);
+    expect(guide).toBeLessThan(heading);
+    expect(heading).toBeLessThan(displayFormat);
+    expect(displayFormat).toBeLessThan(timeFormat);
+    expect(timeFormat).toBeLessThan(openDate);
+    for (const value of [
+      "system",
+      "ymd-dash",
+      "ymd-slash",
+      "ymd-slash-padded",
+      "dmy-slash",
+      "mdy-slash",
+      "custom",
+      "24-hour",
+      "24-hour-seconds",
+      "12-hour",
+      "12-hour-seconds",
+    ]) {
+      expect(generalSectionSource).toMatch(new RegExp(
+        `\\.addOption\\(\\s*"${value}"`,
+      ));
+    }
+    expect(generalSectionSource).toContain("isValidPropertyDateFormat");
+    expect(generalSectionSource).toContain("isValidPropertyTimeFormat");
+    expect(generalSectionSource).toContain("PROPERTY_FORMAT_PREVIEW_VALUE");
+  });
+
   it("debounces text persistence while serializing at the shared persistence boundary", () => {
     const textSettingsSource = [
       appearanceSectionSource,

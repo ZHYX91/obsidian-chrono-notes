@@ -47,6 +47,8 @@ vi.mock("../../src/ui/settings/range-settings-section", () => ({
   renderRangeSettingsSection: mocks.renderRanges,
 }));
 vi.mock("../../src/ui/settings/extensions-and-integrations-settings-section", () => ({
+  normalizeSourceInput: (value: string) =>
+    [...new Set(value.split(/\r?\n/u).map((line) => line.trim()).filter(Boolean))],
   renderExtensionsAndIntegrationsSettingsSection: mocks.renderIntegrations,
 }));
 
@@ -171,6 +173,18 @@ describe("ChronoNotesSettingTab save orchestration", () => {
     expect(saveSettings).toHaveBeenCalledOnce();
   });
 
+  it("flushes a pending declarative edit when its rendered row is cleaned up", async () => {
+    const { context, saveSettings } = displayAndGetGeneralContext();
+    context.scheduleSettingsSave();
+
+    context.flushSettingsSave();
+    await Promise.resolve();
+
+    expect(saveSettings).toHaveBeenCalledOnce();
+    await vi.advanceTimersByTimeAsync(300);
+    expect(saveSettings).toHaveBeenCalledOnce();
+  });
+
   it("flushes a pending edit before delegating the tab hide lifecycle", async () => {
     const { tab, context, saveSettings } = displayAndGetGeneralContext();
     context.scheduleSettingsSave();
@@ -194,12 +208,68 @@ describe("ChronoNotesSettingTab save orchestration", () => {
     await vi.advanceTimersByTimeAsync(300);
     expect(saveSettings).toHaveBeenCalledOnce();
   });
+
+  it("builds declarative pages without starting Vault suggestion listeners", () => {
+    const { tab, vaultOn } = createTab();
+
+    const definitions = tab.getSettingDefinitions();
+
+    expect(definitions).toHaveLength(5);
+    expect(vaultOn).not.toHaveBeenCalled();
+  });
+
+  it("persists declarative controls and selects the guarded 1.13 refresh path", async () => {
+    const { tab, host, saveSettings } = createTab();
+    const update = vi.fn();
+    const refreshDomState = vi.fn();
+    Object.defineProperty(tab, "update", { configurable: true, value: update });
+    Object.defineProperty(tab, "refreshDomState", {
+      configurable: true,
+      value: refreshDomState,
+    });
+
+    await tab.setControlValue("locale", "zh-CN");
+
+    expect(host.settings.locale).toBe("zh-CN");
+    expect(saveSettings).toHaveBeenCalledOnce();
+    expect(update).toHaveBeenCalledOnce();
+    expect(refreshDomState).not.toHaveBeenCalled();
+
+    await tab.setControlValue("propertyDateDisplayFormat", "custom");
+    expect(host.settings.propertyDateDisplayFormat).toBe("custom");
+    expect(saveSettings).toHaveBeenCalledTimes(2);
+    expect(update).toHaveBeenCalledOnce();
+    expect(refreshDomState).toHaveBeenCalledOnce();
+
+    await tab.setControlValue("periodicNotes.daily.enabled", true);
+    expect(host.settings.periodicNotes.daily.enabled).toBe(true);
+    expect(saveSettings).toHaveBeenCalledTimes(3);
+    expect(update).toHaveBeenCalledOnce();
+    expect(refreshDomState).toHaveBeenCalledTimes(2);
+
+    tab.activate("ranges");
+    expect(update).toHaveBeenCalledTimes(2);
+    expect(refreshDomState).toHaveBeenCalledTimes(2);
+    expect(mocks.renderRanges).not.toHaveBeenCalled();
+  });
+
+  it("retains debounced persistence for declarative text controls", async () => {
+    const { tab, host, saveSettings } = createTab();
+
+    await tab.setControlValue("ics.sources", " a.ics\na.ics\nb.ics ");
+    expect(host.settings.ics.sources).toEqual(["a.ics", "b.ics"]);
+    expect(saveSettings).not.toHaveBeenCalled();
+
+    await vi.advanceTimersByTimeAsync(300);
+    expect(saveSettings).toHaveBeenCalledOnce();
+  });
 });
 
 function createTab(): {
   readonly tab: ChronoNotesSettingTab;
   readonly host: SettingsHost;
   readonly saveSettings: ReturnType<typeof vi.fn<() => Promise<void>>>;
+  readonly vaultOn: ReturnType<typeof vi.fn>;
 } {
   const saveSettings = vi.fn(async () => undefined);
   const settings = createDefaultSettings();
@@ -212,9 +282,10 @@ function createTab(): {
     refreshIcs: vi.fn(async () => undefined),
     openFirstUseGuide: vi.fn(),
   } as unknown as SettingsHost;
+  const vaultOn = vi.fn(() => ({}));
   const app = {
     vault: {
-      on: vi.fn(() => ({})),
+      on: vaultOn,
       offref: vi.fn(),
       getMarkdownFiles: vi.fn(() => []),
       getAllFolders: vi.fn(() => []),
@@ -222,7 +293,7 @@ function createTab(): {
   } as unknown as App;
   const tab = new ChronoNotesSettingTab(app, host);
   document.body.append(tab.containerEl);
-  return { tab, host, saveSettings };
+  return { tab, host, saveSettings, vaultOn };
 }
 
 function displayAndGetGeneralContext(): {

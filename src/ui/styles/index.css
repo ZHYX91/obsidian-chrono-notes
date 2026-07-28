@@ -1,4 +1,5 @@
 @import "./settings.css";
+@import "./properties-integration.css";
 @import "./note-navbar.css";
 @import "./calendar-shell.css";
 @import "./month-and-interval.css";

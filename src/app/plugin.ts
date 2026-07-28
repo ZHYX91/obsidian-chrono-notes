@@ -4,6 +4,8 @@ import { ObsidianIcsSourceReader } from "../adapters/obsidian/obsidian-ics-sourc
 import { ObsidianNoteIndexCache } from "../adapters/obsidian/obsidian-note-index-cache";
 import { ObsidianNoteSource } from "../adapters/obsidian/obsidian-note-source";
 import { ObsidianPropertiesDateInterceptor } from "../adapters/obsidian/obsidian-properties-date-interceptor";
+import { ObsidianPropertiesDateDisplay } from "../adapters/obsidian/obsidian-properties-date-display";
+import { OBSIDIAN_PROPERTY_DATE_VALUE_FORMATTER } from "../adapters/obsidian/obsidian-property-date-value-formatter";
 import { openObsidianPluginSettings } from "../adapters/obsidian/obsidian-plugin-settings";
 import { showObsidianDateContextMenu } from "../adapters/obsidian/obsidian-date-context-menu";
 import {
@@ -75,6 +77,7 @@ export default class ChronoNotesPlugin extends Plugin {
   taskCommands: TaskCommands | null = null;
   noteWorkspace: ObsidianPeriodicNoteWorkspacePort | null = null;
   private noteNavbar: NoteNavbarManager | null = null;
+  private propertiesDateDisplay: ObsidianPropertiesDateDisplay | null = null;
   private settingsTab: ChronoNotesSettingTab | null = null;
   private readonly settingsListeners = new Set<() => void>();
   private readonly firstUseGuideGate = new FirstUseGuideGate();
@@ -126,6 +129,22 @@ export default class ChronoNotesPlugin extends Plugin {
         (event) => propertiesDateInterceptor.handleClick(event),
         { capture: true },
       );
+      const propertiesDateDisplay = new ObsidianPropertiesDateDisplay(
+        getPropertyDateDisplaySettings(this.settings, this.getTranslator().locale),
+        OBSIDIAN_PROPERTY_DATE_VALUE_FORMATTER,
+      );
+      this.propertiesDateDisplay = propertiesDateDisplay;
+      propertiesDateDisplay.addDocument(document);
+      this.app.workspace.iterateAllLeaves((leaf) => {
+        propertiesDateDisplay.addDocument(leaf.view.containerEl.ownerDocument);
+      });
+      this.registerEvent(this.app.workspace.on("window-open", (_workspaceWindow, openedWindow) => {
+        propertiesDateDisplay.addDocument(openedWindow.document);
+      }));
+      this.registerEvent(this.app.workspace.on("window-close", (_workspaceWindow, closedWindow) => {
+        propertiesDateDisplay.removeDocument(closedWindow.document);
+      }));
+      this.registerRuntimeDisposer(() => propertiesDateDisplay.dispose());
       this.intervalNoteCommands = new IntervalNoteCommands(
         new ObsidianIntervalNoteFilePort(this.app.vault, this.app.fileManager),
         noteTemplates,
@@ -228,6 +247,13 @@ export default class ChronoNotesPlugin extends Plugin {
       const impact = getSettingsChangeImpact(this.persistedSettings, snapshot);
       this.persistedSettings = snapshot;
       if (!this.isRuntimeCurrent(runtimeRevision) || !impact.changed) return;
+
+      if (impact.propertiesDateDisplay) {
+        this.propertiesDateDisplay?.setSettings(getPropertyDateDisplaySettings(
+          snapshot,
+          createTranslator(snapshot.locale, getLanguage()).locale,
+        ));
+      }
 
       if (impact.calendar) {
         const viewRefreshListeners: Array<() => void> = [];
@@ -690,6 +716,7 @@ export default class ChronoNotesPlugin extends Plugin {
     this.runtimeDisposers.clear();
     for (const dispose of disposers) dispose();
     this.noteNavbar = null;
+    this.propertiesDateDisplay = null;
     this.icsEventIndex = null;
     this.noteIndex = null;
     this.periodicNoteCommands = null;
@@ -773,4 +800,17 @@ export default class ChronoNotesPlugin extends Plugin {
 
 function getLocalTimeZone(): string {
   return Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
+}
+
+function getPropertyDateDisplaySettings(
+  settings: Readonly<ChronoNotesSettings>,
+  locale: string,
+) {
+  return {
+    locale,
+    dateFormat: settings.propertyDateDisplayFormat,
+    timeFormat: settings.propertyTimeDisplayFormat,
+    dateCustomFormat: settings.propertyDateCustomFormat,
+    timeCustomFormat: settings.propertyTimeCustomFormat,
+  } as const;
 }

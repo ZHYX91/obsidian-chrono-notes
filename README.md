@@ -28,13 +28,16 @@ The same calendar workspace adapts to touch interaction and narrow screens.
 
 ## Features
 
-- Year, month, and week calendar views.
-- Daily, weekly, monthly, quarterly, and yearly periodic notes.
+- Year, month, and week calendar views with note state, tasks, holidays, local ICS events, and time-range notes.
+- Daily, weekly, monthly, quarterly, and yearly periodic notes with built-in or Templater templates.
+- Note Navbar navigation between adjacent notes, higher periods, selected dates, and the calendar workspace.
 - Chinese lunar and Ganzhi calendar extensions, including solar terms and traditional festivals.
 - Persian (Solar Hijri), Ethiopic, Hebrew, Indian national (Saka), Islamic civil, and Umm al-Qura calendar extensions.
 - Mainland China and Singapore holiday extensions.
-- Tasks, statistics, heatmaps, time-range notes, templates, and previews.
+- Tasks, statistics, month and year heatmaps, note previews, task completion, and due-date adjustments.
+- Time-range note creation by date-range dragging, cross-week layouts, templates, and a searchable range-note list.
 - Local, read-only ICS calendar sources.
+- Configurable display formats for Obsidian Date and Date & time properties while preserving ISO YAML, native segmented editing, and optional daily-note opening.
 - English, Simplified Chinese, Traditional Chinese, Arabic, Persian, Hebrew, Amharic, and Hindi UI, including right-to-left layout where applicable.
 
 Source notes, calendar files, and plugin settings stay inside the Vault. Chrono Notes Calendar keeps only a derived NoteIndex cache in device-local IndexedDB; that cache is not written into the Vault or sent to a remote service. No account is required.

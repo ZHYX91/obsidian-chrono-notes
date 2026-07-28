@@ -62,11 +62,11 @@ export function renderAppearanceSettingsSection(
       slider
         .setLimits(0, 20, 1)
         .setValue(context.host.settings.immutableFontSizeFactor)
-        .setDynamicTooltip()
         .onChange(async (value) => {
           context.host.settings.immutableFontSizeFactor = value;
           await context.persistSettings();
         });
+      enableLegacyDynamicSliderTooltip(slider);
     });
   fixedFontSize.setDisabled(context.host.settings.fontSizeMode !== "immutable");
 
@@ -132,4 +132,11 @@ export function renderAppearanceSettingsSection(
       context.flushSettingsSaveOnBlur(text.inputEl);
     });
 
+}
+
+function enableLegacyDynamicSliderTooltip(slider: object): void {
+  const setDynamicTooltip: unknown = Reflect.get(slider, "setDynamicTooltip");
+  if (typeof setDynamicTooltip === "function") {
+    Reflect.apply(setDynamicTooltip, slider, []);
+  }
 }

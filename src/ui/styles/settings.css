@@ -157,6 +157,16 @@
   color: var(--text-error);
 }
 
+.chrono-notes-property-format-feedback {
+  margin-top: 4px;
+  overflow-wrap: anywhere;
+  unicode-bidi: plaintext;
+}
+
+.chrono-notes-property-format-feedback.is-error {
+  color: var(--text-error);
+}
+
 .chrono-notes-template-path-example,
 .chrono-notes-range-path-example {
   margin-top: 4px;

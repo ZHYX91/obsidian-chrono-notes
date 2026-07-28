@@ -6,8 +6,24 @@ import {
 import { migrateLuxonDateFormatToMoment } from "../core/periodic/moment-format";
 import type { StatisticDisplayDimension } from "../core/statistics/heatmap";
 import type { CalendarExtensionId } from "../core/calendar/calendar-extension";
+import {
+  isPropertyDateDisplayFormat,
+  isPropertyTimeDisplayFormat,
+  normalizePropertyCustomFormat,
+  type PropertyDateDisplayFormat,
+  type PropertyTimeDisplayFormat,
+} from "../core/properties/property-date-display";
 
-export const SETTINGS_SCHEMA_VERSION = 17;
+export {
+  isPropertyDateDisplayFormat,
+  isPropertyTimeDisplayFormat,
+} from "../core/properties/property-date-display";
+export type {
+  PropertyDateDisplayFormat,
+  PropertyTimeDisplayFormat,
+} from "../core/properties/property-date-display";
+
+export const SETTINGS_SCHEMA_VERSION = 18;
 
 export type PluginLocale =
   | "auto"
@@ -59,6 +75,10 @@ export interface ChronoNotesSettings {
   fontSizeMode: FontSizeMode;
   immutableFontSizeFactor: number;
   showTaskProgress: boolean;
+  propertyDateDisplayFormat: PropertyDateDisplayFormat;
+  propertyTimeDisplayFormat: PropertyTimeDisplayFormat;
+  propertyDateCustomFormat: string;
+  propertyTimeCustomFormat: string;
   interceptPropertyDateClicks: boolean;
   showHoverPreview: boolean;
   showNoteNavbar: boolean;
@@ -87,6 +107,10 @@ const DEFAULT_SETTINGS: Readonly<ChronoNotesSettings> = {
   fontSizeMode: "immutable",
   immutableFontSizeFactor: 10,
   showTaskProgress: true,
+  propertyDateDisplayFormat: "system",
+  propertyTimeDisplayFormat: "system",
+  propertyDateCustomFormat: "YYYY-MM-DD",
+  propertyTimeCustomFormat: "HH:mm",
   interceptPropertyDateClicks: true,
   showHoverPreview: true,
   showNoteNavbar: true,
@@ -191,6 +215,12 @@ const SETTINGS_MIGRATIONS: Readonly<Record<number, SettingsMigration>> = {
     migrated.periodicNotes = migratePeriodicNotePatterns(settings.periodicNotes);
     return migrated;
   },
+  17: (settings) => addSettingsFields(settings, 18, {
+    propertyDateDisplayFormat: DEFAULT_SETTINGS.propertyDateDisplayFormat,
+    propertyTimeDisplayFormat: DEFAULT_SETTINGS.propertyTimeDisplayFormat,
+    propertyDateCustomFormat: DEFAULT_SETTINGS.propertyDateCustomFormat,
+    propertyTimeCustomFormat: DEFAULT_SETTINGS.propertyTimeCustomFormat,
+  }),
 };
 
 export function migrateSettings(value: unknown): RawSettings {
@@ -252,6 +282,20 @@ export function normalizeSettings(value: unknown): ChronoNotesSettings {
       typeof value.showTaskProgress === "boolean"
         ? value.showTaskProgress
         : defaults.showTaskProgress,
+    propertyDateDisplayFormat: isPropertyDateDisplayFormat(value.propertyDateDisplayFormat)
+      ? value.propertyDateDisplayFormat
+      : defaults.propertyDateDisplayFormat,
+    propertyTimeDisplayFormat: isPropertyTimeDisplayFormat(value.propertyTimeDisplayFormat)
+      ? value.propertyTimeDisplayFormat
+      : defaults.propertyTimeDisplayFormat,
+    propertyDateCustomFormat: normalizePropertyCustomFormat(
+      value.propertyDateCustomFormat,
+      defaults.propertyDateCustomFormat,
+    ),
+    propertyTimeCustomFormat: normalizePropertyCustomFormat(
+      value.propertyTimeCustomFormat,
+      defaults.propertyTimeCustomFormat,
+    ),
     interceptPropertyDateClicks:
       typeof value.interceptPropertyDateClicks === "boolean"
         ? value.interceptPropertyDateClicks

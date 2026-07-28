@@ -23,9 +23,6 @@ export default defineConfig([
     rules: {
       // Keep callback references safe even when their receiver is discarded.
       "@typescript-eslint/unbound-method": "error",
-      // The current five-section settings UI supports Obsidian 1.12.7.
-      // Declarative definitions are evaluated separately for a future minimum.
-      "obsidianmd/settings-tab/prefer-setting-definitions": "off",
     },
   },
   {

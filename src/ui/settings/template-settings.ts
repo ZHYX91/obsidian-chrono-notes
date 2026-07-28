@@ -29,7 +29,7 @@ export function renderTemplateEngineSettings(
   renderTemplateEngineGuide(containerEl, context);
 }
 
-function renderTemplateEngineGuide(
+export function renderTemplateEngineGuide(
   containerEl: HTMLElement,
   context: SettingsSectionContext,
 ): void {
@@ -78,16 +78,33 @@ export function renderTemplatePathSetting(
   onChange: (value: string) => void,
   context: SettingsSectionContext,
 ): void {
+  configureTemplatePathSetting(
+    new Setting(containerEl),
+    name,
+    example,
+    value,
+    onChange,
+    context,
+  );
+}
+
+export function configureTemplatePathSetting(
+  setting: Setting,
+  name: string,
+  example: string,
+  value: string,
+  onChange: (value: string) => void,
+  context: SettingsSectionContext,
+): () => void {
   const { t } = context.translator;
-  const setting = new Setting(containerEl)
-    .setName(name)
-    .setDesc(t("settings.templates.pathDesc"));
+  setting.setName(name).setDesc(t("settings.templates.pathDesc"));
   setting.settingEl.addClass("chrono-notes-template-path-setting");
   const exampleEl = setting.descEl.createDiv({
     cls: "chrono-notes-template-path-example",
   });
   exampleEl.append(`${t("settings.templates.pathExample")}: `);
   exampleEl.createEl("code", { text: example });
+  let suggest: MarkdownFileSuggest | null = null;
   setting.addText((text) => {
     text
       .setPlaceholder(example)
@@ -98,10 +115,11 @@ export function renderTemplatePathSetting(
       });
     preparePathInput(text.inputEl);
     context.flushSettingsSaveOnBlur(text.inputEl);
-    new MarkdownFileSuggest(
+    suggest = new MarkdownFileSuggest(
       context.app,
       text.inputEl,
       context.vaultPathSuggestionCatalog,
     );
   });
+  return () => suggest?.close();
 }

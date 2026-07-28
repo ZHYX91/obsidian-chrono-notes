@@ -1,4 +1,8 @@
-import { PluginSettingTab, type App } from "obsidian";
+import {
+  PluginSettingTab,
+  type App,
+  type SettingDefinitionItem,
+} from "obsidian";
 
 import { createTranslator, type Translator } from "../../shared/i18n";
 import { renderAppearanceSettingsSection } from "./appearance-settings-section";
@@ -17,6 +21,11 @@ import { createSettingsTabLayout } from "./settings-tab-layout";
 import type { SettingsTabId } from "./settings-tab-navigation";
 import { getSettingsTabLabels } from "./settings-presentation";
 import { VaultPathSuggestionCatalog } from "./vault-path-suggest";
+import {
+  applyDeclarativeControlValue,
+  getDeclarativeControlValue,
+  getDeclarativeSettingDefinitions,
+} from "./declarative-settings";
 
 export class ChronoNotesSettingTab extends PluginSettingTab {
   private static readonly TEXT_SAVE_DELAY_MS = 300;
@@ -45,9 +54,39 @@ export class ChronoNotesSettingTab extends PluginSettingTab {
     this.render(null);
   }
 
+  override getSettingDefinitions(): SettingDefinitionItem[] {
+    this.translator = this.host.getTranslator();
+    return getDeclarativeSettingDefinitions(
+      this.createSectionContext(() => updateDeclarativeSettingTab(this)),
+      this.activeTab,
+    );
+  }
+
+  override getControlValue(key: string): unknown {
+    return getDeclarativeControlValue(this.host.settings, key);
+  }
+
+  override async setControlValue(key: string, value: unknown): Promise<void> {
+    const mutation = applyDeclarativeControlValue(this.host.settings, key, value);
+    if (mutation.persistence === "scheduled") {
+      this.settingsSave.schedule();
+    } else {
+      await this.settingsSave.saveNow();
+    }
+    if (mutation.refresh === "update") {
+      updateDeclarativeSettingTab(this);
+    } else if (mutation.refresh === "refresh-dom-state") {
+      refreshDeclarativeSettingTabState(this);
+    }
+  }
+
   activate(tab: SettingsTabId): void {
     this.activeTab = tab;
-    if (this.containerEl.isConnected) this.render(null);
+    if (hasDeclarativeSettingApi(this) && this.containerEl.isConnected) {
+      updateDeclarativeSettingTab(this);
+    } else if (!hasDeclarativeSettingApi(this) && this.containerEl.isConnected) {
+      this.render(null);
+    }
   }
 
   override hide(): void {
@@ -99,7 +138,9 @@ export class ChronoNotesSettingTab extends PluginSettingTab {
     }
   }
 
-  private createSectionContext(): SettingsSectionContext {
+  private createSectionContext(
+    display: () => void = () => this.render(null),
+  ): SettingsSectionContext {
     return {
       app: this.app,
       host: this.host,
@@ -107,12 +148,29 @@ export class ChronoNotesSettingTab extends PluginSettingTab {
       vaultPathSuggestionCatalog: this.vaultPathSuggestionCatalog,
       persistSettings: () => this.settingsSave.saveNow(),
       scheduleSettingsSave: () => this.settingsSave.schedule(),
+      flushSettingsSave: () => this.settingsSave.flushInBackground(),
       flushSettingsSaveOnBlur: (inputEl) => {
         inputEl.addEventListener("blur", () => {
           this.settingsSave.flushInBackground();
         });
       },
-      display: () => this.display(),
+      display,
     };
+  }
+}
+
+function hasDeclarativeSettingApi(settingTab: object): boolean {
+  return typeof Reflect.get(settingTab, "update") === "function";
+}
+
+function updateDeclarativeSettingTab(settingTab: object): void {
+  const update: unknown = Reflect.get(settingTab, "update");
+  if (typeof update === "function") Reflect.apply(update, settingTab, []);
+}
+
+function refreshDeclarativeSettingTabState(settingTab: object): void {
+  const refreshDomState: unknown = Reflect.get(settingTab, "refreshDomState");
+  if (typeof refreshDomState === "function") {
+    Reflect.apply(refreshDomState, settingTab, []);
   }
 }
