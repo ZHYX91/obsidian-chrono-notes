@@ -39,17 +39,12 @@
   }
 
   .metadata-properties .chrono-notes-property-date-display-active
-    > input.chrono-notes-property-date-native-input:not(:focus)::-webkit-datetime-edit {
-    color: transparent;
+    > input.chrono-notes-property-date-native-input:not(:focus):not(:active)::-webkit-datetime-edit {
+    opacity: 0 !important;
   }
 
   .metadata-properties .chrono-notes-property-date-display-active
-    > input.chrono-notes-property-date-native-input:active::-webkit-datetime-edit {
-    color: inherit;
-  }
-
-  .metadata-properties .chrono-notes-property-date-display-active
-    > input.chrono-notes-property-date-native-input:active
+    > input.chrono-notes-property-date-native-input:is(:focus, :active)
     ~ .chrono-notes-property-date-display-value {
     display: none;
   }

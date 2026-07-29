@@ -28,21 +28,24 @@ describe("Properties date-format CSS", () => {
     );
   });
 
-  it("keeps the real picker and exposes native text outside safe color mode", () => {
+  it("hides the complete native edit surface while keeping the real picker", () => {
     expect(styles).toMatch(
       /@media \(forced-colors: none\)\s*\{[\s\S]*?\.chrono-notes-property-date-display-active[\s\S]*?display:\s*flex;/,
     );
     expect(styles).toMatch(
-      /@media \(forced-colors: none\)\s*\{[\s\S]*?::-webkit-datetime-edit\s*\{[^}]*color:\s*transparent;/,
-    );
-    expect(styles).toMatch(
-      /input\.chrono-notes-property-date-native-input:active::-webkit-datetime-edit\s*\{[^}]*color:\s*inherit;/s,
-    );
-    expect(styles).toMatch(
-      /input\.chrono-notes-property-date-native-input:active[\s\S]*?~\s*\.chrono-notes-property-date-display-value\s*\{[^}]*display:\s*none;/s,
+      /@media \(forced-colors: none\)\s*\{[\s\S]*?input\.chrono-notes-property-date-native-input:not\(:focus\):not\(:active\)::-webkit-datetime-edit\s*\{[^}]*opacity:\s*0\s*!important;/,
     );
     expect(styles).not.toMatch(
-      /::-webkit-calendar-picker-indicator\s*\{[^}]*display:\s*none;/s,
+      /::-webkit-datetime-edit\s*\{[^}]*color:\s*transparent;/s,
+    );
+    expect(styles).toMatch(
+      /input\.chrono-notes-property-date-native-input:is\(:focus,\s*:active\)[\s\S]*?~\s*\.chrono-notes-property-date-display-value\s*\{[^}]*display:\s*none;/s,
+    );
+    expect(styles).not.toMatch(
+      /::-webkit-calendar-picker-indicator\s*\{[^}]*(?:display:\s*none|visibility:\s*hidden|opacity:\s*0)/s,
+    );
+    expect(styles).not.toMatch(
+      /input\.chrono-notes-property-date-native-input(?![^\{]*::)[^\{]*\{[^}]*opacity:\s*0/s,
     );
     expect(styles).not.toContain("forced-color-adjust: none");
   });
