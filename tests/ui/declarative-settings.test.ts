@@ -18,7 +18,11 @@ vi.mock("obsidian", () => ({
   },
   moment: vi.fn(() => {
     const formatter = {
-      format: vi.fn(() => "2026-07-31"),
+      format: vi.fn((pattern: string) => pattern === "YYYY-MM-DD dddd"
+        ? "2026-07-31 Friday"
+        : pattern === "YYYY-MM-ddd"
+          ? "2026-07-Fri"
+          : "2026-07-31"),
       locale: vi.fn(() => formatter),
     };
     return formatter;
@@ -225,6 +229,12 @@ describe("declarative settings", () => {
     const harness = createSettingHarness();
 
     const cleanup = formatDefinition.render(harness.setting, {} as never);
+    expect(harness.inputEl.value).toBe("YYYY-MM-DD dddd");
+    expect(harness.feedbackSetText).toHaveBeenLastCalledWith("Preview: 2026-07-31 Friday");
+    harness.changeText("YYYY-MM-ddd");
+    expect(context.host.settings.propertyDateCustomFormat).toBe("YYYY-MM-ddd");
+    expect(harness.inputEl.setAttribute).toHaveBeenLastCalledWith("aria-invalid", "false");
+    expect(harness.feedbackSetText).toHaveBeenLastCalledWith("Preview: 2026-07-Fri");
     harness.changeText("dddd, MMMM D, YYYY");
 
     expect(context.host.settings.propertyDateCustomFormat).toBe("dddd, MMMM D, YYYY");
@@ -235,7 +245,7 @@ describe("declarative settings", () => {
     expect(harness.feedbackSetText).toHaveBeenLastCalledWith(
       "Invalid format; check the rules above.",
     );
-    expect(context.scheduleSettingsSave).toHaveBeenCalledTimes(2);
+    expect(context.scheduleSettingsSave).toHaveBeenCalledTimes(3);
     expect(context.flushSettingsSaveOnBlur).toHaveBeenCalledOnce();
 
     cleanup?.();

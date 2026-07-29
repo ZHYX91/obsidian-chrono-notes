@@ -240,7 +240,7 @@ export const AR_MESSAGES = Object.freeze({
   "settings.general.propertyDateDisplayMdySlash": "شهر/يوم/سنة (٠٧/٣١/٢٠٢٦)",
   "settings.general.propertyDateDisplayCustom": "تنسيق عرض مخصص",
   "settings.general.propertyDateCustomFormat": "تنسيق تاريخ مخصص",
-  "settings.general.propertyDateCustomFormatDesc": "استخدم واحدًا من كل من YYYY/YY وM/MM/MMM/MMMM وD/DD، وبحد أقصى ddd/dddd واحدًا. ضع النص الثابت في [...]. لا Z/ZZ/z/zz ولا X/x.",
+  "settings.general.propertyDateCustomFormatDesc": "استخدم رمز تاريخ واحدًا أو أكثر، وبحد أقصى واحدًا من كل مجموعة: السنة YYYY/YY، الشهر M/MM/MMM/MMMM، اليوم D/DD، ويوم الأسبوع ddd/dddd (مختصر/كامل). مثال: YYYY-MM-DD dddd. ضع النص الثابت في [...]. لا Z/ZZ/z/zz ولا X/x.",
   "settings.general.propertyTimeDisplayFormat": "تنسيق عرض الوقت",
   "settings.general.propertyTimeDisplayFormatDesc": "ينطبق على خصائص التاريخ والوقت فقط؛ يبقى YAML بتنسيق ISO المحلي.",
   "settings.general.propertyTimeDisplaySystem": "اتباع نظام التشغيل",

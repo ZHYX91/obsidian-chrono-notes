@@ -109,7 +109,7 @@ const DEFAULT_SETTINGS: Readonly<ChronoNotesSettings> = {
   showTaskProgress: true,
   propertyDateDisplayFormat: "system",
   propertyTimeDisplayFormat: "system",
-  propertyDateCustomFormat: "YYYY-MM-DD",
+  propertyDateCustomFormat: "YYYY-MM-DD dddd",
   propertyTimeCustomFormat: "HH:mm",
   interceptPropertyDateClicks: true,
   showHoverPreview: true,

@@ -63,6 +63,11 @@ describe("Obsidian property date value formatter", () => {
       "YYYY年M月D日 HH时mm分",
       "zh-cn",
     )).toBe("2026年3月8日 02时30分");
+    expect(OBSIDIAN_PROPERTY_DATE_VALUE_FORMATTER.formatMoment(
+      "2026-03-08T02:30",
+      "YYYY-MM-ddd",
+      "en",
+    )).toBe("2026-03-Sun");
   });
 
   it("formats localized month, weekday, clock, and fractional-second tokens", () => {

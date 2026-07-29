@@ -165,7 +165,7 @@ describe("settings", () => {
     expect(createDefaultSettings()).toMatchObject({
       propertyDateDisplayFormat: "system",
       propertyTimeDisplayFormat: "system",
-      propertyDateCustomFormat: "YYYY-MM-DD",
+      propertyDateCustomFormat: "YYYY-MM-DD dddd",
       propertyTimeCustomFormat: "HH:mm",
     });
     for (const format of [
@@ -592,7 +592,7 @@ describe("settings", () => {
       schemaVersion: SETTINGS_SCHEMA_VERSION,
       propertyDateDisplayFormat: "system",
       propertyTimeDisplayFormat: "system",
-      propertyDateCustomFormat: "YYYY-MM-DD",
+      propertyDateCustomFormat: "YYYY-MM-DD dddd",
       propertyTimeCustomFormat: "HH:mm",
     });
     expect(migrateSettings({

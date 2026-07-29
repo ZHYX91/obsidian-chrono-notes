@@ -208,7 +208,7 @@ export const FA_MESSAGES = Object.freeze({
   "settings.general.propertyDateDisplayMdySlash": "ماه/روز/سال (۰۷/۳۱/۲۰۲۶)",
   "settings.general.propertyDateDisplayCustom": "قالب نمایش سفارشی",
   "settings.general.propertyDateCustomFormat": "قالب سفارشی تاریخ",
-  "settings.general.propertyDateCustomFormatDesc": "از هرکدام YYYY/YY، M/MM/MMM/MMMM و D/DD یک نشانه و حداکثر یک ddd/dddd استفاده کنید. متن ثابت را در [...] بگذارید. Z/ZZ/z/zz و X/x مجاز نیست.",
+  "settings.general.propertyDateCustomFormatDesc": "یک یا چند نشانهٔ تاریخ به‌کار ببرید؛ از هر گروه حداکثر یکی: سال YYYY/YY، ماه M/MM/MMM/MMMM، روز D/DD و روز هفته ddd/dddd (کوتاه/کامل). نمونه: YYYY-MM-DD dddd. متن ثابت را در [...] بگذارید. Z/ZZ/z/zz و X/x مجاز نیست.",
   "settings.general.propertyTimeDisplayFormat": "قالب نمایش زمان",
   "settings.general.propertyTimeDisplayFormatDesc": "فقط برای ویژگی تاریخ‌وزمان است؛ YAML به صورت تاریخ‌وزمان محلی ISO می‌ماند.",
   "settings.general.propertyTimeDisplaySystem": "پیروی از سیستم‌عامل",

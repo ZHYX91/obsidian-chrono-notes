@@ -194,7 +194,7 @@ export function configurePropertyFormatSetting(
       ? context.host.settings.propertyDateCustomFormat
       : context.host.settings.propertyTimeCustomFormat;
     text
-      .setPlaceholder(isDate ? "YYYY-MM-DD" : "HH:mm")
+      .setPlaceholder(isDate ? "YYYY-MM-DD dddd" : "HH:mm")
       .setValue(current)
       .onChange((value) => {
         const normalized = value.slice(0, MAX_PROPERTY_DATE_FORMAT_LENGTH);

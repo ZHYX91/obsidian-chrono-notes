@@ -208,7 +208,7 @@ export const HI_MESSAGES = Object.freeze({
   "settings.general.propertyDateDisplayMdySlash": "माह/दिन/वर्ष (०७/३१/२०२६)",
   "settings.general.propertyDateDisplayCustom": "कस्टम प्रदर्शन प्रारूप",
   "settings.general.propertyDateCustomFormat": "कस्टम दिनांक प्रारूप",
-  "settings.general.propertyDateCustomFormatDesc": "YYYY/YY, M/MM/MMM/MMMM और D/DD में से प्रत्येक का एक, तथा अधिकतम एक ddd/dddd उपयोग करें। स्थिर पाठ [...] में रखें। Z/ZZ/z/zz या X/x नहीं।",
+  "settings.general.propertyDateCustomFormatDesc": "एक या अधिक दिनांक token उपयोग करें; हर समूह से अधिकतम एक: वर्ष YYYY/YY, माह M/MM/MMM/MMMM, दिन D/DD, सप्ताह-दिन ddd/dddd (संक्षिप्त/पूरा)। उदाहरण: YYYY-MM-DD dddd। स्थिर पाठ [...] में रखें। Z/ZZ/z/zz या X/x नहीं।",
   "settings.general.propertyTimeDisplayFormat": "समय प्रदर्शन प्रारूप",
   "settings.general.propertyTimeDisplayFormatDesc": "केवल दिनांक व समय प्रॉपर्टी पर लागू; YAML स्थानीय ISO दिनांक-समय रहता है।",
   "settings.general.propertyTimeDisplaySystem": "ऑपरेटिंग सिस्टम का अनुसरण करें",

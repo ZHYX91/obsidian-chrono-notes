@@ -448,7 +448,7 @@ describe("ChronoNotesPlugin lifecycle composition", () => {
         locale: "en",
         dateFormat: "system",
         timeFormat: "system",
-        dateCustomFormat: "YYYY-MM-DD",
+        dateCustomFormat: "YYYY-MM-DD dddd",
         timeCustomFormat: "HH:mm",
       },
     });
@@ -824,7 +824,7 @@ describe("ChronoNotesPlugin lifecycle composition", () => {
         locale: "en",
         dateFormat: "dmy-slash",
         timeFormat: "system",
-        dateCustomFormat: "YYYY-MM-DD",
+        dateCustomFormat: "YYYY-MM-DD dddd",
         timeCustomFormat: "HH:mm",
       });
       expect(view.refresh).not.toHaveBeenCalled();

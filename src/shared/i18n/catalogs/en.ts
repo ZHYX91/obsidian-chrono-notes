@@ -201,7 +201,7 @@ export const EN_MESSAGES = {
   "settings.general.propertyDateDisplayMdySlash": "Month/day/year (07/31/2026)",
   "settings.general.propertyDateDisplayCustom": "Custom display format",
   "settings.general.propertyDateCustomFormat": "Custom date format",
-  "settings.general.propertyDateCustomFormatDesc": "Use one each of YYYY/YY, M/MM/MMM/MMMM, and D/DD; use at most one ddd/dddd. Put literals in [...]. No Z/ZZ/z/zz or X/x.",
+  "settings.general.propertyDateCustomFormatDesc": "Use one or more date tokens, at most one per group: year YYYY/YY, month M/MM/MMM/MMMM, day D/DD, weekday ddd/dddd (short/full). Example: YYYY-MM-DD dddd. Put literals in [...]. No Z/ZZ/z/zz or X/x.",
   "settings.general.propertyTimeDisplayFormat": "Time display format",
   "settings.general.propertyTimeDisplayFormatDesc": "Applies only to Date & time properties. YAML remains an ISO local date-time.",
   "settings.general.propertyTimeDisplaySystem": "Follow operating system",

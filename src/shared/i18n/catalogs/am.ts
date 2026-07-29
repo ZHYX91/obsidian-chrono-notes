@@ -208,7 +208,7 @@ export const AM_MESSAGES = Object.freeze({
   "settings.general.propertyDateDisplayMdySlash": "ወር/ቀን/ዓመት (07/31/2026)",
   "settings.general.propertyDateDisplayCustom": "ብጁ የማሳያ ቅርጸት",
   "settings.general.propertyDateCustomFormat": "ብጁ የቀን ቅርጸት",
-  "settings.general.propertyDateCustomFormatDesc": "ከ YYYY/YY፣ M/MM/MMM/MMMM እና D/DD እያንዳንዱን አንድ፣ ddd/dddd ከፍተኛውን አንድ ይጠቀሙ። ቋሚ ጽሑፍ በ [...]። Z/ZZ/z/zz ወይም X/x አይደገፍም።",
+  "settings.general.propertyDateCustomFormatDesc": "አንድ ወይም ከዚያ በላይ የቀን token ይጠቀሙ፤ ከእያንዳንዱ ቡድን ከፍተኛው አንድ፦ ዓመት YYYY/YY፣ ወር M/MM/MMM/MMMM፣ ቀን D/DD፣ የሳምንት ቀን ddd/dddd (አጭር/ሙሉ)። ምሳሌ፦ YYYY-MM-DD dddd። ቋሚ ጽሑፍ በ [...]። Z/ZZ/z/zz ወይም X/x አይደገፍም።",
   "settings.general.propertyTimeDisplayFormat": "የሰዓት ማሳያ ቅርጸት",
   "settings.general.propertyTimeDisplayFormatDesc": "ለቀንና ሰዓት ባህሪያት ብቻ ይሰራል፤ YAML የአካባቢ ISO ቀንና ሰዓት ሆኖ ይቆያል።",
   "settings.general.propertyTimeDisplaySystem": "ስርዓተ ክወናውን ተከተል",

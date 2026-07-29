@@ -128,9 +128,10 @@ export function resolvePropertyTimePattern(
 export function isValidPropertyDateFormat(format: string): boolean {
   const tokens = scanFormat(format, DATE_TOKENS);
   if (tokens === null) return false;
-  return countTokenKind(tokens, "year") === 1 &&
-    countTokenKind(tokens, "month") === 1 &&
-    countTokenKind(tokens, "day") === 1 &&
+  return tokens.length > 0 &&
+    countTokenKind(tokens, "year") <= 1 &&
+    countTokenKind(tokens, "month") <= 1 &&
+    countTokenKind(tokens, "day") <= 1 &&
     tokens.filter(isWeekdayToken).length <= 1;
 }
 

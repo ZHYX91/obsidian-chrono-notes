@@ -216,7 +216,7 @@ export const HE_MESSAGES = Object.freeze({
   "settings.general.propertyDateDisplayMdySlash": "חודש/יום/שנה (07/31/2026)",
   "settings.general.propertyDateDisplayCustom": "תבנית תצוגה מותאמת",
   "settings.general.propertyDateCustomFormat": "תבנית תאריך מותאמת",
-  "settings.general.propertyDateCustomFormatDesc": "השתמש באחד מכל YYYY/YY, M/MM/MMM/MMMM ו־D/DD, ולכל היותר ב־ddd/dddd אחד. טקסט קבוע ב־[...]. ללא Z/ZZ/z/zz או X/x.",
+  "settings.general.propertyDateCustomFormatDesc": "השתמש באסימון תאריך אחד או יותר, ולכל היותר באחד מכל קבוצה: שנה YYYY/YY, חודש M/MM/MMM/MMMM, יום D/DD, יום בשבוע ddd/dddd (קצר/מלא). דוגמה: YYYY-MM-DD dddd. טקסט קבוע ב־[...]. ללא Z/ZZ/z/zz או X/x.",
   "settings.general.propertyTimeDisplayFormat": "תבנית תצוגת שעה",
   "settings.general.propertyTimeDisplayFormatDesc": "חל רק על מאפייני תאריך ושעה; YAML נשאר תאריך ושעה מקומיים בפורמט ISO.",
   "settings.general.propertyTimeDisplaySystem": "לפי מערכת ההפעלה",

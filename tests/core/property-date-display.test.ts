@@ -32,12 +32,16 @@ describe("Properties date and time display formats", () => {
     expect(isPropertyTimeDisplayFormat("locale")).toBe(false);
   });
 
-  it("accepts one date field of each kind with literals and determines its order", () => {
+  it("accepts one or more non-repeated date fields with literals and determines complete orders", () => {
     for (const format of [
       "YYYY年M月D日",
       "YYYY年MM月DD日",
       "YYYY-MMM-DD",
       "YYYY-MMMM-DD",
+      "YYYY-MM-ddd",
+      "MMMM D",
+      "dddd",
+      "YY",
       "ddd, DD MMM YYYY",
       "dddd, MMMM D, YYYY",
       "DD [of] MM [of] YYYY",
@@ -51,13 +55,15 @@ describe("Properties date and time display formats", () => {
     expect(getPropertyDateFieldOrder("dddd, MMMM D, YYYY")).toBe("mdy");
     expect(getPropertyDateFieldOrder("DD/MM/YYYY")).toBe("dmy");
     expect(getPropertyDateFieldOrder("MM/DD/YYYY")).toBe("mdy");
+    expect(getPropertyDateFieldOrder("YYYY-MM-ddd")).toBeNull();
     expect(getPropertyDateFieldOrder("YYYY-MM-MM-DD")).toBeNull();
+    expect(resolvePropertyDatePattern("custom", "YYYY-MM-ddd")).toBe("YYYY-MM-ddd");
   });
 
-  it("rejects ambiguous, incomplete, unsupported, and oversized date patterns", () => {
+  it("rejects empty, literal-only, repeated, unsupported, and oversized date patterns", () => {
     for (const format of [
       "",
-      "YYYY-MM",
+      "[date]",
       "YYYY-YY-MM-DD",
       "YYYY-MM-MMM-DD",
       "YYYY-MM-DD-DD",

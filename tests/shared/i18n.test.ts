@@ -142,6 +142,9 @@ describe("createTranslator", () => {
     for (const catalog of Object.values(MESSAGE_CATALOGS)) {
       expect(catalog["settings.general.propertyDateCustomFormatDesc"]).toContain("MMMM");
       expect(catalog["settings.general.propertyDateCustomFormatDesc"]).toContain("dddd");
+      expect(catalog["settings.general.propertyDateCustomFormatDesc"]).toContain(
+        "YYYY-MM-DD dddd",
+      );
       expect(catalog["settings.general.propertyTimeCustomFormatDesc"]).toContain("LT/LTS");
       expect(catalog["settings.general.propertyTimeCustomFormatDesc"]).toContain("k/kk");
       expect(catalog["settings.general.propertyTimeCustomFormatDesc"]).toContain("m/mm");

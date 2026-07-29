@@ -199,7 +199,7 @@ export const ZH_CN_MESSAGES = {
   "settings.general.propertyDateDisplayMdySlash": "月日年（07/31/2026）",
   "settings.general.propertyDateDisplayCustom": "自定义显示格式",
   "settings.general.propertyDateCustomFormat": "自定义日期格式",
-  "settings.general.propertyDateCustomFormatDesc": "YYYY/YY、M/MM/MMM/MMMM、D/DD 各一个，ddd/dddd 最多一个；固定文本用 [...]。不支持 Z/ZZ/z/zz、X/x。",
+  "settings.general.propertyDateCustomFormatDesc": "可任选一个或多个日期 token，每类最多一个：年 YYYY/YY、月 M/MM/MMM/MMMM、日 D/DD、星期 ddd/dddd（简称/全称）。示例：YYYY-MM-DD dddd。固定文本用 [...]；不支持 Z/ZZ/z/zz、X/x。",
   "settings.general.propertyTimeDisplayFormat": "时间显示格式",
   "settings.general.propertyTimeDisplayFormatDesc": "仅用于日期时间属性；YAML 仍保持 ISO 本地日期时间。",
   "settings.general.propertyTimeDisplaySystem": "跟随操作系统",
