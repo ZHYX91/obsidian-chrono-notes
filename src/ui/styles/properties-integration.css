@@ -4,246 +4,53 @@
 
 .metadata-properties .chrono-notes-property-date-display-value {
   align-items: center;
+  block-size: var(--chrono-notes-property-date-display-block-size, 100%);
   box-sizing: border-box;
   color: var(--text-normal);
   display: none;
   font: inherit;
-  inset-block: 0;
-  inset-inline-start: var(--chrono-notes-property-date-display-inline-start, 0);
   inline-size: var(--chrono-notes-property-date-display-inline-size, auto);
+  inset-block-start: var(--chrono-notes-property-date-display-block-start, 0);
+  inset-inline-start: var(--chrono-notes-property-date-display-inline-start, 0);
   max-inline-size: 100%;
   overflow: hidden;
-  padding-inline: 2.15em 0.35em;
   pointer-events: none;
   position: absolute;
   text-overflow: ellipsis;
+  unicode-bidi: plaintext;
   white-space: nowrap;
   z-index: 1;
 }
 
 .metadata-properties .chrono-notes-property-date-display-host
-  > input.chrono-notes-property-date-native-input.mod-date[type="date"] {
+  > input.chrono-notes-property-date-native-input:is(
+    .mod-date[type="date"],
+    .mod-datetime[type="datetime-local"]
+  ) {
   flex: 0 1 auto;
   inline-size: var(--chrono-notes-property-date-display-inline-size, auto);
   min-inline-size: 0;
 }
 
-.metadata-properties .chrono-notes-property-date-display-active
-  > .chrono-notes-property-date-display-value {
-  display: flex;
-}
+@media (forced-colors: none) {
+  .metadata-properties .chrono-notes-property-date-display-active
+    > .chrono-notes-property-date-display-value {
+    display: flex;
+  }
 
-.metadata-properties .chrono-notes-property-date-display-active
-  > input.chrono-notes-property-date-native-input:not(:focus)::-webkit-datetime-edit {
-  color: transparent;
-}
+  .metadata-properties .chrono-notes-property-date-display-active
+    > input.chrono-notes-property-date-native-input:not(:focus)::-webkit-datetime-edit {
+    color: transparent;
+  }
 
-:is(
-  html.chrono-notes-property-date-format-ymd,
-  html.chrono-notes-property-date-format-dmy,
-  html.chrono-notes-property-date-format-mdy
-) .metadata-properties :is(
-  input.metadata-input.mod-date[type="date"],
-  input.metadata-input.mod-datetime[type="datetime-local"]
-)::-webkit-datetime-edit-fields-wrapper {
-  direction: ltr;
-  display: flex;
-}
+  .metadata-properties .chrono-notes-property-date-display-active
+    > input.chrono-notes-property-date-native-input:active::-webkit-datetime-edit {
+    color: inherit;
+  }
 
-:is(
-  html.chrono-notes-property-date-format-ymd,
-  html.chrono-notes-property-date-format-dmy,
-  html.chrono-notes-property-date-format-mdy
-) .metadata-properties :is(
-  input.metadata-input.mod-date[type="date"],
-  input.metadata-input.mod-datetime[type="datetime-local"]
-)::-webkit-datetime-edit-text {
-  display: none;
-}
-
-html.chrono-notes-property-date-format-ymd .metadata-properties :is(
-  input.metadata-input.mod-date[type="date"],
-  input.metadata-input.mod-datetime[type="datetime-local"]
-)::-webkit-datetime-edit-year-field {
-  order: 1;
-}
-
-html.chrono-notes-property-date-format-ymd .metadata-properties :is(
-  input.metadata-input.mod-date[type="date"],
-  input.metadata-input.mod-datetime[type="datetime-local"]
-)::-webkit-datetime-edit-month-field {
-  order: 2;
-}
-
-html.chrono-notes-property-date-format-ymd .metadata-properties :is(
-  input.metadata-input.mod-date[type="date"],
-  input.metadata-input.mod-datetime[type="datetime-local"]
-)::-webkit-datetime-edit-day-field {
-  order: 3;
-}
-
-html.chrono-notes-property-date-format-dmy .metadata-properties :is(
-  input.metadata-input.mod-date[type="date"],
-  input.metadata-input.mod-datetime[type="datetime-local"]
-)::-webkit-datetime-edit-day-field {
-  order: 1;
-}
-
-html.chrono-notes-property-date-format-dmy .metadata-properties :is(
-  input.metadata-input.mod-date[type="date"],
-  input.metadata-input.mod-datetime[type="datetime-local"]
-)::-webkit-datetime-edit-month-field {
-  order: 2;
-}
-
-html.chrono-notes-property-date-format-dmy .metadata-properties :is(
-  input.metadata-input.mod-date[type="date"],
-  input.metadata-input.mod-datetime[type="datetime-local"]
-)::-webkit-datetime-edit-year-field {
-  order: 3;
-}
-
-html.chrono-notes-property-date-format-mdy .metadata-properties :is(
-  input.metadata-input.mod-date[type="date"],
-  input.metadata-input.mod-datetime[type="datetime-local"]
-)::-webkit-datetime-edit-month-field {
-  order: 1;
-}
-
-html.chrono-notes-property-date-format-mdy .metadata-properties :is(
-  input.metadata-input.mod-date[type="date"],
-  input.metadata-input.mod-datetime[type="datetime-local"]
-)::-webkit-datetime-edit-day-field {
-  order: 2;
-}
-
-html.chrono-notes-property-date-format-mdy .metadata-properties :is(
-  input.metadata-input.mod-date[type="date"],
-  input.metadata-input.mod-datetime[type="datetime-local"]
-)::-webkit-datetime-edit-year-field {
-  order: 3;
-}
-
-:is(
-  html.chrono-notes-property-date-format-ymd,
-  html.chrono-notes-property-date-format-dmy,
-  html.chrono-notes-property-date-format-mdy
-) .metadata-properties input.metadata-input.mod-datetime[type="datetime-local"]::-webkit-datetime-edit-hour-field {
-  margin-inline-start: 0.55ch;
-  order: 4;
-}
-
-:is(
-  html.chrono-notes-property-date-format-ymd,
-  html.chrono-notes-property-date-format-dmy,
-  html.chrono-notes-property-date-format-mdy
-) .metadata-properties input.metadata-input.mod-datetime[type="datetime-local"]::-webkit-datetime-edit-minute-field {
-  order: 5;
-}
-
-:is(
-  html.chrono-notes-property-date-format-ymd,
-  html.chrono-notes-property-date-format-dmy,
-  html.chrono-notes-property-date-format-mdy
-) .metadata-properties input.metadata-input.mod-datetime[type="datetime-local"]::-webkit-datetime-edit-second-field {
-  order: 6;
-}
-
-:is(
-  html.chrono-notes-property-date-format-ymd,
-  html.chrono-notes-property-date-format-dmy,
-  html.chrono-notes-property-date-format-mdy
-) .metadata-properties input.metadata-input.mod-datetime[type="datetime-local"]::-webkit-datetime-edit-ampm-field {
-  margin-inline-start: 0.35ch;
-  order: 7;
-}
-
-html.chrono-notes-property-date-format-ymd .metadata-properties :is(
-  input.metadata-input.mod-date[type="date"],
-  input.metadata-input.mod-datetime[type="datetime-local"]
-)::-webkit-datetime-edit-year-field,
-html.chrono-notes-property-date-format-ymd .metadata-properties :is(
-  input.metadata-input.mod-date[type="date"],
-  input.metadata-input.mod-datetime[type="datetime-local"]
-)::-webkit-datetime-edit-month-field,
-html.chrono-notes-property-date-format-dmy .metadata-properties :is(
-  input.metadata-input.mod-date[type="date"],
-  input.metadata-input.mod-datetime[type="datetime-local"]
-)::-webkit-datetime-edit-day-field,
-html.chrono-notes-property-date-format-dmy .metadata-properties :is(
-  input.metadata-input.mod-date[type="date"],
-  input.metadata-input.mod-datetime[type="datetime-local"]
-)::-webkit-datetime-edit-month-field,
-html.chrono-notes-property-date-format-mdy .metadata-properties :is(
-  input.metadata-input.mod-date[type="date"],
-  input.metadata-input.mod-datetime[type="datetime-local"]
-)::-webkit-datetime-edit-month-field,
-html.chrono-notes-property-date-format-mdy .metadata-properties :is(
-  input.metadata-input.mod-date[type="date"],
-  input.metadata-input.mod-datetime[type="datetime-local"]
-)::-webkit-datetime-edit-day-field {
-  background-position: right center;
-  background-repeat: no-repeat;
-  background-size: 0.3em 0.8em;
-  padding-inline-end: 0.4em;
-}
-
-html.chrono-notes-property-date-format-ymd .metadata-properties :is(
-  input.metadata-input.mod-date[type="date"],
-  input.metadata-input.mod-datetime[type="datetime-local"]
-)::-webkit-datetime-edit-year-field,
-html.chrono-notes-property-date-format-ymd .metadata-properties :is(
-  input.metadata-input.mod-date[type="date"],
-  input.metadata-input.mod-datetime[type="datetime-local"]
-)::-webkit-datetime-edit-month-field {
-  background-image: linear-gradient(
-    to bottom,
-    transparent 46%,
-    currentcolor 46%,
-    currentcolor 54%,
-    transparent 54%
-  );
-}
-
-html.chrono-notes-property-date-format-dmy .metadata-properties :is(
-  input.metadata-input.mod-date[type="date"],
-  input.metadata-input.mod-datetime[type="datetime-local"]
-)::-webkit-datetime-edit-day-field,
-html.chrono-notes-property-date-format-dmy .metadata-properties :is(
-  input.metadata-input.mod-date[type="date"],
-  input.metadata-input.mod-datetime[type="datetime-local"]
-)::-webkit-datetime-edit-month-field,
-html.chrono-notes-property-date-format-mdy .metadata-properties :is(
-  input.metadata-input.mod-date[type="date"],
-  input.metadata-input.mod-datetime[type="datetime-local"]
-)::-webkit-datetime-edit-month-field,
-html.chrono-notes-property-date-format-mdy .metadata-properties :is(
-  input.metadata-input.mod-date[type="date"],
-  input.metadata-input.mod-datetime[type="datetime-local"]
-)::-webkit-datetime-edit-day-field {
-  background-image: linear-gradient(
-    105deg,
-    transparent 43%,
-    currentcolor 43%,
-    currentcolor 55%,
-    transparent 55%
-  );
-}
-
-:is(
-  html.chrono-notes-property-date-format-ymd,
-  html.chrono-notes-property-date-format-dmy,
-  html.chrono-notes-property-date-format-mdy
-) .metadata-properties input.metadata-input.mod-datetime[type="datetime-local"]::-webkit-datetime-edit-hour-field,
-:is(
-  html.chrono-notes-property-date-format-ymd,
-  html.chrono-notes-property-date-format-dmy,
-  html.chrono-notes-property-date-format-mdy
-) .metadata-properties input.metadata-input.mod-datetime[type="datetime-local"]::-webkit-datetime-edit-minute-field {
-  background-image: radial-gradient(circle, currentcolor 0 16%, transparent 18%),
-    radial-gradient(circle, currentcolor 0 16%, transparent 18%);
-  background-position: right 35%, right 65%;
-  background-repeat: no-repeat;
-  background-size: 0.3em 0.3em;
-  padding-inline-end: 0.38em;
+  .metadata-properties .chrono-notes-property-date-display-active
+    > input.chrono-notes-property-date-native-input:active
+    ~ .chrono-notes-property-date-display-value {
+    display: none;
+  }
 }

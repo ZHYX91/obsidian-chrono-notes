@@ -138,6 +138,9 @@ export default class ChronoNotesPlugin extends Plugin {
       this.app.workspace.iterateAllLeaves((leaf) => {
         propertiesDateDisplay.addDocument(leaf.view.containerEl.ownerDocument);
       });
+      this.registerEvent(this.app.workspace.on("css-change", () => {
+        propertiesDateDisplay.refreshAll();
+      }));
       this.registerEvent(this.app.workspace.on("window-open", (_workspaceWindow, openedWindow) => {
         propertiesDateDisplay.addDocument(openedWindow.document);
       }));

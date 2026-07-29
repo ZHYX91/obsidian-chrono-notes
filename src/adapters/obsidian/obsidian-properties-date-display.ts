@@ -1,8 +1,6 @@
 import {
-  getPropertyDateFieldOrder,
   resolvePropertyDatePattern,
   resolvePropertyTimePattern,
-  type PropertyDateFieldOrder,
   type PropertyDateDisplayFormat,
   type PropertyTimeDisplayFormat,
 } from "../../core/properties/property-date-display";
@@ -16,16 +14,21 @@ const DISPLAY_INLINE_SIZE_PROPERTY =
   "--chrono-notes-property-date-display-inline-size";
 const DISPLAY_INLINE_START_PROPERTY =
   "--chrono-notes-property-date-display-inline-start";
+const DISPLAY_BLOCK_START_PROPERTY =
+  "--chrono-notes-property-date-display-block-start";
+const DISPLAY_BLOCK_SIZE_PROPERTY =
+  "--chrono-notes-property-date-display-block-size";
 
-const ROOT_CLASS_BY_ORDER: Readonly<Record<PropertyDateFieldOrder, string>> = Object.freeze({
-  ymd: "chrono-notes-property-date-format-ymd",
-  dmy: "chrono-notes-property-date-format-dmy",
-  mdy: "chrono-notes-property-date-format-mdy",
-});
-
-export const PROPERTY_DATE_FORMAT_ROOT_CLASSES = Object.freeze(
-  Object.values(ROOT_CLASS_BY_ORDER),
-);
+const INPUT_PRESENTATION_PROPERTIES = Object.freeze([
+  "direction",
+  "font-family",
+  "font-size",
+  "font-style",
+  "font-variant-numeric",
+  "font-weight",
+  "letter-spacing",
+  "line-height",
+]);
 
 export interface PropertyDateDisplaySettings {
   readonly locale: string;
@@ -44,15 +47,15 @@ export interface PropertyDateValueFormatter {
 interface ManagedInput {
   readonly input: HTMLInputElement;
   readonly host: HTMLElement;
-  readonly overlay: HTMLSpanElement;
-  readonly resizeObserver: ResizeObserver | null;
   readonly refresh: () => void;
-  readonly showNative: () => void;
+  readonly syncLayoutObservation: () => void;
+  readonly dispose: () => void;
 }
 
 interface ManagedDocument {
   readonly observer: MutationObserver | null;
   readonly inputs: Map<HTMLInputElement, ManagedInput>;
+  observing: boolean;
 }
 
 export class ObsidianPropertiesDateDisplay {
@@ -69,10 +72,11 @@ export class ObsidianPropertiesDateDisplay {
     const MutationObserverConstructor = document.defaultView?.MutationObserver;
     const observer = MutationObserverConstructor === undefined
       ? null
-      : new MutationObserverConstructor(() => this.scanDocument(document));
-    this.documents.set(document, { observer, inputs });
-    observer?.observe(document.documentElement, { childList: true, subtree: true });
-    this.applyRootClass(document);
+      : new MutationObserverConstructor((records) => {
+        if (this.shouldScanMutations(document, records)) this.scanDocument(document);
+      });
+    this.documents.set(document, { observer, inputs, observing: false });
+    this.updateDocumentObservation(document);
     this.scanDocument(document);
   }
 
@@ -82,14 +86,17 @@ export class ObsidianPropertiesDateDisplay {
     managed.observer?.disconnect();
     for (const input of managed.inputs.values()) this.unmanageInput(input);
     managed.inputs.clear();
-    this.removeFormatClasses(document);
     this.documents.delete(document);
   }
 
   setSettings(settings: PropertyDateDisplaySettings): void {
     this.settings = settings;
+    this.refreshAll();
+  }
+
+  refreshAll(): void {
     for (const document of this.documents.keys()) {
-      this.applyRootClass(document);
+      this.updateDocumentObservation(document);
       this.scanDocument(document);
       const managed = this.documents.get(document);
       if (managed === undefined) continue;
@@ -105,79 +112,210 @@ export class ObsidianPropertiesDateDisplay {
     const managed = this.documents.get(document);
     if (managed === undefined) return;
     for (const [input, item] of managed.inputs) {
-      if (input.isConnected) continue;
+      if (this.shouldRetainInput(document, input, item)) continue;
       this.unmanageInput(item);
       managed.inputs.delete(input);
     }
+    if (!this.hasAnyCustomDisplay()) return;
     for (const element of document.querySelectorAll<HTMLInputElement>(PROPERTY_INPUT_SELECTOR)) {
-      if (managed.inputs.has(element)) continue;
+      if (managed.inputs.has(element) || !this.shouldManageInput(element)) continue;
       managed.inputs.set(element, this.manageInput(element));
     }
+    for (const item of managed.inputs.values()) item.syncLayoutObservation();
+  }
+
+  private updateDocumentObservation(document: Document): void {
+    const managed = this.documents.get(document);
+    if (managed === undefined || managed.observer === null) return;
+    const shouldObserve = this.hasAnyCustomDisplay();
+    if (shouldObserve === managed.observing) return;
+    managed.observer.disconnect();
+    managed.observing = shouldObserve;
+    if (!shouldObserve) return;
+    managed.observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["class", "type"],
+      childList: true,
+      subtree: true,
+    });
+  }
+
+  private shouldScanMutations(
+    document: Document,
+    records: readonly MutationRecord[],
+  ): boolean {
+    const managed = this.documents.get(document);
+    if (managed === undefined) return false;
+    return records.some((record) => {
+      const target = record.target;
+      if (record.type === "childList") {
+        if (target.nodeType !== 1) return true;
+        const element = target as Element;
+        return element.closest(".chrono-notes-property-date-display-value") === null;
+      }
+      if (target.nodeType !== 1) return false;
+      const element = target as Element;
+      if (element.tagName === "INPUT") {
+        const input = element as HTMLInputElement;
+        return managed.inputs.has(input) || input.closest(".metadata-properties") !== null;
+      }
+      if (element.matches(".metadata-properties")) return true;
+      return [...managed.inputs.keys()].some((input) => element.contains(input));
+    });
+  }
+
+  private shouldRetainInput(
+    document: Document,
+    input: HTMLInputElement,
+    managed: ManagedInput,
+  ): boolean {
+    return input.isConnected &&
+      input.ownerDocument === document &&
+      input.parentElement === managed.host &&
+      input.matches(PROPERTY_INPUT_SELECTOR) &&
+      this.shouldManageInput(input);
+  }
+
+  private hasAnyCustomDisplay(): boolean {
+    return resolvePropertyDatePattern(
+      this.settings.dateFormat,
+      this.settings.dateCustomFormat,
+    ) !== null || resolvePropertyTimePattern(
+      this.settings.timeFormat,
+      this.settings.timeCustomFormat,
+    ) !== null;
+  }
+
+  private shouldManageInput(input: HTMLInputElement): boolean {
+    const datePattern = resolvePropertyDatePattern(
+      this.settings.dateFormat,
+      this.settings.dateCustomFormat,
+    );
+    if (input.type === "date") return datePattern !== null;
+    if (input.type !== "datetime-local") return false;
+    const timePattern = resolvePropertyTimePattern(
+      this.settings.timeFormat,
+      this.settings.timeCustomFormat,
+    );
+    return datePattern !== null || timePattern !== null;
   }
 
   private manageInput(input: HTMLInputElement): ManagedInput {
     const host = input.parentElement ?? input.ownerDocument.body;
-    const overlay = host.createSpan({
-      cls: "chrono-notes-property-date-display-value",
-    });
-    overlay.setAttribute("aria-hidden", "true");
-    input.classList.add("chrono-notes-property-date-native-input");
-    host.classList.add("chrono-notes-property-date-display-host");
+    const view = input.ownerDocument.defaultView;
+    const forcedColorsQuery = view?.matchMedia("(forced-colors: active)") ?? null;
+    let overlay: HTMLSpanElement | null = null;
+    let resizeObserver: ResizeObserver | null = null;
+    const observedLayoutElements = new Set<Element>();
+    let refresh: () => void;
 
-    const showNative = (): void => {
-      host.classList.remove("chrono-notes-property-date-display-active");
-      overlay.textContent = "";
-    };
     const clearLayout = (): void => {
       host.style.removeProperty(DISPLAY_INLINE_SIZE_PROPERTY);
       host.style.removeProperty(DISPLAY_INLINE_START_PROPERTY);
+      host.style.removeProperty(DISPLAY_BLOCK_START_PROPERTY);
+      host.style.removeProperty(DISPLAY_BLOCK_SIZE_PROPERTY);
     };
-    const refresh = (): void => {
-      if (input.ownerDocument.activeElement === input) {
-        showNative();
-        return;
-      }
-      host.classList.remove("chrono-notes-property-date-display-active");
-      clearLayout();
-      const formatted = this.formatInput(input);
-      if (formatted === null || formatted.length === 0) {
-        showNative();
-        return;
-      }
-      overlay.textContent = formatted;
-      host.classList.add("chrono-notes-property-date-display-active");
-      applyDisplayLayout(input, host, overlay);
-    };
-    input.addEventListener("focus", showNative);
-    input.addEventListener("blur", refresh);
-    input.addEventListener("input", refresh);
-    input.addEventListener("change", refresh);
-    const ResizeObserverConstructor = input.ownerDocument.defaultView?.ResizeObserver;
-    const resizeObserver = ResizeObserverConstructor === undefined
-      ? null
-      : new ResizeObserverConstructor(refresh);
-    resizeObserver?.observe(host);
-    refresh();
-    return { input, host, overlay, resizeObserver, refresh, showNative };
-  }
-
-  private unmanageInput(managed: ManagedInput): void {
-    const { input, host, overlay, resizeObserver, refresh, showNative } = managed;
-    resizeObserver?.disconnect();
-    input.removeEventListener("focus", showNative);
-    input.removeEventListener("blur", refresh);
-    input.removeEventListener("input", refresh);
-    input.removeEventListener("change", refresh);
-    input.classList.remove("chrono-notes-property-date-native-input");
-    overlay.remove();
-    if (!host.querySelector(".chrono-notes-property-date-display-value")) {
+    const clearPresentation = (): void => {
       host.classList.remove(
         "chrono-notes-property-date-display-host",
         "chrono-notes-property-date-display-active",
       );
-      host.style.removeProperty(DISPLAY_INLINE_SIZE_PROPERTY);
-      host.style.removeProperty(DISPLAY_INLINE_START_PROPERTY);
-    }
+      input.classList.remove("chrono-notes-property-date-native-input");
+      clearLayout();
+      resizeObserver?.disconnect();
+      resizeObserver = null;
+      observedLayoutElements.clear();
+      overlay?.remove();
+      overlay = null;
+    };
+    const showNativeEditor = (): void => {
+      host.classList.remove("chrono-notes-property-date-display-active");
+    };
+    const syncLayoutTargets = (displayOverlay: HTMLSpanElement): void => {
+      if (resizeObserver === null) return;
+      const targets = new Set<Element>([host, input]);
+      for (const child of host.children) {
+        if (child !== displayOverlay) targets.add(child);
+      }
+      for (const element of observedLayoutElements) {
+        if (targets.has(element)) continue;
+        resizeObserver.unobserve(element);
+        observedLayoutElements.delete(element);
+      }
+      for (const element of targets) {
+        if (observedLayoutElements.has(element)) continue;
+        resizeObserver.observe(element);
+        observedLayoutElements.add(element);
+      }
+    };
+    const ensureOverlay = (): HTMLSpanElement => {
+      if (overlay !== null) return overlay;
+      overlay = host.createSpan({
+        cls: "chrono-notes-property-date-display-value",
+      });
+      overlay.setAttribute("aria-hidden", "true");
+      const ResizeObserverConstructor = view?.ResizeObserver;
+      resizeObserver = ResizeObserverConstructor === undefined
+        ? null
+        : new ResizeObserverConstructor(() => refresh());
+      syncLayoutTargets(overlay);
+      return overlay;
+    };
+    refresh = (): void => {
+      if (forcedColorsQuery?.matches === true) {
+        clearPresentation();
+        return;
+      }
+      if (input.ownerDocument.activeElement === input) {
+        showNativeEditor();
+        return;
+      }
+      const formatted = this.formatInput(input);
+      if (formatted === null || formatted.length === 0) {
+        clearPresentation();
+        return;
+      }
+      const displayOverlay = ensureOverlay();
+      syncLayoutTargets(displayOverlay);
+      host.classList.remove(
+        "chrono-notes-property-date-display-host",
+        "chrono-notes-property-date-display-active",
+      );
+      input.classList.remove("chrono-notes-property-date-native-input");
+      clearLayout();
+      displayOverlay.removeAttribute("style");
+      displayOverlay.textContent = formatted;
+      copyInputPresentation(input, displayOverlay);
+      input.classList.add("chrono-notes-property-date-native-input");
+      host.classList.add(
+        "chrono-notes-property-date-display-host",
+        "chrono-notes-property-date-display-active",
+      );
+      applyDisplayLayout(input, host, displayOverlay);
+    };
+    const dispose = (): void => {
+      forcedColorsQuery?.removeEventListener("change", refresh);
+      input.removeEventListener("focus", showNativeEditor);
+      input.removeEventListener("blur", refresh);
+      input.removeEventListener("input", refresh);
+      input.removeEventListener("change", refresh);
+      clearPresentation();
+    };
+    const syncLayoutObservation = (): void => {
+      if (overlay !== null) syncLayoutTargets(overlay);
+    };
+
+    input.addEventListener("focus", showNativeEditor);
+    input.addEventListener("blur", refresh);
+    input.addEventListener("input", refresh);
+    input.addEventListener("change", refresh);
+    forcedColorsQuery?.addEventListener("change", refresh);
+    refresh();
+    return { input, host, refresh, syncLayoutObservation, dispose };
+  }
+
+  private unmanageInput(managed: ManagedInput): void {
+    managed.dispose();
   }
 
   private formatInput(input: HTMLInputElement): string | null {
@@ -209,19 +347,23 @@ export class ObsidianPropertiesDateDisplay {
     return date === null || time === null ? null : `${date} ${time}`;
   }
 
-  private applyRootClass(document: Document): void {
-    this.removeFormatClasses(document);
-    const pattern = resolvePropertyDatePattern(
-      this.settings.dateFormat,
-      this.settings.dateCustomFormat,
-    );
-    if (pattern === null) return;
-    const order = getPropertyDateFieldOrder(pattern);
-    if (order !== null) document.documentElement.classList.add(ROOT_CLASS_BY_ORDER[order]);
-  }
+}
 
-  private removeFormatClasses(document: Document): void {
-    document.documentElement.classList.remove(...PROPERTY_DATE_FORMAT_ROOT_CLASSES);
+function copyInputPresentation(
+  input: HTMLInputElement,
+  overlay: HTMLSpanElement,
+): void {
+  const view = input.ownerDocument.defaultView;
+  if (view === null) return;
+  const style = view.getComputedStyle(input);
+  for (const property of INPUT_PRESENTATION_PROPERTIES) {
+    const value = style.getPropertyValue(property);
+    if (value.length > 0) overlay.style.setProperty(property, value);
+  }
+  for (const side of ["inline-start", "inline-end", "block-start", "block-end"]) {
+    const inset = parseCssPixels(style.getPropertyValue(`padding-${side}`)) +
+      parseCssPixels(style.getPropertyValue(`border-${side}-width`));
+    overlay.style.setProperty(`padding-${side}`, `${inset}px`);
   }
 }
 
@@ -247,7 +389,7 @@ function applyDisplayLayout(
   const hostRect = host.getBoundingClientRect();
   const inputRect = input.getBoundingClientRect();
   if (hostRect.width <= 0 || inputRect.width <= 0) return;
-  const direction = input.ownerDocument.defaultView?.getComputedStyle(host).direction;
+  const direction = input.ownerDocument.defaultView?.getComputedStyle(input).direction;
   const inlineStart = direction === "rtl"
     ? hostRect.right - inputRect.right
     : inputRect.left - hostRect.left;
@@ -255,6 +397,16 @@ function applyDisplayLayout(
     DISPLAY_INLINE_START_PROPERTY,
     `${Math.max(0, Math.round(inlineStart))}px`,
   );
+  host.style.setProperty(
+    DISPLAY_BLOCK_START_PROPERTY,
+    `${Math.max(0, Math.round(inputRect.top - hostRect.top))}px`,
+  );
+  if (inputRect.height > 0) {
+    host.style.setProperty(
+      DISPLAY_BLOCK_SIZE_PROPERTY,
+      `${Math.ceil(inputRect.height)}px`,
+    );
+  }
 }
 
 function getAvailableInputInlineSize(

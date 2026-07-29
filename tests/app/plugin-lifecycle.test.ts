@@ -231,6 +231,7 @@ const mocks = vi.hoisted(() => {
   class MockPropertiesDateDisplay {
     readonly addDocument = vi.fn();
     readonly removeDocument = vi.fn();
+    readonly refreshAll = vi.fn();
     readonly setSettings = vi.fn();
     readonly dispose = vi.fn();
 
@@ -428,6 +429,8 @@ describe("ChronoNotesPlugin lifecycle composition", () => {
     expect(mocks.state.propertiesDateDisplayInstances[0]?.addDocument).toHaveBeenCalledTimes(2);
     expect(mocks.state.propertiesDateDisplayInstances[0]?.addDocument)
       .toHaveBeenCalledWith(existingPopoutDocument);
+    mocks.state.workspaceCallbacks.get("css-change")?.[0]?.();
+    expect(mocks.state.propertiesDateDisplayInstances[0]?.refreshAll).toHaveBeenCalledOnce();
     expect(plugin.noteIndex).not.toBeNull();
     expect(plugin.icsEventIndex).not.toBeNull();
 

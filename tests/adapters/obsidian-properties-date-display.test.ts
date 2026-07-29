@@ -4,7 +4,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
   ObsidianPropertiesDateDisplay,
-  PROPERTY_DATE_FORMAT_ROOT_CLASSES,
   type PropertyDateDisplaySettings,
   type PropertyDateValueFormatter,
 } from "../../src/adapters/obsidian/obsidian-properties-date-display";
@@ -51,7 +50,8 @@ beforeEach(() => {
 
 afterEach(() => {
   document.body.replaceChildren();
-  document.documentElement.classList.remove(...PROPERTY_DATE_FORMAT_ROOT_CLASSES);
+  vi.restoreAllMocks();
+  vi.unstubAllGlobals();
 });
 
 describe("ObsidianPropertiesDateDisplay", () => {
@@ -63,13 +63,33 @@ describe("ObsidianPropertiesDateDisplay", () => {
 
     expect(input.value).toBe("2026-07-31");
     expect(getOverlay(input).textContent).toBe("2026-07-31");
+    expect(getOverlay(input).getAttribute("aria-hidden")).toBe("true");
     expect(input.parentElement?.classList.contains(
       "chrono-notes-property-date-display-active",
     )).toBe(true);
     display.dispose();
   });
 
-  it("reveals the untouched native editor on focus and restores the overlay on blur", () => {
+  it("does not emit edit events while refreshing presentation state", () => {
+    const input = appendInput("date", "mod-date", "2026-07-31");
+    const onInput = vi.fn();
+    const onChange = vi.fn();
+    input.addEventListener("input", onInput);
+    input.addEventListener("change", onChange);
+    const display = new ObsidianPropertiesDateDisplay(DEFAULT_SETTINGS, formatter);
+
+    display.addDocument(document);
+    display.setSettings({ ...DEFAULT_SETTINGS, dateFormat: "dmy-slash" });
+    input.focus();
+    input.blur();
+
+    expect(input.value).toBe("2026-07-31");
+    expect(onInput).not.toHaveBeenCalled();
+    expect(onChange).not.toHaveBeenCalled();
+    display.dispose();
+  });
+
+  it("reveals the native editor without field rewriting and restores the overlay", () => {
     const input = appendInput("date", "mod-date", "2026-07-31");
     const display = new ObsidianPropertiesDateDisplay({
       ...DEFAULT_SETTINGS,
@@ -83,6 +103,8 @@ describe("ObsidianPropertiesDateDisplay", () => {
     expect(input.parentElement?.classList.contains(
       "chrono-notes-property-date-display-active",
     )).toBe(false);
+    expect(input.classList.contains("chrono-notes-property-date-native-input")).toBe(true);
+    expect(getOverlay(input).textContent).toBe("2026年7月31日");
     expect(input.value).toBe("2026-07-31");
 
     input.blur();
@@ -118,7 +140,21 @@ describe("ObsidianPropertiesDateDisplay", () => {
     expect(host.style.getPropertyValue(
       "--chrono-notes-property-date-display-inline-start",
     )).toBe("0px");
+    expect(host.style.getPropertyValue(
+      "--chrono-notes-property-date-display-block-start",
+    )).toBe("0px");
+    expect(host.style.getPropertyValue(
+      "--chrono-notes-property-date-display-block-size",
+    )).toBe("30px");
     expect(input.value).toBe("2026-07-31");
+
+    input.focus();
+    expect(host.classList.contains("chrono-notes-property-date-display-active")).toBe(false);
+    expect(host.style.getPropertyValue(
+      "--chrono-notes-property-date-display-inline-size",
+    )).toBe("220px");
+    input.blur();
+    expect(host.classList.contains("chrono-notes-property-date-display-active")).toBe(true);
     display.dispose();
   });
 
@@ -151,6 +187,8 @@ describe("ObsidianPropertiesDateDisplay", () => {
   it("recalculates the available width when the Properties row resizes", () => {
     const resizeCallbacks: Array<() => void> = [];
     const disconnect = vi.fn();
+    const observe = vi.fn();
+    const unobserve = vi.fn();
     const originalResizeObserver = window.ResizeObserver;
     Object.defineProperty(window, "ResizeObserver", {
       configurable: true,
@@ -160,7 +198,8 @@ describe("ObsidianPropertiesDateDisplay", () => {
         }
 
         disconnect = disconnect;
-        observe(): void {}
+        observe = observe;
+        unobserve = unobserve;
       },
     });
     const input = appendInput("date", "mod-date", "2026-07-31");
@@ -177,6 +216,9 @@ describe("ObsidianPropertiesDateDisplay", () => {
     const overlay = getOverlay(input);
     Object.defineProperty(overlay, "scrollWidth", { value: 220 });
     expect(resizeCallbacks).toHaveLength(1);
+    expect(observe).toHaveBeenCalledWith(host);
+    expect(observe).toHaveBeenCalledWith(input);
+    expect(observe).toHaveBeenCalledWith(link);
     resizeCallbacks[0]?.();
 
     expect(host.style.getPropertyValue(
@@ -225,6 +267,40 @@ describe("ObsidianPropertiesDateDisplay", () => {
     display.dispose();
   });
 
+  it("positions from the input direction when an RTL row keeps the editor LTR", () => {
+    const input = appendInput("date", "mod-date", "2026-07-31");
+    const host = input.parentElement;
+    if (host === null) throw new Error("Expected input host.");
+    host.className = "metadata-property-value";
+    host.style.direction = "rtl";
+    input.style.direction = "ltr";
+    host.style.gap = "4px";
+    const link = document.createElement("button");
+    host.append(link);
+    Object.defineProperty(host, "clientWidth", { value: 300 });
+    host.getBoundingClientRect = () => rect(0, 300);
+    input.getBoundingClientRect = () => {
+      const configured = Number.parseFloat(host.style.getPropertyValue(
+        "--chrono-notes-property-date-display-inline-size",
+      ));
+      const width = Number.isFinite(configured) ? configured : 120;
+      return rect(300 - width, width);
+    };
+    link.getBoundingClientRect = () => rect(0, 28);
+    const display = new ObsidianPropertiesDateDisplay(DEFAULT_SETTINGS, formatter);
+
+    display.addDocument(document);
+    const overlay = getOverlay(input);
+    Object.defineProperty(overlay, "scrollWidth", { value: 220 });
+    input.dispatchEvent(new Event("blur"));
+
+    expect(host.style.getPropertyValue(
+      "--chrono-notes-property-date-display-inline-start",
+    )).toBe("80px");
+    expect(overlay.style.direction).toBe("ltr");
+    display.dispose();
+  });
+
   it("combines independently selected date and time formats", () => {
     const input = appendInput(
       "datetime-local",
@@ -243,9 +319,70 @@ describe("ObsidianPropertiesDateDisplay", () => {
     display.dispose();
   });
 
-  it("leaves system, empty, and malformed values entirely native", () => {
+  it("copies native text metrics and picker-reserved logical insets", () => {
+    const input = appendInput("date", "mod-date", "2026-07-31");
+    input.style.fontFamily = "Test Native Font";
+    input.style.fontSize = "17px";
+    input.style.paddingInlineStart = "24px";
+    input.style.paddingInlineEnd = "8px";
+    const display = new ObsidianPropertiesDateDisplay(DEFAULT_SETTINGS, formatter);
+
+    display.addDocument(document);
+
+    const overlay = getOverlay(input);
+    expect(overlay.style.fontFamily).toContain("Test Native Font");
+    expect(overlay.style.fontSize).toBe("17px");
+    expect(overlay.style.color).toBe("");
+    expect(overlay.style.paddingInlineStart).toBe("24px");
+    expect(overlay.style.paddingInlineEnd).toBe("8px");
+
+    input.style.fontSize = "19px";
+    input.style.paddingInlineStart = "26px";
+    display.refreshAll();
+    expect(getOverlay(input).style.fontSize).toBe("19px");
+    expect(getOverlay(input).style.paddingInlineStart).toBe("26px");
+    display.dispose();
+  });
+
+  it("falls back to native while forced colors are active and refreshes afterward", () => {
+    let forcedColors = true;
+    const listenerState: { current: EventListener | null } = { current: null };
+    const query = {
+      get matches() {
+        return forcedColors;
+      },
+      media: "(forced-colors: active)",
+      onchange: null,
+      addEventListener: vi.fn((_type: string, listener: EventListener) => {
+        listenerState.current = listener;
+      }),
+      removeEventListener: vi.fn((_type: string, listener: EventListener) => {
+        if (listenerState.current === listener) listenerState.current = null;
+      }),
+    } as unknown as MediaQueryList;
+    vi.spyOn(window, "matchMedia").mockReturnValue(query);
+    const input = appendInput("date", "mod-date", "2026-07-31");
+    const display = new ObsidianPropertiesDateDisplay(DEFAULT_SETTINGS, formatter);
+
+    display.addDocument(document);
+    expect(input.parentElement?.querySelector(
+      ".chrono-notes-property-date-display-value",
+    )).toBeNull();
+
+    forcedColors = false;
+    listenerState.current?.(new Event("change"));
+    expect(getOverlay(input).textContent).toBe("2026-07-31");
+    display.dispose();
+    expect(listenerState.current).toBeNull();
+  });
+
+  it("leaves fully system-controlled inputs entirely unmanaged", () => {
     const systemInput = appendInput("date", "mod-date", "2026-07-31");
-    const emptyInput = appendInput("date", "mod-date", "");
+    const systemDateTimeInput = appendInput(
+      "datetime-local",
+      "mod-datetime",
+      "2026-07-31T14:05",
+    );
     const display = new ObsidianPropertiesDateDisplay({
       ...DEFAULT_SETTINGS,
       dateFormat: "system",
@@ -253,11 +390,135 @@ describe("ObsidianPropertiesDateDisplay", () => {
     }, formatter);
     display.addDocument(document);
 
-    for (const input of [systemInput, emptyInput]) {
-      expect(input.parentElement?.classList.contains(
-        "chrono-notes-property-date-display-active",
-      )).toBe(false);
+    for (const input of [systemInput, systemDateTimeInput]) {
+      const host = input.parentElement;
+      expect(host?.querySelector(".chrono-notes-property-date-display-value")).toBeNull();
+      expect(host?.className).toBe("");
+      expect(input.className).not.toContain("chrono-notes");
+      expect(host?.getAttribute("style")).toBeNull();
     }
+    display.dispose();
+  });
+
+  it("does not observe document mutations until a custom display is enabled", () => {
+    const observe = vi.fn();
+    const disconnect = vi.fn();
+    vi.stubGlobal("MutationObserver", class {
+      constructor(_callback: MutationCallback) {}
+
+      observe = observe;
+      disconnect = disconnect;
+    });
+    const input = appendInput("date", "mod-date", "2026-07-31");
+    const display = new ObsidianPropertiesDateDisplay({
+      ...DEFAULT_SETTINGS,
+      dateFormat: "system",
+      timeFormat: "system",
+    }, formatter);
+
+    display.addDocument(document);
+    expect(observe).not.toHaveBeenCalled();
+    expect(input.parentElement?.querySelector(
+      ".chrono-notes-property-date-display-value",
+    )).toBeNull();
+
+    display.setSettings(DEFAULT_SETTINGS);
+    expect(observe).toHaveBeenCalledOnce();
+    expect(getOverlay(input).textContent).toBe("2026-07-31");
+    display.setSettings({
+      ...DEFAULT_SETTINGS,
+      dateFormat: "system",
+      timeFormat: "system",
+    });
+    expect(input.parentElement?.querySelector(
+      ".chrono-notes-property-date-display-value",
+    )).toBeNull();
+    display.dispose();
+  });
+
+  it("keeps empty and unformattable custom values native until a display exists", () => {
+    const emptyInput = appendInput("date", "mod-date", "");
+    const emptyDisplay = new ObsidianPropertiesDateDisplay(DEFAULT_SETTINGS, formatter);
+    emptyDisplay.addDocument(document);
+    expect(emptyInput.parentElement?.querySelector(
+      ".chrono-notes-property-date-display-value",
+    )).toBeNull();
+    expect(emptyInput.classList.contains("chrono-notes-property-date-native-input")).toBe(false);
+    emptyDisplay.dispose();
+
+    document.body.replaceChildren();
+    const rejectedInput = appendInput("date", "mod-date", "2026-07-31");
+    const rejectingFormatter: PropertyDateValueFormatter = {
+      ...formatter,
+      formatMoment: () => null,
+    };
+    const rejectedDisplay = new ObsidianPropertiesDateDisplay(
+      DEFAULT_SETTINGS,
+      rejectingFormatter,
+    );
+    rejectedDisplay.addDocument(document);
+    expect(rejectedInput.parentElement?.querySelector(
+      ".chrono-notes-property-date-display-value",
+    )).toBeNull();
+    expect(rejectedInput.classList.contains(
+      "chrono-notes-property-date-native-input",
+    )).toBe(false);
+    rejectedDisplay.dispose();
+  });
+
+  it("manages Date & time without touching Date when only time is customized", () => {
+    const dateInput = appendInput("date", "mod-date", "2026-07-31");
+    const dateTimeInput = appendInput(
+      "datetime-local",
+      "mod-datetime",
+      "2026-07-31T14:05:06",
+    );
+    const display = new ObsidianPropertiesDateDisplay({
+      ...DEFAULT_SETTINGS,
+      dateFormat: "system",
+      timeFormat: "24-hour-seconds",
+    }, formatter);
+
+    display.addDocument(document);
+
+    expect(dateInput.parentElement?.querySelector(
+      ".chrono-notes-property-date-display-value",
+    )).toBeNull();
+    expect(getOverlay(dateTimeInput).textContent).toBe("SYSTEM-DATE 14:05:06");
+    display.dispose();
+  });
+
+  it("creates and removes presentation state as settings and values change", () => {
+    const input = appendInput("date", "mod-date", "2026-07-31");
+    const host = input.parentElement;
+    if (host === null) throw new Error("Expected input host.");
+    const display = new ObsidianPropertiesDateDisplay({
+      ...DEFAULT_SETTINGS,
+      dateFormat: "system",
+      timeFormat: "system",
+    }, formatter);
+    display.addDocument(document);
+
+    expect(host.querySelector(".chrono-notes-property-date-display-value")).toBeNull();
+    display.setSettings(DEFAULT_SETTINGS);
+    expect(getOverlay(input).textContent).toBe("2026-07-31");
+
+    input.value = "";
+    input.dispatchEvent(new Event("input"));
+    expect(host.querySelector(".chrono-notes-property-date-display-value")).toBeNull();
+    expect(host.classList.contains("chrono-notes-property-date-display-host")).toBe(false);
+    expect(input.classList.contains("chrono-notes-property-date-native-input")).toBe(false);
+
+    input.value = "2026-08-01";
+    input.dispatchEvent(new Event("input"));
+    expect(getOverlay(input).textContent).toBe("2026-08-01");
+    display.setSettings({
+      ...DEFAULT_SETTINGS,
+      dateFormat: "system",
+      timeFormat: "system",
+    });
+    expect(host.querySelector(".chrono-notes-property-date-display-value")).toBeNull();
+    expect(host.style.cssText).toBe("");
     display.dispose();
   });
 
@@ -267,6 +528,66 @@ describe("ObsidianPropertiesDateDisplay", () => {
 
     const input = appendInput("date", "mod-date", "2026-07-31");
     await vi.waitFor(() => expect(getOverlay(input).textContent).toBe("2026-07-31"));
+    display.dispose();
+  });
+
+  it("rebinds moved inputs and releases inputs that stop matching Properties", async () => {
+    const input = appendInput("date", "mod-date", "2026-07-31");
+    const originalHost = input.parentElement;
+    const properties = input.closest<HTMLElement>(".metadata-properties");
+    if (originalHost === null || properties === null) {
+      throw new Error("Expected input host and Properties root.");
+    }
+    const display = new ObsidianPropertiesDateDisplay(DEFAULT_SETTINGS, formatter);
+    display.addDocument(document);
+
+    const replacementHost = document.createElement("div");
+    properties.append(replacementHost);
+    replacementHost.append(input);
+    await vi.waitFor(() => {
+      expect(originalHost.querySelector(
+        ".chrono-notes-property-date-display-value",
+      )).toBeNull();
+      expect(getOverlay(input).textContent).toBe("2026-07-31");
+    });
+
+    input.classList.remove("mod-date");
+    await vi.waitFor(() => {
+      expect(replacementHost.querySelector(
+        ".chrono-notes-property-date-display-value",
+      )).toBeNull();
+      expect(input.classList.contains("chrono-notes-property-date-native-input")).toBe(false);
+    });
+
+    input.classList.add("mod-date");
+    await vi.waitFor(() => expect(getOverlay(input).textContent).toBe("2026-07-31"));
+    input.type = "text";
+    await vi.waitFor(() => {
+      expect(replacementHost.querySelector(
+        ".chrono-notes-property-date-display-value",
+      )).toBeNull();
+    });
+    display.dispose();
+  });
+
+  it("releases and reacquires inputs when the Properties root is toggled", async () => {
+    const input = appendInput("date", "mod-date", "2026-07-31");
+    const properties = input.closest<HTMLElement>(".metadata-properties");
+    if (properties === null) throw new Error("Expected Properties root.");
+    const display = new ObsidianPropertiesDateDisplay(DEFAULT_SETTINGS, formatter);
+    display.addDocument(document);
+
+    properties.classList.remove("metadata-properties");
+    await vi.waitFor(() => {
+      expect(input.parentElement?.querySelector(
+        ".chrono-notes-property-date-display-value",
+      )).toBeNull();
+    });
+
+    properties.classList.add("metadata-properties");
+    await vi.waitFor(() => {
+      expect(getOverlay(input).textContent).toBe("2026-07-31");
+    });
     display.dispose();
   });
 
@@ -300,19 +621,11 @@ describe("ObsidianPropertiesDateDisplay", () => {
       ...DEFAULT_SETTINGS,
       dateFormat: "dmy-slash",
     });
-    expect(document.documentElement.classList.contains(
-      "chrono-notes-property-date-format-dmy",
-    )).toBe(true);
-    expect(popout.documentElement.classList.contains(
-      "chrono-notes-property-date-format-dmy",
-    )).toBe(true);
     expect(getOverlay(mainInput).textContent).toBe("31/07/2026");
     expect(getOverlay(popoutInput).textContent).toBe("31/07/2026");
 
     display.dispose();
     for (const target of [document, popout]) {
-      expect(PROPERTY_DATE_FORMAT_ROOT_CLASSES.some((className) =>
-        target.documentElement.classList.contains(className))).toBe(false);
       expect(target.querySelector(".chrono-notes-property-date-display-value")).toBeNull();
     }
     expect(mainInput.classList.contains("chrono-notes-property-date-native-input")).toBe(false);

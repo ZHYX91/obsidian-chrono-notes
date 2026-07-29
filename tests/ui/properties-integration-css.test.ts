@@ -5,69 +5,68 @@ import { readPluginStyles } from "../support/plugin-styles";
 const styles = readPluginStyles();
 
 describe("Properties date-format CSS", () => {
-  it("scopes all overrides to native Properties date and date-time inputs", () => {
-    for (const format of ["ymd", "dmy", "mdy"]) {
-      expect(styles).toContain(`html.chrono-notes-property-date-format-${format}`);
-    }
+  it("scopes presentation to managed native Properties date inputs", () => {
     expect(styles).toContain(".metadata-properties");
-    expect(styles).toContain('input.metadata-input.mod-date[type="date"]');
-    expect(styles).toContain(
-      'input.metadata-input.mod-datetime[type="datetime-local"]',
+    expect(styles).toContain(".chrono-notes-property-date-display-host");
+    expect(styles).toContain(".chrono-notes-property-date-native-input");
+    expect(styles).toContain('.mod-date[type="date"]');
+    expect(styles).toContain('.mod-datetime[type="datetime-local"]');
+  });
+
+  it("does not reorder browser fields or synthesize native separators", () => {
+    expect(styles).not.toContain("chrono-notes-property-date-format-ymd");
+    expect(styles).not.toContain("chrono-notes-property-date-format-dmy");
+    expect(styles).not.toContain("chrono-notes-property-date-format-mdy");
+    expect(styles).not.toContain("::-webkit-datetime-edit-year-field");
+    expect(styles).not.toContain("::-webkit-datetime-edit-month-field");
+    expect(styles).not.toContain("::-webkit-datetime-edit-day-field");
+    expect(styles).not.toMatch(
+      /::-webkit-datetime-edit-text\s*\{[^}]*display:\s*none;/s,
+    );
+    expect(styles).not.toMatch(
+      /::-webkit-datetime-edit(?:-[^{\s]+)?[^\{]*\{[^}]*direction:\s*ltr;/s,
     );
   });
 
-  it("orders year, month, and day explicitly for every supported format", () => {
-    const expectedOrders = {
-      ymd: { year: 1, month: 2, day: 3 },
-      dmy: { day: 1, month: 2, year: 3 },
-      mdy: { month: 1, day: 2, year: 3 },
-    } as const;
-    for (const [format, fields] of Object.entries(expectedOrders)) {
-      for (const [field, order] of Object.entries(fields)) {
-        expect(styles).toMatch(new RegExp(
-          `html\\.chrono-notes-property-date-format-${format}[\\s\\S]*?`
-          + `::-webkit-datetime-edit-${field}-field\\s*\\{[^}]*order:\\s*${order};`,
-        ));
-      }
-    }
-  });
-
-  it("retains native controls and limits hiding to browser separators", () => {
+  it("keeps the real picker and exposes native text outside safe color mode", () => {
     expect(styles).toMatch(
-      /::-webkit-datetime-edit-text\s*\{[^}]*display:\s*none;/s,
+      /@media \(forced-colors: none\)\s*\{[\s\S]*?\.chrono-notes-property-date-display-active[\s\S]*?display:\s*flex;/,
+    );
+    expect(styles).toMatch(
+      /@media \(forced-colors: none\)\s*\{[\s\S]*?::-webkit-datetime-edit\s*\{[^}]*color:\s*transparent;/,
+    );
+    expect(styles).toMatch(
+      /input\.chrono-notes-property-date-native-input:active::-webkit-datetime-edit\s*\{[^}]*color:\s*inherit;/s,
+    );
+    expect(styles).toMatch(
+      /input\.chrono-notes-property-date-native-input:active[\s\S]*?~\s*\.chrono-notes-property-date-display-value\s*\{[^}]*display:\s*none;/s,
     );
     expect(styles).not.toMatch(
       /::-webkit-calendar-picker-indicator\s*\{[^}]*display:\s*none;/s,
     );
-    expect(styles).not.toMatch(
-      /input\.metadata-input\.mod-(?:date|datetime)\[type="[^"]+"\]\s*\{[^}]*display:\s*none;/s,
-    );
+    expect(styles).not.toContain("forced-color-adjust: none");
   });
 
-  it("uses a pointer-transparent unfocused overlay without replacing the input", () => {
+  it("uses a pointer-transparent overlay measured to the native input rectangle", () => {
     expect(styles).toMatch(
       /\.chrono-notes-property-date-display-value\s*\{[^}]*pointer-events:\s*none;/s,
     );
-    expect(styles).toContain(
-      ".chrono-notes-property-date-display-active",
+    expect(styles).toContain("--chrono-notes-property-date-display-inline-size");
+    expect(styles).toContain("--chrono-notes-property-date-display-inline-start");
+    expect(styles).toContain("--chrono-notes-property-date-display-block-size");
+    expect(styles).toContain("--chrono-notes-property-date-display-block-start");
+    expect(styles).not.toContain("padding-inline: 2.15em");
+    expect(styles).not.toMatch(
+      /\.chrono-notes-property-date-display-value\s*\{[^}]*inset-block:\s*0;/s,
     );
-    expect(styles).toContain(
-      "input.chrono-notes-property-date-native-input:not(:focus)::-webkit-datetime-edit",
+  });
+
+  it("applies measured width to both Date and Date & time while managed", () => {
+    expect(styles).toMatch(
+      /input\.chrono-notes-property-date-native-input:is\([\s\S]*?\.mod-date\[type="date"\][\s\S]*?\.mod-datetime\[type="datetime-local"\][\s\S]*?\)\s*\{[^}]*inline-size:\s*var\(--chrono-notes-property-date-display-inline-size,/s,
     );
     expect(styles).not.toMatch(
       /\.chrono-notes-property-date-native-input\s*\{[^}]*position:\s*absolute;/s,
-    );
-    expect(styles).toContain(
-      "--chrono-notes-property-date-display-inline-size",
-    );
-    expect(styles).toContain(
-      "--chrono-notes-property-date-display-inline-start",
-    );
-    expect(styles).toMatch(
-      /\.chrono-notes-property-date-display-value\s*\{[^}]*box-sizing:\s*border-box;/s,
-    );
-    expect(styles).not.toMatch(
-      /\.chrono-notes-property-date-display-value\s*\{[^}]*inset-inline:\s*0;/s,
     );
   });
 });
