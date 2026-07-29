@@ -196,11 +196,11 @@ describe("settings", () => {
     expect(normalizeSettings({ propertyTimeDisplayFormat: "locale" })
       .propertyTimeDisplayFormat).toBe("system");
     expect(normalizeSettings({
-      propertyDateCustomFormat: "YYYY年M月D日",
-      propertyTimeCustomFormat: "h:mm A",
+      propertyDateCustomFormat: "dddd, MMMM D, YYYY",
+      propertyTimeCustomFormat: "HH:mm:ss.SSS",
     })).toMatchObject({
-      propertyDateCustomFormat: "YYYY年M月D日",
-      propertyTimeCustomFormat: "h:mm A",
+      propertyDateCustomFormat: "dddd, MMMM D, YYYY",
+      propertyTimeCustomFormat: "HH:mm:ss.SSS",
     });
   });
 

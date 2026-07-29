@@ -225,11 +225,45 @@ describe("declarative settings", () => {
     const harness = createSettingHarness();
 
     const cleanup = formatDefinition.render(harness.setting, {} as never);
-    harness.changeText("YYYY/MM/DD");
+    harness.changeText("dddd, MMMM D, YYYY");
 
-    expect(context.host.settings.propertyDateCustomFormat).toBe("YYYY/MM/DD");
-    expect(context.scheduleSettingsSave).toHaveBeenCalledOnce();
+    expect(context.host.settings.propertyDateCustomFormat).toBe("dddd, MMMM D, YYYY");
+    expect(harness.inputEl.setAttribute).toHaveBeenLastCalledWith("aria-invalid", "false");
+    expect(harness.feedbackSetText).toHaveBeenLastCalledWith("Preview: 2026-07-31");
+    harness.changeText("YYYY-MM-DD Z");
+    expect(harness.inputEl.setAttribute).toHaveBeenLastCalledWith("aria-invalid", "true");
+    expect(harness.feedbackSetText).toHaveBeenLastCalledWith(
+      "Invalid format; check the rules above.",
+    );
+    expect(context.scheduleSettingsSave).toHaveBeenCalledTimes(2);
     expect(context.flushSettingsSaveOnBlur).toHaveBeenCalledOnce();
+
+    cleanup?.();
+    expect(context.flushSettingsSave).toHaveBeenCalledOnce();
+  });
+
+  it("validates expanded custom time patterns through the shared renderer", () => {
+    const { context } = createContext();
+    context.host.settings.propertyTimeDisplayFormat = "custom";
+    const pages = getPages(getDeclarativeSettingDefinitions(context, "general"));
+    const formatDefinition = getRenderDefinition(
+      pages,
+      context.translator.t("settings.general.propertyTimeCustomFormat"),
+    );
+    const harness = createSettingHarness();
+
+    const cleanup = formatDefinition.render(harness.setting, {} as never);
+    harness.changeText("LTS");
+
+    expect(context.host.settings.propertyTimeCustomFormat).toBe("LTS");
+    expect(harness.inputEl.setAttribute).toHaveBeenLastCalledWith("aria-invalid", "false");
+    expect(harness.feedbackSetText).toHaveBeenLastCalledWith("Preview: 2026-07-31");
+    harness.changeText("HH:ss");
+    expect(harness.inputEl.setAttribute).toHaveBeenLastCalledWith("aria-invalid", "true");
+    expect(harness.feedbackSetText).toHaveBeenLastCalledWith(
+      "Invalid format; check the rules above.",
+    );
+    expect(context.scheduleSettingsSave).toHaveBeenCalledTimes(2);
 
     cleanup?.();
     expect(context.flushSettingsSave).toHaveBeenCalledOnce();
@@ -327,6 +361,8 @@ function getRenderDefinition(
 
 function createSettingHarness(): {
   readonly setting: Setting;
+  readonly inputEl: HTMLInputElement & { setAttribute: ReturnType<typeof vi.fn> };
+  readonly feedbackSetText: ReturnType<typeof vi.fn>;
   changeText(value: string): void;
 } {
   let onChange: ((value: string) => void) | null = null;
@@ -346,6 +382,15 @@ function createSettingHarness(): {
     spellcheck: true,
     value: "",
   } as unknown as HTMLInputElement;
+  const feedbackSetText = vi.fn();
+  const feedbackElement = {
+    ...element(),
+    setText: feedbackSetText,
+  };
+  const descEl = {
+    ...element(),
+    createDiv: vi.fn(() => feedbackElement),
+  };
   const text = {
     inputEl,
     onChange(callback: (value: string) => void) {
@@ -362,7 +407,7 @@ function createSettingHarness(): {
   };
   const setting = {
     controlEl: element(),
-    descEl: element(),
+    descEl,
     settingEl: element(),
     addText(callback: (component: typeof text) => void) {
       callback(text);
@@ -377,6 +422,8 @@ function createSettingHarness(): {
   } as unknown as Setting;
   return {
     setting,
+    inputEl: inputEl as HTMLInputElement & { setAttribute: ReturnType<typeof vi.fn> },
+    feedbackSetText,
     changeText(value) {
       if (onChange === null) throw new Error("Expected a text change handler.");
       inputEl.value = value;

@@ -4,6 +4,7 @@ import {
   isValidPropertyDateFormat,
   isValidPropertyTimeFormat,
   MAX_PROPERTY_DATE_FORMAT_LENGTH,
+  resolvePropertyMomentLocale,
 } from "../../core/properties/property-date-display";
 import {
   isPropertyDateDisplayFormat,
@@ -15,7 +16,7 @@ import { PLUGIN_LANGUAGE_OPTIONS } from "../../shared/plugin-languages";
 import type { SettingsSectionContext } from "./settings-section-context";
 import { renderTemplateEngineSettings } from "./template-settings";
 
-const PROPERTY_FORMAT_PREVIEW_VALUE = "2026-07-31T14:05:06";
+const PROPERTY_FORMAT_PREVIEW_VALUE = "2026-07-31T14:05:06.123";
 const formatPreviewMoment = moment as unknown as (
   value: string,
 ) => {
@@ -183,7 +184,7 @@ export function configurePropertyFormatSetting(
     feedback.setText(valid
       ? t("settings.general.propertyFormatPreview", {
         preview: formatPreviewMoment(PROPERTY_FORMAT_PREVIEW_VALUE)
-          .locale(context.translator.locale)
+          .locale(resolvePropertyMomentLocale(context.translator.locale))
           .format(format),
       })
       : t("settings.general.propertyFormatInvalid"));

@@ -138,6 +138,19 @@ describe("createTranslator", () => {
     expect(createTranslator("hi", "en").direction).toBe("ltr");
   });
 
+  it("documents every custom property-format token family in all locales", () => {
+    for (const catalog of Object.values(MESSAGE_CATALOGS)) {
+      expect(catalog["settings.general.propertyDateCustomFormatDesc"]).toContain("MMMM");
+      expect(catalog["settings.general.propertyDateCustomFormatDesc"]).toContain("dddd");
+      expect(catalog["settings.general.propertyTimeCustomFormatDesc"]).toContain("LT/LTS");
+      expect(catalog["settings.general.propertyTimeCustomFormatDesc"]).toContain("k/kk");
+      expect(catalog["settings.general.propertyTimeCustomFormatDesc"]).toContain("m/mm");
+      expect(catalog["settings.general.propertyTimeCustomFormatDesc"]).toContain("s/ss");
+      expect(catalog["settings.general.propertyTimeCustomFormatDesc"]).toContain("SSS");
+      expect(catalog["settings.general.propertyFormatInvalid"]).toBeTruthy();
+    }
+  });
+
   it("distinguishes This month and ISO week-picker actions in all locales", () => {
     const english = createTranslator("en", "en-US");
     const simplified = createTranslator("zh-CN", "en-US");

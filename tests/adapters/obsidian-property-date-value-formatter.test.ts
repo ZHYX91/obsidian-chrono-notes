@@ -65,11 +65,61 @@ describe("Obsidian property date value formatter", () => {
     )).toBe("2026年3月8日 02时30分");
   });
 
+  it("formats localized month, weekday, clock, and fractional-second tokens", () => {
+    expect(OBSIDIAN_PROPERTY_DATE_VALUE_FORMATTER.formatMoment(
+      "2026-07-31T14:05:06.123",
+      "dddd, MMMM D, YYYY [at] kk:mm:ss.SSS",
+      "en",
+    )).toBe("Friday, July 31, 2026 at 14:05:06.123");
+    expect(OBSIDIAN_PROPERTY_DATE_VALUE_FORMATTER.formatMoment(
+      "2026-07-31T14:05:06",
+      "LTS",
+      "en",
+    )).toBe("2:05:06 PM");
+    expect(OBSIDIAN_PROPERTY_DATE_VALUE_FORMATTER.formatMoment(
+      "2026-07-31T00:05:06.123",
+      "k kk S SS SSS",
+      "en",
+    )).toBe("24 24 1 12 123");
+    expect(OBSIDIAN_PROPERTY_DATE_VALUE_FORMATTER.formatMoment(
+      "2026-07-31T14:05:06",
+      "LT",
+      "zh-CN",
+    )).toBe("14:05");
+  });
+
+  it("accepts normalized one- to three-digit fractions without losing civil fields", () => {
+    for (const [value, expected] of [
+      ["2026-07-31T14:05:06.1", "14:05:06.100"],
+      ["2026-07-31T14:05:06.12", "14:05:06.120"],
+      ["2026-07-31T14:05:06.123", "14:05:06.123"],
+    ] as const) {
+      expect(OBSIDIAN_PROPERTY_DATE_VALUE_FORMATTER.formatMoment(
+        value,
+        "HH:mm:ss.SSS",
+        "en",
+      )).toBe(expected);
+    }
+  });
+
+  it("falls back deterministically for localized tokens missing from Moment", () => {
+    expect(OBSIDIAN_PROPERTY_DATE_VALUE_FORMATTER.formatMoment(
+      "2026-07-31T14:05:06",
+      "dddd, MMMM D, YYYY LTS",
+      "am",
+    )).toBe("Friday, July 31, 2026 2:05:06 PM");
+  });
+
   it("preserves four-digit civil years below 0100", () => {
     const value = "0099-01-02T03:04:05";
     const expectedDate = formatSystemDate(99, 1, 2);
     const incorrectlyShiftedDate = formatSystemDate(1999, 1, 2);
 
+    expect(OBSIDIAN_PROPERTY_DATE_VALUE_FORMATTER.formatMoment(
+      value,
+      "YYYY-MM-DD HH:mm:ss",
+      "en",
+    )).toBe("0099-01-02 03:04:05");
     expect(OBSIDIAN_PROPERTY_DATE_VALUE_FORMATTER.formatSystemDate(value)).toBe(
       expectedDate,
     );
@@ -84,6 +134,21 @@ describe("Obsidian property date value formatter", () => {
     expect(OBSIDIAN_PROPERTY_DATE_VALUE_FORMATTER.formatSystemTime(
       "2026-01-01T25:00",
       false,
+    )).toBeNull();
+    expect(OBSIDIAN_PROPERTY_DATE_VALUE_FORMATTER.formatMoment(
+      "2026-01-01T24:00",
+      "YYYY-MM-DD HH:mm",
+      "en",
+    )).toBeNull();
+    expect(OBSIDIAN_PROPERTY_DATE_VALUE_FORMATTER.formatMoment(
+      "2026-02-30T14:00",
+      "YYYY-MM-DD HH:mm",
+      "en",
+    )).toBeNull();
+    expect(OBSIDIAN_PROPERTY_DATE_VALUE_FORMATTER.formatMoment(
+      "2026-01-01T14:00:00.1234",
+      "YYYY-MM-DD HH:mm:ss.SSS",
+      "en",
     )).toBeNull();
   });
 });

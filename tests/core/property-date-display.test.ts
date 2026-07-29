@@ -7,6 +7,7 @@ import {
   isValidPropertyDateFormat,
   isValidPropertyTimeFormat,
   normalizePropertyCustomFormat,
+  resolvePropertyMomentLocale,
   resolvePropertyDatePattern,
   resolvePropertyTimePattern,
 } from "../../src/core/properties/property-date-display";
@@ -35,37 +36,102 @@ describe("Properties date and time display formats", () => {
     for (const format of [
       "YYYY年M月D日",
       "YYYY年MM月DD日",
+      "YYYY-MMM-DD",
+      "YYYY-MMMM-DD",
+      "ddd, DD MMM YYYY",
+      "dddd, MMMM D, YYYY",
       "DD [of] MM [of] YYYY",
+      "YYYY-MM-DD [Z]",
+      "YYYY-MM-DD \\Z",
       "MM/DD/YYYY",
     ]) {
       expect(isValidPropertyDateFormat(format)).toBe(true);
     }
     expect(getPropertyDateFieldOrder("YYYY年M月D日")).toBe("ymd");
+    expect(getPropertyDateFieldOrder("dddd, MMMM D, YYYY")).toBe("mdy");
     expect(getPropertyDateFieldOrder("DD/MM/YYYY")).toBe("dmy");
     expect(getPropertyDateFieldOrder("MM/DD/YYYY")).toBe("mdy");
+    expect(getPropertyDateFieldOrder("YYYY-MM-MM-DD")).toBeNull();
   });
 
   it("rejects ambiguous, incomplete, unsupported, and oversized date patterns", () => {
     for (const format of [
       "",
       "YYYY-MM",
+      "YYYY-YY-MM-DD",
+      "YYYY-MM-MMM-DD",
       "YYYY-MM-DD-DD",
-      "YYYY MMMM DD",
+      "ddd dddd, YYYY-MM-DD",
+      "YYYY-MMMMM-DD",
+      "YYYY-MM-Do",
+      "YYYY-MM-DD dd",
       "YYYY-MM-DD Z",
+      "YYYY-MM-DD ZZ",
+      "YYYY-MM-DD z",
+      "YYYY-MM-DD zz",
+      "YYYY-MM-DD X",
+      "YYYY-MM-DD x",
+      "YYYY-MM-DD HH",
       "[unterminated YYYY-MM-DD",
       "YYYY-MM-DD\\",
       "YYYY-MM-DD".repeat(9),
     ]) {
       expect(isValidPropertyDateFormat(format)).toBe(false);
     }
-    expect(resolvePropertyDatePattern("custom", "YYYY MMMM DD")).toBeNull();
+    expect(resolvePropertyDatePattern("custom", "YYYY-MMMM-DD")).toBe(
+      "YYYY-MMMM-DD",
+    );
   });
 
-  it("accepts 12- and 24-hour local time patterns but excludes time zones", () => {
-    for (const format of ["HH:mm", "H:mm:ss", "h:mm A", "hh时mm分ss秒 a"]) {
+  it("accepts explicit and localized civil-time patterns but rejects invalid combinations", () => {
+    for (const format of [
+      "HH",
+      "H",
+      "h",
+      "hh",
+      "k",
+      "kk",
+      "HH:mm",
+      "H:mm:ss",
+      "h A",
+      "h:mm A",
+      "hh时mm分ss秒 a",
+      "kk:mm",
+      "HH:mm:ss.SSS",
+      "HH:mm:ss.S",
+      "HH:mm:ss.SS",
+      "LT",
+      "LTS",
+      "[at] LT",
+      "HH:mm [Z]",
+      "HH:mm \\Z",
+    ]) {
       expect(isValidPropertyTimeFormat(format)).toBe(true);
     }
-    for (const format of ["", "HH", "HH:mm A", "h:mm Z", "HH:mm:ss:ss"]) {
+    for (const format of [
+      "",
+      "mm",
+      "HH:ss",
+      "HH:mm.SSS",
+      "HH:mm A",
+      "kk A",
+      "h:mm Z",
+      "h:mm ZZ",
+      "h:mm z",
+      "h:mm zz",
+      "HH:mm:ss:ss",
+      "HH:mm:ss.S.SS",
+      "HH H",
+      "HH:mm:m",
+      "h A a",
+      "LT HH:mm",
+      "LT LTS",
+      "LT A",
+      "LTS ss",
+      "YYYY-MM-DD HH:mm",
+      "X",
+      "x",
+    ]) {
       expect(isValidPropertyTimeFormat(format)).toBe(false);
     }
     expect(resolvePropertyTimePattern("custom", "h:mm Z")).toBeNull();
@@ -76,5 +142,12 @@ describe("Properties date and time display formats", () => {
       .toBe(" YYYY年M月D日 ");
     expect(normalizePropertyCustomFormat("x".repeat(100), "fallback")).toHaveLength(80);
     expect(normalizePropertyCustomFormat(null, "fallback")).toBe("fallback");
+  });
+
+  it("normalizes Moment locales and gives unsupported Amharic a deterministic fallback", () => {
+    expect(resolvePropertyMomentLocale("zh-CN")).toBe("zh-cn");
+    expect(resolvePropertyMomentLocale("fa_IR")).toBe("fa-ir");
+    expect(resolvePropertyMomentLocale("am")).toBe("en");
+    expect(resolvePropertyMomentLocale("am-ET")).toBe("en");
   });
 });

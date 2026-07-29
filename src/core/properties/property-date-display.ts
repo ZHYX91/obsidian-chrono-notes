@@ -38,8 +38,37 @@ const TIME_PATTERNS: Readonly<
   "12-hour-seconds": "h:mm:ss A",
 });
 
-const DATE_TOKENS = Object.freeze(["YYYY", "YY", "MM", "DD", "M", "D"]);
-const TIME_TOKENS = Object.freeze(["HH", "hh", "mm", "ss", "H", "h", "m", "s", "A", "a"]);
+const DATE_TOKENS = Object.freeze([
+  "YYYY",
+  "MMMM",
+  "dddd",
+  "MMM",
+  "ddd",
+  "YY",
+  "MM",
+  "DD",
+  "M",
+  "D",
+].sort((left, right) => right.length - left.length));
+const TIME_TOKENS = Object.freeze([
+  "LTS",
+  "SSS",
+  "LT",
+  "HH",
+  "hh",
+  "kk",
+  "mm",
+  "ss",
+  "SS",
+  "H",
+  "h",
+  "k",
+  "m",
+  "s",
+  "S",
+  "A",
+  "a",
+].sort((left, right) => right.length - left.length));
 
 export function isPropertyDateDisplayFormat(
   value: unknown,
@@ -69,6 +98,11 @@ export function normalizePropertyCustomFormat(value: unknown, fallback: string):
   return value.slice(0, MAX_PROPERTY_DATE_FORMAT_LENGTH);
 }
 
+export function resolvePropertyMomentLocale(locale: string): string {
+  const normalized = locale.trim().replaceAll("_", "-").toLowerCase();
+  return normalized === "am" || normalized.startsWith("am-") ? "en" : normalized;
+}
+
 export function resolvePropertyDatePattern(
   format: PropertyDateDisplayFormat,
   customFormat: string,
@@ -96,24 +130,38 @@ export function isValidPropertyDateFormat(format: string): boolean {
   if (tokens === null) return false;
   return countTokenKind(tokens, "year") === 1 &&
     countTokenKind(tokens, "month") === 1 &&
-    countTokenKind(tokens, "day") === 1;
+    countTokenKind(tokens, "day") === 1 &&
+    tokens.filter(isWeekdayToken).length <= 1;
 }
 
 export function isValidPropertyTimeFormat(format: string): boolean {
   const tokens = scanFormat(format, TIME_TOKENS);
   if (tokens === null) return false;
+  const localizedTokens = tokens.filter((token) => token === "LT" || token === "LTS");
+  if (localizedTokens.length > 0) return tokens.length === 1;
   const hourTokens = tokens.filter((token) => token === "H" || token === "HH" ||
-    token === "h" || token === "hh");
+    token === "h" || token === "hh" || token === "k" || token === "kk");
   const minuteTokens = tokens.filter((token) => token === "m" || token === "mm");
   const secondTokens = tokens.filter((token) => token === "s" || token === "ss");
+  const fractionalSecondTokens = tokens.filter(
+    (token) => token === "S" || token === "SS" || token === "SSS",
+  );
   const meridiemTokens = tokens.filter((token) => token === "A" || token === "a");
-  if (hourTokens.length !== 1 || minuteTokens.length !== 1 || secondTokens.length > 1 ||
-    meridiemTokens.length > 1) return false;
+  if (
+    hourTokens.length !== 1 ||
+    minuteTokens.length > 1 ||
+    secondTokens.length > 1 ||
+    fractionalSecondTokens.length > 1 ||
+    meridiemTokens.length > 1 ||
+    (secondTokens.length > 0 && minuteTokens.length === 0) ||
+    (fractionalSecondTokens.length > 0 && secondTokens.length === 0)
+  ) return false;
   const usesTwelveHour = hourTokens[0] === "h" || hourTokens[0] === "hh";
   return meridiemTokens.length === 0 || usesTwelveHour;
 }
 
 export function getPropertyDateFieldOrder(pattern: string): PropertyDateFieldOrder | null {
+  if (!isValidPropertyDateFormat(pattern)) return null;
   const tokens = scanFormat(pattern, DATE_TOKENS);
   if (tokens === null) return null;
   const fields = tokens.map(getDateTokenKind).filter((field) => field !== null);
@@ -176,7 +224,13 @@ function countTokenKind(tokens: readonly string[], kind: "year" | "month" | "day
 
 function getDateTokenKind(token: string): "year" | "month" | "day" | null {
   if (token === "YYYY" || token === "YY") return "year";
-  if (token === "M" || token === "MM") return "month";
+  if (token === "M" || token === "MM" || token === "MMM" || token === "MMMM") {
+    return "month";
+  }
   if (token === "D" || token === "DD") return "day";
   return null;
+}
+
+function isWeekdayToken(token: string): boolean {
+  return token === "ddd" || token === "dddd";
 }

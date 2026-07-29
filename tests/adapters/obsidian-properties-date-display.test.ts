@@ -488,6 +488,44 @@ describe("ObsidianPropertiesDateDisplay", () => {
     display.dispose();
   });
 
+  it("passes expanded custom patterns through without changing the ISO input", () => {
+    const input = appendInput(
+      "datetime-local",
+      "mod-datetime",
+      "2026-07-31T14:05:06.123",
+    );
+    const formatMoment = vi.fn((_value: string, pattern: string) => `[${pattern}]`);
+    const spyFormatter: PropertyDateValueFormatter = {
+      ...formatter,
+      formatMoment,
+    };
+    const display = new ObsidianPropertiesDateDisplay({
+      ...DEFAULT_SETTINGS,
+      dateFormat: "custom",
+      dateCustomFormat: "dddd, MMMM D, YYYY",
+      timeFormat: "custom",
+      timeCustomFormat: "LTS",
+    }, spyFormatter);
+
+    display.addDocument(document);
+
+    expect(getOverlay(input).textContent).toBe("[dddd, MMMM D, YYYY] [LTS]");
+    expect(formatMoment).toHaveBeenNthCalledWith(
+      1,
+      "2026-07-31T14:05:06.123",
+      "dddd, MMMM D, YYYY",
+      "en",
+    );
+    expect(formatMoment).toHaveBeenNthCalledWith(
+      2,
+      "2026-07-31T14:05:06.123",
+      "LTS",
+      "en",
+    );
+    expect(input.value).toBe("2026-07-31T14:05:06.123");
+    display.dispose();
+  });
+
   it("creates and removes presentation state as settings and values change", () => {
     const input = appendInput("date", "mod-date", "2026-07-31");
     const host = input.parentElement;
