@@ -1312,6 +1312,7 @@ describe("NoteIndex", () => {
     expect(source.read).not.toHaveBeenCalled();
 
     await vi.waitFor(() => expect(index.get("Daily/C.md").kind).toBe("parsed"));
+    await vi.waitFor(() => expect(index.getSnapshot().readiness).toBe("ready"));
     expect(source.read.mock.calls.map(([path]) => path)).toEqual(["Daily/C.md"]);
     expect(index.get("Daily/B.md").kind).toBe("missing");
     expect(listener).toHaveBeenCalledTimes(3);

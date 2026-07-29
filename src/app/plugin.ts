@@ -4,6 +4,7 @@ import { ObsidianIcsSourceReader } from "../adapters/obsidian/obsidian-ics-sourc
 import { ObsidianNoteIndexCache } from "../adapters/obsidian/obsidian-note-index-cache";
 import { ObsidianNoteSource } from "../adapters/obsidian/obsidian-note-source";
 import { ObsidianPropertiesDateInterceptor } from "../adapters/obsidian/obsidian-properties-date-interceptor";
+import { ObsidianPropertiesDateDocuments } from "../adapters/obsidian/obsidian-properties-date-documents";
 import { ObsidianPropertiesDateDisplay } from "../adapters/obsidian/obsidian-properties-date-display";
 import { OBSIDIAN_PROPERTY_DATE_VALUE_FORMATTER } from "../adapters/obsidian/obsidian-property-date-value-formatter";
 import { openObsidianPluginSettings } from "../adapters/obsidian/obsidian-plugin-settings";
@@ -123,31 +124,29 @@ export default class ChronoNotesPlugin extends Plugin {
         },
         openDaily: (date, target) => this.openPeriodicNote(date, "daily", target),
       });
-      this.registerDomEvent(
-        window,
-        "click",
-        (event) => propertiesDateInterceptor.handleClick(event),
-        { capture: true },
-      );
       const propertiesDateDisplay = new ObsidianPropertiesDateDisplay(
         getPropertyDateDisplaySettings(this.settings, this.getTranslator().locale),
         OBSIDIAN_PROPERTY_DATE_VALUE_FORMATTER,
       );
+      const propertiesDateDocuments = new ObsidianPropertiesDateDocuments(
+        propertiesDateDisplay,
+        propertiesDateInterceptor,
+      );
+      this.registerRuntimeDisposer(() => propertiesDateDocuments.dispose());
       this.propertiesDateDisplay = propertiesDateDisplay;
-      propertiesDateDisplay.addDocument(document);
+      propertiesDateDocuments.addDocument(document);
       this.app.workspace.iterateAllLeaves((leaf) => {
-        propertiesDateDisplay.addDocument(leaf.view.containerEl.ownerDocument);
+        propertiesDateDocuments.addDocument(leaf.view.containerEl.ownerDocument);
       });
       this.registerEvent(this.app.workspace.on("css-change", () => {
         propertiesDateDisplay.refreshAll();
       }));
       this.registerEvent(this.app.workspace.on("window-open", (_workspaceWindow, openedWindow) => {
-        propertiesDateDisplay.addDocument(openedWindow.document);
+        propertiesDateDocuments.addDocument(openedWindow.document);
       }));
       this.registerEvent(this.app.workspace.on("window-close", (_workspaceWindow, closedWindow) => {
-        propertiesDateDisplay.removeDocument(closedWindow.document);
+        propertiesDateDocuments.removeDocument(closedWindow.document);
       }));
-      this.registerRuntimeDisposer(() => propertiesDateDisplay.dispose());
       this.intervalNoteCommands = new IntervalNoteCommands(
         new ObsidianIntervalNoteFilePort(this.app.vault, this.app.fileManager),
         noteTemplates,

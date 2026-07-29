@@ -9,6 +9,7 @@
     "build": "npm run typecheck && npm run build:bundle && npm run artifact:check",
     "build:bundle": "node esbuild.config.mjs production",
     "artifact:check": "node scripts/check-production-bundle.mjs",
+    "release:archive": "node scripts/release-assets.mjs archive",
     "acceptance:vault:create": "npm run build && node scripts/acceptance-vault.mjs create",
     "acceptance:vault:verify": "node scripts/acceptance-vault.mjs verify",
     "acceptance:vault:clean": "node scripts/acceptance-vault.mjs clean",

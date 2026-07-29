@@ -121,6 +121,73 @@ describe("ChronoNotesSettingTab save orchestration", () => {
     expect(tab.containerEl.querySelector('[data-tab-id="templates"]')).toBeNull();
   });
 
+  it("cleans the active imperative section before rerendering and hiding", () => {
+    const { tab } = createTab();
+    const generalCleanup = vi.fn(() => {
+      expect(tab.containerEl.querySelector('[data-tab-id="general"]')).not.toBeNull();
+    });
+    const appearanceCleanup = vi.fn(() => {
+      expect(tab.containerEl.querySelector('[data-tab-id="appearance"]')).not.toBeNull();
+    });
+    mocks.renderGeneral.mockReturnValueOnce(generalCleanup);
+    mocks.renderAppearance.mockReturnValueOnce(appearanceCleanup);
+
+    tab.display();
+    tab.containerEl.querySelector<HTMLButtonElement>(
+      '[role="tab"][data-tab-id="appearance"]',
+    )?.click();
+
+    expect(generalCleanup).toHaveBeenCalledOnce();
+    expect(appearanceCleanup).not.toHaveBeenCalled();
+
+    mocks.baseHide.mockImplementationOnce(() => {
+      expect(tab.containerEl.querySelector('[data-tab-id="appearance"]')).not.toBeNull();
+      expect(appearanceCleanup).toHaveBeenCalledOnce();
+    });
+    tab.hide();
+
+    expect(appearanceCleanup).toHaveBeenCalledOnce();
+    expect(tab.containerEl.childElementCount).toBe(0);
+  });
+
+  it("does not let an asynchronous section callback revive a hidden surface", async () => {
+    let resolveSave!: () => void;
+    const save = new Promise<void>((resolve) => {
+      resolveSave = resolve;
+    });
+    const { tab, context, saveSettings } = displayAndGetGeneralContext();
+    saveSettings.mockReturnValueOnce(save);
+
+    const continuation = context.persistSettings().then(() => context.display());
+    tab.hide();
+    resolveSave();
+    await continuation;
+
+    expect(mocks.renderGeneral).toHaveBeenCalledOnce();
+    expect(tab.containerEl.childElementCount).toBe(0);
+  });
+
+  it("logs an imperative cleanup failure and still renders the next section", () => {
+    const cleanupError = new Error("injected settings cleanup failure");
+    const consoleError = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    mocks.renderGeneral.mockReturnValueOnce(() => {
+      throw cleanupError;
+    });
+    const { tab } = createTab();
+
+    tab.display();
+    tab.containerEl.querySelector<HTMLButtonElement>(
+      '[role="tab"][data-tab-id="appearance"]',
+    )?.click();
+
+    expect(consoleError).toHaveBeenCalledWith(
+      "Chrono Notes Calendar: failed to clean up settings section",
+      cleanupError,
+    );
+    expect(mocks.renderAppearance).toHaveBeenCalledOnce();
+    consoleError.mockRestore();
+  });
+
   it("sets the settings surface direction from the selected locale", () => {
     const { tab, host } = createTab();
     host.settings.locale = "ar";
@@ -227,6 +294,7 @@ describe("ChronoNotesSettingTab save orchestration", () => {
       configurable: true,
       value: refreshDomState,
     });
+    tab.getSettingDefinitions();
 
     await tab.setControlValue("locale", "zh-CN");
 
@@ -251,6 +319,29 @@ describe("ChronoNotesSettingTab save orchestration", () => {
     expect(update).toHaveBeenCalledTimes(2);
     expect(refreshDomState).toHaveBeenCalledTimes(2);
     expect(mocks.renderRanges).not.toHaveBeenCalled();
+    tab.hide();
+  });
+
+  it("does not refresh a reopened declarative surface from an older pending save", async () => {
+    let resolveSave!: () => void;
+    const save = new Promise<void>((resolve) => {
+      resolveSave = resolve;
+    });
+    const { tab, host, saveSettings } = createTab();
+    const update = vi.fn();
+    Object.defineProperty(tab, "update", { configurable: true, value: update });
+    tab.getSettingDefinitions();
+    saveSettings.mockReturnValueOnce(save);
+
+    const pendingMutation = tab.setControlValue("locale", "zh-CN");
+    tab.hide();
+    const reopenedDefinitions = tab.getSettingDefinitions();
+    resolveSave();
+    await pendingMutation;
+
+    expect(host.settings.locale).toBe("zh-CN");
+    expect(reopenedDefinitions).toHaveLength(5);
+    expect(update).not.toHaveBeenCalled();
   });
 
   it("retains debounced persistence for declarative text controls", async () => {

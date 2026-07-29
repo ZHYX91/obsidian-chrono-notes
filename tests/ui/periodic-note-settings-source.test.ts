@@ -48,7 +48,7 @@ const pluginSource = readFileSync(
 
 describe("periodic note settings structure", () => {
   it("collapses disabled note types before rendering dependent fields", () => {
-    expect(periodicSectionSource).toMatch(/if \(!config\.enabled\) return;/);
+    expect(periodicSectionSource).toMatch(/if \(!config\.enabled\) return null;/);
   });
 
   it("uses native keyboard suggestions for folders and Markdown templates", () => {

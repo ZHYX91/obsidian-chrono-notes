@@ -96,6 +96,78 @@ describe("Obsidian periodic note ports", () => {
     }));
   });
 
+  it("shares an in-flight parent-folder creation across different note ports", async () => {
+    const vault = new FakeVault();
+    const fileManager = { trashFile: vi.fn() };
+    const periodic = new ObsidianPeriodicNoteFilePort(vault as never, fileManager as never);
+    const intervals = new ObsidianIntervalNoteFilePort(vault as never, fileManager as never);
+    let releaseSharedFolder: (() => void) | undefined;
+    let signalSharedFolderStarted: (() => void) | undefined;
+    const sharedFolderStarted = new Promise<void>((resolve) => {
+      signalSharedFolderStarted = resolve;
+    });
+    const sharedFolderRelease = new Promise<void>((resolve) => {
+      releaseSharedFolder = resolve;
+    });
+    let sharedFolderCalls = 0;
+    vault.createFolder.mockImplementation(async (path: string) => {
+      if (path === "Calendar") {
+        sharedFolderCalls += 1;
+        if (sharedFolderCalls > 1) throw new Error("Folder already exists");
+        signalSharedFolderStarted?.();
+        await sharedFolderRelease;
+      }
+      vault.folders.add(path);
+    });
+
+    const periodicCreation = periodic.createEmpty("Calendar/Daily/2026-05-18.md");
+    await sharedFolderStarted;
+    const intervalCreation = intervals.create(
+      "Calendar/Ranges/trip.md",
+      "---\nstart: 2026-05-18\n---",
+    );
+    releaseSharedFolder?.();
+
+    await Promise.all([periodicCreation, intervalCreation]);
+    expect(sharedFolderCalls).toBe(1);
+    expect(vault.contents.has("Calendar/Daily/2026-05-18.md")).toBe(true);
+    expect(vault.contents.has("Calendar/Ranges/trip.md")).toBe(true);
+  });
+
+  it("retries a folder after the shared creation promise rejects", async () => {
+    const vault = new FakeVault();
+    const files = new ObsidianPeriodicNoteFilePort(
+      vault as never,
+      { trashFile: vi.fn() } as never,
+    );
+    vault.createFolder.mockRejectedValueOnce(new Error("temporary folder failure"));
+
+    await expect(files.createEmpty("Calendar/Daily/first.md")).rejects.toThrow(
+      "temporary folder failure",
+    );
+    await files.createEmpty("Calendar/Daily/second.md");
+
+    expect(vault.contents.has("Calendar/Daily/second.md")).toBe(true);
+    expect(vault.createFolder).toHaveBeenCalledTimes(3);
+  });
+
+  it("accepts a parent folder completed by another actor during creation", async () => {
+    const vault = new FakeVault();
+    const files = new ObsidianPeriodicNoteFilePort(
+      vault as never,
+      { trashFile: vi.fn() } as never,
+    );
+    vault.createFolder.mockImplementationOnce(async (path: string) => {
+      vault.folders.add(path);
+      throw new Error("Folder already exists");
+    });
+
+    await files.createEmpty("Calendar/Daily/external-race.md");
+
+    expect(vault.contents.has("Calendar/Daily/external-race.md")).toBe(true);
+    expect(vault.createFolder).toHaveBeenCalledTimes(2);
+  });
+
   it("processes task source files atomically through the Vault port", async () => {
     const vault = new FakeVault();
     vault.files.set("Tasks.md", { path: "Tasks.md", extension: "md" });

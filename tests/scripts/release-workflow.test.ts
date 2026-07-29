@@ -16,16 +16,25 @@ describe("release workflow contract", () => {
     expect(workflow).toContain("dist/manifest.json");
     expect(workflow).toContain("dist/styles.css");
     expect(workflow).toContain("chrono-notes-${GITHUB_REF_NAME}.zip");
-    expect(workflow).toContain("chrono-notes/main.js");
-    expect(workflow).toContain("chrono-notes/manifest.json");
-    expect(workflow).toContain("chrono-notes/styles.css");
+    expect(workflow).toContain("node scripts/release-assets.mjs archive");
   });
 
-  it("updates an existing tagged release without duplicating it", () => {
-    expect(workflow).toContain('gh release view "$GITHUB_REF_NAME"');
-    expect(workflow).toContain('gh release upload "$GITHUB_REF_NAME"');
-    expect(workflow).toContain("--clobber");
+  it("treats an existing tagged Release as immutable", () => {
+    expect(workflow).toContain('release_status="$(curl');
+    expect(workflow).toContain('200)');
+    expect(workflow).toContain('404)');
+    expect(workflow).toContain('GitHub Release query failed with HTTP ${release_status}.');
+    expect(workflow.match(/--json isImmutable/gu)).toHaveLength(2);
+    expect(workflow).toContain('exists but is not immutable; publish a new version.');
+    expect(workflow).toContain('Published Release ${GITHUB_REF_NAME} is not immutable.');
+    expect(workflow).toContain('gh release download "$GITHUB_REF_NAME"');
+    expect(workflow).toContain("node scripts/release-assets.mjs compare");
+    expect(workflow).toContain('echo "exists=true" >> "$GITHUB_OUTPUT"');
+    expect(workflow).toContain("if: steps.release_state.outputs.exists != 'true'");
     expect(workflow).toContain('gh release create "$GITHUB_REF_NAME"');
+    expect(workflow).not.toContain("gh release upload");
+    expect(workflow).not.toContain("--clobber");
+    expect(workflow).not.toMatch(/if gh release view[\s\S]*?else/gu);
   });
 
   it("attests every published release asset", () => {

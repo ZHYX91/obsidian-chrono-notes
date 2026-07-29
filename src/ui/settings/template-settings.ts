@@ -2,6 +2,7 @@ import { Setting } from "obsidian";
 
 import { isTemplateEngine } from "../../shared/settings";
 import { preparePathInput } from "./path-input";
+import type { SettingsCleanup } from "./settings-cleanup";
 import type { SettingsSectionContext } from "./settings-section-context";
 import { MarkdownFileSuggest } from "./vault-path-suggest";
 
@@ -77,8 +78,8 @@ export function renderTemplatePathSetting(
   value: string,
   onChange: (value: string) => void,
   context: SettingsSectionContext,
-): void {
-  configureTemplatePathSetting(
+): SettingsCleanup {
+  return configureTemplatePathSetting(
     new Setting(containerEl),
     name,
     example,
@@ -95,7 +96,7 @@ export function configureTemplatePathSetting(
   value: string,
   onChange: (value: string) => void,
   context: SettingsSectionContext,
-): () => void {
+): SettingsCleanup {
   const { t } = context.translator;
   setting.setName(name).setDesc(t("settings.templates.pathDesc"));
   setting.settingEl.addClass("chrono-notes-template-path-setting");

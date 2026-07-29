@@ -46,29 +46,58 @@ jobs:
         run: pnpm release:check
 
       - name: Build manual installation archive
-        shell: bash
+        run: node scripts/release-assets.mjs archive --version "$GITHUB_REF_NAME"
+
+      - name: Check existing immutable Release
+        id: release_state
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
-          archive_root="$RUNNER_TEMP/chrono-notes"
-          archive_path="$GITHUB_WORKSPACE/dist/chrono-notes-${GITHUB_REF_NAME}.zip"
-          mkdir -p "$archive_root"
-          cp \
-            dist/main.js \
-            dist/manifest.json \
-            dist/styles.css \
-            "$archive_root/"
-          (
-            cd "$RUNNER_TEMP"
-            zip -q "$archive_path" \
-              chrono-notes/main.js \
-              chrono-notes/manifest.json \
-              chrono-notes/styles.css
-          )
-          test "$(unzip -Z1 "$archive_path")" = "$(printf '%s\n' \
-            chrono-notes/main.js \
-            chrono-notes/manifest.json \
-            chrono-notes/styles.css)"
+          release_response="$RUNNER_TEMP/release-state.json"
+          release_status="$(curl --silent --show-error --location \
+            --output "$release_response" \
+            --write-out "%{http_code}" \
+            --header "Accept: application/vnd.github+json" \
+            --header "Authorization: Bearer ${GH_TOKEN}" \
+            --header "X-GitHub-Api-Version: 2022-11-28" \
+            "https://api.github.com/repos/${GITHUB_REPOSITORY}/releases/tags/${GITHUB_REF_NAME}")"
+          case "$release_status" in
+            200)
+              immutable="$(gh release view "$GITHUB_REF_NAME" \
+                --repo "$GITHUB_REPOSITORY" \
+                --json isImmutable \
+                --jq '.isImmutable')"
+              if [[ "$immutable" != "true" ]]; then
+                echo "Release ${GITHUB_REF_NAME} exists but is not immutable; publish a new version." >&2
+                exit 1
+              fi
+              existing_assets="$RUNNER_TEMP/existing-release-assets"
+              mkdir -p "$existing_assets"
+              gh release download "$GITHUB_REF_NAME" \
+                --repo "$GITHUB_REPOSITORY" \
+                --dir "$existing_assets" \
+                --pattern main.js \
+                --pattern manifest.json \
+                --pattern styles.css \
+                --pattern "chrono-notes-${GITHUB_REF_NAME}.zip"
+              node scripts/release-assets.mjs compare \
+                --version "$GITHUB_REF_NAME" \
+                --local-dir dist \
+                --existing-dir "$existing_assets"
+              echo "exists=true" >> "$GITHUB_OUTPUT"
+              ;;
+            404)
+              echo "exists=false" >> "$GITHUB_OUTPUT"
+              ;;
+            *)
+              echo "GitHub Release query failed with HTTP ${release_status}." >&2
+              cat "$release_response" >&2
+              exit 1
+              ;;
+          esac
 
       - name: Attest Obsidian release assets
+        if: steps.release_state.outputs.exists != 'true'
         uses: actions/attest@v4
         with:
           subject-path: |
@@ -78,6 +107,7 @@ jobs:
             dist/chrono-notes-${{ github.ref_name }}.zip
 
       - name: Publish GitHub release
+        if: steps.release_state.outputs.exists != 'true'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -87,14 +117,16 @@ jobs:
             dist/styles.css \
             "dist/chrono-notes-${GITHUB_REF_NAME}.zip"
           )
-          if gh release view "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
-            gh release upload "$GITHUB_REF_NAME" "${assets[@]}" \
-              --repo "$GITHUB_REPOSITORY" \
-              --clobber
-          else
-            gh release create "$GITHUB_REF_NAME" "${assets[@]}" \
-              --repo "$GITHUB_REPOSITORY" \
-              --verify-tag \
-              --title "$GITHUB_REF_NAME" \
-              --generate-notes
+          gh release create "$GITHUB_REF_NAME" "${assets[@]}" \
+            --repo "$GITHUB_REPOSITORY" \
+            --verify-tag \
+            --title "$GITHUB_REF_NAME" \
+            --generate-notes
+          immutable="$(gh release view "$GITHUB_REF_NAME" \
+            --repo "$GITHUB_REPOSITORY" \
+            --json isImmutable \
+            --jq '.isImmutable')"
+          if [[ "$immutable" != "true" ]]; then
+            echo "Published Release ${GITHUB_REF_NAME} is not immutable." >&2
+            exit 1
           fi

@@ -40,7 +40,7 @@ Chrono Notes Calendar 是一个面向 Obsidian 周期笔记工作流的日历插
 - 可配置 Obsidian 日期与日期时间属性的显示格式，同时保持 ISO YAML、原生分段编辑和可选的日记打开功能；
 - 英文、简体中文、繁体中文、阿拉伯语、波斯语、希伯来语、阿姆哈拉语和印地语界面，并为相应语言提供从右到左布局。
 
-源笔记、日历文件和插件设置都保留在 Vault 内。Chrono Notes Calendar 只会在设备本地 IndexedDB 中保存派生的 NoteIndex 缓存；该缓存不会写入 Vault，也不会发送到远程服务。插件不要求账号。
+源笔记和插件设置都保留在 Vault 内。只读 ICS 来源既可以是 Vault 文件，也可以是用户明确配置的桌面本地路径；插件不会上传这些文件。Chrono Notes Calendar 只会在设备本地 IndexedDB 中保存派生的 NoteIndex 缓存；该缓存不会写入 Vault，也不会发送到远程服务。插件不要求账号。
 
 ## 开始使用
 

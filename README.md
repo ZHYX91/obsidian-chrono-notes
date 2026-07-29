@@ -40,7 +40,7 @@ The same calendar workspace adapts to touch interaction and narrow screens.
 - Configurable display formats for Obsidian Date and Date & time properties while preserving ISO YAML, native segmented editing, and optional daily-note opening.
 - English, Simplified Chinese, Traditional Chinese, Arabic, Persian, Hebrew, Amharic, and Hindi UI, including right-to-left layout where applicable.
 
-Source notes, calendar files, and plugin settings stay inside the Vault. Chrono Notes Calendar keeps only a derived NoteIndex cache in device-local IndexedDB; that cache is not written into the Vault or sent to a remote service. No account is required.
+Source notes and plugin settings stay inside the Vault. Read-only ICS sources may be Vault files or explicitly configured local desktop paths; they are never uploaded by the plugin. Chrono Notes Calendar keeps only a derived NoteIndex cache in device-local IndexedDB; that cache is not written into the Vault or sent to a remote service. No account is required.
 
 ## Getting started
 

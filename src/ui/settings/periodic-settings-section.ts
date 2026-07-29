@@ -15,11 +15,15 @@ import type { SettingsSectionContext } from "./settings-section-context";
 import { preparePathInput } from "./path-input";
 import { renderTemplatePathSetting } from "./template-settings";
 import { PeriodicNoteFolderSuggest } from "./vault-path-suggest";
+import {
+  combineSettingsCleanups,
+  type SettingsCleanup,
+} from "./settings-cleanup";
 
 export function renderPeriodicSettingsSection(
   containerEl: HTMLElement,
   context: SettingsSectionContext,
-): void {
+): SettingsCleanup {
   const { t } = context.translator;
   containerEl.createEl("h3", { text: t("settings.periodic.behavior") });
   new Setting(containerEl)
@@ -46,16 +50,19 @@ export function renderPeriodicSettingsSection(
   const pathGuideEl = containerEl.createDiv({ cls: "chrono-notes-settings-guide" });
   pathGuideEl.createEl("p", { text: t("settings.periodic.pathsDesc") });
 
+  const cleanups: SettingsCleanup[] = [];
   for (const noteType of PERIODIC_NOTE_TYPES) {
-    renderPeriodicNoteType(containerEl, noteType, context);
+    const cleanup = renderPeriodicNoteType(containerEl, noteType, context);
+    if (cleanup !== null) cleanups.push(cleanup);
   }
+  return combineSettingsCleanups(cleanups);
 }
 
 function renderPeriodicNoteType(
   containerEl: HTMLElement,
   noteType: PeriodicNoteType,
   context: SettingsSectionContext,
-): void {
+): SettingsCleanup | null {
   const { t } = context.translator;
   const config = context.host.settings.periodicNotes[noteType];
   const headingId = `chrono-notes-${noteType}-settings-heading`;
@@ -76,11 +83,11 @@ function renderPeriodicNoteType(
         context.display();
       });
     });
-  if (!config.enabled) return;
+  if (!config.enabled) return null;
 
   const pathSetting = new Setting(sectionEl);
-  configurePeriodicPathSetting(pathSetting, noteType, context);
-  renderTemplatePathSetting(
+  const pathCleanup = configurePeriodicPathSetting(pathSetting, noteType, context);
+  const templateCleanup = renderTemplatePathSetting(
     sectionEl,
     t("settings.templates.path"),
     getPeriodicNoteTemplatePathExample(noteType),
@@ -90,13 +97,14 @@ function renderPeriodicNoteType(
     },
     context,
   );
+  return combineSettingsCleanups([pathCleanup, templateCleanup]);
 }
 
 export function configurePeriodicPathSetting(
   pathSetting: Setting,
   noteType: PeriodicNoteType,
   context: SettingsSectionContext,
-): () => void {
+): SettingsCleanup {
   const { t } = context.translator;
   const config = context.host.settings.periodicNotes[noteType];
   const previewDate = getCurrentLocalDate();

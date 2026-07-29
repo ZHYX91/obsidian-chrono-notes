@@ -17,6 +17,7 @@ import {
   type SettingsSectionContext,
 } from "./settings-section-context";
 import { SettingsSaveCoordinator } from "./settings-save-coordinator";
+import type { SettingsCleanup } from "./settings-cleanup";
 import { createSettingsTabLayout } from "./settings-tab-layout";
 import type { SettingsTabId } from "./settings-tab-navigation";
 import { getSettingsTabLabels } from "./settings-presentation";
@@ -33,6 +34,9 @@ export class ChronoNotesSettingTab extends PluginSettingTab {
   private activeTab: SettingsTabId = "general";
   private readonly settingsSave: SettingsSaveCoordinator;
   private readonly vaultPathSuggestionCatalog: VaultPathSuggestionCatalog;
+  private imperativeSectionCleanup: SettingsCleanup | null = null;
+  private surfaceRevision = 0;
+  private surfaceVisible = false;
   private translator: Translator = createTranslator("en", "en");
 
   constructor(app: App, private readonly host: SettingsHost) {
@@ -50,14 +54,20 @@ export class ChronoNotesSettingTab extends PluginSettingTab {
   }
 
   override display(): void {
+    this.surfaceVisible = true;
     this.vaultPathSuggestionCatalog.start();
     this.render(null);
   }
 
   override getSettingDefinitions(): SettingDefinitionItem[] {
+    this.surfaceVisible = true;
+    const surfaceRevision = ++this.surfaceRevision;
     this.translator = this.host.getTranslator();
     return getDeclarativeSettingDefinitions(
-      this.createSectionContext(() => updateDeclarativeSettingTab(this)),
+      this.createSectionContext(
+        () => updateDeclarativeSettingTab(this),
+        surfaceRevision,
+      ),
       this.activeTab,
     );
   }
@@ -67,13 +77,16 @@ export class ChronoNotesSettingTab extends PluginSettingTab {
   }
 
   override async setControlValue(key: string, value: unknown): Promise<void> {
+    const surfaceRevision = this.surfaceRevision;
     const mutation = applyDeclarativeControlValue(this.host.settings, key, value);
     if (mutation.persistence === "scheduled") {
       this.settingsSave.schedule();
     } else {
       await this.settingsSave.saveNow();
     }
+    if (!this.isSurfaceCurrent(surfaceRevision)) return;
     if (mutation.refresh === "update") {
+      this.surfaceRevision += 1;
       updateDeclarativeSettingTab(this);
     } else if (mutation.refresh === "refresh-dom-state") {
       refreshDeclarativeSettingTabState(this);
@@ -82,22 +95,37 @@ export class ChronoNotesSettingTab extends PluginSettingTab {
 
   activate(tab: SettingsTabId): void {
     this.activeTab = tab;
-    if (hasDeclarativeSettingApi(this) && this.containerEl.isConnected) {
+    if (!this.containerEl.isConnected) return;
+    if (hasDeclarativeSettingApi(this)) {
+      if (!this.surfaceVisible) return;
+      this.surfaceRevision += 1;
       updateDeclarativeSettingTab(this);
-    } else if (!hasDeclarativeSettingApi(this) && this.containerEl.isConnected) {
+    } else if (this.surfaceVisible) {
       this.render(null);
     }
   }
 
   override hide(): void {
-    this.settingsSave.close();
-    this.vaultPathSuggestionCatalog.dispose();
-    super.hide();
+    this.surfaceVisible = false;
+    this.surfaceRevision += 1;
+    this.cleanupImperativeSection();
+    try {
+      // Obsidian 1.13 owns declarative control cleanup in the base lifecycle,
+      // so let it release those resources while their DOM is still attached.
+      super.hide();
+    } finally {
+      this.containerEl.empty();
+      this.settingsSave.close();
+      this.vaultPathSuggestionCatalog.dispose();
+    }
   }
 
   private render(focusTab: SettingsTabId | null): void {
+    if (!this.surfaceVisible) return;
+    const surfaceRevision = ++this.surfaceRevision;
     const { containerEl } = this;
     this.translator = this.host.getTranslator();
+    this.cleanupImperativeSection();
     containerEl.empty();
     containerEl.addClass("chrono-notes-settings");
     containerEl.dir = this.translator.direction;
@@ -112,34 +140,49 @@ export class ChronoNotesSettingTab extends PluginSettingTab {
         this.render(tabId);
       },
     );
-    const sectionContext = this.createSectionContext();
+    const sectionContext = this.createSectionContext(undefined, surfaceRevision);
 
+    let cleanup: SettingsCleanup | void;
     switch (this.activeTab) {
       case "appearance":
-        renderAppearanceSettingsSection(panelEl, sectionContext);
+        cleanup = renderAppearanceSettingsSection(panelEl, sectionContext);
         break;
       case "periodic":
-        renderPeriodicSettingsSection(panelEl, sectionContext);
+        cleanup = renderPeriodicSettingsSection(panelEl, sectionContext);
         break;
       case "ranges":
-        renderRangeSettingsSection(panelEl, sectionContext);
+        cleanup = renderRangeSettingsSection(panelEl, sectionContext);
         break;
       case "extensions-and-integrations":
-        renderExtensionsAndIntegrationsSettingsSection(panelEl, sectionContext);
+        cleanup = renderExtensionsAndIntegrationsSettingsSection(panelEl, sectionContext);
         break;
       case "general":
       default:
-        renderGeneralSettingsSection(panelEl, sectionContext);
+        cleanup = renderGeneralSettingsSection(panelEl, sectionContext);
         break;
     }
+    this.imperativeSectionCleanup = cleanup ?? null;
 
     if (focusTab !== null) {
       activeTabEl.focus();
     }
   }
 
+  private cleanupImperativeSection(): void {
+    const cleanup = this.imperativeSectionCleanup;
+    this.imperativeSectionCleanup = null;
+    if (cleanup === null) return;
+
+    try {
+      cleanup();
+    } catch (error) {
+      console.error("Chrono Notes Calendar: failed to clean up settings section", error);
+    }
+  }
+
   private createSectionContext(
     display: () => void = () => this.render(null),
+    surfaceRevision = this.surfaceRevision,
   ): SettingsSectionContext {
     return {
       app: this.app,
@@ -154,8 +197,14 @@ export class ChronoNotesSettingTab extends PluginSettingTab {
           this.settingsSave.flushInBackground();
         });
       },
-      display,
+      display: () => {
+        if (this.isSurfaceCurrent(surfaceRevision)) display();
+      },
     };
+  }
+
+  private isSurfaceCurrent(surfaceRevision: number): boolean {
+    return this.surfaceVisible && this.surfaceRevision === surfaceRevision;
   }
 }
 

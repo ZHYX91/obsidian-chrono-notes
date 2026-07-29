@@ -5,6 +5,8 @@ import type { PeriodicNoteFilePort } from "../../features/periodic/periodic-note
 import type { TaskFilePort } from "../../features/tasks/task-commands";
 import { isMarkdownFile } from "./obsidian-markdown-files";
 
+const pendingFolderCreates = new WeakMap<Vault, Map<string, Promise<void>>>();
+
 export class ObsidianPeriodicNoteFilePort implements PeriodicNoteFilePort {
   constructor(
     private readonly vault: Vault,
@@ -68,6 +70,40 @@ async function ensureParentFolders(vault: Vault, filePath: string): Promise<void
   let current = "";
   for (const part of parts) {
     current = current.length === 0 ? part : `${current}/${part}`;
-    if (vault.getAbstractFileByPath(current) === null) await vault.createFolder(current);
+    await ensureFolder(vault, current);
+  }
+}
+
+async function ensureFolder(vault: Vault, path: string): Promise<void> {
+  if (vault.getAbstractFileByPath(path) !== null) return;
+
+  let pendingByPath = pendingFolderCreates.get(vault);
+  if (pendingByPath === undefined) {
+    pendingByPath = new Map();
+    pendingFolderCreates.set(vault, pendingByPath);
+  }
+
+  const existing = pendingByPath.get(path);
+  if (existing !== undefined) {
+    await existing;
+    return;
+  }
+
+  const pending = (async () => {
+    if (vault.getAbstractFileByPath(path) !== null) return;
+
+    try {
+      await vault.createFolder(path);
+    } catch (error) {
+      if (vault.getAbstractFileByPath(path) === null) throw error;
+    }
+  })();
+  pendingByPath.set(path, pending);
+
+  try {
+    await pending;
+  } finally {
+    if (pendingByPath.get(path) === pending) pendingByPath.delete(path);
+    if (pendingByPath.size === 0) pendingFolderCreates.delete(vault);
   }
 }

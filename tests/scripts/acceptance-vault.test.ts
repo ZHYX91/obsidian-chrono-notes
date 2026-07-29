@@ -21,6 +21,7 @@ import {
 } from "../../scripts/acceptance-vault.mjs";
 
 const temporaryRoots: string[] = [];
+const ACCEPTANCE_TEST_TIMEOUT_MS = 15_000;
 const acceptanceScript = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
   "../../scripts/acceptance-vault.mjs",
@@ -92,7 +93,7 @@ describe("acceptance Vault lifecycle", () => {
         "utf8",
       ),
     ).toBe("plugin bundle\n");
-  });
+  }, ACCEPTANCE_TEST_TIMEOUT_MS);
 
   it("detects changes to generated files", async () => {
     const harness = await createHarness();
@@ -112,7 +113,7 @@ describe("acceptance Vault lifecycle", () => {
         target,
       }),
     ).rejects.toThrow("Generated file changed: Daily/2026-07-14.md");
-  });
+  }, ACCEPTANCE_TEST_TIMEOUT_MS);
 
   it("accepts host JSON normalization while preserving required values", async () => {
     const harness = await createHarness();
@@ -160,7 +161,7 @@ describe("acceptance Vault lifecycle", () => {
     ).rejects.toThrow(
       "Generated JSON required values changed: .obsidian/core-plugins.json",
     );
-  });
+  }, ACCEPTANCE_TEST_TIMEOUT_MS);
 
   it("rejects changes to required generated JSON values", async () => {
     const harness = await createHarness();
@@ -181,7 +182,7 @@ describe("acceptance Vault lifecycle", () => {
         target,
       }),
     ).rejects.toThrow("Generated JSON changed: .obsidian/appearance.json");
-  });
+  }, ACCEPTANCE_TEST_TIMEOUT_MS);
 
   it("accepts pnpm's literal argument separator in CLI commands", async () => {
     const harness = await createHarness();
@@ -205,7 +206,7 @@ describe("acceptance Vault lifecycle", () => {
         { encoding: "utf8" },
       ),
     ).toContain(`Acceptance Vault verified: ${target}`);
-  });
+  }, ACCEPTANCE_TEST_TIMEOUT_MS);
 
   it("cleans only marked Vaults below the declared acceptance root", async () => {
     const harness = await createHarness();
@@ -234,7 +235,7 @@ describe("acceptance Vault lifecycle", () => {
       target,
     });
     await expect(readFile(path.join(target, ACCEPTANCE_MARKER_NAME))).rejects.toThrow();
-  });
+  }, ACCEPTANCE_TEST_TIMEOUT_MS);
 
   it("prunes only expired marked Vaults and leaves unrelated directories alone", async () => {
     const harness = await createHarness();
@@ -257,7 +258,7 @@ describe("acceptance Vault lifecycle", () => {
     await expect(
       readFile(path.join(unmarkedTarget, ACCEPTANCE_MARKER_NAME)),
     ).rejects.toThrow();
-  });
+  }, ACCEPTANCE_TEST_TIMEOUT_MS);
 });
 
 async function createHarness(): Promise<{

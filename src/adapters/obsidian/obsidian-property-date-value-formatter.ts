@@ -10,53 +10,64 @@ const DATE_TIME_INPUT_FORMATS = Object.freeze([
   "YYYY-MM-DDTHH:mm:ss",
   "YYYY-MM-DDTHH:mm:ss.SSS",
 ]);
-const parseMoment = moment as unknown as (
-  value: string,
-  formats?: readonly string[],
-  strict?: boolean,
-) => {
-  isValid(): boolean;
-  locale(locale: string): { format(pattern: string): string };
-};
 
 export const OBSIDIAN_PROPERTY_DATE_VALUE_FORMATTER: PropertyDateValueFormatter = Object.freeze({
   formatMoment(value: string, pattern: string, locale: string) {
-    const parsed = parseMoment(value, DATE_TIME_INPUT_FORMATS, true);
+    // HTML date controls expose civil fields without a time zone. UTC is only
+    // a stable field container here; it must not convert the displayed value.
+    const parsed = moment.utc(value, [...DATE_TIME_INPUT_FORMATS], true);
     return parsed.isValid() ? parsed.locale(locale).format(pattern) : null;
   },
   formatSystemDate(value: string) {
     const match = DATE_VALUE.exec(value);
     if (match === null) return null;
+    const civilDate = createCivilDate(match, value);
+    if (civilDate === null) return null;
     return new Intl.DateTimeFormat(undefined, {
       calendar: "gregory",
       year: "numeric",
       month: "2-digit",
       day: "2-digit",
-    }).format(createLocalDate(match, value));
+      timeZone: "UTC",
+    }).format(civilDate);
   },
   formatSystemTime(value: string, includeSeconds: boolean) {
     const dateMatch = DATE_VALUE.exec(value);
     const timeMatch = TIME_VALUE.exec(value);
     if (dateMatch === null || timeMatch === null) return null;
+    const civilDate = createCivilDate(dateMatch, value, timeMatch);
+    if (civilDate === null) return null;
     return new Intl.DateTimeFormat(undefined, {
       hour: "numeric",
       minute: "2-digit",
       ...(includeSeconds ? { second: "2-digit" } : {}),
-    }).format(createLocalDate(dateMatch, value, timeMatch));
+      timeZone: "UTC",
+    }).format(civilDate);
   },
 });
 
-function createLocalDate(
+function createCivilDate(
   dateMatch: RegExpExecArray,
   source: string,
   timeMatch: RegExpExecArray | null = TIME_VALUE.exec(source),
-): Date {
-  return new Date(
-    Number(dateMatch[1]),
-    Number(dateMatch[2]) - 1,
-    Number(dateMatch[3]),
-    Number(timeMatch?.[1] ?? 0),
-    Number(timeMatch?.[2] ?? 0),
-    Number(timeMatch?.[3] ?? 0),
-  );
+): Date | null {
+  const year = Number(dateMatch[1]);
+  const month = Number(dateMatch[2]) - 1;
+  const day = Number(dateMatch[3]);
+  const hour = Number(timeMatch?.[1] ?? 0);
+  const minute = Number(timeMatch?.[2] ?? 0);
+  const second = Number(timeMatch?.[3] ?? 0);
+  const result = new Date(0);
+  result.setUTCHours(0, 0, 0, 0);
+  result.setUTCFullYear(year, month, day);
+  result.setUTCHours(hour, minute, second, 0);
+
+  return result.getUTCFullYear() === year &&
+    result.getUTCMonth() === month &&
+    result.getUTCDate() === day &&
+    result.getUTCHours() === hour &&
+    result.getUTCMinutes() === minute &&
+    result.getUTCSeconds() === second
+    ? result
+    : null;
 }

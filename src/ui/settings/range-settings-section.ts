@@ -3,6 +3,10 @@ import { Setting } from "obsidian";
 import { normalizeIntervalNoteFolder } from "../../core/note/interval-note-spec";
 import { isRangeNoteScanScope } from "../../shared/settings";
 import { preparePathInput } from "./path-input";
+import {
+  combineSettingsCleanups,
+  type SettingsCleanup,
+} from "./settings-cleanup";
 import type { SettingsSectionContext } from "./settings-section-context";
 import { renderTemplatePathSetting } from "./template-settings";
 import { VaultFolderSuggest } from "./vault-path-suggest";
@@ -10,7 +14,7 @@ import { VaultFolderSuggest } from "./vault-path-suggest";
 export function renderRangeSettingsSection(
   containerEl: HTMLElement,
   context: SettingsSectionContext,
-): void {
+): SettingsCleanup {
   const { t } = context.translator;
   const settings = context.host.settings.rangeNotes;
   containerEl.createEl("h3", { text: t("settings.ranges.title") });
@@ -43,8 +47,8 @@ export function renderRangeSettingsSection(
         await context.persistSettings();
       });
     });
-  configureRangeFolderSetting(new Setting(containerEl), context);
-  renderTemplatePathSetting(
+  const rangeFolderCleanup = configureRangeFolderSetting(new Setting(containerEl), context);
+  const templateCleanup = renderTemplatePathSetting(
     containerEl,
     t("settings.templates.path"),
     "Templates/Range.md",
@@ -68,7 +72,7 @@ export function renderRangeSettingsSection(
       });
   });
   const customFolder = new Setting(containerEl);
-  configureCustomRangeFolderSetting(customFolder, context);
+  const customFolderCleanup = configureCustomRangeFolderSetting(customFolder, context);
   customFolder.setDisabled(settings.scanScope !== "custom-folder");
   addPositiveIntegerSetting(
     containerEl,
@@ -88,12 +92,17 @@ export function renderRangeSettingsSection(
     },
     context,
   );
+  return combineSettingsCleanups([
+    rangeFolderCleanup,
+    templateCleanup,
+    customFolderCleanup,
+  ]);
 }
 
 export function configureRangeFolderSetting(
   folderSetting: Setting,
   context: SettingsSectionContext,
-): () => void {
+): SettingsCleanup {
   const { t } = context.translator;
   const settings = context.host.settings.rangeNotes;
   folderSetting
@@ -137,7 +146,7 @@ export function configureRangeFolderSetting(
 export function configureCustomRangeFolderSetting(
   customFolder: Setting,
   context: SettingsSectionContext,
-): () => void {
+): SettingsCleanup {
   const { t } = context.translator;
   const settings = context.host.settings.rangeNotes;
   customFolder
