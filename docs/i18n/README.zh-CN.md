@@ -42,12 +42,32 @@ Chrono Notes Calendar 是一个面向 Obsidian 周期笔记工作流的日历插
 
 源笔记和插件设置都保留在 Vault 内。只读 ICS 来源既可以是 Vault 文件，也可以是用户明确配置的桌面本地路径；插件不会上传这些文件。Chrono Notes Calendar 只会在设备本地 IndexedDB 中保存派生的 NoteIndex 缓存；该缓存不会写入 Vault，也不会发送到远程服务。插件不要求账号。
 
-## 开始使用
+## 使用要求与兼容性
+
+- 支持桌面端和移动端的 Obsidian 1.12.7 或更高版本；
+- Vault 内的本地 ICS 来源可在受支持平台使用；明确配置的 Vault 外部路径仅支持桌面端；
+- 可选的非公历历法依赖 Obsidian 运行环境提供的历法数据，不可用时会安全隐藏。
+
+## 安装
+
+### 手动安装
+
+从[最新版本](https://github.com/ZHYX91/obsidian-chrono-notes/releases/latest)下载 `chrono-notes-<version>.zip`，解压到 `Vault/.obsidian/plugins/`。压缩包包含 `chrono-notes/` 目录及其中的 `main.js`、`manifest.json` 和 `styles.css`。重新加载 Obsidian 后，在第三方插件中启用 Chrono Notes Calendar。
+
+### 升级
+
+如果存在 `Vault/.obsidian/plugins/chrono-notes/data.json`，请先备份并保留。只替换 `main.js`、`manifest.json` 和 `styles.css`；只有在明确希望重置全部插件偏好时才删除 `data.json`。
+
+## 使用
 
 1. 在 Chrono Notes Calendar 设置中启用需要的周期笔记类型，并确认路径格式；
 2. 从侧边栏图标或命令面板打开日历；
 3. 按需启用历法、节假日扩展或添加本地 ICS 来源；
 4. 选择日期以打开或创建对应周期笔记。
+
+## 设置
+
+设置覆盖周期笔记路径和模板、历法与节假日扩展、任务与统计显示、本地 ICS 来源、区间笔记，以及 Obsidian 日期与日期时间属性的显示方式。默认设置保存在插件的 `data.json` 中；笔记内容和 frontmatter 仍保留在 Vault 内。
 
 ## 限制
 
@@ -56,9 +76,9 @@ Chrono Notes Calendar 是一个面向 Obsidian 周期笔记工作流的日历插
 - 非公历历法只是由运行环境 Unicode 历法数据驱动的显示扩展；公历始终是笔记路径、导航和索引锚点，不受运行环境支持的扩展会安全隐藏；
 - 部分移动端交互与布局细节受 Obsidian 应用和设备输入栈影响。
 
-## 手动安装
+## 隐私与安全
 
-从[最新版本](https://github.com/ZHYX91/obsidian-chrono-notes/releases/latest)下载 `chrono-notes-<version>.zip`，解压到 `Vault/.obsidian/plugins/`。压缩包已经包含 `chrono-notes/` 目录和三个插件文件。重新加载 Obsidian 后，在第三方插件中启用 Chrono Notes Calendar。
+Chrono Notes Calendar 通过 Obsidian 或本地文件系统边界读取 Vault 笔记和用户明确选择的本地 ICS 文件，不上传笔记、任务、日历或 ICS 数据，也不要求账号。派生的 NoteIndex 缓存只保存在设备本地 IndexedDB 中，并可由源笔记重新生成。
 
 ## 开发
 
@@ -69,7 +89,7 @@ pnpm check
 
 开发环境需要 Node.js 22.13 及以上的 22.x 版本，或 Node.js 24 及更高版本，以及 pnpm 11.7.0。架构与测试细节见[开发者文档](https://github.com/ZHYX91/obsidian-chrono-notes/blob/main/docs/architecture.zh-CN.md)。
 
-## 支持与安全
+## 支持
 
 - 工作流想法和一般反馈请发布到 [General](https://github.com/ZHYX91/obsidian-chrono-notes/discussions/categories/general)；
 - 使用和配置问题请发布到 [Q&A](https://github.com/ZHYX91/obsidian-chrono-notes/discussions/categories/q-a)；
@@ -77,6 +97,10 @@ pnpm check
 - 安全漏洞只能通过 GitHub 的[私人漏洞报告](https://github.com/ZHYX91/obsidian-chrono-notes/security/advisories/new)提交，详细要求见[安全策略](https://github.com/ZHYX91/obsidian-chrono-notes/security/policy)。
 
 不要在公开页面发布真实的 Vault 路径、笔记或任务内容、日历或 ICS 数据、源地址、凭据及个人信息。
+
+## 许可证
+
+[MIT](https://github.com/ZHYX91/obsidian-chrono-notes/blob/main/LICENSE) © ZhengYX
 
 ## 致谢
 

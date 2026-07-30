@@ -42,12 +42,32 @@ The same calendar workspace adapts to touch interaction and narrow screens.
 
 Source notes and plugin settings stay inside the Vault. Read-only ICS sources may be Vault files or explicitly configured local desktop paths; they are never uploaded by the plugin. Chrono Notes Calendar keeps only a derived NoteIndex cache in device-local IndexedDB; that cache is not written into the Vault or sent to a remote service. No account is required.
 
-## Getting started
+## Requirements and compatibility
+
+- Obsidian 1.12.7 or later on desktop or mobile.
+- Local ICS sources inside the Vault work across supported platforms; explicitly configured paths outside the Vault are desktop-only.
+- Optional non-Gregorian calendars depend on the calendar data provided by the Obsidian runtime and are omitted safely when unavailable.
+
+## Installation
+
+### Manual installation
+
+Download `chrono-notes-<version>.zip` from the [latest release](https://github.com/ZHYX91/obsidian-chrono-notes/releases/latest) and extract it into `Vault/.obsidian/plugins/`. The archive contains the `chrono-notes/` directory with `main.js`, `manifest.json`, and `styles.css`. Reload Obsidian, then enable Chrono Notes Calendar under Community plugins.
+
+### Upgrade
+
+Back up and preserve `Vault/.obsidian/plugins/chrono-notes/data.json` when it exists. Replace only `main.js`, `manifest.json`, and `styles.css`; delete `data.json` only when you explicitly want to reset all plugin preferences.
+
+## Usage
 
 1. Enable the periodic-note types you use and confirm their path patterns in Chrono Notes Calendar settings.
 2. Open the calendar from the ribbon or command palette.
 3. Optionally enable calendar and holiday extensions or add local ICS sources.
 4. Select a date to open or create its periodic note.
+
+## Settings
+
+Settings cover periodic-note paths and templates, calendar and holiday extensions, task and statistics display, local ICS sources, time-range notes, and Obsidian Date and Date & time property display. Defaults are stored in the plugin's `data.json`; note content and frontmatter remain in the Vault.
 
 ## Limitations
 
@@ -56,9 +76,9 @@ Source notes and plugin settings stay inside the Vault. Read-only ICS sources ma
 - Non-Gregorian calendar extensions are backed by the runtime's Unicode calendar data. Gregorian dates remain the note-path, navigation, and indexing anchor; unavailable runtime calendars are omitted safely.
 - Some mobile interaction and layout details depend on the Obsidian app and device input stack.
 
-## Manual installation
+## Privacy and security
 
-Download `chrono-notes-<version>.zip` from the [latest release](https://github.com/ZHYX91/obsidian-chrono-notes/releases/latest) and extract it into `Vault/.obsidian/plugins/`. The archive already contains the `chrono-notes/` directory and its three plugin files. Reload Obsidian, then enable Chrono Notes Calendar under Community plugins.
+Chrono Notes Calendar reads Vault notes and user-selected local ICS files through Obsidian or local filesystem boundaries. It does not upload notes, tasks, calendars, or ICS data and does not require an account. Its derived NoteIndex cache stays in device-local IndexedDB and can be rebuilt from the source notes.
 
 ## Development
 
@@ -69,7 +89,7 @@ pnpm check
 
 Development requires Node.js 22.13 or later in the 22.x line, or Node.js 24 and later, plus pnpm 11.7.0. See the [developer documentation](https://github.com/ZHYX91/obsidian-chrono-notes/blob/main/docs/architecture.en.md) for architecture and testing details.
 
-## Support and security
+## Support
 
 - Use [General](https://github.com/ZHYX91/obsidian-chrono-notes/discussions/categories/general) for workflow ideas and general feedback.
 - Use [Q&A](https://github.com/ZHYX91/obsidian-chrono-notes/discussions/categories/q-a) for usage and configuration questions.
@@ -77,6 +97,10 @@ Development requires Node.js 22.13 or later in the 22.x line, or Node.js 24 and 
 - Report vulnerabilities only through GitHub's [private vulnerability reporting](https://github.com/ZHYX91/obsidian-chrono-notes/security/advisories/new); see the [security policy](https://github.com/ZHYX91/obsidian-chrono-notes/security/policy) for details.
 
 Never post real private Vault paths, note or task content, calendar or ICS data, source URLs, credentials, or personal information publicly.
+
+## License
+
+[MIT](https://github.com/ZHYX91/obsidian-chrono-notes/blob/main/LICENSE) © ZhengYX
 
 ## Acknowledgements
 
