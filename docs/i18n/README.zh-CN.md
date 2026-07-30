@@ -69,7 +69,14 @@ pnpm check
 
 开发环境需要 Node.js 22.13 及以上的 22.x 版本，或 Node.js 24 及更高版本，以及 pnpm 11.7.0。架构与测试细节见[开发者文档](https://github.com/ZHYX91/obsidian-chrono-notes/blob/main/docs/architecture.zh-CN.md)。
 
-一般问题、使用帮助与体验反馈可在 [GitHub Discussions](https://github.com/ZHYX91/obsidian-chrono-notes/discussions) 中交流；可复现缺陷和明确的功能建议请使用结构化的 [GitHub Issue 表单](https://github.com/ZHYX91/obsidian-chrono-notes/issues/new/choose)。安全漏洞只能通过 GitHub 的[私人漏洞报告](https://github.com/ZHYX91/obsidian-chrono-notes/security/advisories/new)提交，详细要求见[安全策略](https://github.com/ZHYX91/obsidian-chrono-notes/security/policy)。不要在公开页面发布真实的 Vault 路径、笔记或任务内容、日历或 ICS 数据、源地址、凭据及个人信息。
+## 支持与安全
+
+- 工作流想法和一般反馈请发布到 [General](https://github.com/ZHYX91/obsidian-chrono-notes/discussions/categories/general)；
+- 使用和配置问题请发布到 [Q&A](https://github.com/ZHYX91/obsidian-chrono-notes/discussions/categories/q-a)；
+- 可复现缺陷和明确的功能建议请使用结构化的 [GitHub Issue 表单](https://github.com/ZHYX91/obsidian-chrono-notes/issues/new/choose)；
+- 安全漏洞只能通过 GitHub 的[私人漏洞报告](https://github.com/ZHYX91/obsidian-chrono-notes/security/advisories/new)提交，详细要求见[安全策略](https://github.com/ZHYX91/obsidian-chrono-notes/security/policy)。
+
+不要在公开页面发布真实的 Vault 路径、笔记或任务内容、日历或 ICS 数据、源地址、凭据及个人信息。
 
 ## 致谢
 
