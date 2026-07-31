@@ -9,6 +9,10 @@ const workflow = readFileSync(
   path.join(projectRoot, ".github", "workflows", "release.yml"),
   "utf8",
 );
+const ciWorkflow = readFileSync(
+  path.join(projectRoot, ".github", "workflows", "ci.yml"),
+  "utf8",
+);
 
 describe("release workflow contract", () => {
   it("keeps the loose Obsidian assets and adds one install-ready archive", () => {
@@ -19,14 +23,17 @@ describe("release workflow contract", () => {
     expect(workflow).toContain("node scripts/release-assets.mjs archive");
   });
 
-  it("treats an existing tagged Release as immutable", () => {
-    expect(workflow).toContain('release_status="$(curl');
-    expect(workflow).toContain('200)');
-    expect(workflow).toContain('404)');
-    expect(workflow).toContain('GitHub Release query failed with HTTP ${release_status}.');
-    expect(workflow.match(/--json isImmutable/gu)).toHaveLength(2);
-    expect(workflow).toContain('exists but is not immutable; publish a new version.');
-    expect(workflow).toContain('Published Release ${GITHUB_REF_NAME} is not immutable.');
+  it("treats only an explicit REST 404 as a missing tagged Release", () => {
+    expect(workflow.match(/releases\/tags\/\$\{GITHUB_REF_NAME\}/gu)).toHaveLength(2);
+    expect(workflow).toContain('--write-out "%{http_code}"');
+    expect(workflow).toContain('case "$release_status" in');
+    expect(workflow).toContain('"404")');
+    expect(workflow).toContain('"Could not query the tagged Release (HTTP ${release_status})."');
+    expect(workflow).not.toContain('gh release view "$GITHUB_REF_NAME"');
+  });
+
+  it("accepts an existing tagged Release only when immutable assets match", () => {
+    expect(workflow).toContain("'.immutable == true and .draft == false'");
     expect(workflow).toContain('gh release download "$GITHUB_REF_NAME"');
     expect(workflow).toContain("node scripts/release-assets.mjs compare");
     expect(workflow).toContain('echo "exists=true" >> "$GITHUB_OUTPUT"');
@@ -34,18 +41,70 @@ describe("release workflow contract", () => {
     expect(workflow).toContain('gh release create "$GITHUB_REF_NAME"');
     expect(workflow).not.toContain("gh release upload");
     expect(workflow).not.toContain("--clobber");
-    expect(workflow).not.toMatch(/if gh release view[\s\S]*?else/gu);
+    expect(workflow).not.toContain("--draft");
+    expect(workflow).not.toContain("gh release edit");
+  });
+
+  it("requires the existing Release asset inventory to be exactly four unique files", () => {
+    expect(workflow).toContain('archive_name="chrono-notes-${GITHUB_REF_NAME}.zip"');
+    expect(workflow).toContain('(.assets | type == "array")');
+    expect(workflow).toContain(
+      '([.assets[].name] | sort) ==\n                  (["main.js", "manifest.json", "styles.css", $archive_name] | sort)',
+    );
+    expect(workflow).toContain('([.assets[].name] | unique | length) == 4');
+    expect(workflow).toContain(
+      '"The tagged Release asset inventory is not exactly the four expected files; publish a new version."',
+    );
+  });
+
+  it("verifies the exact published immutable asset bytes after publication", () => {
+    expect(workflow).toContain('gh release create "$GITHUB_REF_NAME" "${assets[@]}"');
+    expect(workflow).not.toContain("--draft");
+    expect(workflow).not.toContain("gh release edit");
+    expect(workflow).toContain("verify_release_assets() {");
+    expect(workflow).toContain(".draft == $expected_draft");
+    expect(workflow).toContain(".immutable == $expected_immutable");
+    expect(workflow).toContain('"published"');
+    expect(workflow).toContain("Release supply-chain verification failed");
+    expect(workflow.match(/node scripts\/release-assets\.mjs compare/gu)).toHaveLength(2);
+    expect(workflow).toMatch(
+      /gh release create[\s\S]*?verify_release_assets[\s\S]*?verify_release_tag_identity/u,
+    );
+  });
+
+  it("fails closed when the pushed version tag no longer identifies the event commit", () => {
+    expect(workflow).toContain('git rev-parse "${GITHUB_SHA}^{commit}"');
+    expect(workflow).toContain('git rev-parse "HEAD^{commit}"');
+    expect(workflow).toContain(
+      'git ls-remote --exit-code origin "$tag_ref" "${tag_ref}^{}"',
+    );
+    expect(workflow).toContain('awk -v ref="${tag_ref}^{}"');
+    expect(workflow).toContain(
+      '"The remote release tag no longer points to the pushed event commit."',
+    );
+    expect(workflow.match(/^\s+verify_release_tag_identity$/gmu)).toHaveLength(4);
   });
 
   it("attests every published release asset", () => {
     expect(workflow).toContain("attestations: write");
     expect(workflow).toContain("id-token: write");
-    expect(workflow).toContain("uses: actions/attest@v4");
     expect(workflow).toContain("dist/main.js");
     expect(workflow).toContain("dist/manifest.json");
     expect(workflow).toContain("dist/styles.css");
     expect(workflow).toContain(
       "dist/chrono-notes-${{ github.ref_name }}.zip",
     );
+  });
+
+  it("pins every third-party Action to a full commit SHA", () => {
+    for (const source of [ciWorkflow, workflow]) {
+      const actionUses = [...source.matchAll(/^\s*uses:\s*([^\s#]+)(?:\s+#.*)?$/gmu)].map(
+        (match) => match[1],
+      );
+      expect(actionUses.length).toBeGreaterThan(0);
+      expect(
+        actionUses.every((value) => /@[a-f\d]{40}$/u.test(value ?? "")),
+      ).toBe(true);
+    }
   });
 });
