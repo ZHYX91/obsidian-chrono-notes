@@ -11,6 +11,8 @@ translation_status: source
 
 插件 ID 为 `chrono-notes`，标准生产产物为 `dist/main.js`、`dist/manifest.json` 与 `dist/styles.css`，构建分析文件为 `dist/chrono-notes.meta.json`。相邻参考项目只作为只读需求、算法和回归样例来源，不属于运行时依赖，也不接收本仓库修改；产品范围以当前需求与功能清单为准。
 
+发布边界分为只读 prepare 与仅用于缺失版本的写入 publish。prepare 在构建后先查询同标签 Release：只有 immutable 状态、四项附件字节、每项精确 provenance 及最终标签提交都一致时才接受 no-op，并使整个 publish job 跳过；明确 404 才继续候选 handoff。数字稳定版本标签的仓库 ruleset 与 GitHub Release immutability 是并列的外部前置：ruleset 必须限制 update 和 delete，且实际 release actor 不得拥有 bypass。仓库 workflow 只记录和依赖这些设置，不读取或修改管理配置。
+
 ## 2. 分层
 
 ```text

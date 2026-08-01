@@ -65,10 +65,13 @@ describe("release workflow contract", () => {
     expect(preflightJob).not.toContain("contents: write");
     expect(preflightJob).not.toContain("id-token: write");
     expect(preflightJob).toContain("Validate published version history and release-notes baseline");
-    expect(prepareJob).toContain("permissions:\n      contents: read");
+    expect(prepareJob).toContain("attestations: read");
+    expect(prepareJob).toContain("contents: read");
     expect(prepareJob).not.toContain("contents: write");
     expect(prepareJob).toContain("persist-credentials: false");
-    expect(publishJob).toContain("if: github.event_name == 'push'");
+    expect(publishJob).toContain(
+      "if: github.event_name == 'push' && needs.prepare-release.outputs.release_exists == 'false'",
+    );
     expect(publishJob).toContain("needs: prepare-release");
     expect(publishJob).toContain("attestations: write");
     expect(publishJob).toContain("contents: write");
@@ -121,18 +124,49 @@ describe("release workflow contract", () => {
   });
 
   it("accepts an existing tagged Release only when immutable assets match", () => {
-    expect(workflow).toContain(".immutable == true and .draft == false and .prerelease == false");
-    expect(workflow).toContain('gh release download "$RELEASE_VERSION"');
-    expect(workflow).toContain('cmp "$RUNNER_TEMP/release-candidate/$asset" "$existing/$asset"');
-    expect(workflow).toContain('gh attestation verify "$existing/$asset"');
-    expect(workflow).toContain(
+    const prepareStart = workflow.indexOf("\n  prepare-release:");
+    const publishStart = workflow.indexOf("\n  publish:");
+    const prepareJob = workflow.slice(prepareStart, publishStart);
+    const publishJob = workflow.slice(publishStart);
+    const sourceStep = prepareJob.indexOf("Verify tag source identity under read-only permissions");
+    const releaseStateStep = prepareJob.indexOf(
+      "Accept an exact existing immutable Release under read-only permissions",
+    );
+    const releaseNotesStep = prepareJob.indexOf(
+      "Select and validate the previous published Release",
+    );
+    const stageStep = prepareJob.indexOf("Stage the exact release candidate");
+    const uploadStep = prepareJob.indexOf("Upload the verified release candidate");
+
+    expect(sourceStep).toBeGreaterThan(-1);
+    expect(releaseStateStep).toBeGreaterThan(sourceStep);
+    expect(releaseNotesStep).toBeGreaterThan(releaseStateStep);
+    expect(stageStep).toBeGreaterThan(releaseNotesStep);
+    expect(uploadStep).toBeGreaterThan(stageStep);
+    expect(prepareJob).toContain(
+      "release_exists: ${{ steps.release_state.outputs.exists }}",
+    );
+    expect(prepareJob).toContain(".immutable == true and .draft == false and .prerelease == false");
+    expect(prepareJob).toContain('gh release download "$RELEASE_VERSION"');
+    expect(prepareJob).toContain('cmp "dist/$asset" "$existing/$asset"');
+    expect(prepareJob).toContain('gh attestation verify "$existing/$asset"');
+    expect(prepareJob).toContain(
       '--signer-workflow "github.com/${GITHUB_REPOSITORY}/.github/workflows/release.yml"',
     );
     expect(workflow.match(/--deny-self-hosted-runners/gu)).toHaveLength(2);
-    expect(workflow).toContain('--source-digest "$RELEASE_COMMIT"');
-    expect(workflow).toContain('echo "exists=true" >> "$GITHUB_OUTPUT"');
-    expect(workflow).toContain("if: steps.release_state.outputs.exists != 'true'");
-    expect(workflow).toContain("Reverify tag after accepting an existing no-op");
+    expect(prepareJob).toContain('--source-digest "$RELEASE_COMMIT"');
+    expect(prepareJob).toContain('echo "exists=true" >> "$GITHUB_OUTPUT"');
+    expect(prepareJob).toContain(
+      "The release tag changed while the existing Release was verified.",
+    );
+    expect(prepareJob.match(/if: steps\.release_state\.outputs\.exists == 'false'/gu)).toHaveLength(3);
+    expect(publishJob).not.toContain("tagged-release.json");
+    expect(publishJob).not.toContain("existing-release-assets");
+    expect(publishJob).not.toContain('echo "exists=true"');
+    expect(publishJob).toMatch(
+      /steps:\n\s+- name: Reverify release identity before using write credentials/u,
+    );
+    expect(workflow).not.toContain("!= 'true'");
     expect(workflow).toContain('gh release create "$RELEASE_VERSION"');
     expect(workflow).not.toContain("gh release upload");
     expect(workflow).not.toContain("--clobber");
@@ -175,7 +209,9 @@ describe("release workflow contract", () => {
       '"The remote release tag no longer points to the pushed event commit."',
     );
     expect(workflow).toContain("Reverify release identity before using write credentials");
-    expect(workflow).toContain("Reverify tag after accepting an existing no-op");
+    expect(workflow).toContain(
+      "The release tag changed while the existing Release was verified.",
+    );
   });
 
   it("generates notes from the highest older real stable Release", () => {

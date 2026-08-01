@@ -3,6 +3,8 @@ import { lstat, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 
+import { assertStableReleaseVersion } from "./release-contract.mjs";
+
 const ARCHIVE_DIRECTORY = "chrono-notes";
 const LOOSE_ASSET_NAMES = Object.freeze(["main.js", "manifest.json", "styles.css"]);
 const ZIP_DOS_DATE = 0x0021;
@@ -219,9 +221,7 @@ function parseJson(source, label) {
 }
 
 function assertReleaseVersion(version) {
-  if (typeof version !== "string" || !/^\d+\.\d+\.\d+$/u.test(version)) {
-    throw new Error("Release version must use x.y.z without a v prefix");
-  }
+  assertStableReleaseVersion(version);
 }
 
 function assertZip32Size(value, label) {

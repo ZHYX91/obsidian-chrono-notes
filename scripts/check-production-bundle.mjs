@@ -11,6 +11,7 @@ import {
   productionJavascriptReferenceBytes,
 } from "./build-contract.mjs";
 import { assertPackageVersionContract } from "./release-contract.mjs";
+import { verifyProductionBundleRebuild } from "./verify-production-rebuild.mjs";
 
 const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const resolveProjectPath = (relativePath) => path.resolve(projectRoot, relativePath);
@@ -105,12 +106,18 @@ for (const forbiddenExternal of ["process", "node:process", "buffer", "node:buff
 }
 
 smokeLoadPlugin(resolveProjectPath(artifactPaths.main), mainSource);
+const reproducibleBytes = await verifyProductionBundleRebuild();
+assert.equal(
+  reproducibleBytes,
+  mainStats.size,
+  "Independent production rebuild must compare the complete main.js",
+);
 
 console.log(
   `Production artifact check passed: ${mainStats.size} B / ${productionJavascriptBudgetBytes} B, ` +
   `headroom ${productionJavascriptBudgetBytes - mainStats.size} B, ` +
   `delta ${formatSignedBytes(mainStats.size - productionJavascriptReferenceBytes)}, ` +
-  `externals: ${[...externalImports].sort().join(", ") || "none"}`,
+  `externals: ${[...externalImports].sort().join(", ") || "none"}, reproducible bytes: exact`,
 );
 
 if (process.argv.includes("--details")) {

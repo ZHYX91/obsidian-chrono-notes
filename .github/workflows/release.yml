@@ -123,6 +123,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     permissions:
+      attestations: read
       contents: read
     outputs:
       candidate_artifact_digest: ${{ steps.upload_candidate.outputs.artifact-digest }}
@@ -130,6 +131,7 @@ jobs:
       candidate_artifact_name: ${{ steps.candidate.outputs.artifact_name }}
       previous_tag: ${{ steps.release_notes.outputs.previous_tag }}
       release_commit: ${{ steps.source.outputs.release_commit }}
+      release_exists: ${{ steps.release_state.outputs.exists }}
     env:
       RELEASE_VERSION: ${{ github.ref_name }}
     steps:
@@ -202,7 +204,70 @@ jobs:
           fi
           echo "release_commit=${expected_commit}" >> "$GITHUB_OUTPUT"
 
+      - name: Accept an exact existing immutable Release under read-only permissions
+        id: release_state
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_COMMIT: ${{ steps.source.outputs.release_commit }}
+        shell: bash
+        run: |
+          verify_tag() {
+            local object type sha
+            object="$(gh api "/repos/${GITHUB_REPOSITORY}/git/ref/tags/${RELEASE_VERSION}" --jq '.object')"
+            type="$(jq -r '.type' <<< "$object")"
+            sha="$(jq -r '.sha' <<< "$object")"
+            for _ in {1..10}; do
+              [[ "$type" == "tag" ]] || break
+              object="$(gh api "/repos/${GITHUB_REPOSITORY}/git/tags/${sha}" --jq '.object')"
+              type="$(jq -r '.type' <<< "$object")"
+              sha="$(jq -r '.sha' <<< "$object")"
+            done
+            [[ "$type" == "commit" && "$sha" == "$RELEASE_COMMIT" ]]
+          }
+
+          release_response="$RUNNER_TEMP/tagged-release.json"
+          release_status="$(curl --silent --show-error --output "$release_response" --write-out "%{http_code}" \
+            --header "Accept: application/vnd.github+json" \
+            --header "Authorization: Bearer ${GH_TOKEN}" \
+            --header "X-GitHub-Api-Version: 2026-03-10" \
+            "${GITHUB_API_URL}/repos/${GITHUB_REPOSITORY}/releases/tags/${RELEASE_VERSION}")"
+          case "$release_status" in
+            "200")
+              archive_name="chrono-notes-${RELEASE_VERSION}.zip"
+              jq --exit-status --arg archive_name "$archive_name" '
+                .immutable == true and .draft == false and .prerelease == false and
+                (.assets | type == "array") and
+                ([.assets[].name] | sort) == (["main.js", "manifest.json", "styles.css", $archive_name] | sort) and
+                ([.assets[].name] | unique | length) == 4
+              ' "$release_response" >/dev/null || {
+                echo "The tagged Release is not the exact immutable stable contract; publish a new version." >&2
+                exit 1
+              }
+              existing="$RUNNER_TEMP/existing-release-assets"
+              mkdir "$existing"
+              gh release download "$RELEASE_VERSION" --repo "$GITHUB_REPOSITORY" --dir "$existing" \
+                --pattern main.js --pattern manifest.json --pattern styles.css --pattern "$archive_name"
+              for asset in main.js manifest.json styles.css "$archive_name"; do
+                cmp "dist/$asset" "$existing/$asset"
+                gh attestation verify "$existing/$asset" \
+                  --repo "$GITHUB_REPOSITORY" \
+                  --signer-workflow "github.com/${GITHUB_REPOSITORY}/.github/workflows/release.yml" \
+                  --deny-self-hosted-runners \
+                  --source-ref "$GITHUB_REF" \
+                  --source-digest "$RELEASE_COMMIT"
+              done
+              verify_tag || {
+                echo "The release tag changed while the existing Release was verified." >&2
+                exit 1
+              }
+              echo "exists=true" >> "$GITHUB_OUTPUT"
+              ;;
+            "404") echo "exists=false" >> "$GITHUB_OUTPUT" ;;
+            *) echo "Could not query the tagged Release (HTTP ${release_status})." >&2; exit 1 ;;
+          esac
+
       - name: Select and validate the previous published Release
+        if: steps.release_state.outputs.exists == 'false'
         id: release_notes
         env:
           GH_TOKEN: ${{ github.token }}
@@ -226,6 +291,7 @@ jobs:
           echo "previous_tag=${previous_tag}" >> "$GITHUB_OUTPUT"
 
       - name: Stage the exact release candidate
+        if: steps.release_state.outputs.exists == 'false'
         id: candidate
         shell: bash
         run: |
@@ -241,6 +307,7 @@ jobs:
           echo "artifact_name=${artifact_name}" >> "$GITHUB_OUTPUT"
 
       - name: Upload the verified release candidate
+        if: steps.release_state.outputs.exists == 'false'
         id: upload_candidate
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
@@ -252,7 +319,7 @@ jobs:
           retention-days: 1
 
   publish:
-    if: github.event_name == 'push'
+    if: github.event_name == 'push' && needs.prepare-release.outputs.release_exists == 'false'
     needs: prepare-release
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -355,11 +422,15 @@ jobs:
           candidate="$RUNNER_TEMP/release-candidate"
           python3 - "$artifact_zip" "$candidate" "$RELEASE_VERSION" <<'PY'
           # RELEASE_ZIP_VALIDATOR_BEGIN
+          import sys
+
+          if sys.version_info < (3, 9):
+              raise SystemExit("Release ZIP validation requires Python 3.9 or newer")
+
           import hashlib
           import re
           import shutil
           import stat
-          import sys
           import zipfile
           from pathlib import Path
 
@@ -546,71 +617,7 @@ jobs:
             exit 1
           fi
 
-      - name: Check existing immutable Release and provenance
-        id: release_state
-        env:
-          GH_TOKEN: ${{ github.token }}
-        shell: bash
-        run: |
-          release_response="$RUNNER_TEMP/tagged-release.json"
-          release_status="$(curl --silent --show-error --output "$release_response" --write-out "%{http_code}" \
-            --header "Accept: application/vnd.github+json" \
-            --header "Authorization: Bearer ${GH_TOKEN}" \
-            --header "X-GitHub-Api-Version: 2026-03-10" \
-            "${GITHUB_API_URL}/repos/${GITHUB_REPOSITORY}/releases/tags/${RELEASE_VERSION}")"
-          case "$release_status" in
-            "200")
-              archive_name="chrono-notes-${RELEASE_VERSION}.zip"
-              jq --exit-status --arg archive_name "$archive_name" '
-                .immutable == true and .draft == false and .prerelease == false and
-                (.assets | type == "array") and
-                ([.assets[].name] | sort) == (["main.js", "manifest.json", "styles.css", $archive_name] | sort) and
-                ([.assets[].name] | unique | length) == 4
-              ' "$release_response" >/dev/null || {
-                echo "The tagged Release is not the exact immutable stable contract; publish a new version." >&2
-                exit 1
-              }
-              existing="$RUNNER_TEMP/existing-release-assets"
-              mkdir "$existing"
-              gh release download "$RELEASE_VERSION" --repo "$GITHUB_REPOSITORY" --dir "$existing" \
-                --pattern main.js --pattern manifest.json --pattern styles.css --pattern "$archive_name"
-              for asset in main.js manifest.json styles.css "$archive_name"; do
-                cmp "$RUNNER_TEMP/release-candidate/$asset" "$existing/$asset"
-                gh attestation verify "$existing/$asset" \
-                  --repo "$GITHUB_REPOSITORY" \
-                  --signer-workflow "github.com/${GITHUB_REPOSITORY}/.github/workflows/release.yml" \
-                  --deny-self-hosted-runners \
-                  --source-ref "$GITHUB_REF" \
-                  --source-digest "$RELEASE_COMMIT"
-              done
-              echo "exists=true" >> "$GITHUB_OUTPUT"
-              ;;
-            "404") echo "exists=false" >> "$GITHUB_OUTPUT" ;;
-            *) echo "Could not query the tagged Release (HTTP ${release_status})." >&2; exit 1 ;;
-          esac
-
-      - name: Reverify tag after accepting an existing no-op
-        if: steps.release_state.outputs.exists == 'true'
-        env:
-          GH_TOKEN: ${{ github.token }}
-        shell: bash
-        run: |
-          tag_object="$(gh api "/repos/${GITHUB_REPOSITORY}/git/ref/tags/${RELEASE_VERSION}" --jq '.object')"
-          tag_type="$(jq -r '.type' <<< "$tag_object")"
-          tag_sha="$(jq -r '.sha' <<< "$tag_object")"
-          for _ in {1..10}; do
-            [[ "$tag_type" == "tag" ]] || break
-            tag_object="$(gh api "/repos/${GITHUB_REPOSITORY}/git/tags/${tag_sha}" --jq '.object')"
-            tag_type="$(jq -r '.type' <<< "$tag_object")"
-            tag_sha="$(jq -r '.sha' <<< "$tag_object")"
-          done
-          [[ "$tag_type" == "commit" && "$tag_sha" == "$RELEASE_COMMIT" ]] || {
-            echo "The release tag changed while the existing Release was verified." >&2
-            exit 1
-          }
-
       - name: Attest Obsidian release assets
-        if: steps.release_state.outputs.exists != 'true'
         uses: actions/attest@508db95dd578ae2727ebd6217d5ba78e4fbda05d # v4
         with:
           subject-path: |
@@ -620,7 +627,6 @@ jobs:
             ${{ runner.temp }}/release-candidate/chrono-notes-${{ env.RELEASE_VERSION }}.zip
 
       - name: Publish and verify the immutable GitHub Release
-        if: steps.release_state.outputs.exists != 'true'
         env:
           GH_TOKEN: ${{ github.token }}
         shell: bash

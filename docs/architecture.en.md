@@ -12,6 +12,8 @@ Chrono Notes Calendar is designed around single data ownership, consistent parsi
 
 The plugin ID is `chrono-notes`. Standard production assets are `dist/main.js`, `dist/manifest.json`, and `dist/styles.css`, while build analysis is written to `dist/chrono-notes.meta.json`. The sibling reference project is read-only input for requirements, verified algorithms, and regression cases. It is not a runtime dependency and must not be modified from this repository; the current requirements and capability checklist define product scope.
 
+The release boundary is split between read-only prepare and write-capable publish used only for a missing version. After building, prepare queries the same-tag Release first: a no-op is accepted only when immutable state, all four asset bytes, each exact provenance, and the final tag commit match, and then the complete publish job is skipped; only an explicit 404 continues to candidate handoff. A repository ruleset for numeric stable version tags and GitHub Release immutability are parallel external prerequisites: the ruleset must restrict update and delete, and the actual release actor must have no bypass. Repository workflows only record and depend on these settings; they neither read nor modify administrative configuration.
+
 ## 2. Layers
 
 ```text

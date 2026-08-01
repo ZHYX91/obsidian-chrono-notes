@@ -14,14 +14,18 @@ export function assertPackageVersionContract(manifest, packageJson, versions) {
 }
 
 export function assertReleaseTag(releaseTag, manifestVersion) {
-  assert.match(
-    releaseTag,
-    /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/u,
-    "Release tag must use stable x.y.z without a v prefix or leading zeroes",
-  );
+  assertStableReleaseVersion(releaseTag, "Release tag");
   assert.equal(
     releaseTag,
     manifestVersion,
     "Release tag must match manifest.json version",
+  );
+}
+
+export function assertStableReleaseVersion(releaseVersion, label = "Release version") {
+  assert.match(
+    releaseVersion,
+    /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/u,
+    `${label} must use stable x.y.z without a v prefix or leading zeroes`,
   );
 }

@@ -180,6 +180,10 @@ let validatorPath: string;
 let fixtureBuilderPath: string;
 
 beforeAll(() => {
+  execFileSync(pythonCommand, [
+    "-c",
+    "import sys; raise SystemExit(0 if sys.version_info >= (3, 9) else 'Python 3.9 or newer is required')",
+  ]);
   temporaryRoot = mkdtempSync(path.join(os.tmpdir(), "chrono-release-validator-"));
   validatorPath = path.join(temporaryRoot, "validator.py");
   fixtureBuilderPath = path.join(temporaryRoot, "fixture-builder.py");
@@ -192,6 +196,15 @@ afterAll(() => {
 });
 
 describe("inline release ZIP validator", () => {
+  it("declares the same Python 3.9 minimum required by local execution", () => {
+    expect(extractValidator(workflow)).toContain(
+      "if sys.version_info < (3, 9):",
+    );
+    expect(extractValidator(workflow)).toContain(
+      "Release ZIP validation requires Python 3.9 or newer",
+    );
+  });
+
   it.each(["legal", "legal_dos_outer"])(
     "accepts the exact %s artifact boundary and extracts only five verified files",
     (scenario) => {

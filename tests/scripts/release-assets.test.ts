@@ -182,6 +182,33 @@ describe("Release asset contract", () => {
       stderr: expect.stringContaining("does not match dist/manifest.json version"),
     });
   });
+
+  it.each([
+    "01.2.3",
+    "1.02.3",
+    "1.2.03",
+    "v1.2.3",
+    "1.2.3-beta.1",
+    "1.2.3+build.1",
+  ])("rejects non-stable archive version %s before comparing the manifest", async (invalidVersion) => {
+    const root = await createTemporaryDirectory();
+    const distDirectory = path.join(root, "dist");
+    await writeReleaseAssets(distDirectory);
+
+    await expect(
+      runReleaseAssets([
+        "archive",
+        "--version",
+        invalidVersion,
+        "--dist-dir",
+        distDirectory,
+      ]),
+    ).rejects.toMatchObject({
+      stderr: expect.stringContaining(
+        "Release version must use stable x.y.z without a v prefix or leading zeroes",
+      ),
+    });
+  });
 });
 
 async function createTemporaryDirectory(): Promise<string> {
