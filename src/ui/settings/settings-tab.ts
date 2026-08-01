@@ -63,12 +63,12 @@ export class ChronoNotesSettingTab extends PluginSettingTab {
     this.surfaceVisible = true;
     const surfaceRevision = ++this.surfaceRevision;
     this.translator = this.host.getTranslator();
+    this.applySurfaceSemantics();
     return getDeclarativeSettingDefinitions(
       this.createSectionContext(
         () => updateDeclarativeSettingTab(this),
         surfaceRevision,
       ),
-      this.activeTab,
     );
   }
 
@@ -90,18 +90,6 @@ export class ChronoNotesSettingTab extends PluginSettingTab {
       updateDeclarativeSettingTab(this);
     } else if (mutation.refresh === "refresh-dom-state") {
       refreshDeclarativeSettingTabState(this);
-    }
-  }
-
-  activate(tab: SettingsTabId): void {
-    this.activeTab = tab;
-    if (!this.containerEl.isConnected) return;
-    if (hasDeclarativeSettingApi(this)) {
-      if (!this.surfaceVisible) return;
-      this.surfaceRevision += 1;
-      updateDeclarativeSettingTab(this);
-    } else if (this.surfaceVisible) {
-      this.render(null);
     }
   }
 
@@ -127,8 +115,7 @@ export class ChronoNotesSettingTab extends PluginSettingTab {
     this.translator = this.host.getTranslator();
     this.cleanupImperativeSection();
     containerEl.empty();
-    containerEl.addClass("chrono-notes-settings");
-    containerEl.dir = this.translator.direction;
+    this.applySurfaceSemantics();
 
     const { activeTabEl, panelEl } = createSettingsTabLayout(
       containerEl,
@@ -180,6 +167,11 @@ export class ChronoNotesSettingTab extends PluginSettingTab {
     }
   }
 
+  private applySurfaceSemantics(): void {
+    this.containerEl.addClass("chrono-notes-settings");
+    this.containerEl.dir = this.translator.direction;
+  }
+
   private createSectionContext(
     display: () => void = () => this.render(null),
     surfaceRevision = this.surfaceRevision,
@@ -206,10 +198,6 @@ export class ChronoNotesSettingTab extends PluginSettingTab {
   private isSurfaceCurrent(surfaceRevision: number): boolean {
     return this.surfaceVisible && this.surfaceRevision === surfaceRevision;
   }
-}
-
-function hasDeclarativeSettingApi(settingTab: object): boolean {
-  return typeof Reflect.get(settingTab, "update") === "function";
 }
 
 function updateDeclarativeSettingTab(settingTab: object): void {

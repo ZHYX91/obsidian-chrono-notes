@@ -12,10 +12,10 @@ export const externalModules = Object.freeze([
   "@electron/remote",
 ]);
 
-// Explicit MessageKey mappings add about 52 KB over the positional 0.2.0
-// catalogs. The 1.25 MB gate leaves roughly 5-10% maintenance headroom after
-// that measured correctness improvement without making dependency growth free.
-export const productionJavascriptBudgetBytes = 1_250_000;
+// The pre-maintenance HEAD produced 1,247,458 B, leaving only 2,542 B (0.20%)
+// under the old gate. The 1.35 MB gate restores about 6% measured maintenance
+// headroom after the scoped index/cache UI without treating dependency growth as free.
+export const productionJavascriptBudgetBytes = 1_350_000;
 
 // Published 0.1.2 production artifact before the multilingual 0.2.0 work.
 export const productionJavascriptReferenceBytes = 991_182;

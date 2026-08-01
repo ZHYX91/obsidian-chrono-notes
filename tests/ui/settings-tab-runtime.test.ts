@@ -215,6 +215,20 @@ describe("ChronoNotesSettingTab save orchestration", () => {
     });
   });
 
+  it("applies locale direction to the declarative 1.13 surface", () => {
+    const { tab, host } = createTab();
+    host.settings.locale = "ar";
+
+    tab.getSettingDefinitions();
+
+    expect(tab.containerEl.dir).toBe("rtl");
+    expect(tab.containerEl.classList.contains("chrono-notes-settings")).toBe(true);
+
+    host.settings.locale = "hi";
+    tab.getSettingDefinitions();
+    expect(tab.containerEl.dir).toBe("ltr");
+  });
+
   it("saves a scheduled section edit after the 300 ms debounce", async () => {
     const { context, saveSettings } = displayAndGetGeneralContext();
 
@@ -315,8 +329,7 @@ describe("ChronoNotesSettingTab save orchestration", () => {
     expect(update).toHaveBeenCalledOnce();
     expect(refreshDomState).toHaveBeenCalledTimes(2);
 
-    tab.activate("ranges");
-    expect(update).toHaveBeenCalledTimes(2);
+    expect(update).toHaveBeenCalledOnce();
     expect(refreshDomState).toHaveBeenCalledTimes(2);
     expect(mocks.renderRanges).not.toHaveBeenCalled();
     tab.hide();

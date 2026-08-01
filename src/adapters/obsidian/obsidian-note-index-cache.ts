@@ -1,8 +1,10 @@
 import type { Vault } from "obsidian";
 
-import type {
-  NoteIndexCache,
-  PersistedNoteIndexSnapshot,
+import {
+  summarizePersistedNoteIndexStorage,
+  type NoteIndexCache,
+  type NoteIndexCacheStorageStatus,
+  type PersistedNoteIndexSnapshot,
 } from "../../features/notes/note-index-cache";
 
 const DATABASE_NAME = "chrono-notes";
@@ -38,6 +40,23 @@ export class ObsidianNoteIndexCache implements NoteIndexCache {
       },
       undefined,
     );
+  }
+
+  async getStatus(): Promise<NoteIndexCacheStorageStatus> {
+    if (
+      typeof window === "undefined" ||
+      typeof window.indexedDB === "undefined"
+    ) {
+      return Object.freeze({ state: "unavailable" });
+    }
+    try {
+      const value = await this.load();
+      return value === null
+        ? Object.freeze({ state: "unavailable" })
+        : summarizePersistedNoteIndexStorage(value);
+    } catch {
+      return Object.freeze({ state: "error" });
+    }
   }
 
   private async withStore<T>(

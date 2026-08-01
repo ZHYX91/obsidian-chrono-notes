@@ -30,7 +30,8 @@ import { isPeriodicNotePathIndexing } from "../features/calendar/indexed-periodi
 import { IntervalNoteCommands } from "../features/intervals/interval-note-commands";
 import { notifyListeners } from "../features/notify-listeners";
 import { resolveNoteCreationConfirmation } from "../features/notes/note-creation-confirmation";
-import { NoteIndex } from "../features/notes/note-index";
+import { NoteIndex, type NoteIndexStatus } from "../features/notes/note-index";
+import type { NoteIndexCacheStorageStatus } from "../features/notes/note-index-cache";
 import { PeriodicNoteCommands } from "../features/periodic/periodic-note-commands";
 import { getSettingsChangeImpact } from "../features/settings/settings-change-impact";
 import { TaskCommands, type TaskCommandResult } from "../features/tasks/task-commands";
@@ -80,6 +81,8 @@ export default class ChronoNotesPlugin extends Plugin {
   private noteNavbar: NoteNavbarManager | null = null;
   private propertiesDateDisplay: ObsidianPropertiesDateDisplay | null = null;
   private settingsTab: ChronoNotesSettingTab | null = null;
+  private noteIndexCache: ObsidianNoteIndexCache | null = null;
+  private noteIndexCacheRebuild: Promise<void> | null = null;
   private readonly settingsListeners = new Set<() => void>();
   private readonly firstUseGuideGate = new FirstUseGuideGate();
   private settingsSaveTail: Promise<void> = Promise.resolve();
@@ -97,9 +100,11 @@ export default class ChronoNotesPlugin extends Plugin {
       if (!this.isRuntimeCurrent(runtimeRevision)) return;
 
       const commandMessages = getPluginCommandMessages(this.getTranslator().t);
+      const noteIndexCache = new ObsidianNoteIndexCache(this.app.vault);
       const noteIndex = new NoteIndex(new ObsidianNoteSource(this.app.vault), {
-        cache: new ObsidianNoteIndexCache(this.app.vault),
+        cache: noteIndexCache,
       });
+      this.noteIndexCache = noteIndexCache;
       this.noteIndex = noteIndex;
       this.registerRuntimeDisposer(() => noteIndex.stop());
 
@@ -554,7 +559,6 @@ export default class ChronoNotesPlugin extends Plugin {
         folderExists: (path) =>
           this.app.vault.getAbstractFileByPath(path) instanceof TFolder,
         openRangeSettings: () => {
-          this.settingsTab?.activate("ranges");
           openObsidianPluginSettings(this.app, this.manifest.id);
         },
       },
@@ -574,6 +578,45 @@ export default class ChronoNotesPlugin extends Plugin {
 
   getIcsSnapshot(): IcsEventIndexSnapshot | null {
     return this.icsEventIndex?.getSnapshot() ?? null;
+  }
+
+  getNoteIndexStatus(): (NoteIndexStatus & Readonly<{ rebuildingCache: boolean }>) | null {
+    const status = this.noteIndex?.getStatus();
+    return status === undefined
+      ? null
+      : Object.freeze({
+        ...status,
+        rebuildingCache: this.noteIndexCacheRebuild !== null,
+      });
+  }
+
+  subscribeNoteIndex(listener: () => void): () => void {
+    return this.noteIndex?.subscribe(listener) ?? (() => undefined);
+  }
+
+  async getNoteIndexCacheStatus(): Promise<NoteIndexCacheStorageStatus> {
+    return this.noteIndexCache?.getStatus()
+      ?? Object.freeze({ state: "unavailable" });
+  }
+
+  async rebuildNoteIndexCache(): Promise<void> {
+    if (this.noteIndexCacheRebuild !== null) {
+      await this.noteIndexCacheRebuild;
+      return;
+    }
+    const noteIndex = this.noteIndex;
+    if (noteIndex === null || !noteIndex.getStatus().active) {
+      throw new Error("NoteIndex is not active");
+    }
+    const runtimeRevision = this.runtimeRevision;
+    const rebuild = Promise.resolve().then(() =>
+      this.performNoteIndexCacheRebuild(noteIndex, runtimeRevision));
+    this.noteIndexCacheRebuild = rebuild;
+    try {
+      await rebuild;
+    } finally {
+      if (this.noteIndexCacheRebuild === rebuild) this.noteIndexCacheRebuild = null;
+    }
   }
 
   async refreshIcs(
@@ -648,6 +691,49 @@ export default class ChronoNotesPlugin extends Plugin {
     }
   }
 
+  private async performNoteIndexCacheRebuild(
+    noteIndex: NoteIndex,
+    runtimeRevision: number,
+  ): Promise<void> {
+    noteIndex.stop();
+    let cacheError: Error | null = null;
+    try {
+      await noteIndex.clearCacheWhileStopped();
+    } catch (error) {
+      cacheError = error instanceof Error
+        ? error
+        : new Error("Failed to clear NoteIndex cache", { cause: error });
+    }
+    if (!this.isRuntimeCurrent(runtimeRevision) || this.noteIndex !== noteIndex) {
+      if (cacheError !== null) throw cacheError;
+      return;
+    }
+    try {
+      await noteIndex.start();
+    } catch (error) {
+      if (!this.isRuntimeCurrent(runtimeRevision) || this.noteIndex !== noteIndex) {
+        throw error;
+      }
+      try {
+        await noteIndex.start();
+      } catch (recoveryError) {
+        if (cacheError !== null) {
+          console.error("Chrono Notes Calendar: failed to clear NoteIndex cache", cacheError);
+        }
+        console.error(
+          "Chrono Notes Calendar: initial NoteIndex cache rebuild start failed",
+          error,
+        );
+        throw recoveryError;
+      }
+      console.error(
+        "Chrono Notes Calendar: recovered a failed NoteIndex cache rebuild start",
+        error,
+      );
+    }
+    if (cacheError !== null) throw cacheError;
+  }
+
   private showCreateIntervalNote(
     initialDate: LocalDate,
     initialEndDate?: LocalDate,
@@ -719,6 +805,8 @@ export default class ChronoNotesPlugin extends Plugin {
     for (const dispose of disposers) dispose();
     this.noteNavbar = null;
     this.propertiesDateDisplay = null;
+    this.noteIndexCache = null;
+    this.noteIndexCacheRebuild = null;
     this.icsEventIndex = null;
     this.noteIndex = null;
     this.periodicNoteCommands = null;

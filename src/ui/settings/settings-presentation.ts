@@ -3,6 +3,8 @@ import type {
   IcsEventIndexSnapshot,
   IcsSourceStatus,
 } from "../../features/calendar/ics-event-index";
+import type { NoteIndexStatus } from "../../features/notes/note-index";
+import type { NoteIndexCacheStorageStatus } from "../../features/notes/note-index-cache";
 import type { Translator } from "../../shared/i18n";
 import type { SettingsTabId } from "./settings-tab-navigation";
 
@@ -57,6 +59,47 @@ export function formatIcsSourceStatus(
     recurring: status.skippedRecurring,
     invalid: status.skippedInvalid,
   });
+}
+
+export function formatNoteIndexStatus(
+  status: (NoteIndexStatus & Readonly<{ rebuildingCache: boolean }>) | null,
+  t: Translator["t"],
+): string {
+  if (status === null || (!status.active && !status.rebuildingCache)) {
+    return t("settings.index.status.unavailable");
+  }
+  const parameters = {
+    notes: status.noteCount,
+    errors: status.errorCount,
+  };
+  if (status.rebuildingCache) {
+    return t("settings.index.status.rebuilding", parameters);
+  }
+  if (status.readiness === "indexing") {
+    return t("settings.index.status.indexing", parameters);
+  }
+  if (status.backgroundVerificationActive) {
+    return t("settings.index.status.verifying", parameters);
+  }
+  return t("settings.index.status.ready", parameters);
+}
+
+export function formatNoteIndexCacheStatus(
+  status: NoteIndexCacheStorageStatus,
+  t: Translator["t"],
+): string {
+  switch (status.state) {
+    case "stored":
+      return t("settings.index.cacheStored", { entries: status.entryCount });
+    case "empty":
+      return t("settings.index.cacheEmpty");
+    case "invalid":
+      return t("settings.index.cacheInvalid");
+    case "error":
+      return t("settings.index.cacheError");
+    case "unavailable":
+      return t("settings.index.cacheUnavailable");
+  }
 }
 
 export function periodicNoteLabel(

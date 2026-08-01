@@ -6,18 +6,19 @@
   "main": "dist/main.js",
   "scripts": {
     "dev": "node esbuild.config.mjs",
-    "build": "npm run typecheck && npm run build:bundle && npm run artifact:check",
+    "build": "pnpm typecheck && pnpm build:bundle && pnpm artifact:check",
     "build:bundle": "node esbuild.config.mjs production",
     "artifact:check": "node scripts/check-production-bundle.mjs",
     "release:archive": "node scripts/release-assets.mjs archive",
-    "acceptance:vault:create": "npm run build && node scripts/acceptance-vault.mjs create",
+    "acceptance:vault:create": "pnpm build && node scripts/acceptance-vault.mjs create",
     "acceptance:vault:verify": "node scripts/acceptance-vault.mjs verify",
     "acceptance:vault:clean": "node scripts/acceptance-vault.mjs clean",
     "acceptance:vault:prune": "node scripts/acceptance-vault.mjs prune",
-    "size": "npm run build:bundle && node scripts/check-production-bundle.mjs --details",
+    "size": "pnpm build:bundle && node scripts/check-production-bundle.mjs --details",
     "bench:quick": "vitest run --config vitest.performance.config.ts --mode quick --reporter=verbose",
     "bench:large": "vitest run --config vitest.performance.config.ts --mode large --reporter=verbose",
     "holiday:check": "node scripts/check-holiday-coverage.mjs",
+    "check:runtime": "node scripts/check-runtime.mjs",
     "lint": "eslint main.ts src --max-warnings 0",
     "format:check": "node scripts/check-source-style.mjs",
     "check:readme-i18n": "node scripts/check-readme-i18n.mjs",
@@ -25,8 +26,8 @@
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
     "test:timezones": "node scripts/run-tests-in-timezones.mjs",
-    "check": "npm run lint && npm run format:check && npm run check:readme-i18n && npm run typecheck && npm run test && npm run build:bundle && npm run artifact:check",
-    "release:check": "npm run check && npm run test:timezones && npm run bench:quick && npm run holiday:check"
+    "check": "node scripts/check-runtime.mjs && pnpm lint && pnpm format:check && pnpm check:readme-i18n && pnpm typecheck && pnpm test && pnpm build:bundle && pnpm artifact:check",
+    "release:check": "pnpm check && pnpm test:timezones && pnpm bench:quick && pnpm holiday:check"
   },
   "keywords": [
     "obsidian",
@@ -39,9 +40,9 @@
   ],
   "author": "ZhengYX",
   "license": "MIT",
-  "packageManager": "pnpm@11.7.0",
+  "packageManager": "pnpm@11.9.0",
   "engines": {
-    "node": "^22.13.0 || >=24.0.0"
+    "node": "24.18.0"
   },
   "devDependencies": {
     "@types/luxon": "^3.7.2",

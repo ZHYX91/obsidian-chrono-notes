@@ -1,6 +1,8 @@
 import type { App, Plugin } from "obsidian";
 
 import type { IcsEventIndexSnapshot } from "../../features/calendar/ics-event-index";
+import type { NoteIndexStatus } from "../../features/notes/note-index";
+import type { NoteIndexCacheStorageStatus } from "../../features/notes/note-index-cache";
 import type { Translator } from "../../shared/i18n";
 import type { ChronoNotesSettings } from "../../shared/settings";
 import type { VaultPathSuggestionCatalog } from "./vault-path-suggest";
@@ -13,6 +15,10 @@ export interface SettingsHost extends Plugin {
   getIcsSnapshot(): IcsEventIndexSnapshot | null;
   refreshIcs(showNotice?: boolean): Promise<void>;
   openFirstUseGuide(): void;
+  getNoteIndexStatus(): (NoteIndexStatus & Readonly<{ rebuildingCache: boolean }>) | null;
+  subscribeNoteIndex(listener: () => void): () => void;
+  getNoteIndexCacheStatus(): Promise<NoteIndexCacheStorageStatus>;
+  rebuildNoteIndexCache(): Promise<void>;
 }
 
 export interface SettingsSectionContext {

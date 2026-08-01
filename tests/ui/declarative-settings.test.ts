@@ -50,7 +50,7 @@ describe("declarative settings", () => {
   it("indexes five unique native pages without traversing the Vault", () => {
     const { context, startCatalog } = createContext();
 
-    const pages = getPages(getDeclarativeSettingDefinitions(context, "general"));
+    const pages = getPages(getDeclarativeSettingDefinitions(context));
 
     expect(pages.map(({ name }) => name)).toEqual([
       "General",
@@ -105,18 +105,17 @@ describe("declarative settings", () => {
     expect(startCatalog).not.toHaveBeenCalled();
   });
 
-  it("moves an explicitly requested legacy section to the first native page", () => {
+  it("keeps the five native pages in stable product order", () => {
     const { context } = createContext();
 
-    const pages = getPages(getDeclarativeSettingDefinitions(context, "ranges"));
+    const pages = getPages(getDeclarativeSettingDefinitions(context));
 
-    expect(pages[0]?.name).toBe("Range notes");
-    expect(pages.map(({ name }) => name).sort()).toEqual([
-      "Appearance & views",
-      "Extensions & integrations",
+    expect(pages.map(({ name }) => name)).toEqual([
       "General",
+      "Appearance & views",
       "Periodic notes",
       "Range notes",
+      "Extensions & integrations",
     ]);
   });
 
@@ -196,7 +195,7 @@ describe("declarative settings", () => {
     obsidianMocks.closeSuggest.mockClear();
     const { context, startCatalog } = createContext();
     context.host.settings.periodicNotes.daily.enabled = true;
-    const pages = getPages(getDeclarativeSettingDefinitions(context, "periodic"));
+    const pages = getPages(getDeclarativeSettingDefinitions(context));
     const pathDefinition = getRenderDefinition(
       pages,
       context.translator.t("settings.periodic.pathPattern"),
@@ -221,7 +220,7 @@ describe("declarative settings", () => {
   it("renders custom property formats and flushes pending saves on cleanup", () => {
     const { context } = createContext();
     context.host.settings.propertyDateDisplayFormat = "custom";
-    const pages = getPages(getDeclarativeSettingDefinitions(context, "general"));
+    const pages = getPages(getDeclarativeSettingDefinitions(context));
     const formatDefinition = getRenderDefinition(
       pages,
       context.translator.t("settings.general.propertyDateCustomFormat"),
@@ -255,7 +254,7 @@ describe("declarative settings", () => {
   it("validates expanded custom time patterns through the shared renderer", () => {
     const { context } = createContext();
     context.host.settings.propertyTimeDisplayFormat = "custom";
-    const pages = getPages(getDeclarativeSettingDefinitions(context, "general"));
+    const pages = getPages(getDeclarativeSettingDefinitions(context));
     const formatDefinition = getRenderDefinition(
       pages,
       context.translator.t("settings.general.propertyTimeCustomFormat"),

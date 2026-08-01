@@ -13,6 +13,7 @@ import {
   createPersistedNoteIndexSnapshot,
   parsePersistedNoteIndexSnapshot,
   parsePersistedNoteIndexSnapshotIncrementally,
+  summarizePersistedNoteIndexStorage,
   type NoteIndexCache,
   type PersistedNoteIndexSnapshot,
 } from "../../src/features/notes/note-index-cache";
@@ -83,6 +84,44 @@ function cached(content: string, file: NoteSourceFile = FILE): PersistedNoteInde
 }
 
 describe("persistent NoteIndex cache", () => {
+  it("summarizes only the persisted cache header without parsing every note", () => {
+    expect(summarizePersistedNoteIndexStorage(undefined)).toEqual({ state: "empty" });
+    expect(summarizePersistedNoteIndexStorage({ schema: 2, entries: [] }))
+      .toEqual({ state: "invalid" });
+    expect(summarizePersistedNoteIndexStorage({ schema: 1, entries: [{ broken: true }] }))
+      .toEqual({ state: "stored", entryCount: 1 });
+  });
+
+  it("reports runtime status and clears its configured cache only while stopped", async () => {
+    const source = new MetadataNoteSource();
+    source.files = [FILE];
+    source.read.mockResolvedValue("ready");
+    const cache = new MemoryNoteIndexCache(null);
+    const index = new NoteIndex(source, { cache });
+
+    expect(index.getStatus()).toMatchObject({
+      active: false,
+      readiness: "indexing",
+      noteCount: 0,
+      errorCount: 0,
+      cacheConfigured: true,
+    });
+    await index.start();
+    expect(index.getStatus()).toMatchObject({
+      active: true,
+      readiness: "ready",
+      noteCount: 1,
+      errorCount: 0,
+    });
+    await expect(index.clearCacheWhileStopped()).rejects.toThrow(
+      "NoteIndex must be stopped before clearing its cache",
+    );
+
+    index.stop();
+    await expect(index.clearCacheWhileStopped()).resolves.toBeUndefined();
+    expect(cache.clear).toHaveBeenCalledOnce();
+  });
+
   it("restores a matching derived entry before background verification settles", async () => {
     const source = new MetadataNoteSource();
     source.files = [FILE];

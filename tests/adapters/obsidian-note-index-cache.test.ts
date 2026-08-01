@@ -20,6 +20,7 @@ describe("ObsidianNoteIndexCache", () => {
     const snapshot = createPersistedNoteIndexSnapshot([]);
 
     await expect(cache.load()).resolves.toBeNull();
+    await expect(cache.getStatus()).resolves.toEqual({ state: "unavailable" });
     await expect(cache.save(snapshot)).resolves.toBeUndefined();
     await expect(cache.clear()).resolves.toBeUndefined();
   });
@@ -31,11 +32,16 @@ describe("ObsidianNoteIndexCache", () => {
     const snapshot = createPersistedNoteIndexSnapshot([]);
 
     await expect(cache.load()).resolves.toBeUndefined();
+    await expect(cache.getStatus()).resolves.toEqual({ state: "empty" });
     await expect(cache.save(snapshot)).resolves.toBeUndefined();
     await expect(cache.load()).resolves.toEqual(snapshot);
+    await expect(cache.getStatus()).resolves.toEqual({
+      state: "stored",
+      entryCount: 0,
+    });
     await expect(cache.clear()).resolves.toBeUndefined();
     await expect(cache.load()).resolves.toBeUndefined();
-    expect(indexedDB.open).toHaveBeenCalledTimes(5);
+    expect(indexedDB.open).toHaveBeenCalledTimes(7);
   });
 
   it("keeps same-name Vaults isolated by storage identity", async () => {
@@ -66,6 +72,7 @@ describe("ObsidianNoteIndexCache", () => {
     } as never);
 
     await expect(cache.load()).rejects.toThrow("open failed");
+    await expect(cache.getStatus()).resolves.toEqual({ state: "error" });
   });
 });
 

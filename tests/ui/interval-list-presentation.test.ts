@@ -39,7 +39,7 @@ describe("interval list presentation", () => {
       scanNotConfigured: "尚未設定自訂掃描目錄。",
       scanFolderMissing: "設定的掃描目錄尚不存在。",
       creationOutsideScope: "區間筆記建立目錄不在目前掃描範圍內。",
-      openRangeSettings: "開啟區間設定",
+      openRangeSettings: "開啟 Chrono Notes 設定",
       resetFilters: "重設篩選",
       emptyScope: "目前掃描範圍內沒有區間筆記。",
       emptyFilters: "沒有符合目前篩選條件的區間筆記。",

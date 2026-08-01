@@ -5,6 +5,8 @@ import { createTranslator } from "../../src/shared/i18n";
 import {
   formatIcsSourceStatus,
   formatIcsStatus,
+  formatNoteIndexCacheStatus,
+  formatNoteIndexStatus,
   getSettingsTabLabels,
   periodicNoteLabel,
 } from "../../src/ui/settings/settings-presentation";
@@ -77,6 +79,38 @@ describe("settings presentation", () => {
       skippedInvalid: 0,
       error: "無法讀取",
     }, t)).toBe("broken.ics：無法讀取");
+  });
+
+  it("formats the minimal note-index and current-Vault cache health states", () => {
+    const t = createTranslator("en", "en").t;
+    const ready = {
+      active: true,
+      readiness: "ready",
+      noteCount: 12,
+      errorCount: 1,
+      backgroundVerificationActive: false,
+      cacheConfigured: true,
+      rebuildingCache: false,
+    } as const;
+
+    expect(formatNoteIndexStatus(ready, t)).toBe(
+      "Ready. 12 notes indexed; 1 read errors.",
+    );
+    expect(formatNoteIndexStatus({
+      ...ready,
+      backgroundVerificationActive: true,
+    }, t)).toContain("verifying Vault files in the background");
+    expect(formatNoteIndexStatus({
+      ...ready,
+      active: false,
+      rebuildingCache: true,
+    }, t)).toContain("Rebuilding from Vault files");
+    expect(formatNoteIndexCacheStatus({
+      state: "stored",
+      entryCount: 12,
+    }, t)).toBe("Derived index data for 12 notes is stored for this Vault.");
+    expect(formatNoteIndexCacheStatus({ state: "unavailable" }, t))
+      .toBe("Persistent cache is unavailable in this environment.");
   });
 
   it.each([

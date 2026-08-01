@@ -378,6 +378,7 @@ vi.mock("../../src/ui/modals/mini-calendar-modal", () => ({
 
 import type { App, PluginManifest } from "obsidian";
 
+import { openObsidianPluginSettings } from "../../src/adapters/obsidian/obsidian-plugin-settings";
 import ChronoNotesPlugin from "../../src/app/plugin";
 import { createDefaultSettings } from "../../src/shared/settings";
 
@@ -511,6 +512,25 @@ describe("ChronoNotesPlugin lifecycle composition", () => {
     expect(navbar.handleFileRename).not.toHaveBeenCalled();
   });
 
+  it("opens the plugin settings root without claiming a nested range-page deep link", async () => {
+    const plugin = createPlugin();
+    await plugin.onload();
+    plugin.openIntervalNoteList();
+    const modalHost = mocks.state.intervalModalHosts[0] as {
+      openRangeSettings(): void;
+    } | undefined;
+    if (modalHost === undefined) throw new Error("Expected the interval modal host.");
+
+    modalHost.openRangeSettings();
+
+    expect(mocks.state.settingsTabInstances[0]?.activate).not.toHaveBeenCalled();
+    expect(openObsidianPluginSettings).toHaveBeenCalledWith(
+      plugin.app,
+      "chrono-notes",
+    );
+    plugin.unload();
+  });
+
   it("rolls back already attached Properties documents when a later leaf fails", async () => {
     const failingDocument = {} as Document;
     mocks.state.propertiesDateDocumentFailure = failingDocument;
@@ -629,6 +649,124 @@ describe("ChronoNotesPlugin lifecycle composition", () => {
 
     plugin.unload();
     error.mockRestore();
+  });
+
+  it("serializes a current-Vault cache clear with a full note-index rebuild", async () => {
+    mocks.state.noteListPaths.mockReturnValue(["ready.md"]);
+    mocks.state.noteRead.mockResolvedValue("# Ready");
+    const plugin = createPlugin();
+    await plugin.onload();
+    mocks.state.layoutReadyCallbacks[0]?.();
+    const index = plugin.noteIndex;
+    if (index === null) throw new Error("Expected a NoteIndex.");
+    await vi.waitFor(() => expect(index.getSnapshot().readiness).toBe("ready"));
+    const stop = vi.spyOn(index, "stop");
+    const clearCache = vi.spyOn(index, "clearCacheWhileStopped");
+    const start = vi.spyOn(index, "start");
+    const listener = vi.fn();
+    index.subscribe(listener);
+
+    const first = plugin.rebuildNoteIndexCache();
+    const second = plugin.rebuildNoteIndexCache();
+    await Promise.all([first, second]);
+    await plugin.rebuildNoteIndexCache();
+
+    expect(stop).toHaveBeenCalledTimes(2);
+    expect(clearCache).toHaveBeenCalledTimes(2);
+    expect(start).toHaveBeenCalledTimes(2);
+    expect(listener).toHaveBeenCalled();
+    expect(mocks.state.noteSourceUnsubscribes).toHaveLength(3);
+    expect(mocks.state.noteSourceUnsubscribes.slice(0, 2).every(
+      (unsubscribe) => unsubscribe.mock.calls.length === 1,
+    )).toBe(true);
+    expect(index.getSnapshot().readiness).toBe("ready");
+    plugin.unload();
+  });
+
+  it("restores the source subscription when clearing the cache fails", async () => {
+    const plugin = createPlugin();
+    await plugin.onload();
+    mocks.state.layoutReadyCallbacks[0]?.();
+    const index = plugin.noteIndex;
+    if (index === null) throw new Error("Expected a NoteIndex.");
+    await vi.waitFor(() => expect(index.getSnapshot().readiness).toBe("ready"));
+    const cacheError = new Error("clear failed");
+    vi.spyOn(index, "clearCacheWhileStopped").mockRejectedValueOnce(cacheError);
+    const start = vi.spyOn(index, "start");
+
+    await expect(plugin.rebuildNoteIndexCache()).rejects.toBe(cacheError);
+
+    expect(start).toHaveBeenCalledOnce();
+    expect(index.getStatus().active).toBe(true);
+    expect(index.getSnapshot().readiness).toBe("ready");
+    expect(mocks.state.noteSourceUnsubscribes).toHaveLength(2);
+    expect(mocks.state.noteSourceUnsubscribes[0]).toHaveBeenCalledOnce();
+    plugin.unload();
+  });
+
+  it("normalizes a non-Error cache failure while restoring the index", async () => {
+    const plugin = createPlugin();
+    await plugin.onload();
+    mocks.state.layoutReadyCallbacks[0]?.();
+    const index = plugin.noteIndex;
+    if (index === null) throw new Error("Expected a NoteIndex.");
+    await vi.waitFor(() => expect(index.getSnapshot().readiness).toBe("ready"));
+    vi.spyOn(index, "clearCacheWhileStopped").mockRejectedValueOnce("clear failed");
+
+    await expect(plugin.rebuildNoteIndexCache()).rejects.toMatchObject({
+      message: "Failed to clear NoteIndex cache",
+      cause: "clear failed",
+    });
+
+    expect(index.getStatus().active).toBe(true);
+    expect(mocks.state.noteSourceUnsubscribes).toHaveLength(2);
+    plugin.unload();
+  });
+
+  it("retries one failed rebuild start and restores the source subscription", async () => {
+    const plugin = createPlugin();
+    await plugin.onload();
+    mocks.state.layoutReadyCallbacks[0]?.();
+    const index = plugin.noteIndex;
+    if (index === null) throw new Error("Expected a NoteIndex.");
+    await vi.waitFor(() => expect(index.getSnapshot().readiness).toBe("ready"));
+    const startError = new Error("transient start failure");
+    const start = vi.spyOn(index, "start").mockRejectedValueOnce(startError);
+    const consoleError = vi.spyOn(console, "error").mockImplementation(() => undefined);
+
+    await expect(plugin.rebuildNoteIndexCache()).resolves.toBeUndefined();
+
+    expect(start).toHaveBeenCalledTimes(2);
+    expect(index.getStatus().active).toBe(true);
+    expect(index.getSnapshot().readiness).toBe("ready");
+    expect(mocks.state.noteSourceUnsubscribes).toHaveLength(2);
+    expect(consoleError).toHaveBeenCalledWith(
+      "Chrono Notes Calendar: recovered a failed NoteIndex cache rebuild start",
+      startError,
+    );
+    plugin.unload();
+    consoleError.mockRestore();
+  });
+
+  it("does not restart a cache rebuild after plugin unload", async () => {
+    const plugin = createPlugin();
+    await plugin.onload();
+    mocks.state.layoutReadyCallbacks[0]?.();
+    const index = plugin.noteIndex;
+    if (index === null) throw new Error("Expected a NoteIndex.");
+    await vi.waitFor(() => expect(index.getSnapshot().readiness).toBe("ready"));
+    const clearing = mocks.createDeferred<void>();
+    vi.spyOn(index, "clearCacheWhileStopped").mockReturnValue(clearing.promise);
+    const start = vi.spyOn(index, "start");
+
+    const rebuilding = plugin.rebuildNoteIndexCache();
+    await vi.waitFor(() => expect(index.getStatus().active).toBe(false));
+    plugin.unload();
+    clearing.resolve(undefined);
+    await rebuilding;
+
+    expect(start).not.toHaveBeenCalled();
+    expect(plugin.noteIndex).toBeNull();
   });
 
   it("synchronizes open calendar views to the active periodic note", async () => {

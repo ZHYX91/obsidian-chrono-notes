@@ -36,6 +36,10 @@ import {
 } from "../../shared/settings";
 import { configurePropertyFormatSetting } from "./general-settings-section";
 import {
+  configureNoteIndexCacheSetting,
+  configureNoteIndexStatusSetting,
+} from "./index-cache-settings";
+import {
   formatIcsSourceStatus,
   formatIcsStatus,
   getSettingsTabLabels,
@@ -95,7 +99,6 @@ export interface DeclarativeSettingMutation {
 
 export function getDeclarativeSettingDefinitions(
   context: SettingsSectionContext,
-  preferredPage: SettingsTabId,
 ): SettingDefinitionItem<ChronoNotesControlKey>[] {
   const labels = new Map(
     getSettingsTabLabels(context.translator.t).map(({ id, label }) => [id, label]),
@@ -145,9 +148,7 @@ export function getDeclarativeSettingDefinitions(
       },
     },
   ];
-  return pages
-    .sort((left, right) => pageOrder(left.id, preferredPage) - pageOrder(right.id, preferredPage))
-    .map(({ page }) => page);
+  return pages.map(({ page }) => page);
 }
 
 export function getDeclarativeControlValue(
@@ -457,6 +458,23 @@ function getGeneralDefinitions(
             setting.settingEl.empty();
             renderTemplateEngineGuide(setting.settingEl, context);
           },
+        },
+      ],
+    },
+    {
+      type: "group",
+      heading: t("settings.index.title"),
+      items: [
+        {
+          name: t("settings.index.noteIndex"),
+          render: (setting) => renderManagedSetting(context, () =>
+            configureNoteIndexStatusSetting(setting, context)),
+        },
+        {
+          name: t("settings.index.currentVaultCache"),
+          desc: t("settings.index.rebuildDesc"),
+          render: (setting) => renderManagedSetting(context, () =>
+            configureNoteIndexCacheSetting(setting, context)),
         },
       ],
     },
@@ -1034,15 +1052,4 @@ function getRequiredLabel(
   const label = labels.get(id);
   if (label === undefined) throw new Error(`Missing settings tab label: ${id}`);
   return label;
-}
-
-function pageOrder(id: SettingsTabId, preferredPage: SettingsTabId): number {
-  if (id === preferredPage) return -1;
-  return [
-    "general",
-    "appearance",
-    "periodic",
-    "ranges",
-    "extensions-and-integrations",
-  ].indexOf(id);
 }

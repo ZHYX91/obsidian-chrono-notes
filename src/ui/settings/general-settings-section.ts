@@ -13,6 +13,8 @@ import {
   isWeekStartDay,
 } from "../../shared/settings";
 import { PLUGIN_LANGUAGE_OPTIONS } from "../../shared/plugin-languages";
+import type { SettingsCleanup } from "./settings-cleanup";
+import { renderIndexCacheSettingsSection } from "./index-cache-settings";
 import type { SettingsSectionContext } from "./settings-section-context";
 import { renderTemplateEngineSettings } from "./template-settings";
 
@@ -26,7 +28,7 @@ const formatPreviewMoment = moment as unknown as (
 export function renderGeneralSettingsSection(
   containerEl: HTMLElement,
   context: SettingsSectionContext,
-): void {
+): SettingsCleanup {
   const { t } = context.translator;
   containerEl.createEl("h3", { text: t("settings.general.title") });
   new Setting(containerEl)
@@ -156,6 +158,7 @@ export function renderGeneralSettingsSection(
     });
 
   renderTemplateEngineSettings(containerEl, context);
+  return renderIndexCacheSettingsSection(containerEl, context);
 }
 
 export function configurePropertyFormatSetting(

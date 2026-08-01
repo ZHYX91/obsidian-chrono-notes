@@ -9,6 +9,13 @@ import type { IndexedNote } from "./indexed-note";
 
 const NOTE_INDEX_CACHE_SCHEMA = 1;
 
+export type NoteIndexCacheStorageStatus =
+  | Readonly<{ state: "unavailable" }>
+  | Readonly<{ state: "empty" }>
+  | Readonly<{ state: "stored"; entryCount: number }>
+  | Readonly<{ state: "invalid" }>
+  | Readonly<{ state: "error" }>;
+
 export interface PersistedNoteIndexEntry {
   readonly file: NoteSourceFile;
   readonly note: IndexedNote;
@@ -37,6 +44,23 @@ export function createPersistedNoteIndexSnapshot(
   return Object.freeze({
     schema: NOTE_INDEX_CACHE_SCHEMA,
     entries: Object.freeze([...entries]),
+  });
+}
+
+export function summarizePersistedNoteIndexStorage(
+  value: unknown,
+): NoteIndexCacheStorageStatus {
+  if (value === undefined) return Object.freeze({ state: "empty" });
+  if (
+    !isRecord(value) ||
+    value.schema !== NOTE_INDEX_CACHE_SCHEMA ||
+    !Array.isArray(value.entries)
+  ) {
+    return Object.freeze({ state: "invalid" });
+  }
+  return Object.freeze({
+    state: "stored",
+    entryCount: value.entries.length,
   });
 }
 

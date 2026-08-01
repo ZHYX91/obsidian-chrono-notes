@@ -65,6 +65,15 @@ export interface NoteIndexSnapshot {
   readonly intervals: IntervalIndexSnapshot;
 }
 
+export interface NoteIndexStatus {
+  readonly active: boolean;
+  readonly readiness: NoteIndexReadiness;
+  readonly noteCount: number;
+  readonly errorCount: number;
+  readonly backgroundVerificationActive: boolean;
+  readonly cacheConfigured: boolean;
+}
+
 type NoteIndexListener = () => void;
 
 interface InFlightRead {
@@ -401,6 +410,29 @@ export class NoteIndex {
 
   getSnapshot(): NoteIndexSnapshot {
     return this.snapshot;
+  }
+
+  getStatus(): NoteIndexStatus {
+    const notes = Object.values(this.snapshot.notes);
+    return Object.freeze({
+      active: this.active,
+      readiness: this.snapshot.readiness,
+      noteCount: notes.length,
+      errorCount: notes.filter((entry) => entry.kind === "error").length,
+      backgroundVerificationActive: this.backgroundVerificationActive,
+      cacheConfigured: this.cache !== null,
+    });
+  }
+
+  async clearCacheWhileStopped(): Promise<void> {
+    if (this.active) {
+      throw new Error("NoteIndex must be stopped before clearing its cache");
+    }
+    if (this.cache === null) {
+      throw new Error("NoteIndex cache is not configured");
+    }
+    await this.cacheSaveTail;
+    await this.cache.clear();
   }
 
   get(path: string): NoteIndexEntry {
