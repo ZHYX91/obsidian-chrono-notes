@@ -125,6 +125,9 @@ jobs:
     permissions:
       contents: read
     outputs:
+      candidate_artifact_digest: ${{ steps.upload_candidate.outputs.artifact-digest }}
+      candidate_artifact_id: ${{ steps.upload_candidate.outputs.artifact-id }}
+      candidate_artifact_name: ${{ steps.candidate.outputs.artifact_name }}
       previous_tag: ${{ steps.release_notes.outputs.previous_tag }}
       release_commit: ${{ steps.source.outputs.release_commit }}
     env:
@@ -223,9 +226,11 @@ jobs:
           echo "previous_tag=${previous_tag}" >> "$GITHUB_OUTPUT"
 
       - name: Stage the exact release candidate
+        id: candidate
         shell: bash
         run: |
           candidate="$RUNNER_TEMP/release-candidate"
+          artifact_name="release-candidate-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
           mkdir "$candidate"
           cp dist/main.js dist/manifest.json dist/styles.css \
             "dist/chrono-notes-${RELEASE_VERSION}.zip" "$candidate/"
@@ -233,13 +238,17 @@ jobs:
             cd "$candidate"
             sha256sum main.js manifest.json styles.css "chrono-notes-${RELEASE_VERSION}.zip" > SHA256SUMS
           )
+          echo "artifact_name=${artifact_name}" >> "$GITHUB_OUTPUT"
 
       - name: Upload the verified release candidate
+        id: upload_candidate
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
-          name: release-candidate-${{ github.run_id }}
+          name: ${{ steps.candidate.outputs.artifact_name }}
           path: ${{ runner.temp }}/release-candidate/
+          compression-level: 0
           if-no-files-found: error
+          overwrite: false
           retention-days: 1
 
   publish:
@@ -253,6 +262,9 @@ jobs:
       contents: write
       id-token: write
     env:
+      CANDIDATE_ARTIFACT_DIGEST: ${{ needs.prepare-release.outputs.candidate_artifact_digest }}
+      CANDIDATE_ARTIFACT_ID: ${{ needs.prepare-release.outputs.candidate_artifact_id }}
+      CANDIDATE_ARTIFACT_NAME: ${{ needs.prepare-release.outputs.candidate_artifact_name }}
       RELEASE_COMMIT: ${{ needs.prepare-release.outputs.release_commit }}
       RELEASE_VERSION: ${{ github.ref_name }}
       PREVIOUS_RELEASE_TAG: ${{ needs.prepare-release.outputs.previous_tag }}
@@ -286,17 +298,63 @@ jobs:
             exit 1
           fi
 
-      - name: Download the exact candidate from this workflow run
+      - name: Download the exact candidate from this workflow attempt
         env:
           GH_TOKEN: ${{ github.token }}
         shell: bash
         run: |
+          expected_artifact_name="release-candidate-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          if [[ ! "$CANDIDATE_ARTIFACT_ID" =~ ^[1-9][0-9]*$ ]]; then
+            echo "The prepared candidate artifact ID is missing or invalid." >&2
+            exit 1
+          fi
+          if [[ "$CANDIDATE_ARTIFACT_NAME" != "$expected_artifact_name" ]]; then
+            echo "The prepared candidate artifact is not bound to this workflow attempt." >&2
+            exit 1
+          fi
+          if [[ ! "$CANDIDATE_ARTIFACT_DIGEST" =~ ^[0-9a-f]{64}$ ]]; then
+            echo "The prepared candidate artifact digest is missing or invalid." >&2
+            exit 1
+          fi
+
+          artifact_response="$RUNNER_TEMP/release-candidate-artifact.json"
+          gh api \
+            --header "X-GitHub-Api-Version: 2026-03-10" \
+            "/repos/${GITHUB_REPOSITORY}/actions/artifacts/${CANDIDATE_ARTIFACT_ID}" \
+            > "$artifact_response"
+          jq --exit-status \
+            --arg artifact_id "$CANDIDATE_ARTIFACT_ID" \
+            --arg artifact_name "$CANDIDATE_ARTIFACT_NAME" \
+            --arg artifact_digest "$CANDIDATE_ARTIFACT_DIGEST" \
+            --arg release_commit "$RELEASE_COMMIT" \
+            --argjson run_id "$GITHUB_RUN_ID" '
+              (.id | tostring) == $artifact_id and
+              .name == $artifact_name and
+              (.digest == $artifact_digest or .digest == ("sha256:" + $artifact_digest)) and
+              .expired == false and
+              .workflow_run.id == $run_id and
+              .workflow_run.head_sha == $release_commit
+            ' "$artifact_response" >/dev/null || {
+              echo "The GitHub artifact record does not match the prepared release candidate." >&2
+              exit 1
+            }
+
+          artifact_zip="$RUNNER_TEMP/release-candidate-artifact.zip"
+          curl --fail --location --silent --show-error \
+            --header "Accept: application/vnd.github+json" \
+            --header "Authorization: Bearer ${GH_TOKEN}" \
+            --header "X-GitHub-Api-Version: 2026-03-10" \
+            "${GITHUB_API_URL}/repos/${GITHUB_REPOSITORY}/actions/artifacts/${CANDIDATE_ARTIFACT_ID}/zip" \
+            --output "$artifact_zip"
+          downloaded_digest="$(sha256sum "$artifact_zip" | awk '{ print $1 }')"
+          if [[ "$downloaded_digest" != "$CANDIDATE_ARTIFACT_DIGEST" ]]; then
+            echo "The downloaded candidate ZIP digest does not match GitHub's server digest." >&2
+            exit 1
+          fi
+
           candidate="$RUNNER_TEMP/release-candidate"
           mkdir "$candidate"
-          gh run download "$GITHUB_RUN_ID" \
-            --repo "$GITHUB_REPOSITORY" \
-            --name "release-candidate-${GITHUB_RUN_ID}" \
-            --dir "$candidate"
+          unzip -q "$artifact_zip" -d "$candidate"
           expected="SHA256SUMS
           chrono-notes-${RELEASE_VERSION}.zip
           main.js
@@ -312,6 +370,22 @@ jobs:
             echo "The candidate manifest version no longer matches the release tag." >&2
             exit 1
           fi
+          archive_name="chrono-notes-${RELEASE_VERSION}.zip"
+          expected_archive_entries="chrono-notes/main.js
+          chrono-notes/manifest.json
+          chrono-notes/styles.css"
+          actual_archive_entries="$(unzip -Z1 "$candidate/$archive_name")"
+          if [[ "$actual_archive_entries" != "$expected_archive_entries" ]]; then
+            echo "The manual installation archive layout is invalid." >&2
+            exit 1
+          fi
+          for asset in main.js manifest.json styles.css; do
+            if ! unzip -p "$candidate/$archive_name" "chrono-notes/$asset" |
+              cmp --silent - "$candidate/$asset"; then
+              echo "The manual installation archive differs from loose asset ${asset}." >&2
+              exit 1
+            fi
+          done
 
       - name: Check existing immutable Release and provenance
         id: release_state

@@ -189,12 +189,50 @@ describe("release workflow contract", () => {
     );
   });
 
-  it("hands an exact current-run candidate from read-only prepare to publish", () => {
-    expect(workflow).toContain("name: release-candidate-${{ github.run_id }}");
-    expect(workflow).toContain('gh run download "$GITHUB_RUN_ID"');
-    expect(workflow).toContain('--name "release-candidate-${GITHUB_RUN_ID}"');
+  it("hands an exact current-attempt candidate from read-only prepare to publish", () => {
+    expect(workflow).toContain(
+      'artifact_name="release-candidate-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"',
+    );
+    expect(workflow).toContain(
+      "candidate_artifact_id: ${{ steps.upload_candidate.outputs.artifact-id }}",
+    );
+    expect(workflow).toContain(
+      "candidate_artifact_digest: ${{ steps.upload_candidate.outputs.artifact-digest }}",
+    );
+    expect(workflow).toContain(
+      'expected_artifact_name="release-candidate-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"',
+    );
+    expect(workflow).toContain(
+      '"/repos/${GITHUB_REPOSITORY}/actions/artifacts/${CANDIDATE_ARTIFACT_ID}"',
+    );
+    expect(workflow).toContain(".workflow_run.id == $run_id");
+    expect(workflow).toContain(".workflow_run.head_sha == $release_commit");
+    expect(workflow).toContain(
+      '"${GITHUB_API_URL}/repos/${GITHUB_REPOSITORY}/actions/artifacts/${CANDIDATE_ARTIFACT_ID}/zip"',
+    );
+    expect(workflow).toContain(
+      'if [[ "$downloaded_digest" != "$CANDIDATE_ARTIFACT_DIGEST" ]]',
+    );
+    expect(workflow).toContain(
+      'if [[ ! "$CANDIDATE_ARTIFACT_DIGEST" =~ ^[0-9a-f]{64}$ ]]',
+    );
+    expect(workflow).toContain(
+      '(.digest == $artifact_digest or .digest == ("sha256:" + $artifact_digest))',
+    );
     expect(workflow).toContain("sha256sum --check --strict SHA256SUMS");
     expect(workflow).toContain("The downloaded candidate does not contain the exact five internal files.");
+    expect(workflow).not.toContain('gh run download "$GITHUB_RUN_ID"');
+  });
+
+  it("revalidates the installation ZIP against every loose candidate asset", () => {
+    expect(workflow).toContain('unzip -Z1 "$candidate/$archive_name"');
+    expect(workflow).toContain(
+      'unzip -p "$candidate/$archive_name" "chrono-notes/$asset"',
+    );
+    expect(workflow).toContain('cmp --silent - "$candidate/$asset"');
+    expect(workflow).toContain(
+      'The manual installation archive differs from loose asset ${asset}.',
+    );
   });
 
   it("attests every published release asset", () => {
