@@ -74,6 +74,7 @@ describe("release workflow contract", () => {
     expect(publishJob).toContain("contents: write");
     expect(publishJob).toContain("id-token: write");
     expect(publishJob).not.toContain("actions/checkout@");
+    expect(publishJob).not.toContain("actions/setup-node@");
     expect(publishJob).not.toContain("pnpm install");
     expect(publishJob).not.toContain("node scripts/");
     expect(publishJob).toMatch(
@@ -219,20 +220,18 @@ describe("release workflow contract", () => {
     expect(workflow).toContain(
       '(.digest == $artifact_digest or .digest == ("sha256:" + $artifact_digest))',
     );
-    expect(workflow).toContain("sha256sum --check --strict SHA256SUMS");
-    expect(workflow).toContain("The downloaded candidate does not contain the exact five internal files.");
+    expect(workflow).toContain(
+      'python3 - "$artifact_zip" "$candidate" "$RELEASE_VERSION"',
+    );
+    expect(workflow).not.toContain('unzip -q "$artifact_zip"');
     expect(workflow).not.toContain('gh run download "$GITHUB_RUN_ID"');
   });
 
-  it("revalidates the installation ZIP against every loose candidate asset", () => {
-    expect(workflow).toContain('unzip -Z1 "$candidate/$archive_name"');
-    expect(workflow).toContain(
-      'unzip -p "$candidate/$archive_name" "chrono-notes/$asset"',
-    );
-    expect(workflow).toContain('cmp --silent - "$candidate/$asset"');
-    expect(workflow).toContain(
-      'The manual installation archive differs from loose asset ${asset}.',
-    );
+  it("keeps one extractable inline validator as the publish ZIP trust boundary", () => {
+    expect(workflow.match(/# RELEASE_ZIP_VALIDATOR_BEGIN/gmu)).toHaveLength(1);
+    expect(workflow.match(/# RELEASE_ZIP_VALIDATOR_END/gmu)).toHaveLength(1);
+    expect(workflow).not.toContain("extractall(");
+    expect(workflow).not.toContain("unzip -p");
   });
 
   it("attests every published release asset", () => {
