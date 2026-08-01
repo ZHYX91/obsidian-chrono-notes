@@ -44,4 +44,11 @@ describe("release notes baseline", () => {
       published("0.4.0"),
     ], "0.3.0")).toThrow(/must advance/u);
   });
+
+  it("ignores noncanonical tags and compares large components exactly", () => {
+    expect(selectReleaseNotesBaseline([
+      published("01.2.3"),
+      published("9007199254740993.0.0"),
+    ], "9007199254740994.0.0")).toBe("9007199254740993.0.0");
+  });
 });

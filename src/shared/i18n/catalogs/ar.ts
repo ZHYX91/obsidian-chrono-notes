@@ -223,6 +223,7 @@ export const AR_MESSAGES = Object.freeze({
   "settings.index.cacheUnavailable": "ذاكرة التخزين الدائمة غير متاحة في هذه البيئة.",
   "settings.index.cacheEmpty": "لا توجد بيانات فهرس مشتقة محفوظة لهذا Vault.",
   "settings.index.cacheStored": "تم حفظ بيانات الفهرس المشتقة لـ {entries} ملاحظة في هذا Vault.",
+  "settings.index.cacheLegacy": "توجد ذاكرة تخزين مؤقت قديمة لهذا Vault؛ سيظهر عدد الإدخالات بعد الحفظ العادي التالي.",
   "settings.index.cacheInvalid": "رأس الذاكرة المحفوظة غير صالح وسيُستبدل عند إعادة البناء.",
   "settings.index.cacheError": "تعذر فحص ذاكرة Vault الحالية.",
   "settings.index.cacheRebuilding": "جارٍ مسح ذاكرة Vault هذه وإعادة بناء فهرس الملاحظات…",

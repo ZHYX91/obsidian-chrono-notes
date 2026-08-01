@@ -153,6 +153,10 @@ const mocks = vi.hoisted(() => {
       return state.noteListPaths();
     }
 
+    listFiles(): readonly Readonly<{ path: string; mtime: number; size: number }>[] {
+      return state.noteListPaths().map((path) => ({ path, mtime: 1, size: 1 }));
+    }
+
     read(path: string): Promise<string> {
       return state.noteRead(path);
     }
@@ -663,6 +667,7 @@ describe("ChronoNotesPlugin lifecycle composition", () => {
     const stop = vi.spyOn(index, "stop");
     const clearCache = vi.spyOn(index, "clearCacheWhileStopped");
     const start = vi.spyOn(index, "start");
+    const persist = vi.spyOn(index, "persistCacheNow");
     const listener = vi.fn();
     index.subscribe(listener);
 
@@ -674,6 +679,7 @@ describe("ChronoNotesPlugin lifecycle composition", () => {
     expect(stop).toHaveBeenCalledTimes(2);
     expect(clearCache).toHaveBeenCalledTimes(2);
     expect(start).toHaveBeenCalledTimes(2);
+    expect(persist).toHaveBeenCalledTimes(2);
     expect(listener).toHaveBeenCalled();
     expect(mocks.state.noteSourceUnsubscribes).toHaveLength(3);
     expect(mocks.state.noteSourceUnsubscribes.slice(0, 2).every(
@@ -693,10 +699,12 @@ describe("ChronoNotesPlugin lifecycle composition", () => {
     const cacheError = new Error("clear failed");
     vi.spyOn(index, "clearCacheWhileStopped").mockRejectedValueOnce(cacheError);
     const start = vi.spyOn(index, "start");
+    const persist = vi.spyOn(index, "persistCacheNow");
 
     await expect(plugin.rebuildNoteIndexCache()).rejects.toBe(cacheError);
 
     expect(start).toHaveBeenCalledOnce();
+    expect(persist).not.toHaveBeenCalled();
     expect(index.getStatus().active).toBe(true);
     expect(index.getSnapshot().readiness).toBe("ready");
     expect(mocks.state.noteSourceUnsubscribes).toHaveLength(2);
@@ -732,11 +740,13 @@ describe("ChronoNotesPlugin lifecycle composition", () => {
     await vi.waitFor(() => expect(index.getSnapshot().readiness).toBe("ready"));
     const startError = new Error("transient start failure");
     const start = vi.spyOn(index, "start").mockRejectedValueOnce(startError);
+    const persist = vi.spyOn(index, "persistCacheNow");
     const consoleError = vi.spyOn(console, "error").mockImplementation(() => undefined);
 
     await expect(plugin.rebuildNoteIndexCache()).resolves.toBeUndefined();
 
     expect(start).toHaveBeenCalledTimes(2);
+    expect(persist).toHaveBeenCalledOnce();
     expect(index.getStatus().active).toBe(true);
     expect(index.getSnapshot().readiness).toBe("ready");
     expect(mocks.state.noteSourceUnsubscribes).toHaveLength(2);
@@ -746,6 +756,23 @@ describe("ChronoNotesPlugin lifecycle composition", () => {
     );
     plugin.unload();
     consoleError.mockRestore();
+  });
+
+  it("keeps the rebuilt index active while surfacing an immediate cache-save failure", async () => {
+    const plugin = createPlugin();
+    await plugin.onload();
+    mocks.state.layoutReadyCallbacks[0]?.();
+    const index = plugin.noteIndex;
+    if (index === null) throw new Error("Expected a NoteIndex.");
+    await vi.waitFor(() => expect(index.getSnapshot().readiness).toBe("ready"));
+    const saveError = new Error("save failed");
+    vi.spyOn(index, "persistCacheNow").mockRejectedValueOnce(saveError);
+
+    await expect(plugin.rebuildNoteIndexCache()).rejects.toBe(saveError);
+
+    expect(index.getStatus().active).toBe(true);
+    expect(index.getSnapshot().readiness).toBe("ready");
+    plugin.unload();
   });
 
   it("does not restart a cache rebuild after plugin unload", async () => {

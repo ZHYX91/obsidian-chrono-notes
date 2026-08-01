@@ -1,6 +1,7 @@
 import type { Vault } from "obsidian";
 
 import {
+  createPersistedNoteIndexStorageMetadata,
   summarizePersistedNoteIndexStorage,
   type NoteIndexCache,
   type NoteIndexCacheStorageStatus,
@@ -13,9 +14,11 @@ const STORE_NAME = "note-index-snapshots";
 
 export class ObsidianNoteIndexCache implements NoteIndexCache {
   private readonly key: string;
+  private readonly metadataKey: string;
 
   constructor(vault: Vault) {
     this.key = getVaultCacheKey(vault);
+    this.metadataKey = JSON.stringify(["metadata", this.key]);
   }
 
   async load(): Promise<unknown> {
@@ -27,6 +30,10 @@ export class ObsidianNoteIndexCache implements NoteIndexCache {
       "readwrite",
       async (store) => {
         await requestResult(store.put(snapshot, this.key));
+        await requestResult(store.put(
+          createPersistedNoteIndexStorageMetadata(snapshot),
+          this.metadataKey,
+        ));
       },
       undefined,
     );
@@ -37,6 +44,7 @@ export class ObsidianNoteIndexCache implements NoteIndexCache {
       "readwrite",
       async (store) => {
         await requestResult(store.delete(this.key));
+        await requestResult(store.delete(this.metadataKey));
       },
       undefined,
     );
@@ -50,10 +58,27 @@ export class ObsidianNoteIndexCache implements NoteIndexCache {
       return Object.freeze({ state: "unavailable" });
     }
     try {
-      const value = await this.load();
-      return value === null
-        ? Object.freeze({ state: "unavailable" })
-        : summarizePersistedNoteIndexStorage(value);
+      return await this.withStore(
+        "readonly",
+        async (store) => {
+          const metadata: unknown = await requestResult<unknown>(
+            store.get(this.metadataKey),
+          );
+          if (metadata !== undefined) {
+            const status = summarizePersistedNoteIndexStorage(metadata);
+            if (status.state !== "stored") return status;
+            const snapshotKey = await requestResult(store.getKey(this.key));
+            return snapshotKey === undefined
+              ? Object.freeze({ state: "invalid" })
+              : status;
+          }
+          const legacyKey = await requestResult(store.getKey(this.key));
+          return legacyKey === undefined
+            ? Object.freeze({ state: "empty" })
+            : Object.freeze({ state: "legacy" });
+        },
+        Object.freeze({ state: "unavailable" }),
+      );
     } catch {
       return Object.freeze({ state: "error" });
     }

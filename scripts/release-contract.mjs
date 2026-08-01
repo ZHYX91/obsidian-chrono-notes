@@ -16,8 +16,8 @@ export function assertPackageVersionContract(manifest, packageJson, versions) {
 export function assertReleaseTag(releaseTag, manifestVersion) {
   assert.match(
     releaseTag,
-    /^\d+\.\d+\.\d+$/u,
-    "Release tag must use x.y.z without a v prefix",
+    /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/u,
+    "Release tag must use stable x.y.z without a v prefix or leading zeroes",
   );
   assert.equal(
     releaseTag,

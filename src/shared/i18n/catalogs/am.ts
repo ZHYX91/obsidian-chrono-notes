@@ -191,6 +191,7 @@ export const AM_MESSAGES = Object.freeze({
   "settings.index.cacheUnavailable": "ቋሚ መሸጎጫ በዚህ አካባቢ አይገኝም።",
   "settings.index.cacheEmpty": "ለዚህ Vault የተገኘ የማውጫ መሸጎጫ አልተቀመጠም።",
   "settings.index.cacheStored": "በዚህ Vault ውስጥ ለ{entries} ማስታወሻዎች የተገኘ የማውጫ ውሂብ ተቀምጧል።",
+  "settings.index.cacheLegacy": "ለዚህ Vault የቆየ መሸጎጫ አለ፤ የግቤት ብዛቱ ከሚቀጥለው መደበኛ ማስቀመጥ በኋላ ይታያል።",
   "settings.index.cacheInvalid": "የተቀመጠው የመሸጎጫ ራስጌ ልክ አይደለም እና ሲገነባ ይተካል።",
   "settings.index.cacheError": "የአሁኑን Vault መሸጎጫ መፈተሽ አልተቻለም።",
   "settings.index.cacheRebuilding": "የዚህ Vault መሸጎጫ እየተጠረገ እና የማስታወሻ ማውጫው እንደገና እየተገነባ ነው…",

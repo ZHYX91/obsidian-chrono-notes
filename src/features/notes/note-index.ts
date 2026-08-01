@@ -435,6 +435,23 @@ export class NoteIndex {
     await this.cache.clear();
   }
 
+  async persistCacheNow(): Promise<void> {
+    if (
+      !this.active ||
+      this.snapshot.readiness !== "ready" ||
+      this.backgroundVerificationActive ||
+      !this.isLiveWorkIdle()
+    ) {
+      throw new Error("NoteIndex must be ready and idle before persisting its cache");
+    }
+    if (this.cache === null || this.source.listFiles === undefined) {
+      throw new Error("NoteIndex cache is not configured");
+    }
+    this.cancelCacheSave?.();
+    this.cancelCacheSave = null;
+    await this.persistCacheSnapshot(this.createCacheSnapshot());
+  }
+
   get(path: string): NoteIndexEntry {
     return this.snapshot.notes[path] ?? Object.freeze({ kind: "missing", path });
   }
@@ -1314,16 +1331,22 @@ export class NoteIndex {
         this.scheduleCachePersistence();
         return;
       }
-      const snapshot = this.createCacheSnapshot();
-      const save = this.cacheSaveTail.then(async () => {
-        try {
-          await this.cache?.save(snapshot);
-        } catch (error) {
-          reportCacheFailure("save", error);
-        }
-      });
-      this.cacheSaveTail = save;
+      void this.persistCacheSnapshot(this.createCacheSnapshot()).catch(() => undefined);
     });
+  }
+
+  private persistCacheSnapshot(
+    snapshot: PersistedNoteIndexSnapshot,
+  ): Promise<void> {
+    const cache = this.cache;
+    if (cache === null) {
+      return Promise.reject(new Error("NoteIndex cache is not configured"));
+    }
+    const save = this.cacheSaveTail.then(() => cache.save(snapshot));
+    this.cacheSaveTail = save.catch((error: unknown) => {
+      reportCacheFailure("save", error);
+    });
+    return save;
   }
 
   private createCacheSnapshot(): PersistedNoteIndexSnapshot {

@@ -191,6 +191,7 @@ export const FA_MESSAGES = Object.freeze({
   "settings.index.cacheUnavailable": "حافظهٔ پنهان پایدار در این محیط در دسترس نیست.",
   "settings.index.cacheEmpty": "برای این Vault دادهٔ مشتق‌شدهٔ نمایه ذخیره نشده است.",
   "settings.index.cacheStored": "دادهٔ مشتق‌شدهٔ نمایه برای {entries} یادداشت در این Vault ذخیره شده است.",
+  "settings.index.cacheLegacy": "برای این Vault یک حافظهٔ نهان قدیمی وجود دارد؛ تعداد ورودی‌ها پس از ذخیرهٔ عادی بعدی نمایش داده می‌شود.",
   "settings.index.cacheInvalid": "سرآیند حافظهٔ ذخیره‌شده نامعتبر است و هنگام بازسازی جایگزین می‌شود.",
   "settings.index.cacheError": "بررسی حافظهٔ پنهان Vault فعلی ممکن نشد.",
   "settings.index.cacheRebuilding": "در حال پاک‌کردن حافظهٔ این Vault و بازسازی نمایهٔ یادداشت‌ها…",

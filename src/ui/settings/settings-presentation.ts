@@ -93,6 +93,8 @@ export function formatNoteIndexCacheStatus(
       return t("settings.index.cacheStored", { entries: status.entryCount });
     case "empty":
       return t("settings.index.cacheEmpty");
+    case "legacy":
+      return t("settings.index.cacheLegacy");
     case "invalid":
       return t("settings.index.cacheInvalid");
     case "error":

@@ -111,6 +111,8 @@ describe("settings presentation", () => {
     }, t)).toBe("Derived index data for 12 notes is stored for this Vault.");
     expect(formatNoteIndexCacheStatus({ state: "unavailable" }, t))
       .toBe("Persistent cache is unavailable in this environment.");
+    expect(formatNoteIndexCacheStatus({ state: "legacy" }, t))
+      .toContain("legacy cache");
   });
 
   it.each([

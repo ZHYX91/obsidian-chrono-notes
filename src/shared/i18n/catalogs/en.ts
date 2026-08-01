@@ -184,6 +184,7 @@ export const EN_MESSAGES = {
   "settings.index.cacheUnavailable": "Persistent cache is unavailable in this environment.",
   "settings.index.cacheEmpty": "No derived note-index cache is stored for this Vault.",
   "settings.index.cacheStored": "Derived index data for {entries} notes is stored for this Vault.",
+  "settings.index.cacheLegacy": "A legacy cache exists for this Vault; its entry count will appear after the next normal save.",
   "settings.index.cacheInvalid": "The stored cache header is invalid and will be replaced by a rebuild.",
   "settings.index.cacheError": "The current Vault cache could not be inspected.",
   "settings.index.cacheRebuilding": "Clearing this Vault's cache and rebuilding the note index…",

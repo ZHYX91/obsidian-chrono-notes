@@ -191,6 +191,7 @@ export const HI_MESSAGES = Object.freeze({
   "settings.index.cacheUnavailable": "इस वातावरण में स्थायी कैश उपलब्ध नहीं है।",
   "settings.index.cacheEmpty": "इस Vault के लिए व्युत्पन्न नोट-इंडेक्स कैश संग्रहीत नहीं है।",
   "settings.index.cacheStored": "इस Vault में {entries} नोट के लिए व्युत्पन्न इंडेक्स डेटा संग्रहीत है।",
+  "settings.index.cacheLegacy": "इस Vault के लिए पुराना कैश मौजूद है; अगली सामान्य सेव के बाद प्रविष्टियों की संख्या दिखाई देगी।",
   "settings.index.cacheInvalid": "संग्रहीत कैश हेडर अमान्य है और पुनर्निर्माण पर बदल दिया जाएगा।",
   "settings.index.cacheError": "वर्तमान Vault कैश की जाँच नहीं की जा सकी।",
   "settings.index.cacheRebuilding": "इस Vault का कैश साफ़ करके नोट इंडेक्स दोबारा बनाया जा रहा है…",

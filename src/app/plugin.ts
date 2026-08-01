@@ -732,6 +732,7 @@ export default class ChronoNotesPlugin extends Plugin {
       );
     }
     if (cacheError !== null) throw cacheError;
+    await noteIndex.persistCacheNow();
   }
 
   private showCreateIntervalNote(

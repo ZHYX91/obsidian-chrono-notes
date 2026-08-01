@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { pathToFileURL } from "node:url";
 
-const SEMVER_PATTERN = /^(\d+)\.(\d+)\.(\d+)$/u;
+const SEMVER_PATTERN = /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/u;
 
 export function selectReleaseNotesBaseline(releases, currentVersion) {
   const current = parseVersion(currentVersion, "Current release version");
@@ -39,13 +39,14 @@ function flattenReleases(value) {
 function parseVersion(value, label) {
   const match = SEMVER_PATTERN.exec(value);
   assert.ok(match, `${label} must use x.y.z without a v prefix`);
-  return match.slice(1).map((part) => Number.parseInt(part, 10));
+  return match.slice(1).map((part) => BigInt(part));
 }
 
 function compareVersions(left, right) {
   for (let index = 0; index < 3; index += 1) {
-    const difference = (left[index] ?? 0) - (right[index] ?? 0);
-    if (difference !== 0) return difference;
+    const leftPart = left[index] ?? 0n;
+    const rightPart = right[index] ?? 0n;
+    if (leftPart !== rightPart) return leftPart < rightPart ? -1 : 1;
   }
   return 0;
 }

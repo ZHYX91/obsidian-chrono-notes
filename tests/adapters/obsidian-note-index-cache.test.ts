@@ -35,13 +35,30 @@ describe("ObsidianNoteIndexCache", () => {
     await expect(cache.getStatus()).resolves.toEqual({ state: "empty" });
     await expect(cache.save(snapshot)).resolves.toBeUndefined();
     await expect(cache.load()).resolves.toEqual(snapshot);
+    indexedDB.valueReads.length = 0;
     await expect(cache.getStatus()).resolves.toEqual({
       state: "stored",
       entryCount: 0,
     });
+    expect(indexedDB.valueReads.every((key) =>
+      typeof key === "string" && key.startsWith('["metadata",'))).toBe(true);
     await expect(cache.clear()).resolves.toBeUndefined();
     await expect(cache.load()).resolves.toBeUndefined();
     expect(indexedDB.open).toHaveBeenCalledTimes(7);
+  });
+
+  it("reports a legacy snapshot without reading its full value", async () => {
+    const indexedDB = createFakeIndexedDb({ omitMetadataWrites: true });
+    vi.stubGlobal("window", { indexedDB });
+    const cache = new ObsidianNoteIndexCache(createVault("Vault", "D:/Legacy"));
+    await cache.save(createPersistedNoteIndexSnapshot([]));
+    indexedDB.valueReads.length = 0;
+
+    await expect(cache.getStatus()).resolves.toEqual({ state: "legacy" });
+
+    expect(indexedDB.valueReads).toHaveLength(1);
+    expect(indexedDB.valueReads[0]).toMatch(/^\["metadata",/u);
+    expect(indexedDB.keyReads).toHaveLength(1);
   });
 
   it("keeps same-name Vaults isolated by storage identity", async () => {
@@ -89,8 +106,11 @@ function createVault(name: string, basePath: string) {
 
 function createFakeIndexedDb(options: Readonly<{
   failOpen?: boolean;
+  omitMetadataWrites?: boolean;
 }> = {}) {
   const values = new Map<IDBValidKey, unknown>();
+  const valueReads: IDBValidKey[] = [];
+  const keyReads: IDBValidKey[] = [];
   let upgraded = false;
   const database = {
     objectStoreNames: {
@@ -100,10 +120,12 @@ function createFakeIndexedDb(options: Readonly<{
       upgraded = true;
       return {} as IDBObjectStore;
     },
-    transaction: () => createTransaction(values),
+    transaction: () => createTransaction(values, valueReads, keyReads, options),
     close: vi.fn(),
   } as unknown as IDBDatabase;
   return {
+    valueReads,
+    keyReads,
     open: vi.fn(() => {
       const request = {} as IDBOpenDBRequest;
       queueMicrotask(() => {
@@ -125,13 +147,26 @@ function createFakeIndexedDb(options: Readonly<{
 
 function createTransaction(
   values: Map<IDBValidKey, unknown>,
+  valueReads: IDBValidKey[],
+  keyReads: IDBValidKey[],
+  options: Readonly<{ omitMetadataWrites?: boolean }>,
 ): IDBTransaction {
   const transaction = {
     objectStore: () => ({
-      get: (key: IDBValidKey) => createRequest(() => values.get(key)),
+      get: (key: IDBValidKey) => createRequest(() => {
+        valueReads.push(key);
+        return values.get(key);
+      }),
+      getKey: (key: IDBValidKey) => createRequest(() => {
+        keyReads.push(key);
+        return values.has(key) ? key : undefined;
+      }),
       put: (value: unknown, key: IDBValidKey) =>
         createRequest(() => {
-          values.set(key, value);
+          if (!(options.omitMetadataWrites === true &&
+            typeof key === "string" && key.startsWith('["metadata",'))) {
+            values.set(key, value);
+          }
           return key;
         }),
       delete: (key: IDBValidKey) =>

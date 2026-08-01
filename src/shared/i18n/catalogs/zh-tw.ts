@@ -183,6 +183,7 @@ export const ZH_TW_MESSAGES = {
   "settings.index.cacheUnavailable": "目前執行環境不支援持久快取。",
   "settings.index.cacheEmpty": "目前 Vault 尚未儲存筆記索引衍生快取。",
   "settings.index.cacheStored": "目前 Vault 已儲存 {entries} 篇筆記的索引衍生資料。",
+  "settings.index.cacheLegacy": "目前 Vault 存在舊版快取；下次正常儲存後將顯示項目數。",
   "settings.index.cacheInvalid": "已儲存的快取標頭無效，重建時會取代它。",
   "settings.index.cacheError": "無法檢查目前 Vault 快取。",
   "settings.index.cacheRebuilding": "正在清除目前 Vault 快取並重建筆記索引……",

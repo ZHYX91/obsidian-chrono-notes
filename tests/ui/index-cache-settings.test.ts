@@ -42,7 +42,7 @@ describe("index and cache settings", () => {
     const harness = createHarness();
     harness.getCacheStatus
       .mockResolvedValueOnce({ state: "stored", entryCount: 3 })
-      .mockResolvedValueOnce({ state: "empty" });
+      .mockResolvedValueOnce({ state: "stored", entryCount: 3 });
     const cleanup = configureNoteIndexCacheSetting(harness.setting, harness.context);
     await Promise.resolve();
 
@@ -62,10 +62,23 @@ describe("index and cache settings", () => {
       "Clearing this Vault's cache and rebuilding the note index…",
     );
     expect(harness.setDesc).toHaveBeenLastCalledWith(
-      "No derived note-index cache is stored for this Vault.",
+      "Derived index data for 3 notes is stored for this Vault.",
     );
     cleanup();
     expect(harness.listenerCount()).toBe(0);
+  });
+
+  it("keeps a deterministic inline failure when immediate cache persistence fails", async () => {
+    const harness = createHarness();
+    harness.rebuild.mockRejectedValueOnce(new Error("save failed"));
+    configureNoteIndexCacheSetting(harness.setting, harness.context);
+    await Promise.resolve();
+
+    await harness.clickButton();
+
+    expect(harness.setDesc).toHaveBeenLastCalledWith(
+      "The cache could not be cleared or the note index could not be rebuilt.",
+    );
   });
 });
 

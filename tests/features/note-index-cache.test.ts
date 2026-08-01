@@ -10,6 +10,7 @@ import { parseNote } from "../../src/core/note/parsed-note";
 import { createIndexedNote } from "../../src/features/notes/indexed-note";
 import { NoteIndex } from "../../src/features/notes/note-index";
 import {
+  createPersistedNoteIndexStorageMetadata,
   createPersistedNoteIndexSnapshot,
   parsePersistedNoteIndexSnapshot,
   parsePersistedNoteIndexSnapshotIncrementally,
@@ -86,10 +87,14 @@ function cached(content: string, file: NoteSourceFile = FILE): PersistedNoteInde
 describe("persistent NoteIndex cache", () => {
   it("summarizes only the persisted cache header without parsing every note", () => {
     expect(summarizePersistedNoteIndexStorage(undefined)).toEqual({ state: "empty" });
-    expect(summarizePersistedNoteIndexStorage({ schema: 2, entries: [] }))
+    expect(summarizePersistedNoteIndexStorage({ schema: 2, entryCount: 0 }))
       .toEqual({ state: "invalid" });
-    expect(summarizePersistedNoteIndexStorage({ schema: 1, entries: [{ broken: true }] }))
+    expect(summarizePersistedNoteIndexStorage({ schema: 1, entryCount: 1 }))
       .toEqual({ state: "stored", entryCount: 1 });
+    expect(createPersistedNoteIndexStorageMetadata(cached("body"))).toEqual({
+      schema: 1,
+      entryCount: 1,
+    });
   });
 
   it("reports runtime status and clears its configured cache only while stopped", async () => {
@@ -106,6 +111,9 @@ describe("persistent NoteIndex cache", () => {
       errorCount: 0,
       cacheConfigured: true,
     });
+    await expect(index.persistCacheNow()).rejects.toThrow(
+      "NoteIndex must be ready and idle before persisting its cache",
+    );
     await index.start();
     expect(index.getStatus()).toMatchObject({
       active: true,
@@ -120,6 +128,30 @@ describe("persistent NoteIndex cache", () => {
     index.stop();
     await expect(index.clearCacheWhileStopped()).resolves.toBeUndefined();
     expect(cache.clear).toHaveBeenCalledOnce();
+  });
+
+  it("persists a ready idle cache immediately and propagates a save failure", async () => {
+    const source = new MetadataNoteSource();
+    source.files = [FILE];
+    source.read.mockResolvedValue("ready");
+    const cache = new MemoryNoteIndexCache(null);
+    const index = new NoteIndex(source, { cache });
+    await index.start();
+
+    await expect(index.persistCacheNow()).resolves.toBeUndefined();
+    expect(cache.save).toHaveBeenCalledOnce();
+    expect(cache.value).toMatchObject({ schema: 1 });
+
+    const saveError = new Error("save failed");
+    const consoleError = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    cache.save.mockRejectedValueOnce(saveError);
+    await expect(index.persistCacheNow()).rejects.toBe(saveError);
+    await expect(index.persistCacheNow()).resolves.toBeUndefined();
+    expect(consoleError).toHaveBeenCalledWith(
+      "Chrono Notes Calendar: failed to save NoteIndex cache",
+      saveError,
+    );
+    consoleError.mockRestore();
   });
 
   it("restores a matching derived entry before background verification settles", async () => {

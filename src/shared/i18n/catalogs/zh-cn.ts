@@ -182,6 +182,7 @@ export const ZH_CN_MESSAGES = {
   "settings.index.cacheUnavailable": "当前运行环境不支持持久缓存。",
   "settings.index.cacheEmpty": "当前 Vault 尚未保存笔记索引派生缓存。",
   "settings.index.cacheStored": "当前 Vault 已保存 {entries} 篇笔记的索引派生数据。",
+  "settings.index.cacheLegacy": "当前 Vault 存在旧版缓存；下次正常保存后将显示条目数。",
   "settings.index.cacheInvalid": "已保存的缓存头无效，重建时会替换它。",
   "settings.index.cacheError": "无法检查当前 Vault 缓存。",
   "settings.index.cacheRebuilding": "正在清除当前 Vault 缓存并重建笔记索引……",

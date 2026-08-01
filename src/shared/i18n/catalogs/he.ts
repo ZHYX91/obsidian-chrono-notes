@@ -199,6 +199,7 @@ export const HE_MESSAGES = Object.freeze({
   "settings.index.cacheUnavailable": "מטמון קבוע אינו זמין בסביבה זו.",
   "settings.index.cacheEmpty": "לא נשמר מטמון אינדקס נגזר עבור Vault זה.",
   "settings.index.cacheStored": "נשמרו נתוני אינדקס נגזרים עבור {entries} הערות ב-Vault זה.",
+  "settings.index.cacheLegacy": "קיים מטמון ישן עבור Vault זה; מספר הרשומות יוצג לאחר השמירה הרגילה הבאה.",
   "settings.index.cacheInvalid": "כותרת המטמון השמור אינה תקינה ותוחלף בבנייה מחדש.",
   "settings.index.cacheError": "לא ניתן לבדוק את מטמון ה-Vault הנוכחי.",
   "settings.index.cacheRebuilding": "מטמון Vault זה נמחק ואינדקס ההערות נבנה מחדש…",

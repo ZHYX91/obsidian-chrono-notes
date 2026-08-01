@@ -5,6 +5,9 @@ import { fileURLToPath } from "node:url";
 
 import { describe, expect, it } from "vitest";
 
+// @ts-expect-error The release contract is implemented in JavaScript.
+import { assertReleaseTag } from "../../scripts/release-contract.mjs";
+
 const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 const manifest = JSON.parse(
   readFileSync(path.join(projectRoot, "manifest.json"), "utf8"),
@@ -37,6 +40,11 @@ describe("release version contract", () => {
 
   it("rejects a different semantic version", () => {
     expect(() => checkReleaseVersion(differentVersion)).toThrow();
+  });
+
+  it("rejects leading-zero and prerelease versions", () => {
+    expect(() => assertReleaseTag("00.2.1", "00.2.1")).toThrow(/leading zeroes/u);
+    expect(() => checkReleaseVersion(`${manifestVersion}-rc.1`)).toThrow();
   });
 
   it("requires a release tag", () => {

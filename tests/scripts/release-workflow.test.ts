@@ -3,6 +3,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { describe, expect, it } from "vitest";
+import { parse as parseYaml } from "yaml";
 
 const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 const workflow = readFileSync(
@@ -15,6 +16,15 @@ const ciWorkflow = readFileSync(
 );
 
 describe("release workflow contract", () => {
+  it("is valid YAML with the three explicit release jobs", () => {
+    const parsed = parseYaml(workflow) as { jobs?: Record<string, unknown> };
+    expect(Object.keys(parsed.jobs ?? {})).toEqual([
+      "preflight",
+      "prepare-release",
+      "publish",
+    ]);
+  });
+
   it("keeps the loose Obsidian assets and adds one install-ready archive", () => {
     expect(workflow).toContain("dist/main.js");
     expect(workflow).toContain("dist/manifest.json");
@@ -40,10 +50,13 @@ describe("release workflow contract", () => {
 
   it("keeps dispatch preflight read-only and grants writes only to tag publication", () => {
     const preflightStart = workflow.indexOf("\n  preflight:");
+    const prepareStart = workflow.indexOf("\n  prepare-release:");
     const publishStart = workflow.indexOf("\n  publish:");
     expect(preflightStart).toBeGreaterThan(-1);
-    expect(publishStart).toBeGreaterThan(preflightStart);
-    const preflightJob = workflow.slice(preflightStart, publishStart);
+    expect(prepareStart).toBeGreaterThan(preflightStart);
+    expect(publishStart).toBeGreaterThan(prepareStart);
+    const preflightJob = workflow.slice(preflightStart, prepareStart);
+    const prepareJob = workflow.slice(prepareStart, publishStart);
     const publishJob = workflow.slice(publishStart);
 
     expect(preflightJob).toContain("if: github.event_name == 'workflow_dispatch'");
@@ -51,10 +64,21 @@ describe("release workflow contract", () => {
     expect(preflightJob).not.toContain("attestations: write");
     expect(preflightJob).not.toContain("contents: write");
     expect(preflightJob).not.toContain("id-token: write");
+    expect(preflightJob).toContain("Validate published version history and release-notes baseline");
+    expect(prepareJob).toContain("permissions:\n      contents: read");
+    expect(prepareJob).not.toContain("contents: write");
+    expect(prepareJob).toContain("persist-credentials: false");
     expect(publishJob).toContain("if: github.event_name == 'push'");
+    expect(publishJob).toContain("needs: prepare-release");
     expect(publishJob).toContain("attestations: write");
     expect(publishJob).toContain("contents: write");
     expect(publishJob).toContain("id-token: write");
+    expect(publishJob).not.toContain("actions/checkout@");
+    expect(publishJob).not.toContain("pnpm install");
+    expect(publishJob).not.toContain("node scripts/");
+    expect(publishJob).toMatch(
+      /steps:\n\s+- name: Reverify release identity before using write credentials/u,
+    );
   });
 
   it("serializes all release versions for the repository", () => {
@@ -96,15 +120,18 @@ describe("release workflow contract", () => {
   });
 
   it("accepts an existing tagged Release only when immutable assets match", () => {
-    expect(workflow).toContain(
-      "'.immutable == true and .draft == false and .prerelease == false'",
-    );
+    expect(workflow).toContain(".immutable == true and .draft == false and .prerelease == false");
     expect(workflow).toContain('gh release download "$RELEASE_VERSION"');
-    expect(workflow).toContain("node scripts/release-assets.mjs compare");
-    expect(workflow).toContain('echo "exists=true" >> "$GITHUB_OUTPUT"');
+    expect(workflow).toContain('cmp "$RUNNER_TEMP/release-candidate/$asset" "$existing/$asset"');
+    expect(workflow).toContain('gh attestation verify "$existing/$asset"');
     expect(workflow).toContain(
-      "if: github.event_name == 'push' && steps.release_state.outputs.exists != 'true'",
+      '--signer-workflow "github.com/${GITHUB_REPOSITORY}/.github/workflows/release.yml"',
     );
+    expect(workflow.match(/--deny-self-hosted-runners/gu)).toHaveLength(2);
+    expect(workflow).toContain('--source-digest "$RELEASE_COMMIT"');
+    expect(workflow).toContain('echo "exists=true" >> "$GITHUB_OUTPUT"');
+    expect(workflow).toContain("if: steps.release_state.outputs.exists != 'true'");
+    expect(workflow).toContain("Reverify tag after accepting an existing no-op");
     expect(workflow).toContain('gh release create "$RELEASE_VERSION"');
     expect(workflow).not.toContain("gh release upload");
     expect(workflow).not.toContain("--clobber");
@@ -114,13 +141,12 @@ describe("release workflow contract", () => {
 
   it("requires the existing Release asset inventory to be exactly four unique files", () => {
     expect(workflow).toContain('archive_name="chrono-notes-${RELEASE_VERSION}.zip"');
-    expect(workflow).toContain('(.assets | type == "array")');
     expect(workflow).toContain(
-      '([.assets[].name] | sort) ==\n                  (["main.js", "manifest.json", "styles.css", $archive_name] | sort)',
+      '([.assets[].name] | sort) == (["main.js", "manifest.json", "styles.css", $archive_name] | sort)',
     );
     expect(workflow).toContain('([.assets[].name] | unique | length) == 4');
     expect(workflow).toContain(
-      '"The tagged Release asset inventory is not exactly the four expected files; publish a new version."',
+      '"The tagged Release is not the exact immutable stable contract; publish a new version."',
     );
   });
 
@@ -128,16 +154,13 @@ describe("release workflow contract", () => {
     expect(workflow).toContain('gh release create "$RELEASE_VERSION" "${assets[@]}"');
     expect(workflow).not.toContain("--draft");
     expect(workflow).not.toContain("gh release edit");
-    expect(workflow).toContain("verify_release_assets() {");
-    expect(workflow).toContain(".draft == $expected_draft");
-    expect(workflow).toContain(".immutable == $expected_immutable");
-    expect(workflow).toContain(".prerelease == false and");
-    expect(workflow).toContain('"published"');
-    expect(workflow).toContain("Release supply-chain verification failed");
-    expect(workflow.match(/node scripts\/release-assets\.mjs compare/gu)).toHaveLength(2);
-    expect(workflow).toMatch(
-      /gh release create[\s\S]*?verify_release_assets[\s\S]*?verify_release_tag_identity/u,
-    );
+    expect(workflow).toContain("for attempt in {1..10}");
+    expect(workflow).toContain('$release_status" != "404"');
+    expect(workflow).toContain("non-retryable HTTP");
+    expect(workflow).toContain("after bounded retries");
+    expect(workflow).toContain('cmp "$candidate/$asset" "$remote/$asset"');
+    expect(workflow).toContain('gh attestation verify "$remote/$asset"');
+    expect(workflow).toContain("The release tag changed after publication verification.");
   });
 
   it("fails closed when the pushed version tag no longer identifies the event commit", () => {
@@ -146,16 +169,17 @@ describe("release workflow contract", () => {
     expect(workflow).toContain(
       'git ls-remote --exit-code origin "$tag_ref" "${tag_ref}^{}"',
     );
-    expect(workflow).toContain('awk -v ref="${tag_ref}^{}"');
+    expect(workflow).toContain('awk -v peeled="${tag_ref}^{}"');
     expect(workflow).toContain(
       '"The remote release tag no longer points to the pushed event commit."',
     );
-    expect(workflow.match(/^\s+verify_release_tag_identity$/gmu)).toHaveLength(4);
+    expect(workflow).toContain("Reverify release identity before using write credentials");
+    expect(workflow).toContain("Reverify tag after accepting an existing no-op");
   });
 
   it("generates notes from the highest older real stable Release", () => {
-    expect(workflow).toContain("gh api --paginate --slurp");
-    expect(workflow).toContain("scripts/release-notes-baseline.mjs");
+    expect(workflow.match(/gh api --paginate --slurp/gu)).toHaveLength(2);
+    expect(workflow.match(/scripts\/release-notes-baseline\.mjs/gu)).toHaveLength(2);
     expect(workflow).toContain('--current-version "$RELEASE_VERSION"');
     expect(workflow).toContain(
       'notes_arguments+=(--notes-start-tag "$PREVIOUS_RELEASE_TAG")',
@@ -165,14 +189,22 @@ describe("release workflow contract", () => {
     );
   });
 
+  it("hands an exact current-run candidate from read-only prepare to publish", () => {
+    expect(workflow).toContain("name: release-candidate-${{ github.run_id }}");
+    expect(workflow).toContain('gh run download "$GITHUB_RUN_ID"');
+    expect(workflow).toContain('--name "release-candidate-${GITHUB_RUN_ID}"');
+    expect(workflow).toContain("sha256sum --check --strict SHA256SUMS");
+    expect(workflow).toContain("The downloaded candidate does not contain the exact five internal files.");
+  });
+
   it("attests every published release asset", () => {
     expect(workflow).toContain("attestations: write");
     expect(workflow).toContain("id-token: write");
-    expect(workflow).toContain("dist/main.js");
-    expect(workflow).toContain("dist/manifest.json");
-    expect(workflow).toContain("dist/styles.css");
+    expect(workflow).toContain("${{ runner.temp }}/release-candidate/main.js");
+    expect(workflow).toContain("${{ runner.temp }}/release-candidate/manifest.json");
+    expect(workflow).toContain("${{ runner.temp }}/release-candidate/styles.css");
     expect(workflow).toContain(
-      "dist/chrono-notes-${{ env.RELEASE_VERSION }}.zip",
+      "${{ runner.temp }}/release-candidate/chrono-notes-${{ env.RELEASE_VERSION }}.zip",
     );
   });
 
