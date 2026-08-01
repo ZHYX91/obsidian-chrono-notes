@@ -669,7 +669,11 @@ describe("ChronoNotesPlugin lifecycle composition", () => {
     const start = vi.spyOn(index, "start");
     const persist = vi.spyOn(index, "persistCacheNow");
     const listener = vi.fn();
-    index.subscribe(listener);
+    const rebuildStates: boolean[] = [];
+    plugin.subscribeNoteIndex(() => {
+      rebuildStates.push(plugin.getNoteIndexStatus()?.rebuildingCache ?? false);
+      listener();
+    });
 
     const first = plugin.rebuildNoteIndexCache();
     const second = plugin.rebuildNoteIndexCache();
@@ -681,6 +685,8 @@ describe("ChronoNotesPlugin lifecycle composition", () => {
     expect(start).toHaveBeenCalledTimes(2);
     expect(persist).toHaveBeenCalledTimes(2);
     expect(listener).toHaveBeenCalled();
+    expect(rebuildStates).toContain(true);
+    expect(rebuildStates.at(-1)).toBe(false);
     expect(mocks.state.noteSourceUnsubscribes).toHaveLength(3);
     expect(mocks.state.noteSourceUnsubscribes.slice(0, 2).every(
       (unsubscribe) => unsubscribe.mock.calls.length === 1,

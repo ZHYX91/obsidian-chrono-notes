@@ -83,6 +83,7 @@ export default class ChronoNotesPlugin extends Plugin {
   private settingsTab: ChronoNotesSettingTab | null = null;
   private noteIndexCache: ObsidianNoteIndexCache | null = null;
   private noteIndexCacheRebuild: Promise<void> | null = null;
+  private readonly noteIndexStatusListeners = new Set<() => void>();
   private readonly settingsListeners = new Set<() => void>();
   private readonly firstUseGuideGate = new FirstUseGuideGate();
   private settingsSaveTail: Promise<void> = Promise.resolve();
@@ -591,7 +592,12 @@ export default class ChronoNotesPlugin extends Plugin {
   }
 
   subscribeNoteIndex(listener: () => void): () => void {
-    return this.noteIndex?.subscribe(listener) ?? (() => undefined);
+    const unsubscribeIndex = this.noteIndex?.subscribe(listener) ?? (() => undefined);
+    this.noteIndexStatusListeners.add(listener);
+    return () => {
+      unsubscribeIndex();
+      this.noteIndexStatusListeners.delete(listener);
+    };
   }
 
   async getNoteIndexCacheStatus(): Promise<NoteIndexCacheStorageStatus> {
@@ -612,10 +618,14 @@ export default class ChronoNotesPlugin extends Plugin {
     const rebuild = Promise.resolve().then(() =>
       this.performNoteIndexCacheRebuild(noteIndex, runtimeRevision));
     this.noteIndexCacheRebuild = rebuild;
+    notifyListeners(this.noteIndexStatusListeners);
     try {
       await rebuild;
     } finally {
-      if (this.noteIndexCacheRebuild === rebuild) this.noteIndexCacheRebuild = null;
+      if (this.noteIndexCacheRebuild === rebuild) {
+        this.noteIndexCacheRebuild = null;
+        notifyListeners(this.noteIndexStatusListeners);
+      }
     }
   }
 
@@ -815,6 +825,7 @@ export default class ChronoNotesPlugin extends Plugin {
     this.taskCommands = null;
     this.noteWorkspace = null;
     this.settingsTab = null;
+    this.noteIndexStatusListeners.clear();
     this.settingsListeners.clear();
     this.lastIcsDisplayZone = null;
   }
