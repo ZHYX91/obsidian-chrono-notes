@@ -91,6 +91,8 @@ Vault create/modify/rename/delete
 
 app 组合根通过公开的 `getLanguage()` API 取得 Obsidian 当前界面语言，并把同一 translator 契约注入设置页、日历、Navbar、命令与 Modal。`auto` 只以宿主界面语言为准，不读取浏览器或操作系统 locale；下文所称系统 locale 均指该 Obsidian locale。
 
+插件类本身只负责设置加载/保存、创建运行时与注册顶层 view/command/setting tab。所有运行时服务由 `createChronoRuntime()` 统一构造并装配为单一 `ChronoRuntime` 所有权边界：NoteIndex 与设备缓存、ICS 索引、周期/区间/任务命令、工作区端口、Note Navbar 与 Properties 日期适配器都以非空字段暴露，并逆序释放于唯一 `ChronoRuntime.dispose()`；插件卸载与运行时构造失败共用同一条释放路径，不再散布 nullable 服务字段或分散 disposer。设置页只消费窄 `SettingsHost` port（设置读写、索引/ICS 状态与重建、入口能力），不依赖整个插件实例。
+
 - React reducer 只维护当前日期、选中对象和视图类型等界面状态。
 - Vault 派生数据使用外部 store 快照和 `useSyncExternalStore`。
 - 设置页使用 Obsidian 原生 Setting API，不强制 React。
@@ -169,4 +171,4 @@ Properties 日期/时间显示与打开行为使用两个独立 Obsidian 适配�
 
 设置页显示期间由一个可释放的共享路径目录持有按路径预排序的文件夹与 Markdown 文件元数据。Vault create/delete/rename 只标记目录失效，下次查询再重建；modify 不触发。空查询直接截取候选上限，模糊查询扫描全部候选以保持 Obsidian 排名，但只用有界 top-K 结构选择实际建议，不对全部命中排序。隐藏设置页时注销 Vault 监听并清空目录。
 
-插件组合不等待完整 Vault 扫描，先注册日历、命令、设置和宿主监听；Obsidian 报告布局就绪后，再并行后台启动 NoteIndex 与首次 ICS 刷新。快照中独立、稳定、可订阅的 readiness 是权威边界：未知路径派生为 indexing，创建命令延后到 ready；后台启动失败通过 Obsidian Notice 暴露，但不让已注册 UI 整体不可用。运行时 revision 检查与 `stop()` 共同阻止卸载后迟到的启动工作重新激活插件。
+插件组合不等待完整 Vault 扫描，先注册日历、命令、设置和宿主监听；Obsidian 报告布局就绪后，再并行后台启动 NoteIndex 与首次 ICS 刷新。快照中独立、稳定、可订阅的 readiness 是权威边界：未知路径派生为 indexing，创建命令延后到 ready；后台启动失败通过 Obsidian Notice 暴露，但不让已注册 UI 整体不可用。运行时 revision 检查与 `stop()` 共同阻止卸载后迟到的启动工作重新激活插件。所有运行时服务都位于 `createChronoRuntime()` 创建的单一 `ChronoRuntime` 实例内：插件只通过该对象访问索引、命令、Navbar 与 Properties 适配器，`dispose()` 与插件卸载路径合并，卸载后不再持有或触碰已释放服务。

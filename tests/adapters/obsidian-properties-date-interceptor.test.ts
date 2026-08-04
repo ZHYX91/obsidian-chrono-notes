@@ -21,10 +21,8 @@ class FakeElement {
   }
 
   closest(selector: string): FakeElement | null {
-    for (let current: FakeElement | null = this; current !== null; current = current.parent) {
-      if (current.matches(selector)) return current;
-    }
-    return null;
+    if (this.matches(selector)) return this;
+    return this.parent?.closest(selector) ?? null;
   }
 
   querySelector(selector: string): FakeElement | null {

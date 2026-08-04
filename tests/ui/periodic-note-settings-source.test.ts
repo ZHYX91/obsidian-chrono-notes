@@ -209,6 +209,6 @@ describe("periodic note settings structure", () => {
   it("isolates post-save consumers behind the shared listener boundary", () => {
     expect(pluginSource).toContain("notifyListeners(viewRefreshListeners)");
     expect(pluginSource).toContain("notifyListeners(this.settingsListeners)");
-    expect(pluginSource).toContain("notifyListeners([() => this.noteNavbar?.update()])");
+    expect(pluginSource).toContain("notifyListeners([() => this.runtime?.noteNavbar.update()])");
   });
 });

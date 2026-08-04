@@ -57,6 +57,9 @@ importers:
       eslint-plugin-obsidianmd:
         specifier: 0.4.1
         version: 0.4.1(@eslint/js@9.39.5)(@eslint/json@0.14.0)(@typescript-eslint/parser@8.65.0(eslint@10.7.0)(typescript@6.0.3))(eslint@10.7.0)(obsidian@1.13.1(@codemirror/state@6.5.0)(@codemirror/view@6.38.6))(typescript-eslint@8.65.0(eslint@10.7.0)(typescript@6.0.3))
+      globals:
+        specifier: ^15.15.0
+        version: 15.15.0
       happy-dom:
         specifier: 20.10.6
         version: 20.10.6

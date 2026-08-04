@@ -1,6 +1,7 @@
 import {
   PluginSettingTab,
   type App,
+  type Plugin,
   type SettingDefinitionItem,
 } from "obsidian";
 
@@ -40,7 +41,9 @@ export class ChronoNotesSettingTab extends PluginSettingTab {
   private translator: Translator = createTranslator("en", "en");
 
   constructor(app: App, private readonly host: SettingsHost) {
-    super(app, host);
+    // The Obsidian base class keeps a plugin reference for its own rendering
+    // lifecycle; the tab itself only consumes the narrow SettingsHost port.
+    super(app, host as unknown as Plugin);
     this.vaultPathSuggestionCatalog = new VaultPathSuggestionCatalog(app);
     this.settingsSave = new SettingsSaveCoordinator(
       () => this.host.saveSettings(),

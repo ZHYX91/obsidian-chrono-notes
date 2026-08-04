@@ -24,7 +24,7 @@ describe("Properties date-format CSS", () => {
       /::-webkit-datetime-edit-text\s*\{[^}]*display:\s*none;/s,
     );
     expect(styles).not.toMatch(
-      /::-webkit-datetime-edit(?:-[^{\s]+)?[^\{]*\{[^}]*direction:\s*ltr;/s,
+      /::-webkit-datetime-edit(?:-[^{\s]+)?[^{]*\{[^}]*direction:\s*ltr;/s,
     );
   });
 
@@ -45,7 +45,7 @@ describe("Properties date-format CSS", () => {
       /::-webkit-calendar-picker-indicator\s*\{[^}]*(?:display:\s*none|visibility:\s*hidden|opacity:\s*0)/s,
     );
     expect(styles).not.toMatch(
-      /input\.chrono-notes-property-date-native-input(?![^\{]*::)[^\{]*\{[^}]*opacity:\s*0/s,
+      /input\.chrono-notes-property-date-native-input(?![^{]*::)[^{]*\{[^}]*opacity:\s*0/s,
     );
     expect(styles).not.toContain("forced-color-adjust: none");
   });

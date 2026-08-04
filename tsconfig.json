@@ -24,6 +24,7 @@
     "src/**/*.tsx",
     "tests/**/*.ts",
     "benchmarks/**/*.ts",
+    "scripts/**/*.d.mts",
     "vitest.config.ts",
     "vitest.performance.config.ts"
   ]

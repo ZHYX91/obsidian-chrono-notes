@@ -64,6 +64,8 @@ describe("IcsEventIndex", () => {
   it("normalizes a synchronous non-Error reader failure", async () => {
     const reader: IcsSourceReader = {
       read: () => {
+        // This case intentionally verifies normalization of non-Error throws.
+        // eslint-disable-next-line @typescript-eslint/only-throw-error -- covers non-Error reader failures
         throw { code: "E_READ" };
       },
     };

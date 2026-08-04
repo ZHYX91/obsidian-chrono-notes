@@ -21,7 +21,7 @@ class FakeVault {
 
   constructor(readonly adapter: object) {}
 
-  getAbstractFileByPath(source: string): unknown | null {
+  getAbstractFileByPath(source: string): object | null {
     return this.files.get(source) ?? null;
   }
 }

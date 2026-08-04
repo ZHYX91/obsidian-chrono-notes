@@ -1,4 +1,4 @@
-import type { App, Plugin } from "obsidian";
+import type { App } from "obsidian";
 
 import type { IcsEventIndexSnapshot } from "../../features/calendar/ics-event-index";
 import type { NoteIndexStatus } from "../../features/notes/note-index";
@@ -7,7 +7,7 @@ import type { Translator } from "../../shared/i18n";
 import type { ChronoNotesSettings } from "../../shared/settings";
 import type { VaultPathSuggestionCatalog } from "./vault-path-suggest";
 
-export interface SettingsHost extends Plugin {
+export interface SettingsHost {
   settings: ChronoNotesSettings;
   getTranslator(): Translator;
   saveSettings(): Promise<void>;

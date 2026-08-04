@@ -1,40 +1,23 @@
 import { getLanguage, Notice, Plugin, TFolder } from "obsidian";
 
-import { ObsidianIcsSourceReader } from "../adapters/obsidian/obsidian-ics-source-reader";
-import { ObsidianNoteIndexCache } from "../adapters/obsidian/obsidian-note-index-cache";
-import { ObsidianNoteSource } from "../adapters/obsidian/obsidian-note-source";
-import { ObsidianPropertiesDateInterceptor } from "../adapters/obsidian/obsidian-properties-date-interceptor";
-import { ObsidianPropertiesDateDocuments } from "../adapters/obsidian/obsidian-properties-date-documents";
-import { ObsidianPropertiesDateDisplay } from "../adapters/obsidian/obsidian-properties-date-display";
-import { OBSIDIAN_PROPERTY_DATE_VALUE_FORMATTER } from "../adapters/obsidian/obsidian-property-date-value-formatter";
 import { openObsidianPluginSettings } from "../adapters/obsidian/obsidian-plugin-settings";
 import { showObsidianDateContextMenu } from "../adapters/obsidian/obsidian-date-context-menu";
 import {
-  ObsidianIntervalNoteFilePort,
-  ObsidianPeriodicNoteFilePort,
-  ObsidianNoteTemplatePort,
-  ObsidianPeriodicNoteWorkspacePort,
-  ObsidianTaskFilePort,
-  ObsidianTaskWorkspacePort,
-} from "../adapters/obsidian/obsidian-periodic-note-ports";
-import {
-  PERIODIC_NOTE_TYPES,
   type LocalDate,
   type PeriodicNoteType,
+  PERIODIC_NOTE_TYPES,
 } from "../core/periodic/periodic-date";
 import { findPeriodicNotePathMatch } from "../core/periodic/periodic-note-path";
 import { normalizeIntervalNoteFolder } from "../core/note/interval-note-spec";
 import type { NoteTask } from "../core/note/note-tasks";
 import { IcsEventIndex, type IcsEventIndexSnapshot } from "../features/calendar/ics-event-index";
 import { isPeriodicNotePathIndexing } from "../features/calendar/indexed-periodic-note";
-import { IntervalNoteCommands } from "../features/intervals/interval-note-commands";
 import { notifyListeners } from "../features/notify-listeners";
 import { resolveNoteCreationConfirmation } from "../features/notes/note-creation-confirmation";
 import { NoteIndex, type NoteIndexStatus } from "../features/notes/note-index";
 import type { NoteIndexCacheStorageStatus } from "../features/notes/note-index-cache";
-import { PeriodicNoteCommands } from "../features/periodic/periodic-note-commands";
 import { getSettingsChangeImpact } from "../features/settings/settings-change-impact";
-import { TaskCommands, type TaskCommandResult } from "../features/tasks/task-commands";
+import type { TaskCommandResult } from "../features/tasks/task-commands";
 import { FirstUseGuideGate } from "../features/onboarding/first-use-guide";
 import { createTranslator, type Translator } from "../shared/i18n";
 import { getCurrentLocalDate } from "../shared/local-date-clock";
@@ -57,7 +40,12 @@ import {
   CHRONO_NOTES_VIEW_TYPE,
   ChronoNotesView,
 } from "../ui/calendar/chrono-notes-view";
-import { NoteNavbarManager } from "../ui/note-navbar/note-navbar";
+import {
+  ChronoRuntime,
+  createChronoRuntime,
+  getPropertyDateDisplaySettings,
+  type ChronoRuntimeHost,
+} from "./chrono-runtime";
 import {
   formatIcsRefreshNotice,
   formatPeriodicNotConfiguredNotice,
@@ -72,16 +60,8 @@ import {
 
 export default class ChronoNotesPlugin extends Plugin {
   settings: ChronoNotesSettings = createDefaultSettings();
-  noteIndex: NoteIndex | null = null;
-  icsEventIndex: IcsEventIndex | null = null;
-  periodicNoteCommands: PeriodicNoteCommands | null = null;
-  intervalNoteCommands: IntervalNoteCommands | null = null;
-  taskCommands: TaskCommands | null = null;
-  noteWorkspace: ObsidianPeriodicNoteWorkspacePort | null = null;
-  private noteNavbar: NoteNavbarManager | null = null;
-  private propertiesDateDisplay: ObsidianPropertiesDateDisplay | null = null;
+  private runtime: ChronoRuntime | null = null;
   private settingsTab: ChronoNotesSettingTab | null = null;
-  private noteIndexCache: ObsidianNoteIndexCache | null = null;
   private noteIndexCacheRebuild: Promise<void> | null = null;
   private readonly noteIndexStatusListeners = new Set<() => void>();
   private readonly settingsListeners = new Set<() => void>();
@@ -92,7 +72,14 @@ export default class ChronoNotesPlugin extends Plugin {
   private runtimeRevision = 0;
   private runtimeActive = false;
   private lastIcsDisplayZone: string | null = null;
-  private readonly runtimeDisposers = new Set<() => void>();
+
+  get noteIndex(): NoteIndex | null {
+    return this.runtime?.noteIndex ?? null;
+  }
+
+  get icsEventIndex(): IcsEventIndex | null {
+    return this.runtime?.icsEventIndex ?? null;
+  }
 
   override async onload(): Promise<void> {
     const runtimeRevision = this.beginRuntime();
@@ -100,99 +87,10 @@ export default class ChronoNotesPlugin extends Plugin {
       await this.loadSettings();
       if (!this.isRuntimeCurrent(runtimeRevision)) return;
 
-      const commandMessages = getPluginCommandMessages(this.getTranslator().t);
-      const noteIndexCache = new ObsidianNoteIndexCache(this.app.vault);
-      const noteIndex = new NoteIndex(new ObsidianNoteSource(this.app.vault), {
-        cache: noteIndexCache,
-      });
-      this.noteIndexCache = noteIndexCache;
-      this.noteIndex = noteIndex;
-      this.registerRuntimeDisposer(() => noteIndex.stop());
+      const runtime = createChronoRuntime(this.createChronoRuntimeHost());
+      this.runtime = runtime;
 
-      const icsEventIndex = new IcsEventIndex(new ObsidianIcsSourceReader(this.app.vault));
-      this.icsEventIndex = icsEventIndex;
-      this.registerRuntimeDisposer(() => icsEventIndex.stop());
-      this.noteWorkspace = new ObsidianPeriodicNoteWorkspacePort(
-        this.app.vault,
-        this.app.workspace,
-      );
-      const noteTemplates = new ObsidianNoteTemplatePort(this.app, this.app.vault);
-      this.periodicNoteCommands = new PeriodicNoteCommands(
-        new ObsidianPeriodicNoteFilePort(this.app.vault, this.app.fileManager),
-        noteTemplates,
-        this.noteWorkspace,
-      );
-      const propertiesDateInterceptor = new ObsidianPropertiesDateInterceptor({
-        getEnabled: () => this.settings.interceptPropertyDateClicks,
-        isDailyConfigured: () => {
-          const daily = this.settings.periodicNotes.daily;
-          return daily.enabled && daily.pattern.trim().length > 0;
-        },
-        openDaily: (date, target) => this.openPeriodicNote(date, "daily", target),
-      });
-      const propertiesDateDisplay = new ObsidianPropertiesDateDisplay(
-        getPropertyDateDisplaySettings(this.settings, this.getTranslator().locale),
-        OBSIDIAN_PROPERTY_DATE_VALUE_FORMATTER,
-      );
-      const propertiesDateDocuments = new ObsidianPropertiesDateDocuments(
-        propertiesDateDisplay,
-        propertiesDateInterceptor,
-      );
-      this.registerRuntimeDisposer(() => propertiesDateDocuments.dispose());
-      this.propertiesDateDisplay = propertiesDateDisplay;
-      propertiesDateDocuments.addDocument(document);
-      this.app.workspace.iterateAllLeaves((leaf) => {
-        propertiesDateDocuments.addDocument(leaf.view.containerEl.ownerDocument);
-      });
-      this.registerEvent(this.app.workspace.on("css-change", () => {
-        propertiesDateDisplay.refreshAll();
-      }));
-      this.registerEvent(this.app.workspace.on("window-open", (_workspaceWindow, openedWindow) => {
-        propertiesDateDocuments.addDocument(openedWindow.document);
-      }));
-      this.registerEvent(this.app.workspace.on("window-close", (_workspaceWindow, closedWindow) => {
-        propertiesDateDocuments.removeDocument(closedWindow.document);
-      }));
-      this.intervalNoteCommands = new IntervalNoteCommands(
-        new ObsidianIntervalNoteFilePort(this.app.vault, this.app.fileManager),
-        noteTemplates,
-        this.noteWorkspace,
-      );
-      this.taskCommands = new TaskCommands(
-        new ObsidianTaskFilePort(this.app.vault),
-        new ObsidianTaskWorkspacePort(this.app.vault, this.app.workspace),
-      );
-      const noteNavbar = new NoteNavbarManager(this.app, {
-        noteIndex,
-        getSettings: () => this.settings,
-        getTranslator: () => this.getTranslator(),
-        openPeriodic: (date, noteType, target) => this.openPeriodicNote(date, noteType, target),
-        openCalendar: () => this.activateCalendarView(),
-        openPath: (path, target) => this.openIndexedNote(path, target),
-        setRelatedCollapsed: async (collapsed) => {
-          this.settings.relatedIntervalNotesCollapsed = collapsed;
-          await this.saveSettings();
-        },
-        pickDate: (initialDate, onSelect) => this.showMiniCalendar(initialDate, onSelect),
-      });
-      this.noteNavbar = noteNavbar;
-      this.registerRuntimeDisposer(() => noteNavbar.unmount());
-      this.registerEvent(this.app.workspace.on("active-leaf-change", () => {
-        if (!this.isRuntimeCurrent(runtimeRevision)) return;
-        noteNavbar.update();
-        this.syncCalendarSelectionToActiveFile();
-      }));
-      this.registerEvent(this.app.workspace.on("layout-change", () => {
-        if (this.isRuntimeCurrent(runtimeRevision)) noteNavbar.update();
-      }));
-      this.registerEvent(this.app.workspace.on("file-open", (file) => {
-        if (!this.isRuntimeCurrent(runtimeRevision)) return;
-        noteNavbar.update();
-        this.syncCalendarSelectionToPath(file?.path);
-      }));
-      this.registerEvent(this.app.vault.on("rename", () => {
-        if (this.isRuntimeCurrent(runtimeRevision)) noteNavbar.handleFileRename();
-      }));
+      const commandMessages = getPluginCommandMessages(this.getTranslator().t);
       this.registerCalendarView(commandMessages);
       this.registerPeriodicNoteCommands(commandMessages);
       this.addCommand({
@@ -217,11 +115,12 @@ export default class ChronoNotesPlugin extends Plugin {
       this.addSettingTab(this.settingsTab);
       this.app.workspace.onLayoutReady(() => {
         if (!this.isRuntimeCurrent(runtimeRevision)) return;
-        noteNavbar.update();
+        runtime.noteNavbar.update();
         this.syncCalendarSelectionToActiveFile();
-        void this.startDeferredIndexes(noteIndex, runtimeRevision);
+        void this.startDeferredIndexes(runtime.noteIndex, runtimeRevision);
         void this.showFirstUseGuideOnce(runtimeRevision);
       });
+      this.registerWorkspaceNoteSync(runtimeRevision);
       this.registerIcsDisplayZoneRefresh(runtimeRevision);
     } catch (error) {
       if (this.isRuntimeCurrent(runtimeRevision)) this.endRuntime();
@@ -257,7 +156,7 @@ export default class ChronoNotesPlugin extends Plugin {
       if (!this.isRuntimeCurrent(runtimeRevision) || !impact.changed) return;
 
       if (impact.propertiesDateDisplay) {
-        this.propertiesDateDisplay?.setSettings(getPropertyDateDisplaySettings(
+        this.runtime?.propertiesDateDisplay.setSettings(getPropertyDateDisplaySettings(
           snapshot,
           createTranslator(snapshot.locale, getLanguage()).locale,
         ));
@@ -277,11 +176,58 @@ export default class ChronoNotesPlugin extends Plugin {
         this.intervalSettingsRevision += 1;
         notifyListeners(this.settingsListeners);
       }
-      if (impact.navbar) notifyListeners([() => this.noteNavbar?.update()]);
+      if (impact.navbar) notifyListeners([() => this.runtime?.noteNavbar.update()]);
       if (impact.ics) void this.refreshIcs(false, snapshot);
     });
     this.settingsSaveTail = save.catch(() => undefined);
     await save;
+  }
+
+  private registerWorkspaceNoteSync(runtimeRevision: number): void {
+    this.registerEvent(this.app.workspace.on("active-leaf-change", () => {
+      if (!this.isRuntimeCurrent(runtimeRevision)) return;
+      this.runtime?.noteNavbar.update();
+      this.syncCalendarSelectionToActiveFile();
+    }));
+    this.registerEvent(this.app.workspace.on("layout-change", () => {
+      if (this.isRuntimeCurrent(runtimeRevision)) this.runtime?.noteNavbar.update();
+    }));
+    this.registerEvent(this.app.workspace.on("file-open", (file) => {
+      if (!this.isRuntimeCurrent(runtimeRevision)) return;
+      this.runtime?.noteNavbar.update();
+      this.syncCalendarSelectionToPath(file?.path);
+    }));
+    this.registerEvent(this.app.vault.on("rename", () => {
+      if (this.isRuntimeCurrent(runtimeRevision)) this.runtime?.noteNavbar.handleFileRename();
+    }));
+  }
+
+  private createChronoRuntimeHost(): ChronoRuntimeHost {
+    return {
+      app: this.app,
+      vault: this.app.vault,
+      fileManager: this.app.fileManager,
+      workspace: this.app.workspace,
+      getSettings: () => this.settings,
+      getTranslator: () => this.getTranslator(),
+      openPeriodicNote: (date, noteType, target) =>
+        this.openPeriodicNote(date, noteType, target),
+      activateCalendarView: (date) => this.activateCalendarView(date),
+      openIndexedNote: (path, target) => this.openIndexedNote(path, target),
+      showMiniCalendar: (initialDate, onSelect) =>
+        this.showMiniCalendar(initialDate, onSelect),
+      showCreateIntervalNote: (initialDate, initialEndDate, onSettled) =>
+        this.showCreateIntervalNote(initialDate, initialEndDate, onSettled),
+      toggleTask: (task) => this.toggleTask(task),
+      rescheduleTask: (task, nextDueDate) => this.rescheduleTask(task, nextDueDate),
+      openTaskSource: (task, target) => this.openTaskSource(task, target),
+      saveSettings: () => this.saveSettings(),
+      setRelatedIntervalNotesCollapsed: async (collapsed) => {
+        this.settings.relatedIntervalNotesCollapsed = collapsed;
+        await this.saveSettings();
+      },
+      registerEvent: (eventRef) => this.registerEvent(eventRef),
+    };
   }
 
   private registerPeriodicNoteCommands(messages: PluginCommandMessages): void {
@@ -380,13 +326,14 @@ export default class ChronoNotesPlugin extends Plugin {
     noteType: PeriodicNoteType,
     target: "default" | "tab",
   ): Promise<void> {
-    if (this.periodicNoteCommands === null) return;
+    const runtime = this.runtime;
+    if (runtime === null) return;
     if (this.isPeriodicNotePathIndexing(date, noteType)) {
       new Notice(getNoteIndexingNotice(this.getTranslator().t));
       return;
     }
     try {
-      const result = await this.periodicNoteCommands.openOrCreate(
+      const result = await runtime.periodicNoteCommands.openOrCreate(
         {
           date,
           noteType,
@@ -435,8 +382,9 @@ export default class ChronoNotesPlugin extends Plugin {
     date: LocalDate,
     noteType: PeriodicNoteType,
   ): boolean {
-    const snapshot = this.noteIndex?.getSnapshot();
-    if (snapshot === undefined) return false;
+    const noteIndex = this.noteIndex;
+    if (noteIndex === null) return false;
+    const snapshot = noteIndex.getSnapshot();
     const config = this.settings.periodicNotes[noteType];
     return isPeriodicNotePathIndexing(
       date,
@@ -451,9 +399,10 @@ export default class ChronoNotesPlugin extends Plugin {
   }
 
   private async openIntervalNote(start: LocalDate, end: LocalDate): Promise<void> {
-    if (this.intervalNoteCommands === null) return;
+    const runtime = this.runtime;
+    if (runtime === null) return;
     try {
-      const result = await this.intervalNoteCommands.openOrCreate(
+      const result = await runtime.intervalNoteCommands.openOrCreate(
         {
           start,
           end,
@@ -492,9 +441,10 @@ export default class ChronoNotesPlugin extends Plugin {
   }
 
   private async openIndexedNote(path: string, target: "default" | "tab"): Promise<void> {
-    if (this.noteWorkspace === null) return;
+    const runtime = this.runtime;
+    if (runtime === null) return;
     try {
-      await this.noteWorkspace.open(path, target);
+      await runtime.noteWorkspace.open(path, target);
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       new Notice(formatPluginErrorNotice(message, this.getTranslator().t));
@@ -502,27 +452,30 @@ export default class ChronoNotesPlugin extends Plugin {
   }
 
   private async toggleTask(task: NoteTask): Promise<void> {
-    if (this.taskCommands === null) return;
+    const runtime = this.runtime;
+    if (runtime === null) return;
     try {
-      this.showTaskCommandResult(await this.taskCommands.toggle(task));
+      this.showTaskCommandResult(await runtime.taskCommands.toggle(task));
     } catch (error) {
       this.showTaskCommandError(error);
     }
   }
 
   private async rescheduleTask(task: NoteTask, nextDueDate: LocalDate): Promise<void> {
-    if (this.taskCommands === null) return;
+    const runtime = this.runtime;
+    if (runtime === null) return;
     try {
-      this.showTaskCommandResult(await this.taskCommands.rescheduleDue(task, nextDueDate));
+      this.showTaskCommandResult(await runtime.taskCommands.rescheduleDue(task, nextDueDate));
     } catch (error) {
       this.showTaskCommandError(error);
     }
   }
 
   private async openTaskSource(task: NoteTask, target: "default" | "tab"): Promise<void> {
-    if (this.taskCommands === null) return;
+    const runtime = this.runtime;
+    if (runtime === null) return;
     try {
-      await this.taskCommands.openSource(task, target);
+      await runtime.taskCommands.openSource(task, target);
     } catch (error) {
       this.showTaskCommandError(error);
     }
@@ -539,12 +492,12 @@ export default class ChronoNotesPlugin extends Plugin {
   }
 
   openIntervalNoteList(): void {
-    const noteIndex = this.noteIndex;
-    if (noteIndex === null) return;
+    const runtime = this.runtime;
+    if (runtime === null) return;
     new IntervalNoteListModal(
       this.app,
       {
-        noteIndex,
+        noteIndex: runtime.noteIndex,
         getSettings: () => this.settings,
         getSettingsRevision: () => this.intervalSettingsRevision,
         subscribeSettings: (listener) => {
@@ -601,7 +554,7 @@ export default class ChronoNotesPlugin extends Plugin {
   }
 
   async getNoteIndexCacheStatus(): Promise<NoteIndexCacheStorageStatus> {
-    return this.noteIndexCache?.getStatus()
+    return this.runtime?.noteIndexCache.getStatus()
       ?? Object.freeze({ state: "unavailable" });
   }
 
@@ -811,41 +764,14 @@ export default class ChronoNotesPlugin extends Plugin {
       this.runtimeActive = false;
       this.runtimeRevision += 1;
     }
-    const disposers = [...this.runtimeDisposers].reverse();
-    this.runtimeDisposers.clear();
-    for (const dispose of disposers) dispose();
-    this.noteNavbar = null;
-    this.propertiesDateDisplay = null;
-    this.noteIndexCache = null;
-    this.noteIndexCacheRebuild = null;
-    this.icsEventIndex = null;
-    this.noteIndex = null;
-    this.periodicNoteCommands = null;
-    this.intervalNoteCommands = null;
-    this.taskCommands = null;
-    this.noteWorkspace = null;
+    const runtime = this.runtime;
+    this.runtime = null;
+    runtime?.dispose();
     this.settingsTab = null;
+    this.noteIndexCacheRebuild = null;
     this.noteIndexStatusListeners.clear();
     this.settingsListeners.clear();
     this.lastIcsDisplayZone = null;
-  }
-
-  private registerRuntimeDisposer(dispose: () => void): void {
-    let disposed = false;
-    const disposeOnce = () => {
-      if (disposed) return;
-      disposed = true;
-      try {
-        dispose();
-      } catch (error) {
-        console.error("Chrono Notes Calendar: runtime cleanup failed", error);
-      }
-    };
-    this.runtimeDisposers.add(disposeOnce);
-    this.register(() => {
-      this.runtimeDisposers.delete(disposeOnce);
-      disposeOnce();
-    });
   }
 
   private isRuntimeCurrent(runtimeRevision: number): boolean {
@@ -902,17 +828,4 @@ export default class ChronoNotesPlugin extends Plugin {
 
 function getLocalTimeZone(): string {
   return Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
-}
-
-function getPropertyDateDisplaySettings(
-  settings: Readonly<ChronoNotesSettings>,
-  locale: string,
-) {
-  return {
-    locale,
-    dateFormat: settings.propertyDateDisplayFormat,
-    timeFormat: settings.propertyTimeDisplayFormat,
-    dateCustomFormat: settings.propertyDateCustomFormat,
-    timeCustomFormat: settings.propertyTimeCustomFormat,
-  } as const;
 }
