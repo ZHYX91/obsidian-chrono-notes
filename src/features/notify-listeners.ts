@@ -29,7 +29,7 @@ function isPromiseLike(value: unknown): value is PromiseLike<unknown> {
 
 function reportListenerError(error: unknown): void {
   try {
-    console.error("Chrono Notes Calendar: listener notification failed", error);
+    console.error("Chrono Notes: listener notification failed", error);
   } catch {
     // Error reporting must not break snapshot publication either.
   }

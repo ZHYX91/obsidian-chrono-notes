@@ -46,6 +46,9 @@ jobs:
       - name: Run the quick algorithmic benchmark gate
         run: pnpm bench:quick
 
+      - name: Run the 10k single-file update guardrail
+        run: pnpm bench:single-file:large
+
       - name: Generate coverage report
         run: pnpm test:coverage
 

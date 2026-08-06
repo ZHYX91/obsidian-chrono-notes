@@ -227,7 +227,7 @@ describe("CalendarApp active query", () => {
     expect(calendar?.getAttribute("aria-label")).toBeNull();
     expect(labelId).toBe("calendar-preview-test-calendar-label");
     expect(document.getElementById(labelId ?? "")?.textContent)
-      .toBe("Chrono Notes Calendar");
+      .toBe("Chrono Notes");
 
     await act(async () => root.unmount());
   });

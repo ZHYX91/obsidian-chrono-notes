@@ -63,7 +63,7 @@ describe("notifyListeners", () => {
 
       expect(remainingListener).toHaveBeenCalledOnce();
       expect(reportError).toHaveBeenCalledWith(
-        "Chrono Notes Calendar: listener notification failed",
+        "Chrono Notes: listener notification failed",
         listenerError,
       );
     } finally {

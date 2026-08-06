@@ -86,7 +86,7 @@ export function createChronoRuntime(host: ChronoRuntimeHost): ChronoRuntime {
       try {
         dispose();
       } catch (error) {
-        console.error("Chrono Notes Calendar: runtime cleanup failed", error);
+        console.error("Chrono Notes: runtime cleanup failed", error);
       }
     });
   };

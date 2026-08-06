@@ -7,7 +7,7 @@ const vitestCli = fileURLToPath(
 const timeZones = ["UTC", "America/New_York"];
 
 for (const timeZone of timeZones) {
-  process.stdout.write(`\nChrono Notes Calendar tests with TZ=${timeZone}\n`);
+  process.stdout.write(`\nChrono Notes tests with TZ=${timeZone}\n`);
   await run(process.execPath, [vitestCli, "run"], {
     ...process.env,
     TZ: timeZone,

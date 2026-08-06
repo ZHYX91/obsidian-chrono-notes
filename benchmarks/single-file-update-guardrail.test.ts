@@ -42,6 +42,8 @@ describe(`single-file update guardrail (${__CHRONO_BENCHMARK_NOTE_COUNT__} notes
       const publishesBefore = diagnostics.publishes;
       const materializationsBefore = diagnostics.materializations;
       const notificationsBefore = notifications;
+      const materializationTimingOffset = timings.snapshotMaterializationsMs.length;
+      const notificationTimingOffset = timings.listenerNotificationsMs.length;
       const heapBefore = sampleHeapUsed();
       const latencies: number[] = [];
       for (let update = 0; update < updateCount; update += 1) {
@@ -58,8 +60,20 @@ describe(`single-file update guardrail (${__CHRONO_BENCHMARK_NOTE_COUNT__} notes
       const notificationsDuringStorm = notifications - notificationsBefore;
 
       const latency = summarizeTimings(latencies);
-      const materialization = summarizeTimings(timings.snapshotMaterializationsMs);
-      const notification = summarizeTimings(timings.listenerNotificationsMs);
+      const materialization = summarizeTimings(
+        timings.snapshotMaterializationsMs.slice(materializationTimingOffset),
+      );
+      const notification = summarizeTimings(
+        timings.listenerNotificationsMs.slice(notificationTimingOffset),
+      );
+      const budgets = Object.freeze({
+        latencyP95Ms: LARGE_VAULT ? 250 : 100,
+        snapshotMaterializationP95Ms: LARGE_VAULT ? 50 : 10,
+        listenerNotificationP95Ms: 25,
+        retainedHeapBytes: LARGE_VAULT
+          ? 128 * 1024 * 1024
+          : 64 * 1024 * 1024,
+      });
 
       console.info(`CHRONO_BENCHMARK_SINGLE_FILE_UPDATE ${JSON.stringify(Object.freeze({
         noteCount: __CHRONO_BENCHMARK_NOTE_COUNT__,
@@ -77,20 +91,26 @@ describe(`single-file update guardrail (${__CHRONO_BENCHMARK_NOTE_COUNT__} notes
           publishes: publishesDuringStorm,
           notifications: notificationsDuringStorm,
         }),
+        budgets,
       }))}`);
 
       expect(source.readCountFor(path) - 1).toBe(updateCount);
       expect(materializationsDuringStorm).toBe(updateCount);
       expect(publishesDuringStorm).toBe(updateCount);
       expect(notificationsDuringStorm).toBe(updateCount);
+      expect(materialization.samples).toBe(updateCount);
+      expect(notification.samples).toBe(updateCount);
 
-      const latencyBudgetMs = LARGE_VAULT ? 1_000 : 250;
-      expect(latency.p95).toBeLessThanOrEqual(latencyBudgetMs);
-      expect(materialization.p95).toBeLessThanOrEqual(latencyBudgetMs);
-      expect(notification.p95).toBeLessThanOrEqual(LARGE_VAULT ? 500 : 100);
+      expect(latency.p95).toBeLessThanOrEqual(budgets.latencyP95Ms);
+      expect(materialization.p95).toBeLessThanOrEqual(
+        budgets.snapshotMaterializationP95Ms,
+      );
+      expect(notification.p95).toBeLessThanOrEqual(
+        budgets.listenerNotificationP95Ms,
+      );
       if (canRequestGc()) {
         expect(heapAfter - heapBefore).toBeLessThanOrEqual(
-          LARGE_VAULT ? 512 * 1024 * 1024 : 256 * 1024 * 1024,
+          budgets.retainedHeapBytes,
         );
       }
     } finally {

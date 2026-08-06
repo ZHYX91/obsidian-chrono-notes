@@ -1197,7 +1197,7 @@ export class NoteIndex {
       unsubscribe?.();
     } catch (error) {
       try {
-        console.error("Chrono Notes Calendar: failed to unsubscribe after NoteIndex start failure", error);
+        console.error("Chrono Notes: failed to unsubscribe after NoteIndex start failure", error);
       } catch {
         // Preserve the original start failure even if diagnostics also fail.
       }
@@ -1579,7 +1579,7 @@ function collectStartupDirtyPaths(events: readonly NoteSourceEvent[]): ReadonlyS
 
 function reportCacheFailure(action: "load" | "save", error: unknown): void {
   try {
-    console.error(`Chrono Notes Calendar: failed to ${action} NoteIndex cache`, error);
+    console.error(`Chrono Notes: failed to ${action} NoteIndex cache`, error);
   } catch {
     // Cache failures must never make the live index unavailable.
   }

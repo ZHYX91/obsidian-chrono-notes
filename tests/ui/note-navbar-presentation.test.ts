@@ -14,7 +14,7 @@ describe("note navbar presentation", () => {
       previousPeriod: "上一个周期",
       nextPeriod: "下一个周期",
       chooseDate: "选择日期",
-      openCalendar: "打开 Chrono Notes Calendar",
+      openCalendar: "打开 Chrono Notes",
       relatedRangeNotes: "相关区间笔记",
     });
   });

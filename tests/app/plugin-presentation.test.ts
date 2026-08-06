@@ -42,7 +42,7 @@ describe("plugin presentation", () => {
     const messages = getPluginCommandMessages(createTranslator("zh-CN", "en").t);
 
     expect(messages).toMatchObject({
-      ribbonCalendar: "打开 Chrono Notes Calendar",
+      ribbonCalendar: "打开 Chrono Notes",
       openCalendar: "打开日历",
       openRangeList: "打开区间笔记列表",
       openMiniCalendar: "打开迷你日历",
@@ -57,7 +57,7 @@ describe("plugin presentation", () => {
 
     expect(formatPeriodicNotConfiguredNotice("weekly", t)).toBe("請先設定並啟用週記。");
     expect(formatPluginErrorNotice("permission denied", t)).toBe(
-      "Chrono Notes Calendar：permission denied",
+      "Chrono Notes：permission denied",
     );
     expect(getTaskCommandNotice("stale", t)).toBe(
       "任務在更新前已變更，請重新整理後再試。",

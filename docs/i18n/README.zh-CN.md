@@ -1,8 +1,8 @@
-# Chrono Notes Calendar
+# Chrono Notes
 
 [English](../../README.md) · [简体中文](README.zh-CN.md)
 
-Chrono Notes Calendar 是一个面向 Obsidian 周期笔记工作流的日历插件，整合周期笔记、可选历法扩展、地区节假日、任务、统计和区间笔记。
+Chrono Notes 是一个面向 Obsidian 周期笔记工作流的日历插件，整合周期笔记、可选历法扩展、地区节假日、任务、统计和区间笔记。
 
 ## 界面截图
 
@@ -10,20 +10,20 @@ Chrono Notes Calendar 是一个面向 Obsidian 周期笔记工作流的日历插
 
 无需离开笔记，即可切换相邻周期笔记、跳转到上级周期或返回日历。
 
-![Chrono Notes Calendar 周期笔记导航与月历](../assets/chrono-notes-navigation-en.png)
+![Chrono Notes 周期笔记导航与月历](../assets/chrono-notes-navigation-en.png)
 
 ### 日历工作区
 
 在月历中集中查看笔记状态、任务、本地 ICS 事件、节假日和区间笔记。
 
-![Chrono Notes Calendar 桌面端区间笔记与月历](../assets/chrono-notes-desktop-en.png)
+![Chrono Notes 桌面端区间笔记与月历](../assets/chrono-notes-desktop-en.png)
 
 ### Android
 
 同一套日历工作区会适配触控操作和窄屏布局。
 
 <p align="center">
-  <img src="../assets/chrono-notes-android-en.png" alt="Chrono Notes Calendar Android 月历" width="360">
+  <img src="../assets/chrono-notes-android-en.png" alt="Chrono Notes Android 月历" width="360">
 </p>
 
 ## 功能特性
@@ -40,7 +40,7 @@ Chrono Notes Calendar 是一个面向 Obsidian 周期笔记工作流的日历插
 - 可配置 Obsidian 日期与日期时间属性的显示格式，同时保持 ISO YAML、原生分段编辑和可选的日记打开功能；
 - 英文、简体中文、繁体中文、阿拉伯语、波斯语、希伯来语、阿姆哈拉语和印地语界面，并为相应语言提供从右到左布局。
 
-源笔记和插件设置都保留在 Vault 内。只读 ICS 来源既可以是 Vault 文件，也可以是用户明确配置的桌面本地路径；插件不会上传这些文件。Chrono Notes Calendar 只会在设备本地 IndexedDB 中保存派生的 NoteIndex 缓存；该缓存不会写入 Vault，也不会发送到远程服务。插件不要求账号。
+源笔记和插件设置都保留在 Vault 内。只读 ICS 来源既可以是 Vault 文件，也可以是用户明确配置的桌面本地路径；插件不会上传这些文件。Chrono Notes 只会在设备本地 IndexedDB 中保存派生的 NoteIndex 缓存；该缓存不会写入 Vault，也不会发送到远程服务。插件不要求账号。
 
 ## 使用要求与兼容性
 
@@ -52,7 +52,7 @@ Chrono Notes Calendar 是一个面向 Obsidian 周期笔记工作流的日历插
 
 ### 手动安装
 
-从[最新版本](https://github.com/ZHYX91/obsidian-chrono-notes/releases/latest)下载 `chrono-notes-<version>.zip`，解压到 `Vault/.obsidian/plugins/`。压缩包包含 `chrono-notes/` 目录及其中的 `main.js`、`manifest.json` 和 `styles.css`。重新加载 Obsidian 后，在第三方插件中启用 Chrono Notes Calendar。
+从[最新版本](https://github.com/ZHYX91/obsidian-chrono-notes/releases/latest)下载 `chrono-notes-<version>.zip`，解压到 `Vault/.obsidian/plugins/`。压缩包包含 `chrono-notes/` 目录及其中的 `main.js`、`manifest.json` 和 `styles.css`。重新加载 Obsidian 后，在第三方插件中启用 Chrono Notes。
 
 ### 升级
 
@@ -60,7 +60,7 @@ Chrono Notes Calendar 是一个面向 Obsidian 周期笔记工作流的日历插
 
 ## 使用
 
-1. 在 Chrono Notes Calendar 设置中启用需要的周期笔记类型，并确认路径格式；
+1. 在 Chrono Notes 设置中启用需要的周期笔记类型，并确认路径格式；
 2. 从侧边栏图标或命令面板打开日历；
 3. 按需启用历法、节假日扩展或添加本地 ICS 来源；
 4. 选择日期以打开或创建对应周期笔记。
@@ -78,7 +78,7 @@ Chrono Notes Calendar 是一个面向 Obsidian 周期笔记工作流的日历插
 
 ## 隐私与安全
 
-Chrono Notes Calendar 通过 Obsidian 或本地文件系统边界读取 Vault 笔记和用户明确选择的本地 ICS 文件，不上传笔记、任务、日历或 ICS 数据，也不要求账号。派生的 NoteIndex 缓存只保存在设备本地 IndexedDB 中，并可由源笔记重新生成。
+Chrono Notes 通过 Obsidian 或本地文件系统边界读取 Vault 笔记和用户明确选择的本地 ICS 文件，不上传笔记、任务、日历或 ICS 数据，也不要求账号。派生的 NoteIndex 缓存只保存在设备本地 IndexedDB 中，并可由源笔记重新生成。
 
 ## 开发
 
@@ -104,7 +104,7 @@ pnpm check
 
 ## 致谢
 
-Chrono Notes Calendar 受到以下项目的启发：
+Chrono Notes 受到以下项目的启发：
 
 - Liam Cain：[Calendar](https://github.com/liamcain/obsidian-calendar-plugin)
 - 纳米级尘埃（a-nano-dust）：[Dust Calendar](https://github.com/a-nano-dust/dust-obsidian-calendar)

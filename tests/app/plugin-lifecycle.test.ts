@@ -609,7 +609,7 @@ describe("ChronoNotesPlugin lifecycle composition", () => {
     expect(plugin.settings.schemaVersion).toBe(18);
     expect(plugin.settings.periodicNotes.weekly.pattern).toBe("[Weekly]/GGGG-[W]WW");
     expect(error).toHaveBeenCalledWith(
-      "Chrono Notes Calendar: failed to persist migrated settings",
+      "Chrono Notes: failed to persist migrated settings",
       expect.any(Error),
     );
     plugin.unload();
@@ -645,7 +645,7 @@ describe("ChronoNotesPlugin lifecycle composition", () => {
     await vi.waitFor(() => expect(mocks.state.noteListPaths).toHaveBeenCalledOnce());
     expect(mocks.state.noteSourceUnsubscribes[0]).toHaveBeenCalledOnce();
     await vi.waitFor(() => expect(error).toHaveBeenCalledWith(
-      "Chrono Notes Calendar: deferred indexing failed",
+      "Chrono Notes: deferred indexing failed",
       expect.any(Error),
     ));
     expect(plugin.noteIndex).not.toBeNull();
@@ -757,7 +757,7 @@ describe("ChronoNotesPlugin lifecycle composition", () => {
     expect(index.getSnapshot().readiness).toBe("ready");
     expect(mocks.state.noteSourceUnsubscribes).toHaveLength(2);
     expect(consoleError).toHaveBeenCalledWith(
-      "Chrono Notes Calendar: recovered a failed NoteIndex cache rebuild start",
+      "Chrono Notes: recovered a failed NoteIndex cache rebuild start",
       startError,
     );
     plugin.unload();
@@ -1023,7 +1023,7 @@ describe("ChronoNotesPlugin lifecycle composition", () => {
       expect(navbar.update).toHaveBeenCalledTimes(2);
       expect(modalHost.getSettingsRevision()).toBe(1);
       expect(reportError).toHaveBeenCalledWith(
-        "Chrono Notes Calendar: listener notification failed",
+        "Chrono Notes: listener notification failed",
         expect.any(Error),
       );
 
@@ -1130,7 +1130,7 @@ describe("ChronoNotesPlugin lifecycle composition", () => {
     expect(mocks.state.firstUseGuideOpen).not.toHaveBeenCalled();
     expect(plugin.settings.firstUseGuideSeen).toBe(false);
     expect(error).toHaveBeenCalledWith(
-      "Chrono Notes Calendar: failed to persist first-use guide state",
+      "Chrono Notes: failed to persist first-use guide state",
       expect.any(Error),
     );
     plugin.unload();

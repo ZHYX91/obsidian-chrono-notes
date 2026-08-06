@@ -1,8 +1,8 @@
-# Chrono Notes Calendar
+# Chrono Notes
 
 [English](https://github.com/ZHYX91/obsidian-chrono-notes/blob/main/README.md) · [简体中文](https://github.com/ZHYX91/obsidian-chrono-notes/blob/main/docs/i18n/README.zh-CN.md)
 
-Chrono Notes Calendar is an Obsidian calendar workspace for periodic notes, optional calendar extensions, regional holidays, tasks, statistics, and time-range notes.
+Chrono Notes is an Obsidian calendar workspace for periodic notes, optional calendar extensions, regional holidays, tasks, statistics, and time-range notes.
 
 ## Screenshots
 
@@ -10,20 +10,20 @@ Chrono Notes Calendar is an Obsidian calendar workspace for periodic notes, opti
 
 Move between adjacent periodic notes, jump to the parent period, or return to the calendar without leaving the note.
 
-![Chrono Notes Calendar periodic note navigation and month calendar](https://raw.githubusercontent.com/ZHYX91/obsidian-chrono-notes/main/docs/assets/chrono-notes-navigation-en.png)
+![Chrono Notes periodic note navigation and month calendar](https://raw.githubusercontent.com/ZHYX91/obsidian-chrono-notes/main/docs/assets/chrono-notes-navigation-en.png)
 
 ### Calendar workspace
 
 See note state, tasks, local ICS events, holidays, and range notes together in the month calendar.
 
-![Chrono Notes Calendar desktop range note and month calendar](https://raw.githubusercontent.com/ZHYX91/obsidian-chrono-notes/main/docs/assets/chrono-notes-desktop-en.png)
+![Chrono Notes desktop range note and month calendar](https://raw.githubusercontent.com/ZHYX91/obsidian-chrono-notes/main/docs/assets/chrono-notes-desktop-en.png)
 
 ### Android
 
 The same calendar workspace adapts to touch interaction and narrow screens.
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/ZHYX91/obsidian-chrono-notes/main/docs/assets/chrono-notes-android-en.png" alt="Chrono Notes Calendar Android month calendar" width="360">
+  <img src="https://raw.githubusercontent.com/ZHYX91/obsidian-chrono-notes/main/docs/assets/chrono-notes-android-en.png" alt="Chrono Notes Android month calendar" width="360">
 </p>
 
 ## Features
@@ -40,7 +40,7 @@ The same calendar workspace adapts to touch interaction and narrow screens.
 - Configurable display formats for Obsidian Date and Date & time properties while preserving ISO YAML, native segmented editing, and optional daily-note opening.
 - English, Simplified Chinese, Traditional Chinese, Arabic, Persian, Hebrew, Amharic, and Hindi UI, including right-to-left layout where applicable.
 
-Source notes and plugin settings stay inside the Vault. Read-only ICS sources may be Vault files or explicitly configured local desktop paths; they are never uploaded by the plugin. Chrono Notes Calendar keeps only a derived NoteIndex cache in device-local IndexedDB; that cache is not written into the Vault or sent to a remote service. No account is required.
+Source notes and plugin settings stay inside the Vault. Read-only ICS sources may be Vault files or explicitly configured local desktop paths; they are never uploaded by the plugin. Chrono Notes keeps only a derived NoteIndex cache in device-local IndexedDB; that cache is not written into the Vault or sent to a remote service. No account is required.
 
 ## Requirements and compatibility
 
@@ -52,7 +52,7 @@ Source notes and plugin settings stay inside the Vault. Read-only ICS sources ma
 
 ### Manual installation
 
-Download `chrono-notes-<version>.zip` from the [latest release](https://github.com/ZHYX91/obsidian-chrono-notes/releases/latest) and extract it into `Vault/.obsidian/plugins/`. The archive contains the `chrono-notes/` directory with `main.js`, `manifest.json`, and `styles.css`. Reload Obsidian, then enable Chrono Notes Calendar under Community plugins.
+Download `chrono-notes-<version>.zip` from the [latest release](https://github.com/ZHYX91/obsidian-chrono-notes/releases/latest) and extract it into `Vault/.obsidian/plugins/`. The archive contains the `chrono-notes/` directory with `main.js`, `manifest.json`, and `styles.css`. Reload Obsidian, then enable Chrono Notes under Community plugins.
 
 ### Upgrade
 
@@ -60,7 +60,7 @@ Back up and preserve `Vault/.obsidian/plugins/chrono-notes/data.json` when it ex
 
 ## Usage
 
-1. Enable the periodic-note types you use and confirm their path patterns in Chrono Notes Calendar settings.
+1. Enable the periodic-note types you use and confirm their path patterns in Chrono Notes settings.
 2. Open the calendar from the ribbon or command palette.
 3. Optionally enable calendar and holiday extensions or add local ICS sources.
 4. Select a date to open or create its periodic note.
@@ -78,7 +78,7 @@ Settings cover periodic-note paths and templates, calendar and holiday extension
 
 ## Privacy and security
 
-Chrono Notes Calendar reads Vault notes and user-selected local ICS files through Obsidian or local filesystem boundaries. It does not upload notes, tasks, calendars, or ICS data and does not require an account. Its derived NoteIndex cache stays in device-local IndexedDB and can be rebuilt from the source notes.
+Chrono Notes reads Vault notes and user-selected local ICS files through Obsidian or local filesystem boundaries. It does not upload notes, tasks, calendars, or ICS data and does not require an account. Its derived NoteIndex cache stays in device-local IndexedDB and can be rebuilt from the source notes.
 
 ## Development
 
@@ -104,7 +104,7 @@ Never post real private Vault paths, note or task content, calendar or ICS data,
 
 ## Acknowledgements
 
-Chrono Notes Calendar draws inspiration from:
+Chrono Notes draws inspiration from:
 
 - Liam Cain: [Calendar](https://github.com/liamcain/obsidian-calendar-plugin)
 - a-nano-dust (纳米级尘埃): [Dust Calendar](https://github.com/a-nano-dust/dust-obsidian-calendar)

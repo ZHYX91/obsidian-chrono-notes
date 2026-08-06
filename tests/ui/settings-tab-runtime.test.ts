@@ -181,7 +181,7 @@ describe("ChronoNotesSettingTab save orchestration", () => {
     )?.click();
 
     expect(consoleError).toHaveBeenCalledWith(
-      "Chrono Notes Calendar: failed to clean up settings section",
+      "Chrono Notes: failed to clean up settings section",
       cleanupError,
     );
     expect(mocks.renderAppearance).toHaveBeenCalledOnce();

@@ -42,7 +42,7 @@ export function useHostEnvironment(): HostEnvironment {
 
 function getDefaultHostEnvironment(): HostEnvironment {
   if (typeof document === "undefined") {
-    throw new Error("Chrono Notes Calendar: host document is unavailable");
+    throw new Error("Chrono Notes: host document is unavailable");
   }
   return Object.freeze({
     document,
@@ -53,7 +53,7 @@ function getDefaultHostEnvironment(): HostEnvironment {
 function getDocumentWindow(document: Document): Window {
   const ownerWindow = document.defaultView;
   if (ownerWindow === null) {
-    throw new Error("Chrono Notes Calendar: host window is unavailable");
+    throw new Error("Chrono Notes: host window is unavailable");
   }
   return ownerWindow;
 }

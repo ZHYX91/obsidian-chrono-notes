@@ -148,7 +148,7 @@ describe("persistent NoteIndex cache", () => {
     await expect(index.persistCacheNow()).rejects.toBe(saveError);
     await expect(index.persistCacheNow()).resolves.toBeUndefined();
     expect(consoleError).toHaveBeenCalledWith(
-      "Chrono Notes Calendar: failed to save NoteIndex cache",
+      "Chrono Notes: failed to save NoteIndex cache",
       saveError,
     );
     consoleError.mockRestore();

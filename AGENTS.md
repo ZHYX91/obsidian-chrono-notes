@@ -2,7 +2,7 @@
 
 ## Project Scope
 
-Chrono Notes Calendar is an Obsidian workspace for periodic notes, calendar extensions, regional holidays, tasks, statistics, and time ranges. The sibling project at `../obsidian-calendar` is read-only reference material. Do not modify it while working in this repository.
+Chrono Notes is an Obsidian workspace for periodic notes, calendar extensions, regional holidays, tasks, statistics, and time ranges. The sibling project at `../obsidian-calendar` is read-only reference material. Do not modify it while working in this repository.
 
 Current date, note, task, template, interval-note, holiday, and ICS semantics are defined by the stable product, architecture, UX, and testing documents. Preserve them unless a documented decision changes them; do not expand the plugin into unrelated product scope.
 

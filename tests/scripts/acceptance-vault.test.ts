@@ -115,6 +115,22 @@ describe("acceptance Vault lifecycle", () => {
     ).rejects.toThrow("Generated file changed: Daily/2026-07-14.md");
   }, ACCEPTANCE_TEST_TIMEOUT_MS);
 
+  it("rejects a non-canonical plugin display name", async () => {
+    const harness = await createHarness();
+    const manifestPath = path.join(harness.sourceRoot, "manifest.json");
+    const manifest = JSON.parse(await readFile(manifestPath, "utf8")) as Record<
+      string,
+      unknown
+    >;
+    manifest.name = "Wrong Name";
+    await writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`, "utf8");
+
+    await expect(createAcceptanceVault({
+      acceptanceRoot: harness.acceptanceRoot,
+      sourceRoot: harness.sourceRoot,
+    })).rejects.toThrow("Unexpected plugin manifest name");
+  }, ACCEPTANCE_TEST_TIMEOUT_MS);
+
   it("accepts host JSON normalization while preserving required values", async () => {
     const harness = await createHarness();
     const target = await createAcceptanceVault({
@@ -277,7 +293,7 @@ async function createHarness(): Promise<{
     path.join(sourceRoot, "manifest.json"),
     `${JSON.stringify({
       id: "chrono-notes",
-      name: "Chrono Notes Calendar",
+      name: "Chrono Notes",
       version: "9.8.7",
       minAppVersion: "1.12.7",
       description: "Acceptance test",

@@ -142,7 +142,7 @@ export default class ChronoNotesPlugin extends Plugin {
     try {
       await this.saveData(this.persistedSettings);
     } catch (error) {
-      console.error("Chrono Notes Calendar: failed to persist migrated settings", error);
+      console.error("Chrono Notes: failed to persist migrated settings", error);
     }
   }
 
@@ -368,7 +368,7 @@ export default class ChronoNotesPlugin extends Plugin {
       } else if (result.status === "opened") {
         for (const item of result.cascade) {
           if (item.status === "failed") {
-            console.error(`Chrono Notes Calendar: failed to create ${item.noteType} note`, item.error);
+            console.error(`Chrono Notes: failed to create ${item.noteType} note`, item.error);
           }
         }
       }
@@ -616,7 +616,7 @@ export default class ChronoNotesPlugin extends Plugin {
     } catch (error) {
       if (!this.isRuntimeCurrent(runtimeRevision) || this.icsEventIndex !== index) return;
       const message = error instanceof Error ? error.message : String(error);
-      console.error("Chrono Notes Calendar: ICS refresh failed", error);
+      console.error("Chrono Notes: ICS refresh failed", error);
       if (showNotice) new Notice(formatPluginErrorNotice(message, this.getTranslator().t));
     }
   }
@@ -649,7 +649,7 @@ export default class ChronoNotesPlugin extends Plugin {
     } catch (error) {
       if (!this.isRuntimeCurrent(runtimeRevision) || this.noteIndex !== noteIndex) return;
       const message = error instanceof Error ? error.message : String(error);
-      console.error("Chrono Notes Calendar: deferred indexing failed", error);
+      console.error("Chrono Notes: deferred indexing failed", error);
       new Notice(formatPluginErrorNotice(message, this.getTranslator().t));
     }
   }
@@ -681,16 +681,16 @@ export default class ChronoNotesPlugin extends Plugin {
         await noteIndex.start();
       } catch (recoveryError) {
         if (cacheError !== null) {
-          console.error("Chrono Notes Calendar: failed to clear NoteIndex cache", cacheError);
+          console.error("Chrono Notes: failed to clear NoteIndex cache", cacheError);
         }
         console.error(
-          "Chrono Notes Calendar: initial NoteIndex cache rebuild start failed",
+          "Chrono Notes: initial NoteIndex cache rebuild start failed",
           error,
         );
         throw recoveryError;
       }
       console.error(
-        "Chrono Notes Calendar: recovered a failed NoteIndex cache rebuild start",
+        "Chrono Notes: recovered a failed NoteIndex cache rebuild start",
         error,
       );
     }
@@ -744,7 +744,7 @@ export default class ChronoNotesPlugin extends Plugin {
       await this.saveSettings();
     } catch (error) {
       this.settings.firstUseGuideSeen = false;
-      console.error("Chrono Notes Calendar: failed to persist first-use guide state", error);
+      console.error("Chrono Notes: failed to persist first-use guide state", error);
       return;
     }
     if (!this.isRuntimeCurrent(runtimeRevision)) return;

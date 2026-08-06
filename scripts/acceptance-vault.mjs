@@ -52,6 +52,7 @@ export async function createAcceptanceVault({
 
   const sourceManifest = await readJson(path.join(resolvedSource, "manifest.json"));
   assert.equal(sourceManifest.id, "chrono-notes", "Unexpected plugin manifest ID");
+  assert.equal(sourceManifest.name, "Chrono Notes", "Unexpected plugin manifest name");
   assert.match(
     sourceManifest.version,
     /^\d+\.\d+\.\d+$/u,
@@ -310,7 +311,7 @@ function createFixtureFiles(settingsSchemaVersion) {
         sources: ["Fixtures/acceptance.ics"],
       },
     }),
-    "Acceptance.md": `# Chrono Notes Calendar acceptance Vault
+    "Acceptance.md": `# Chrono Notes acceptance Vault
 
 This Vault is generated. Do not store personal notes here.
 
@@ -432,7 +433,7 @@ Exercises a third range lane and overflow.
 `,
     "Fixtures/acceptance.ics": `BEGIN:VCALENDAR
 VERSION:2.0
-PRODID:-//Chrono Notes Calendar//Acceptance//EN
+PRODID:-//Chrono Notes//Acceptance//EN
 BEGIN:VEVENT
 UID:team-offsite@example.test
 DTSTART;VALUE=DATE:20260714
