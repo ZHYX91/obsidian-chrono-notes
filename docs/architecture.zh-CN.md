@@ -171,4 +171,4 @@ Properties 日期/时间显示与打开行为使用两个独立 Obsidian 适配�
 
 设置页显示期间由一个可释放的共享路径目录持有按路径预排序的文件夹与 Markdown 文件元数据。Vault create/delete/rename 只标记目录失效，下次查询再重建；modify 不触发。空查询直接截取候选上限，模糊查询扫描全部候选以保持 Obsidian 排名，但只用有界 top-K 结构选择实际建议，不对全部命中排序。隐藏设置页时注销 Vault 监听并清空目录。
 
-插件组合不等待完整 Vault 扫描，先注册日历、命令、设置和宿主监听；Obsidian 报告布局就绪后，再并行后台启动 NoteIndex 与首次 ICS 刷新。快照中独立、稳定、可订阅的 readiness 是权威边界：未知路径派生为 indexing，创建命令延后到 ready；后台启动失败通过 Obsidian Notice 暴露，但不让已注册 UI 整体不可用。运行时 revision 检查与 `stop()` 共同阻止卸载后迟到的启动工作重新激活插件。所有运行时服务都位于 `createChronoRuntime()` 创建的单一 `ChronoRuntime` 实例内：插件只通过该对象访问索引、命令、Navbar 与 Properties 适配器，`dispose()` 与插件卸载路径合并，卸载后不再持有或触碰已释放服务。
+插件组合不等待完整 Vault 扫描，先注册日历、命令、设置和宿主监听；Obsidian 报告布局就绪后，再并行后台启动 NoteIndex 与首次 ICS 刷新。快照中独立、稳定、可订阅的 readiness 是权威边界：未知路径派生为 indexing，创建命令延后到 ready；后台启动失败通过 Obsidian Notice 暴露，但不让已注册 UI 整体不可用。运行时 revision 检查与 `stop()` 共同阻止卸载后迟到的启动工作重新激活插件。NoteIndex 还在现有状态上维护一个有界的内存诊断快照：待处理工作数、最近全量索引和最近实时增量批次的完成时间、耗时及影响路径数；后台缓存核对不会覆盖“最近增量”指标。诊断使用独立订阅通道，因此更新时间不会唤醒日历查询订阅，也不会触发额外 Vault 读取。所有运行时服务都位于 `createChronoRuntime()` 创建的单一 `ChronoRuntime` 实例内：插件只通过该对象访问索引、命令、Navbar 与 Properties 适配器，`dispose()` 与插件卸载路径合并，卸载后不再持有或触碰已释放服务。

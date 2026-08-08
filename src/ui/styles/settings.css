@@ -56,6 +56,48 @@
   margin: 4px 0 12px;
 }
 
+.chrono-notes-index-status-setting {
+  flex-wrap: wrap;
+  align-items: flex-start;
+}
+
+.chrono-notes-index-details {
+  min-width: 0;
+  flex: 1 0 100%;
+  margin-top: 8px;
+}
+
+.chrono-notes-index-details > summary {
+  min-height: 34px;
+  cursor: pointer;
+  color: var(--text-muted);
+  font-size: var(--font-ui-small);
+}
+
+.chrono-notes-index-metrics {
+  display: grid;
+  gap: var(--size-2-1);
+  margin: var(--size-2-2) 0 0;
+}
+
+.chrono-notes-index-metrics > div {
+  display: grid;
+  min-width: 0;
+  grid-template-columns: minmax(8rem, 1fr) minmax(0, 2fr);
+  gap: var(--size-2-2);
+}
+
+.chrono-notes-index-metrics dt {
+  color: var(--text-muted);
+}
+
+.chrono-notes-index-metrics dd {
+  min-width: 0;
+  margin: 0;
+  overflow-wrap: anywhere;
+  font-variant-numeric: tabular-nums;
+}
+
 .chrono-notes-settings-panel {
   container-type: inline-size;
   min-width: 0;
@@ -233,4 +275,14 @@
 
 .chrono-notes-settings-panel textarea {
   min-height: 88px;
+}
+
+body.is-mobile .chrono-notes-index-details > summary {
+  min-height: 44px;
+}
+
+@container (max-width: 420px) {
+  .chrono-notes-index-metrics > div {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }

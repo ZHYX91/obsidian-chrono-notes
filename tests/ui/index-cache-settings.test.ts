@@ -1,4 +1,5 @@
 import type { Setting } from "obsidian";
+import { Window } from "happy-dom";
 import { describe, expect, it, vi } from "vitest";
 
 vi.mock("obsidian", () => ({ Setting: class {} }));
@@ -12,6 +13,7 @@ import type {
   SettingsHost,
   SettingsSectionContext,
 } from "../../src/ui/settings/settings-section-context";
+import { installObsidianDomFactories } from "../setup/obsidian-dom";
 
 describe("index and cache settings", () => {
   it("updates the index summary through a cleanup-safe dedicated subscription", () => {
@@ -22,6 +24,9 @@ describe("index and cache settings", () => {
     expect(harness.setDesc).toHaveBeenLastCalledWith(
       "Ready. 3 notes indexed; 0 read errors.",
     );
+    expect(harness.settingEl.querySelector("details")?.open).toBe(false);
+    expect(harness.settingEl.textContent).toContain("Indexed notes3");
+    expect(harness.settingEl.textContent).toContain("Last full indexNot yet available");
 
     harness.status = {
       ...harness.status,
@@ -84,13 +89,18 @@ describe("index and cache settings", () => {
 
 function createHarness() {
   const listeners = new Set<() => void>();
+  const diagnosticsListeners = new Set<() => void>();
   const setName = vi.fn();
   const setDesc = vi.fn();
   const setButtonText = vi.fn();
   const setDisabled = vi.fn();
   const hints: string[] = [];
   let click: (() => void | Promise<void>) | null = null;
+  const window = new Window();
+  installObsidianDomFactories(window.document as unknown as Document);
+  const settingEl = window.document.createElement("div") as unknown as HTMLElement;
   const setting = {
+    settingEl,
     descEl: {
       createDiv: ({ text }: { text: string }) => {
         hints.push(text);
@@ -139,6 +149,7 @@ function createHarness() {
       rebuildingCache: false,
     } as NonNullable<ReturnType<SettingsHost["getNoteIndexStatus"]>>,
     setting,
+    settingEl,
     setName,
     setDesc,
     setButtonText,
@@ -149,7 +160,7 @@ function createHarness() {
     notifyIndex: () => {
       for (const listener of listeners) listener();
     },
-    listenerCount: () => listeners.size,
+    listenerCount: () => listeners.size + diagnosticsListeners.size,
     clickButton: async () => {
       if (click === null) throw new Error("Expected a button click handler.");
       await click();
@@ -160,6 +171,15 @@ function createHarness() {
     subscribeNoteIndex: (listener: () => void) => {
       listeners.add(listener);
       return () => listeners.delete(listener);
+    },
+    getNoteIndexDiagnostics: () => ({
+      pendingUpdateCount: 0,
+      lastFullIndex: null,
+      lastIncrementalUpdate: null,
+    }),
+    subscribeNoteIndexDiagnostics: (listener: () => void) => {
+      diagnosticsListeners.add(listener);
+      return () => diagnosticsListeners.delete(listener);
     },
     getNoteIndexCacheStatus: getCacheStatus,
     rebuildNoteIndexCache: rebuild,

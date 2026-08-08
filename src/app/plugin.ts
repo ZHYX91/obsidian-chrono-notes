@@ -14,7 +14,11 @@ import { IcsEventIndex, type IcsEventIndexSnapshot } from "../features/calendar/
 import { isPeriodicNotePathIndexing } from "../features/calendar/indexed-periodic-note";
 import { notifyListeners } from "../features/notify-listeners";
 import { resolveNoteCreationConfirmation } from "../features/notes/note-creation-confirmation";
-import { NoteIndex, type NoteIndexStatus } from "../features/notes/note-index";
+import {
+  NoteIndex,
+  type NoteIndexDiagnosticsSnapshot,
+  type NoteIndexStatus,
+} from "../features/notes/note-index";
 import type { NoteIndexCacheStorageStatus } from "../features/notes/note-index-cache";
 import { getSettingsChangeImpact } from "../features/settings/settings-change-impact";
 import type { TaskCommandResult } from "../features/tasks/task-commands";
@@ -551,6 +555,14 @@ export default class ChronoNotesPlugin extends Plugin {
       unsubscribeIndex();
       this.noteIndexStatusListeners.delete(listener);
     };
+  }
+
+  getNoteIndexDiagnostics(): NoteIndexDiagnosticsSnapshot | null {
+    return this.noteIndex?.getDiagnostics() ?? null;
+  }
+
+  subscribeNoteIndexDiagnostics(listener: () => void): () => void {
+    return this.noteIndex?.subscribeDiagnostics(listener) ?? (() => undefined);
   }
 
   async getNoteIndexCacheStatus(): Promise<NoteIndexCacheStorageStatus> {

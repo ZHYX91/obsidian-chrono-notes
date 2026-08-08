@@ -180,6 +180,31 @@ describe("persistent NoteIndex cache", () => {
     index.stop();
   });
 
+  it("does not report background verification as a live incremental update", async () => {
+    const source = new MetadataNoteSource();
+    source.files = [FILE];
+    source.read.mockResolvedValue("old");
+    const verificationCallbacks: Array<() => void> = [];
+    const index = new NoteIndex(source, {
+      cache: new MemoryNoteIndexCache(cached("old")),
+      operationClock: () => 10,
+      wallClock: () => 1_000,
+      scheduleBackgroundVerification: (callback) => {
+        verificationCallbacks.push(callback);
+        return () => undefined;
+      },
+    });
+
+    await index.start();
+    expect(index.getDiagnostics().lastIncrementalUpdate).toBeNull();
+    verificationCallbacks[0]?.();
+    await vi.waitFor(() => expect(source.read).toHaveBeenCalledOnce());
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    expect(index.getDiagnostics().lastIncrementalUpdate).toBeNull();
+    index.stop();
+  });
+
   it("lets background verification repair same-metadata external edits", async () => {
     const source = new MetadataNoteSource();
     source.files = [FILE];

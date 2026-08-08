@@ -1,7 +1,10 @@
 import type { App } from "obsidian";
 
 import type { IcsEventIndexSnapshot } from "../../features/calendar/ics-event-index";
-import type { NoteIndexStatus } from "../../features/notes/note-index";
+import type {
+  NoteIndexDiagnosticsSnapshot,
+  NoteIndexStatus,
+} from "../../features/notes/note-index";
 import type { NoteIndexCacheStorageStatus } from "../../features/notes/note-index-cache";
 import type { Translator } from "../../shared/i18n";
 import type { ChronoNotesSettings } from "../../shared/settings";
@@ -17,6 +20,8 @@ export interface SettingsHost {
   openFirstUseGuide(): void;
   getNoteIndexStatus(): (NoteIndexStatus & Readonly<{ rebuildingCache: boolean }>) | null;
   subscribeNoteIndex(listener: () => void): () => void;
+  getNoteIndexDiagnostics(): NoteIndexDiagnosticsSnapshot | null;
+  subscribeNoteIndexDiagnostics(listener: () => void): () => void;
   getNoteIndexCacheStatus(): Promise<NoteIndexCacheStorageStatus>;
   rebuildNoteIndexCache(): Promise<void>;
 }

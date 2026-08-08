@@ -161,6 +161,52 @@ describe("NoteIndex", () => {
     expect(Object.isFrozen(entry.note)).toBe(true);
   });
 
+  it("reports lightweight full and incremental runtime diagnostics", async () => {
+    const source = new FakeNoteSource();
+    source.paths = ["Daily/today.md"];
+    let monotonic = 0;
+    let wallTime = 1_000;
+    source.read
+      .mockImplementationOnce(async () => {
+        monotonic = 25;
+        return "initial";
+      })
+      .mockImplementationOnce(async () => {
+        monotonic = 118;
+        return "modified";
+      });
+    const listener = vi.fn();
+    const index = new NoteIndex(source, {
+      operationClock: () => monotonic,
+      wallClock: () => wallTime,
+    });
+    index.subscribeDiagnostics(listener);
+
+    await index.start();
+    expect(index.getDiagnostics()).toEqual({
+      pendingUpdateCount: 0,
+      lastFullIndex: {
+        completedAt: 1_000,
+        durationMs: 25,
+        affectedPathCount: 1,
+      },
+      lastIncrementalUpdate: null,
+    });
+
+    monotonic = 100;
+    wallTime = 2_000;
+    await index.refresh("Daily/today.md");
+    expect(index.getDiagnostics()).toMatchObject({
+      pendingUpdateCount: 0,
+      lastIncrementalUpdate: {
+        completedAt: 2_000,
+        durationMs: 18,
+        affectedPathCount: 1,
+      },
+    });
+    expect(listener).toHaveBeenCalled();
+  });
+
   it("collects phase timings only when an explicit timing sink is supplied", async () => {
     const source = new FakeNoteSource();
     source.paths = ["Daily/today.md"];
