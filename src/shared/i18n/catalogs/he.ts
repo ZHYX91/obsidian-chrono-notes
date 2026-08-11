@@ -342,7 +342,7 @@ export const HE_MESSAGES = Object.freeze({
   "settings.templates.periodicHeading": "תבניות להערות תקופתיות",
   "settings.templates.intervalHeading": "תבנית להערת טווח",
   "settings.templates.path": "קובץ תבנית",
-  "settings.templates.pathDesc": "בחר קובץ Markdown ב-Vault בזמן ההקלדה. השאר ריק כדי להשתמש בתוכן הריק או המופק כברירת מחדל. מצייני המקום הזמינים נקבעים לפי מנוע התבניות תחת כללי > הגדרות תבנית.",
+  "settings.templates.pathDesc": "בחר קובץ Markdown ב-Vault בזמן ההקלדה. הנתיב יחסי לשורש ה-Vault, אינו משתמש בהגדרת התיקייה של תוסף הליבה Templates ב-Obsidian, והסיומת .md אופציונלית. השאר ריק כדי להשתמש בתוכן הריק או המופק כברירת מחדל. מצייני המקום הזמינים נקבעים לפי מנוע התבניות תחת כללי > הגדרות תבנית.",
   "settings.templates.pathExample": "דוגמה",
   "settings.templates.builtinHelp": "FORMAT במצייני המקום המובנים משתמש בתבנית Obsidian/Moment. מציינים ותבניות שאינם נתמכים נשארים ללא שינוי.",
   "settings.templates.templaterHelp": "משתמש בתחביר Templater. Chrono Notes מזריק את עזרי tp_calendar לקריאה בלבד הבאים.",

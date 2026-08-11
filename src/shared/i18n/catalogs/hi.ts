@@ -334,7 +334,7 @@ export const HI_MESSAGES = Object.freeze({
   "settings.templates.periodicHeading": "आवधिक नोट टेम्पलेट",
   "settings.templates.intervalHeading": "रेंज नोट टेम्पलेट",
   "settings.templates.path": "टेम्पलेट फ़ाइल",
-  "settings.templates.pathDesc": "टाइप करते समय Vault में Markdown फ़ाइल चुनें। डिफ़ॉल्ट खाली या उत्पन्न सामग्री के लिए इसे खाली छोड़ दें। उपलब्ध प्लेसहोल्डर सामान्य > टेम्पलेट सेटिंग्स में चुने गए टेम्पलेट इंजन पर निर्भर करते हैं।",
+  "settings.templates.pathDesc": "टाइप करते समय Vault में Markdown फ़ाइल चुनें। पथ Vault रूट के सापेक्ष है, Obsidian के मुख्य Templates प्लगइन की फ़ोल्डर सेटिंग का उपयोग नहीं करता, और .md प्रत्यय वैकल्पिक है। डिफ़ॉल्ट खाली या उत्पन्न सामग्री के लिए इसे खाली छोड़ दें। उपलब्ध प्लेसहोल्डर सामान्य > टेम्पलेट सेटिंग्स में चुने गए टेम्पलेट इंजन पर निर्भर करते हैं।",
   "settings.templates.pathExample": "उदाहरण",
   "settings.templates.builtinHelp": "बिल्ट-इन प्लेसहोल्डर में FORMAT Obsidian/Moment प्रारूप का उपयोग करता है। अज्ञात प्लेसहोल्डर और असमर्थित प्रारूप अपरिवर्तित रहते हैं।",
   "settings.templates.templaterHelp": "Templater सिंटैक्स का उपयोग करता है। Chrono Notes निम्न केवल-पढ़ने योग्य tp_calendar सहायक जोड़ता है।",

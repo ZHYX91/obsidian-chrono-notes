@@ -366,7 +366,7 @@ export const AR_MESSAGES = Object.freeze({
   "settings.templates.periodicHeading": "قوالب الملاحظات الدورية",
   "settings.templates.intervalHeading": "قالب ملاحظة النطاق",
   "settings.templates.path": "ملف القالب",
-  "settings.templates.pathDesc": "اختر ملف Markdown من Vault أثناء الكتابة. اتركه فارغًا لاستخدام المحتوى الافتراضي الفارغ أو المُنشأ. تعتمد العناصر النائبة المتاحة على محرك القوالب ضمن عام > إعدادات القالب.",
+  "settings.templates.pathDesc": "اختر ملف Markdown من Vault أثناء الكتابة. المسار نسبي إلى جذر Vault، ولا يستخدم إعداد مجلد إضافة Templates الأساسية في Obsidian، وامتداد .md اختياري. اتركه فارغًا لاستخدام المحتوى الافتراضي الفارغ أو المُنشأ. تعتمد العناصر النائبة المتاحة على محرك القوالب ضمن عام > إعدادات القالب.",
   "settings.templates.pathExample": "مثال",
   "settings.templates.builtinHelp": "تستخدم FORMAT في العناصر النائبة المدمجة تنسيق Obsidian/Moment. تبقى العناصر والصيغ غير المدعومة دون تغيير.",
   "settings.templates.templaterHelp": "يستخدم صيغة Templater. يضيف Chrono Notes مساعدات tp_calendar للقراءة فقط التالية.",

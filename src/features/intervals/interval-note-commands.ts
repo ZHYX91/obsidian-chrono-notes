@@ -19,7 +19,7 @@ import type {
 export interface IntervalNoteFilePort {
   exists(path: string): boolean;
   create(path: string, content: string): Promise<void>;
-  process(path: string, update: (content: string) => string): Promise<void>;
+  modify(path: string, content: string): Promise<void>;
   delete(path: string): Promise<void>;
 }
 
@@ -124,8 +124,6 @@ export class IntervalNoteCommands {
   ): Promise<void> {
     let created = false;
     try {
-      await this.files.create(spec.path, buildIntervalNoteContent(spec));
-      created = true;
       const context: IntervalNoteTemplateContext = Object.freeze({
         kind: "interval",
         start: spec.start,
@@ -137,11 +135,22 @@ export class IntervalNoteCommands {
         templateEngine: settings.templateEngine,
         title: spec.title,
       });
-      await this.templates.populate(spec.path, context);
-      await this.files.process(
-        spec.path,
-        (content) => applyIntervalNoteMetadata(content, spec),
+      const prepared = await this.templates.prepare(
+        context,
+        buildIntervalNoteContent(spec),
       );
+      await this.files.create(
+        spec.path,
+        applyIntervalNoteMetadata(prepared.initialContent, spec),
+      );
+      created = true;
+      if (prepared.renderAfterCreate !== undefined) {
+        const rendered = await prepared.renderAfterCreate(spec.path);
+        await this.files.modify(
+          spec.path,
+          applyIntervalNoteMetadata(rendered, spec),
+        );
+      }
     } catch (cause) {
       let rollbackCause: unknown;
       if (created) {

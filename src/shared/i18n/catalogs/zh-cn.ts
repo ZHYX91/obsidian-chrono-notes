@@ -325,7 +325,7 @@ export const ZH_CN_MESSAGES = {
   "settings.templates.periodicHeading": "周期笔记模板",
   "settings.templates.intervalHeading": "区间笔记模板",
   "settings.templates.path": "模板文件",
-  "settings.templates.pathDesc": "输入时可从 Vault 中的 Markdown 文件建议里选择。留空则使用默认的空白内容或生成内容。可用占位符取决于“常规 → 模板设置”中的模板引擎。",
+  "settings.templates.pathDesc": "输入时可从 Vault 中的 Markdown 文件建议里选择。路径相对 Vault 根目录，不读取 Obsidian 核心 Templates 插件的模板文件夹设置，.md 后缀可省略。留空则使用默认的空白内容或生成内容。可用占位符取决于“常规 → 模板设置”中的模板引擎。",
   "settings.templates.pathExample": "示例",
   "settings.templates.builtinHelp": "内置占位符的 FORMAT 使用 Obsidian/Moment 格式。未知占位符和不支持的格式会原样保留。",
   "settings.templates.templaterHelp": "使用 Templater 语法。Chrono Notes 会注入以下只读 tp_calendar 辅助项。",

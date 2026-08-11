@@ -334,7 +334,7 @@ export const FA_MESSAGES = Object.freeze({
   "settings.templates.periodicHeading": "الگوهای یادداشت دوره‌ای",
   "settings.templates.intervalHeading": "الگوی یادداشت محدوده",
   "settings.templates.path": "فایل الگو",
-  "settings.templates.pathDesc": "هنگام تایپ از میان فایل‌های Markdown در Vault انتخاب کنید. برای استفاده از محتوای خالی یا تولیدشده پیش‌فرض، خالی بگذارید. جای‌نگهدارهای در دسترس به موتور الگو در عمومی > تنظیمات الگو بستگی دارند.",
+  "settings.templates.pathDesc": "هنگام تایپ از میان فایل‌های Markdown در Vault انتخاب کنید. مسیر نسبت به ریشه Vault است، از تنظیم پوشه افزونه اصلی Templates در Obsidian استفاده نمی‌کند و پسوند .md اختیاری است. برای استفاده از محتوای خالی یا تولیدشده پیش‌فرض، خالی بگذارید. جای‌نگهدارهای در دسترس به موتور الگو در عمومی > تنظیمات الگو بستگی دارند.",
   "settings.templates.pathExample": "مثال",
   "settings.templates.builtinHelp": "FORMAT در جای‌نگهدارهای داخلی از قالب Obsidian/Moment استفاده می‌کند. جای‌نگهدارها و قالب‌های پشتیبانی‌نشده بدون تغییر می‌مانند.",
   "settings.templates.templaterHelp": "از نحو Templater استفاده می‌کند. Chrono Notes کمک‌تابع‌های فقط‌خواندنی tp_calendar زیر را تزریق می‌کند.",

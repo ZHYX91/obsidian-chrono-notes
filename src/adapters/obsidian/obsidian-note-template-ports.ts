@@ -8,6 +8,7 @@ import {
 import type {
   NoteTemplateContext,
   NoteTemplatePort,
+  PreparedNoteTemplate,
 } from "../../features/templates/note-template-port";
 import { isMarkdownFile } from "./obsidian-markdown-files";
 
@@ -18,21 +19,20 @@ export class ObsidianBuiltinTemplatePort implements NoteTemplatePort {
     private readonly timeZone?: string,
   ) {}
 
-  async populate(path: string, context: NoteTemplateContext): Promise<void> {
+  async prepare(
+    context: NoteTemplateContext,
+    defaultContent: string,
+  ): Promise<PreparedNoteTemplate> {
     const configuredPath = context.templatePath.trim();
-    if (configuredPath.length === 0) return;
+    if (configuredPath.length === 0) return preparedContent(defaultContent);
 
     const templatePath = withMarkdownExtension(configuredPath);
     const template = this.vault.getAbstractFileByPath(templatePath);
     if (!isMarkdownFile(template)) {
       throw new Error(`Template note not found: ${templatePath}`);
     }
-    const target = this.vault.getAbstractFileByPath(path);
-    if (!isMarkdownFile(target)) {
-      throw new Error(`Target note not found: ${path}`);
-    }
 
-    const content = await this.vault.read(template);
+    const content = await this.vault.cachedRead(template);
     const baseContext = {
       locale: context.locale,
       title: context.title,
@@ -50,7 +50,7 @@ export class ObsidianBuiltinTemplatePort implements NoteTemplatePort {
           end: context.end,
           dayCount: context.dayCount,
         });
-    await this.vault.modify(target, rendered);
+    return preparedContent(rendered);
   }
 }
 
@@ -68,10 +68,13 @@ export class ObsidianNoteTemplatePort implements NoteTemplatePort {
     this.templater = new ObsidianTemplaterTemplatePort(app, vault);
   }
 
-  populate(path: string, context: NoteTemplateContext): Promise<void> {
+  prepare(
+    context: NoteTemplateContext,
+    defaultContent: string,
+  ): Promise<PreparedNoteTemplate> {
     return context.templateEngine === "templater"
-      ? this.templater.populate(path, context)
-      : this.builtin.populate(path, context);
+      ? this.templater.prepare(context, defaultContent)
+      : this.builtin.prepare(context, defaultContent);
   }
 }
 
@@ -81,14 +84,19 @@ class ObsidianTemplaterTemplatePort implements NoteTemplatePort {
     private readonly vault: Vault,
   ) {}
 
-  async populate(path: string, context: NoteTemplateContext): Promise<void> {
+  async prepare(
+    context: NoteTemplateContext,
+    defaultContent: string,
+  ): Promise<PreparedNoteTemplate> {
     const configuredPath = context.templatePath.trim();
-    if (configuredPath.length === 0) return;
+    if (configuredPath.length === 0) return preparedContent(defaultContent);
 
     const templater = getTemplaterPlugin(this.app)?.templater;
+    const createRunningConfig = templater?.create_running_config;
+    const parseTemplate = templater?.parse_template;
     if (
-      typeof templater?.create_running_config !== "function" ||
-      typeof templater.parse_template !== "function"
+      typeof createRunningConfig !== "function" ||
+      typeof parseTemplate !== "function"
     ) {
       throw new Error("Templater is not installed or enabled.");
     }
@@ -98,26 +106,35 @@ class ObsidianTemplaterTemplatePort implements NoteTemplatePort {
     if (!isMarkdownFile(template)) {
       throw new Error(`Template note not found: ${templatePath}`);
     }
-    const target = this.vault.getAbstractFileByPath(path);
-    if (!isMarkdownFile(target)) {
-      throw new Error(`Target note not found: ${path}`);
-    }
 
-    const rawTemplate = await this.vault.read(template);
-    const config = templater.create_running_config(template, target, 1);
-    let rendered: unknown;
-    try {
-      rendered = await templater.parse_template(
-        config,
-        buildTemplaterTemplate(rawTemplate, context),
-      );
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      throw new Error(`Templater rendering failed: ${message}`, { cause: error });
-    }
-    const content = Array.isArray(rendered) ? String(rendered[0]) : String(rendered);
-    await this.vault.modify(target, content);
+    const rawTemplate = await this.vault.cachedRead(template);
+    return Object.freeze({
+      initialContent: defaultContent,
+      renderAfterCreate: async (path: string) => {
+        const target = this.vault.getAbstractFileByPath(path);
+        if (!isMarkdownFile(target)) {
+          throw new Error(`Target note not found: ${path}`);
+        }
+        const config = createRunningConfig.call(templater, template, target, 1);
+        let rendered: unknown;
+        try {
+          rendered = await parseTemplate.call(
+            templater,
+            config,
+            buildTemplaterTemplate(rawTemplate, context),
+          );
+        } catch (error) {
+          const message = error instanceof Error ? error.message : String(error);
+          throw new Error(`Templater rendering failed: ${message}`, { cause: error });
+        }
+        return Array.isArray(rendered) ? String(rendered[0]) : String(rendered);
+      },
+    });
   }
+}
+
+function preparedContent(initialContent: string): PreparedNoteTemplate {
+  return Object.freeze({ initialContent });
 }
 
 function withMarkdownExtension(path: string): string {

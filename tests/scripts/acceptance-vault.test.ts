@@ -54,9 +54,13 @@ describe("acceptance Vault lifecycle", () => {
       ),
     ) as {
       calendarExtensions: string[];
+      cascadeLargerNotes: boolean;
       ics: { sources: string[] };
       locale: string;
-      periodicNotes: { daily: { pattern: string } };
+      periodicNotes: {
+        daily: { pattern: string; templatePath: string };
+        monthly: { templatePath: string };
+      };
       rangeNotes: { templatePath: string };
       schemaVersion: number;
     };
@@ -78,15 +82,25 @@ describe("acceptance Vault lifecycle", () => {
     });
     expect(settings).toMatchObject({
       calendarExtensions: ["persian", "islamic-umalqura"],
+      cascadeLargerNotes: true,
       ics: { sources: ["Fixtures/acceptance.ics"] },
       locale: "en",
-      periodicNotes: { daily: { pattern: "[Daily]/YYYY-MM-DD" } },
-      rangeNotes: { templatePath: "" },
+      periodicNotes: {
+        daily: {
+          pattern: "[Daily]/YYYY-MM-DD",
+          templatePath: "Templates/Periodic.md",
+        },
+        monthly: { templatePath: "Templates/Periodic.md" },
+      },
+      rangeNotes: { templatePath: "Templates/Range.md" },
       schemaVersion: 16,
     });
     expect(communityPlugins).toEqual(["chrono-notes"]);
     expect(ics).toContain("SUMMARY:Team offsite");
     expect(ics).not.toContain("fixture");
+    await expect(
+      readFile(path.join(target, "Templates", "Periodic.md"), "utf8"),
+    ).resolves.toContain("formatted={{date:YYYY/MM/DD dddd}}");
     expect(
       await readFile(
         path.join(target, ".obsidian", "plugins", "chrono-notes", "main.js"),

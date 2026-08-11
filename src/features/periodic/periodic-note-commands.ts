@@ -16,7 +16,8 @@ export type NoteOpenTarget = "default" | "tab";
 
 export interface PeriodicNoteFilePort {
   exists(path: string): boolean;
-  createEmpty(path: string): Promise<void>;
+  create(path: string, content: string): Promise<void>;
+  modify(path: string, content: string): Promise<void>;
   delete(path: string): Promise<void>;
 }
 
@@ -220,8 +221,6 @@ export class PeriodicNoteCommands {
   ): Promise<void> {
     let created = false;
     try {
-      await this.files.createEmpty(path);
-      created = true;
       const config = settings.periodicNotes[noteType];
       const context: PeriodicNoteTemplateContext = Object.freeze({
         kind: "periodic",
@@ -233,7 +232,12 @@ export class PeriodicNoteCommands {
         templateEngine: settings.templateEngine,
         title: getNoteTitle(path),
       });
-      await this.templates.populate(path, context);
+      const prepared = await this.templates.prepare(context, "");
+      await this.files.create(path, prepared.initialContent);
+      created = true;
+      if (prepared.renderAfterCreate !== undefined) {
+        await this.files.modify(path, await prepared.renderAfterCreate(path));
+      }
     } catch (cause) {
       let rollbackCause: unknown;
       if (created) {

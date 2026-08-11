@@ -327,7 +327,7 @@ export const EN_MESSAGES = {
   "settings.templates.periodicHeading": "Periodic note templates",
   "settings.templates.intervalHeading": "Range note template",
   "settings.templates.path": "Template file",
-  "settings.templates.pathDesc": "Choose a Markdown file in the Vault while typing. Leave empty to use the default empty or generated content. Available placeholders follow the template engine under General > Template settings.",
+  "settings.templates.pathDesc": "Choose a Markdown file in the Vault while typing. The path is relative to the Vault root, does not use Obsidian's core Templates folder setting, and may omit .md. Leave empty to use the default empty or generated content. Available placeholders follow the template engine under General > Template settings.",
   "settings.templates.pathExample": "Example",
   "settings.templates.builtinHelp": "Built-in placeholders use Obsidian/Moment formats inside FORMAT. Unknown placeholders and unsupported formats remain unchanged.",
   "settings.templates.templaterHelp": "Uses Templater syntax. Chrono Notes injects the following read-only tp_calendar helpers.",

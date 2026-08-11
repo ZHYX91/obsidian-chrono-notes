@@ -266,41 +266,41 @@ function createFixtureFiles(settingsSchemaVersion) {
       statisticDisplayDimension: "word-count",
       statisticValueStep: 20,
       yearViewHeatmap: false,
-      confirmPeriodicNoteCreation: true,
-      confirmIntervalNoteCreation: true,
-      cascadeLargerNotes: false,
+      confirmPeriodicNoteCreation: false,
+      confirmIntervalNoteCreation: false,
+      cascadeLargerNotes: true,
       templateEngine: "builtin",
       periodicNotes: {
         daily: {
           enabled: true,
           pattern: "[Daily]/YYYY-MM-DD",
-          templatePath: "",
+          templatePath: "Templates/Periodic.md",
         },
         weekly: {
           enabled: true,
           pattern: "[Weekly]/GGGG-[W]WW",
-          templatePath: "",
+          templatePath: "Templates/Periodic.md",
         },
         monthly: {
           enabled: true,
           pattern: "[Monthly]/YYYY-MM",
-          templatePath: "",
+          templatePath: "Templates/Periodic.md",
         },
         quarterly: {
           enabled: true,
           pattern: "[Quarterly]/YYYY-[Q]Q",
-          templatePath: "",
+          templatePath: "Templates/Periodic.md",
         },
         yearly: {
           enabled: true,
           pattern: "[Yearly]/YYYY",
-          templatePath: "",
+          templatePath: "Templates/Periodic.md",
         },
       },
       rangeNotes: {
         showInCalendar: true,
         folder: "Intervals",
-        templatePath: "",
+        templatePath: "Templates/Range.md",
         scanScope: "range-folder",
         customFolder: "",
         monthViewLimit: 2,
@@ -318,6 +318,27 @@ This Vault is generated. Do not store personal notes here.
 Primary calendar window: July 2026.
 Layout combinations: February 17 and February 28, 2026.
 Future calendar locale samples: March 20 and September 11, 2026.
+`,
+    "Templates/Periodic.md": `---
+acceptance-template: periodic
+---
+# {{title}}
+
+target={{date}}
+formatted={{date:YYYY/MM/DD dddd}}
+created={{time:HH:mm:ss}}
+literal={{unknown}}
+`,
+    "Templates/Range.md": `---
+acceptance-template: range
+start: template-value
+end: template-value
+---
+# {{title}}
+
+range={{start}}..{{end}}
+days={{days}}
+created={{time:HH:mm:ss}}
 `,
     "Date display.md": `---
 date: 2026-07-31

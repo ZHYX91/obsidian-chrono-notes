@@ -44,29 +44,37 @@ function createSettings(
 
 function createPorts(existing: readonly string[] = []) {
   const paths = new Set(existing);
+  const contents = new Map<string, string>();
   const files: PeriodicNoteFilePort = {
     exists: vi.fn((path) => paths.has(path)),
-    createEmpty: vi.fn(async (path) => {
+    create: vi.fn(async (path, content) => {
       paths.add(path);
+      contents.set(path, content);
+    }),
+    modify: vi.fn(async (path, content) => {
+      contents.set(path, content);
     }),
     delete: vi.fn(async (path) => {
       paths.delete(path);
+      contents.delete(path);
     }),
   };
   const templates: NoteTemplatePort = {
-    populate: vi.fn(async () => undefined),
+    prepare: vi.fn(async (_context, defaultContent) => ({
+      initialContent: defaultContent,
+    })),
   };
   const workspace: PeriodicNoteWorkspacePort = {
     open: vi.fn(async () => undefined),
   };
-  return { files, templates, workspace, paths };
+  return { files, templates, workspace, paths, contents };
 }
 
 describe("PeriodicNoteCommands", () => {
   it("coordinates same-path creation while preserving each request target and cascade", async () => {
     const ports = createPorts();
-    const population = deferred<void>();
-    vi.mocked(ports.templates.populate).mockReturnValueOnce(population.promise);
+    const preparation = deferred<{ initialContent: string }>();
+    vi.mocked(ports.templates.prepare).mockReturnValueOnce(preparation.promise);
     const commands = new PeriodicNoteCommands(ports.files, ports.templates, ports.workspace);
     const settings = createSettings({
       daily: { enabled: true, pattern: "[Daily]/YYYY-MM-DD" },
@@ -78,14 +86,14 @@ describe("PeriodicNoteCommands", () => {
       { date, noteType: "daily", target: "default" },
       settings,
     );
-    await vi.waitFor(() => expect(ports.files.createEmpty).toHaveBeenCalledOnce());
+    await vi.waitFor(() => expect(ports.templates.prepare).toHaveBeenCalledOnce());
     const second = commands.openOrCreate(
       { date, noteType: "daily", target: "tab", cascade: true },
       settings,
     );
     expect(ports.workspace.open).not.toHaveBeenCalled();
 
-    population.resolve();
+    preparation.resolve({ initialContent: "" });
     await expect(Promise.all([first, second])).resolves.toEqual([
       {
         status: "opened",
@@ -103,8 +111,8 @@ describe("PeriodicNoteCommands", () => {
       },
     ]);
 
-    expect(ports.files.createEmpty).toHaveBeenCalledTimes(2);
-    expect(ports.files.createEmpty).toHaveBeenCalledWith("Daily/2026-05-18.md");
+    expect(ports.files.create).toHaveBeenCalledTimes(2);
+    expect(ports.files.create).toHaveBeenCalledWith("Daily/2026-05-18.md", "");
     expect(ports.workspace.open).toHaveBeenCalledWith("Daily/2026-05-18.md", "default");
     expect(ports.workspace.open).toHaveBeenCalledWith("Daily/2026-05-18.md", "tab");
   });
@@ -148,8 +156,8 @@ describe("PeriodicNoteCommands", () => {
       cascade: [],
     });
     expect(ports.workspace.open).toHaveBeenCalledWith("Daily/2026-05-18.md", "tab");
-    expect(ports.files.createEmpty).not.toHaveBeenCalled();
-    expect(ports.templates.populate).not.toHaveBeenCalled();
+    expect(ports.files.create).not.toHaveBeenCalled();
+    expect(ports.templates.prepare).not.toHaveBeenCalled();
   });
 
   it("cancels before creating when confirmation is declined", async () => {
@@ -179,11 +187,14 @@ describe("PeriodicNoteCommands", () => {
       noteType: "daily",
       path: "Daily/2026-05-18.md",
     });
-    expect(ports.files.createEmpty).not.toHaveBeenCalled();
+    expect(ports.files.create).not.toHaveBeenCalled();
   });
 
   it("creates, populates, and opens a note with one canonical context", async () => {
     const ports = createPorts();
+    vi.mocked(ports.templates.prepare).mockResolvedValueOnce({
+      initialContent: "# rendered quarterly note",
+    });
     const commands = new PeriodicNoteCommands(ports.files, ports.templates, ports.workspace);
     const settings = createSettings({
       quarterly: {
@@ -204,23 +215,30 @@ describe("PeriodicNoteCommands", () => {
       created: true,
       cascade: [],
     });
-    expect(ports.files.createEmpty).toHaveBeenCalledWith("Quarterly/2026-Q2.md");
-    expect(ports.templates.populate).toHaveBeenCalledWith("Quarterly/2026-Q2.md", {
-      kind: "periodic",
-      date: { year: 2026, month: 4, day: 1 },
-      locale: "en-US",
-      noteType: "quarterly",
-      path: "Quarterly/2026-Q2.md",
-      templatePath: "Templates/Quarterly.md",
-      templateEngine: "builtin",
-      title: "2026-Q2",
-    });
+    expect(ports.templates.prepare).toHaveBeenCalledWith(
+      {
+        kind: "periodic",
+        date: { year: 2026, month: 4, day: 1 },
+        locale: "en-US",
+        noteType: "quarterly",
+        path: "Quarterly/2026-Q2.md",
+        templatePath: "Templates/Quarterly.md",
+        templateEngine: "builtin",
+        title: "2026-Q2",
+      },
+      "",
+    );
+    expect(ports.files.create).toHaveBeenCalledWith(
+      "Quarterly/2026-Q2.md",
+      "# rendered quarterly note",
+    );
+    expect(ports.files.modify).not.toHaveBeenCalled();
     expect(ports.workspace.open).toHaveBeenCalledWith("Quarterly/2026-Q2.md", "default");
   });
 
-  it("rolls back the new file and reports the cause when its template fails", async () => {
+  it("fails before file creation when template preparation fails", async () => {
     const ports = createPorts();
-    vi.mocked(ports.templates.populate).mockRejectedValueOnce(new Error("template boom"));
+    vi.mocked(ports.templates.prepare).mockRejectedValueOnce(new Error("template boom"));
     const commands = new PeriodicNoteCommands(ports.files, ports.templates, ports.workspace);
     const settings = createSettings({
       daily: { enabled: true, pattern: "[Daily]/YYYY-MM-DD" },
@@ -238,9 +256,33 @@ describe("PeriodicNoteCommands", () => {
       noteType: "daily",
       cause: new Error("template boom"),
     } satisfies Partial<PeriodicNoteCreationError>);
-    expect(ports.files.delete).toHaveBeenCalledWith("Daily/2026-05-18.md");
+    expect(ports.files.create).not.toHaveBeenCalled();
+    expect(ports.files.delete).not.toHaveBeenCalled();
     expect(ports.paths.has("Daily/2026-05-18.md")).toBe(false);
     expect(ports.workspace.open).not.toHaveBeenCalled();
+  });
+
+  it("rolls back a Templater target when deferred rendering fails", async () => {
+    const ports = createPorts();
+    vi.mocked(ports.templates.prepare).mockResolvedValueOnce({
+      initialContent: "",
+      renderAfterCreate: vi.fn(async () => {
+        throw new Error("templater boom");
+      }),
+    });
+    const commands = new PeriodicNoteCommands(ports.files, ports.templates, ports.workspace);
+    const settings = createSettings({
+      daily: { enabled: true, pattern: "[Daily]/YYYY-MM-DD" },
+    });
+
+    await expect(commands.openOrCreate(
+      { date: { year: 2026, month: 5, day: 18 }, noteType: "daily" },
+      settings,
+    )).rejects.toThrow("templater boom");
+    expect(ports.files.create).toHaveBeenCalledWith("Daily/2026-05-18.md", "");
+    expect(ports.files.modify).not.toHaveBeenCalled();
+    expect(ports.files.delete).toHaveBeenCalledWith("Daily/2026-05-18.md");
+    expect(ports.paths.has("Daily/2026-05-18.md")).toBe(false);
   });
 
   it("cascade-creates every enabled larger period and skips existing notes", async () => {
@@ -275,7 +317,7 @@ describe("PeriodicNoteCommands", () => {
         { noteType: "yearly", path: "Yearly/2026.md", status: "created" },
       ],
     });
-    expect(ports.files.createEmpty).toHaveBeenCalledTimes(3);
+    expect(ports.files.create).toHaveBeenCalledTimes(3);
     expect(confirmCreate).toHaveBeenCalledOnce();
     expect(ports.paths).toEqual(
       new Set([
@@ -289,10 +331,10 @@ describe("PeriodicNoteCommands", () => {
 
   it("rolls back only a failed cascade note and continues with later periods", async () => {
     const ports = createPorts();
-    vi.mocked(ports.templates.populate)
-      .mockResolvedValueOnce(undefined)
+    vi.mocked(ports.templates.prepare)
+      .mockResolvedValueOnce({ initialContent: "" })
       .mockRejectedValueOnce(new Error("weekly template failed"))
-      .mockResolvedValueOnce(undefined);
+      .mockResolvedValueOnce({ initialContent: "" });
     const commands = new PeriodicNoteCommands(ports.files, ports.templates, ports.workspace);
     const settings = createSettings({
       daily: { enabled: true, pattern: "[Daily]/YYYY-MM-DD" },

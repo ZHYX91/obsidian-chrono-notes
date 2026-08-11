@@ -26,6 +26,14 @@ export type NoteTemplateContext =
   | PeriodicNoteTemplateContext
   | IntervalNoteTemplateContext;
 
+export interface PreparedNoteTemplate {
+  readonly initialContent: string;
+  readonly renderAfterCreate?: (path: string) => Promise<string>;
+}
+
 export interface NoteTemplatePort {
-  populate(path: string, context: NoteTemplateContext): Promise<void>;
+  prepare(
+    context: NoteTemplateContext,
+    defaultContent: string,
+  ): Promise<PreparedNoteTemplate>;
 }

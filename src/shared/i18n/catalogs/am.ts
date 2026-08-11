@@ -334,7 +334,7 @@ export const AM_MESSAGES = Object.freeze({
   "settings.templates.periodicHeading": "የወቅታዊ ማስታወሻ አብነቶች",
   "settings.templates.intervalHeading": "የክልል ማስታወሻ አብነት",
   "settings.templates.path": "የአብነት ፋይል",
-  "settings.templates.pathDesc": "በሚተይቡበት ጊዜ በVault ውስጥ የMarkdown ፋይል ይምረጡ። ነባሪ ባዶ ወይም የሚፈጠር ይዘት ለመጠቀም ባዶ ይተዉት። የሚገኙ ቦታ ያዢዎች በአጠቃላይ > አብነት ቅንብሮች ውስጥ በተመረጠው የአብነት ሞተር ይወሰናሉ።",
+  "settings.templates.pathDesc": "በሚተይቡበት ጊዜ በVault ውስጥ የMarkdown ፋይል ይምረጡ። መንገዱ ከVault ስር አንጻር ነው፣ የObsidian ዋና Templates ፕለጊን የአቃፊ ቅንብርን አይጠቀምም፣ እና .md ቅጥያ አማራጭ ነው። ነባሪ ባዶ ወይም የሚፈጠር ይዘት ለመጠቀም ባዶ ይተዉት። የሚገኙ ቦታ ያዢዎች በአጠቃላይ > አብነት ቅንብሮች ውስጥ በተመረጠው የአብነት ሞተር ይወሰናሉ።",
   "settings.templates.pathExample": "ምሳሌ",
   "settings.templates.builtinHelp": "በአብሮገነብ ቦታ ያዢዎች ውስጥ FORMAT የObsidian/Moment ቅርጸትን ይጠቀማል። ያልታወቁ ቦታ ያዢዎችና ያልተደገፉ ቅርጸቶች ሳይለወጡ ይቀራሉ።",
   "settings.templates.templaterHelp": "የTemplater አገባብን ይጠቀማል። Chrono Notes የሚከተሉትን ለንባብ ብቻ tp_calendar ረዳቶች ያክላል።",

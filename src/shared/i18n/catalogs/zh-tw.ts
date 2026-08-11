@@ -326,7 +326,7 @@ export const ZH_TW_MESSAGES = {
   "settings.templates.periodicHeading": "週期筆記範本",
   "settings.templates.intervalHeading": "區間筆記範本",
   "settings.templates.path": "範本檔案",
-  "settings.templates.pathDesc": "輸入時可從 Vault 中的 Markdown 檔案建議裡選擇。留空則使用預設的空白內容或產生內容。可用預留位置取決於「一般 → 範本設定」中的範本引擎。",
+  "settings.templates.pathDesc": "輸入時可從 Vault 中的 Markdown 檔案建議裡選擇。路徑相對於 Vault 根目錄，不會讀取 Obsidian 核心 Templates 外掛的範本資料夾設定，.md 副檔名可省略。留空則使用預設的空白內容或產生內容。可用預留位置取決於「一般 → 範本設定」中的範本引擎。",
   "settings.templates.pathExample": "範例",
   "settings.templates.builtinHelp": "內建預留位置的 FORMAT 使用 Obsidian/Moment 格式。未知預留位置與不支援的格式會原樣保留。",
   "settings.templates.templaterHelp": "使用 Templater 語法。Chrono Notes 會注入以下唯讀 tp_calendar 輔助項。",

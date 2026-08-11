@@ -31,8 +31,8 @@ function createPorts(existing: readonly string[] = []) {
       paths.add(path);
       contents.set(path, content);
     }),
-    process: vi.fn(async (path, update) => {
-      contents.set(path, update(contents.get(path) ?? ""));
+    modify: vi.fn(async (path, content) => {
+      contents.set(path, content);
     }),
     delete: vi.fn(async (path) => {
       paths.delete(path);
@@ -40,7 +40,9 @@ function createPorts(existing: readonly string[] = []) {
     }),
   };
   const templates: NoteTemplatePort = {
-    populate: vi.fn(async () => undefined),
+    prepare: vi.fn(async (_context, defaultContent) => ({
+      initialContent: defaultContent,
+    })),
   };
   const workspace: PeriodicNoteWorkspacePort = {
     open: vi.fn(async () => undefined),
@@ -86,8 +88,8 @@ describe("IntervalNoteCommands", () => {
       },
     ]);
     expect(ports.files.create).toHaveBeenCalledOnce();
-    expect(ports.templates.populate).toHaveBeenCalledOnce();
-    expect(ports.files.process).toHaveBeenCalledOnce();
+    expect(ports.templates.prepare).toHaveBeenCalledOnce();
+    expect(ports.files.modify).not.toHaveBeenCalled();
     expect(ports.workspace.open).toHaveBeenCalledWith(
       "Ranges/2026-05-06 - 2026-05-08.md",
       "default",
@@ -194,15 +196,15 @@ describe("IntervalNoteCommands", () => {
 
   it("renders a configured range template and then enforces canonical metadata", async () => {
     const ports = createPorts();
-    vi.mocked(ports.templates.populate).mockImplementationOnce(async (path) => {
-      ports.contents.set(path, [
+    vi.mocked(ports.templates.prepare).mockResolvedValueOnce({
+      initialContent: [
         "---",
         "start: wrong",
         "project: travel",
         "---",
         "",
         "# Custom range",
-      ].join("\n"));
+      ].join("\n"),
     });
     const commands = new IntervalNoteCommands(
       ports.files,
@@ -220,8 +222,7 @@ describe("IntervalNoteCommands", () => {
       templatePath: "Templates/Range.md",
     });
 
-    expect(ports.templates.populate).toHaveBeenCalledWith(
-      "Ranges/2026-07-01 - 2026-07-07.md",
+    expect(ports.templates.prepare).toHaveBeenCalledWith(
       expect.objectContaining({
         kind: "interval",
         start: { year: 2026, month: 7, day: 1 },
@@ -229,15 +230,16 @@ describe("IntervalNoteCommands", () => {
         dayCount: 7,
         templatePath: "Templates/Range.md",
       }),
+      expect.stringContaining("start: 2026-07-01\nend: 2026-07-07"),
     );
     expect(ports.contents.get("Ranges/2026-07-01 - 2026-07-07.md")).toContain(
       "start: 2026-07-01\nproject: travel\nend: 2026-07-07",
     );
   });
 
-  it("removes a newly created range note when template rendering fails", async () => {
+  it("fails before creating a range note when template preparation fails", async () => {
     const ports = createPorts();
-    vi.mocked(ports.templates.populate).mockRejectedValueOnce(
+    vi.mocked(ports.templates.prepare).mockRejectedValueOnce(
       new Error("template failed"),
     );
     const commands = new IntervalNoteCommands(
@@ -255,15 +257,16 @@ describe("IntervalNoteCommands", () => {
       ...SETTINGS,
       templatePath: "Templates/Range.md",
     })).rejects.toThrow("template failed");
-    expect(ports.files.delete).toHaveBeenCalledWith(path);
+    expect(ports.files.create).not.toHaveBeenCalled();
+    expect(ports.files.delete).not.toHaveBeenCalled();
     expect(ports.paths.has(path)).toBe(false);
     expect(ports.workspace.open).not.toHaveBeenCalled();
   });
 
-  it("removes a newly created range note when template metadata is invalid", async () => {
+  it("rejects invalid built-in template metadata before target creation", async () => {
     const ports = createPorts();
-    vi.mocked(ports.templates.populate).mockImplementationOnce(async (path) => {
-      ports.contents.set(path, "---\ninvalid: [\n---\nBody");
+    vi.mocked(ports.templates.prepare).mockResolvedValueOnce({
+      initialContent: "---\ninvalid: [\n---\nBody",
     });
     const commands = new IntervalNoteCommands(
       ports.files,
@@ -280,9 +283,79 @@ describe("IntervalNoteCommands", () => {
       ...SETTINGS,
       templatePath: "Templates/Range.md",
     })).rejects.toThrow("invalid frontmatter");
-    expect(ports.files.delete).toHaveBeenCalledWith(path);
+    expect(ports.files.create).not.toHaveBeenCalled();
+    expect(ports.files.delete).not.toHaveBeenCalled();
     expect(ports.paths.has(path)).toBe(false);
     expect(ports.workspace.open).not.toHaveBeenCalled();
+  });
+
+  it("writes a Templater range in two operations with canonical metadata", async () => {
+    const ports = createPorts();
+    const renderAfterCreate = vi.fn(async () => [
+      "---",
+      "start: wrong",
+      "project: travel",
+      "---",
+      "",
+      "# Deferred range",
+    ].join("\n"));
+    vi.mocked(ports.templates.prepare).mockResolvedValueOnce({
+      initialContent: "---\nstart: 2026-07-01\nend: 2026-07-07\n---\n",
+      renderAfterCreate,
+    });
+    const commands = new IntervalNoteCommands(
+      ports.files,
+      ports.templates,
+      ports.workspace,
+    );
+    const path = "Ranges/2026-07-01 - 2026-07-07.md";
+
+    await commands.openOrCreate({
+      start: { year: 2026, month: 7, day: 1 },
+      end: { year: 2026, month: 7, day: 7 },
+      folder: "Ranges",
+    }, {
+      ...SETTINGS,
+      templateEngine: "templater",
+      templatePath: "Templates/Range.md",
+    });
+
+    expect(ports.files.create).toHaveBeenCalledOnce();
+    expect(renderAfterCreate).toHaveBeenCalledWith(path);
+    expect(ports.files.modify).toHaveBeenCalledOnce();
+    expect(ports.contents.get(path)).toContain(
+      "start: 2026-07-01\nproject: travel\nend: 2026-07-07",
+    );
+  });
+
+  it("rolls back a range note when deferred Templater rendering fails", async () => {
+    const ports = createPorts();
+    vi.mocked(ports.templates.prepare).mockResolvedValueOnce({
+      initialContent: "",
+      renderAfterCreate: vi.fn(async () => {
+        throw new Error("templater failed");
+      }),
+    });
+    const commands = new IntervalNoteCommands(
+      ports.files,
+      ports.templates,
+      ports.workspace,
+    );
+    const path = "Ranges/2026-07-01 - 2026-07-07.md";
+
+    await expect(commands.openOrCreate({
+      start: { year: 2026, month: 7, day: 1 },
+      end: { year: 2026, month: 7, day: 7 },
+      folder: "Ranges",
+    }, {
+      ...SETTINGS,
+      templateEngine: "templater",
+      templatePath: "Templates/Range.md",
+    })).rejects.toThrow("templater failed");
+    expect(ports.files.create).toHaveBeenCalledOnce();
+    expect(ports.files.modify).not.toHaveBeenCalled();
+    expect(ports.files.delete).toHaveBeenCalledWith(path);
+    expect(ports.paths.has(path)).toBe(false);
   });
 
   it("does not erase a successful file when opening fails", async () => {
