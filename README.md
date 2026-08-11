@@ -84,7 +84,7 @@ Chrono Notes reads Vault notes and user-selected local ICS files through Obsidia
 
 ```bash
 pnpm install
-pnpm check
+pnpm run check
 ```
 
 Development requires Node.js 22.13 or later in the 22.x line, or Node.js 24 and later, plus pnpm 11.7.0. See the [developer documentation](https://github.com/ZHYX91/obsidian-chrono-notes/blob/main/docs/architecture.en.md) for architecture and testing details.

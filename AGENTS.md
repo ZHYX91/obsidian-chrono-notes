@@ -25,8 +25,8 @@ Source code lives in `src/`:
 - `pnpm typecheck`: strict TypeScript validation.
 - `pnpm test`: run Vitest once.
 - `pnpm build`: type-check and create the standard plugin assets at `dist/`.
-- `pnpm check`: lint, source-format checks, strict type checking, the complete Vitest suite, production bundling, and artifact contracts.
-- `pnpm release:check`: `pnpm check` plus time-zone tests, the quick benchmark, and the annual holiday-data gate.
+- `pnpm run check`: lint, source-format checks, strict type checking, the complete Vitest suite, production bundling, and artifact contracts.
+- `pnpm release:check`: `pnpm run check` plus time-zone tests, the quick benchmark, and the annual holiday-data gate.
 
 ## Code Style
 
@@ -52,7 +52,7 @@ When changing a paired stable document, update its translation in the same chang
 
 Tests live in `tests/` and mirror source areas. Prioritize contract and boundary tests over superficial component snapshots. Critical areas include document parsing, periodic date anchors, path resolution, settings normalization, Vault event ordering, stale async results, templates, task dates, interval notes, and ICS parsing.
 
-Before handoff, run `pnpm check`.
+Before handoff, run `pnpm run check`.
 
 ## Deployment and host acceptance
 

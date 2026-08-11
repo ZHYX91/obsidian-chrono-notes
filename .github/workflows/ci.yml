@@ -38,7 +38,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Type-check, test, and build
-        run: pnpm check
+        run: pnpm run check
 
       - name: Test deterministic date behavior across time zones
         run: pnpm test:timezones

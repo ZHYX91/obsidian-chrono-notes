@@ -84,7 +84,7 @@ Chrono Notes 通过 Obsidian 或本地文件系统边界读取 Vault 笔记和�
 
 ```bash
 pnpm install
-pnpm check
+pnpm run check
 ```
 
 开发环境需要 Node.js 22.13 及以上的 22.x 版本，或 Node.js 24 及更高版本，以及 pnpm 11.7.0。架构与测试细节见[开发者文档](../architecture.zh-CN.md)。
