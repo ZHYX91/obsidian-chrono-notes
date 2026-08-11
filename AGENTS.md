@@ -54,6 +54,12 @@ Tests live in `tests/` and mirror source areas. Prioritize contract and boundary
 
 Before handoff, run `pnpm check`.
 
+## Deployment and host acceptance
+
+Deploy to a production Vault only when the user explicitly names and authorizes the exact target. Before copying, resolve the target plugin directory, record or back up the currently installed runtime assets, and hash `data.json` when present. Replace only the verified production assets declared by the release contract, preserve `data.json` unless the user explicitly authorizes a reset, and verify the installed hashes after copying.
+
+Acceptance fixtures, cleanup scripts, and destructive test operations may target only explicitly identified temporary Vaults; never point them at an ordinary or production Vault. Source checks, packaged-candidate checks, deployed-host behavior, emulator evidence, and physical-device evidence remain separate claims.
+
 ## Git and Generated Files
 
 Use Conventional Commit subjects. Do not commit `node_modules/`, `dist/`, coverage output, vault data, private calendars, local paths, or generated plugin caches. Production plugin files are build artifacts unless a release process explicitly asks for them.
