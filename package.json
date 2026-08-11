@@ -14,6 +14,8 @@
     "acceptance:vault:verify": "node scripts/acceptance-vault.mjs verify",
     "acceptance:vault:clean": "node scripts/acceptance-vault.mjs clean",
     "acceptance:vault:prune": "node scripts/acceptance-vault.mjs prune",
+    "acceptance:sandbox:prepare": "pnpm build && node scripts/acceptance-sandbox.mjs prepare",
+    "acceptance:sandbox:verify": "node scripts/acceptance-sandbox.mjs verify",
     "size": "pnpm build:bundle && node scripts/check-production-bundle.mjs --details",
     "bench:quick": "vitest run --config vitest.performance.config.ts --mode quick --reporter=verbose",
     "bench:large": "vitest run --config vitest.performance.config.ts --mode large --reporter=verbose",

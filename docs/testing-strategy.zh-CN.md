@@ -135,6 +135,8 @@ ICS core 契约覆盖 UTF-8 BOM、CRLF/LF、折叠行、转义文本、多 `VEVE
 
 固定的用户 Vault、OneDrive Vault、私有 ICS、个人设置和旧工作区不得作为生成输入或提交进仓库。桌面与 Android 必须部署同一个已验证生成目录；模拟器传输、真实 UI 操作、日志采集和结果判定仍属于宿主验收，不因夹具可再生而宣称已自动化。
 
+Windows Sandbox 验收通过同级 `obsidian-acceptance-kit` 的共享安全层执行。`pnpm acceptance:sandbox:prepare -- --bundle <new-directory> --obsidian-dir <installed-app-directory> --obsidian-version <exact-version>` 先构建当前候选，把 Chrono 专有夹具叠加到共享基础设置，再生成网络、剪贴板、打印机、摄像头、麦克风和 vGPU 均关闭的 `.wsb` bundle。源 Vault、控制脚本和 Obsidian 程序目录只读映射；真实宿主只操作 Sandbox 内的副本。首次打开仍须人工确认信任本轮已哈希绑定的候选。完成项目场景、关闭隔离 Obsidian 并运行桌面 `Finish Acceptance.cmd` 后，用 `pnpm acceptance:sandbox:verify -- --bundle <directory> --run-id <uuid>` 同时校验共享基础设施输出与 Chrono v2 夹具契约。共享 kit 不判定模板、级联、布局或视觉场景是否通过，项目结论必须另行记录。
+
 ## 人工发布门禁
 
 仓库自动门禁通过不等于真实宿主行为已经验证。每个发布候选必须记录执行日期、Obsidian 版本、操作系统、主题、窗口或侧栏宽度、三个安装文件的哈希、结果和缺陷链接，并在同一候选产物上完成与本次变更相关的真实宿主回归。
