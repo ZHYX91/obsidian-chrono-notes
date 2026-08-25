@@ -46,6 +46,13 @@ Simplified Chinese is the source language for product and architecture decisions
 
 Documentation describes current behavior and current verification requirements. Remove superseded plans, handoff notes, progress logs, dated audit narratives, and obsolete alternatives after their durable decisions have been incorporated into stable documents.
 
+`CHANGELOG.md` is the only public document that records release history. README and user help
+describe the product as it works now: compatibility, installation, usage, settings, limitations,
+privacy, and support. Do not add version banners, dated acceptance evidence, release-status
+narratives, or superseded plans outside the changelog. Keep migration or deprecation guidance only
+when users still need to act, and state the required action directly. Engineering documents describe
+the current contract and repeatable process rather than past executions.
+
 When changing a paired stable document, update its translation in the same change or mark its `translation_status` as `outdated`.
 
 ## Testing
