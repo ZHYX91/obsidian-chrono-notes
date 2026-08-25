@@ -219,13 +219,14 @@ describe("ChronoNotesSettingTab save orchestration", () => {
     const { tab, host } = createTab();
     host.settings.locale = "ar";
 
-    tab.getSettingDefinitions();
+    expect(tab.getSettingDefinitions()).toEqual([]);
+    tab.getDeclarativeSettingDefinitions();
 
     expect(tab.containerEl.dir).toBe("rtl");
     expect(tab.containerEl.classList.contains("chrono-notes-settings")).toBe(true);
 
     host.settings.locale = "hi";
-    tab.getSettingDefinitions();
+    tab.getDeclarativeSettingDefinitions();
     expect(tab.containerEl.dir).toBe("ltr");
   });
 
@@ -293,7 +294,7 @@ describe("ChronoNotesSettingTab save orchestration", () => {
   it("builds declarative pages without starting Vault suggestion listeners", () => {
     const { tab, vaultOn } = createTab();
 
-    const definitions = tab.getSettingDefinitions();
+    const definitions = tab.getDeclarativeSettingDefinitions();
 
     expect(definitions).toHaveLength(5);
     expect(vaultOn).not.toHaveBeenCalled();
@@ -308,7 +309,7 @@ describe("ChronoNotesSettingTab save orchestration", () => {
       configurable: true,
       value: refreshDomState,
     });
-    tab.getSettingDefinitions();
+    tab.getDeclarativeSettingDefinitions();
 
     await tab.setControlValue("locale", "zh-CN");
 
@@ -343,12 +344,12 @@ describe("ChronoNotesSettingTab save orchestration", () => {
     const { tab, host, saveSettings } = createTab();
     const update = vi.fn();
     Object.defineProperty(tab, "update", { configurable: true, value: update });
-    tab.getSettingDefinitions();
+    tab.getDeclarativeSettingDefinitions();
     saveSettings.mockReturnValueOnce(save);
 
     const pendingMutation = tab.setControlValue("locale", "zh-CN");
     tab.hide();
-    const reopenedDefinitions = tab.getSettingDefinitions();
+    const reopenedDefinitions = tab.getDeclarativeSettingDefinitions();
     resolveSave();
     await pendingMutation;
 

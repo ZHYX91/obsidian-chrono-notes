@@ -66,6 +66,12 @@ describe("declarative settings", () => {
         cls: "chrono-notes-property-format-settings",
       }),
     ]));
+    expect(pages[0]?.items).not.toEqual(expect.arrayContaining([
+      expect.objectContaining({ type: "group", heading: "General" }),
+    ]));
+    expect(pages[3]?.items).not.toEqual(expect.arrayContaining([
+      expect.objectContaining({ type: "group", heading: "Range notes" }),
+    ]));
     expect(getControlKeys(pages)).toEqual([
       "locale",
       "weekStartDay",
@@ -228,6 +234,9 @@ describe("declarative settings", () => {
     const harness = createSettingHarness();
 
     const cleanup = formatDefinition.render(harness.setting, {} as never);
+    expect(harness.setting.settingEl.addClass).toHaveBeenCalledWith(
+      "chrono-notes-property-custom-format-setting",
+    );
     expect(harness.inputEl.value).toBe("YYYY-MM-DD dddd");
     expect(harness.feedbackSetText).toHaveBeenLastCalledWith("Preview: 2026-07-31 Friday");
     harness.changeText("YYYY-MM-ddd");

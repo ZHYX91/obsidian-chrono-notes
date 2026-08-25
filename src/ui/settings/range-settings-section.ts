@@ -17,7 +17,6 @@ export function renderRangeSettingsSection(
 ): SettingsCleanup {
   const { t } = context.translator;
   const settings = context.host.settings.rangeNotes;
-  containerEl.createEl("h3", { text: t("settings.ranges.title") });
   const listSetting = new Setting(containerEl)
     .setName(t("settings.ranges.list"))
     .setDesc(t("settings.ranges.listDesc"));

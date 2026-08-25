@@ -30,7 +30,6 @@ export function renderGeneralSettingsSection(
   context: SettingsSectionContext,
 ): SettingsCleanup {
   const { t } = context.translator;
-  containerEl.createEl("h3", { text: t("settings.general.title") });
   new Setting(containerEl)
     .setName(t("settings.general.language"))
     .setDesc(t("settings.general.languageDesc"))
@@ -168,6 +167,7 @@ export function configurePropertyFormatSetting(
 ): void {
   const { t } = context.translator;
   const isDate = kind === "date";
+  setting.settingEl.addClass("chrono-notes-property-custom-format-setting");
   setting
     .setName(t(isDate
       ? "settings.general.propertyDateCustomFormat"

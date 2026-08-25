@@ -11,6 +11,7 @@ import {
   getPeriodicNoteTemplatePathExample,
 } from "./periodic-note-settings-presentation";
 import { periodicNoteLabel } from "./settings-presentation";
+import { createSettingsGuide } from "./settings-guide";
 import type { SettingsSectionContext } from "./settings-section-context";
 import { preparePathInput } from "./path-input";
 import { renderTemplatePathSetting } from "./template-settings";
@@ -47,7 +48,7 @@ export function renderPeriodicSettingsSection(
       });
     });
   containerEl.createEl("h3", { text: t("settings.periodic.paths") });
-  const pathGuideEl = containerEl.createDiv({ cls: "chrono-notes-settings-guide" });
+  const pathGuideEl = createSettingsGuide(containerEl, t("settings.periodic.paths"));
   pathGuideEl.createEl("p", { text: t("settings.periodic.pathsDesc") });
 
   const cleanups: SettingsCleanup[] = [];

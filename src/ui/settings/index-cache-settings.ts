@@ -35,7 +35,6 @@ export function configureNoteIndexStatusSetting(
   const values = {
     notes: appendMetric(metrics, t("settings.index.details.notes")),
     errors: appendMetric(metrics, t("settings.index.details.errors")),
-    verification: appendMetric(metrics, t("settings.index.details.verification")),
     pending: appendMetric(metrics, t("settings.index.details.pending")),
     fullIndex: appendMetric(metrics, t("settings.index.details.fullIndex")),
     incremental: appendMetric(metrics, t("settings.index.details.incremental")),
@@ -46,9 +45,6 @@ export function configureNoteIndexStatusSetting(
     setting.setDesc(formatNoteIndexStatus(status, t));
     values.notes.textContent = formatInteger(status?.noteCount ?? 0, context.translator.locale);
     values.errors.textContent = formatInteger(status?.errorCount ?? 0, context.translator.locale);
-    values.verification.textContent = status?.backgroundVerificationActive === true
-      ? t("settings.index.details.active")
-      : t("settings.index.details.inactive");
     values.pending.textContent = formatInteger(
       diagnostics?.pendingUpdateCount ?? 0,
       context.translator.locale,

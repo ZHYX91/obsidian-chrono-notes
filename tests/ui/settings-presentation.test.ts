@@ -88,7 +88,6 @@ describe("settings presentation", () => {
       readiness: "ready",
       noteCount: 12,
       errorCount: 1,
-      backgroundVerificationActive: false,
       cacheConfigured: true,
       rebuildingCache: false,
     } as const;
@@ -96,10 +95,6 @@ describe("settings presentation", () => {
     expect(formatNoteIndexStatus(ready, t)).toBe(
       "Ready. 12 notes indexed; 1 read errors.",
     );
-    expect(formatNoteIndexStatus({
-      ...ready,
-      backgroundVerificationActive: true,
-    }, t)).toContain("verifying Vault files in the background");
     expect(formatNoteIndexStatus({
       ...ready,
       active: false,

@@ -829,8 +829,7 @@
   }
 
   .chrono-notes-settings-tab {
-    height: 44px;
-    min-height: 44px;
+    min-block-size: 44px;
   }
 
   .chrono-notes-calendar-header > button,

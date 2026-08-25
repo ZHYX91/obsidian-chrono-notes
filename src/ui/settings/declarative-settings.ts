@@ -325,48 +325,42 @@ function getGeneralDefinitions(
   }
   return [
     {
-      type: "group",
-      heading: t("settings.general.title"),
-      items: [
-        {
-          name: t("settings.general.language"),
-          desc: t("settings.general.languageDesc"),
-          control: {
-            type: "dropdown",
-            key: "locale",
-            defaultValue: "auto",
-            options: languageOptions,
-          },
-        },
-        {
-          name: t("settings.general.weekStarts"),
-          control: {
-            type: "dropdown",
-            key: "weekStartDay",
-            defaultValue: "monday",
-            options: {
-              monday: t("settings.general.monday"),
-              sunday: t("settings.general.sunday"),
-            },
-          },
-        },
-        {
-          name: t("settings.general.noteNavbar"),
-          desc: t("settings.general.noteNavbarDesc"),
-          control: {
-            type: "toggle",
-            key: "showNoteNavbar",
-            defaultValue: true,
-          },
-        },
-        buttonDefinition(
-          t("settings.general.firstUseGuide"),
-          t("settings.general.firstUseGuideDesc"),
-          t("settings.general.showFirstUseGuide"),
-          () => context.host.openFirstUseGuide(),
-        ),
-      ],
+      name: t("settings.general.language"),
+      desc: t("settings.general.languageDesc"),
+      control: {
+        type: "dropdown",
+        key: "locale",
+        defaultValue: "auto",
+        options: languageOptions,
+      },
     },
+    {
+      name: t("settings.general.weekStarts"),
+      control: {
+        type: "dropdown",
+        key: "weekStartDay",
+        defaultValue: "monday",
+        options: {
+          monday: t("settings.general.monday"),
+          sunday: t("settings.general.sunday"),
+        },
+      },
+    },
+    {
+      name: t("settings.general.noteNavbar"),
+      desc: t("settings.general.noteNavbarDesc"),
+      control: {
+        type: "toggle",
+        key: "showNoteNavbar",
+        defaultValue: true,
+      },
+    },
+    buttonDefinition(
+      t("settings.general.firstUseGuide"),
+      t("settings.general.firstUseGuideDesc"),
+      t("settings.general.showFirstUseGuide"),
+      () => context.host.openFirstUseGuide(),
+    ),
     {
       type: "group",
       heading: t("settings.general.obsidianProperties"),
@@ -681,98 +675,92 @@ function getRangeDefinitions(
 ): SettingDefinitionItem<ChronoNotesControlKey>[] {
   const { t } = context.translator;
   return [
+    buttonDefinition(
+      t("settings.ranges.list"),
+      t("settings.ranges.listDesc"),
+      t("settings.ranges.openList"),
+      () => context.host.openIntervalNoteList(),
+      "chrono-notes-settings-primary-action",
+    ),
+    toggleDefinition(
+      t("settings.ranges.confirmBeforeCreating"),
+      t("settings.ranges.confirmBeforeCreatingDesc"),
+      "confirmIntervalNoteCreation",
+      true,
+    ),
+    toggleDefinition(
+      t("settings.ranges.showInCalendar"),
+      t("settings.ranges.showInCalendarDesc"),
+      "rangeNotes.showInCalendar",
+      true,
+    ),
     {
-      type: "group",
-      heading: t("settings.ranges.title"),
-      items: [
-        buttonDefinition(
-          t("settings.ranges.list"),
-          t("settings.ranges.listDesc"),
-          t("settings.ranges.openList"),
-          () => context.host.openIntervalNoteList(),
-          "chrono-notes-settings-primary-action",
-        ),
-        toggleDefinition(
-          t("settings.ranges.confirmBeforeCreating"),
-          t("settings.ranges.confirmBeforeCreatingDesc"),
-          "confirmIntervalNoteCreation",
-          true,
-        ),
-        toggleDefinition(
-          t("settings.ranges.showInCalendar"),
-          t("settings.ranges.showInCalendarDesc"),
-          "rangeNotes.showInCalendar",
-          true,
-        ),
-        {
-          name: t("settings.ranges.folder"),
-          desc: t("settings.ranges.folderDesc"),
-          render: (setting) => renderManagedSetting(context, () => {
-            context.vaultPathSuggestionCatalog.start();
-            return configureRangeFolderSetting(setting, context);
-          }),
-        },
-        {
-          name: t("settings.templates.path"),
-          desc: t("settings.templates.pathDesc"),
-          render: (setting) => renderManagedSetting(context, () => {
-            context.vaultPathSuggestionCatalog.start();
-            const settings = context.host.settings.rangeNotes;
-            return configureTemplatePathSetting(
-              setting,
-              t("settings.templates.path"),
-              "Templates/Range.md",
-              settings.templatePath,
-              (value) => {
-                settings.templatePath = value;
-              },
-              context,
-            );
-          }),
-        },
-        {
-          name: t("settings.ranges.scanScope"),
-          control: {
-            type: "dropdown",
-            key: "rangeNotes.scanScope",
-            defaultValue: "range-folder",
-            options: {
-              "range-folder": t("settings.ranges.rangeFolder"),
-              "custom-folder": t("settings.ranges.customFolder"),
-              "entire-vault": t("settings.ranges.entireVault"),
-            },
+      name: t("settings.ranges.folder"),
+      desc: t("settings.ranges.folderDesc"),
+      render: (setting) => renderManagedSetting(context, () => {
+        context.vaultPathSuggestionCatalog.start();
+        return configureRangeFolderSetting(setting, context);
+      }),
+    },
+    {
+      name: t("settings.templates.path"),
+      desc: t("settings.templates.pathDesc"),
+      render: (setting) => renderManagedSetting(context, () => {
+        context.vaultPathSuggestionCatalog.start();
+        const settings = context.host.settings.rangeNotes;
+        return configureTemplatePathSetting(
+          setting,
+          t("settings.templates.path"),
+          "Templates/Range.md",
+          settings.templatePath,
+          (value) => {
+            settings.templatePath = value;
           },
+          context,
+        );
+      }),
+    },
+    {
+      name: t("settings.ranges.scanScope"),
+      control: {
+        type: "dropdown",
+        key: "rangeNotes.scanScope",
+        defaultValue: "range-folder",
+        options: {
+          "range-folder": t("settings.ranges.rangeFolder"),
+          "custom-folder": t("settings.ranges.customFolder"),
+          "entire-vault": t("settings.ranges.entireVault"),
         },
-        {
-          name: t("settings.ranges.customScanFolder"),
-          desc: t("settings.ranges.customScanFolderDesc"),
-          render: (setting) => renderManagedSetting(context, () => {
-            context.vaultPathSuggestionCatalog.start();
-            setting.setDisabled(context.host.settings.rangeNotes.scanScope !== "custom-folder");
-            return configureCustomRangeFolderSetting(setting, context);
-          }),
-        },
-        {
-          name: t("settings.ranges.monthMaximum"),
-          control: {
-            type: "number",
-            key: "rangeNotes.monthViewLimit",
-            defaultValue: 2,
-            min: 1,
-            step: 1,
-          },
-        },
-        {
-          name: t("settings.ranges.weekMaximum"),
-          control: {
-            type: "number",
-            key: "rangeNotes.weekViewLimit",
-            defaultValue: 5,
-            min: 1,
-            step: 1,
-          },
-        },
-      ],
+      },
+    },
+    {
+      name: t("settings.ranges.customScanFolder"),
+      desc: t("settings.ranges.customScanFolderDesc"),
+      render: (setting) => renderManagedSetting(context, () => {
+        context.vaultPathSuggestionCatalog.start();
+        setting.setDisabled(context.host.settings.rangeNotes.scanScope !== "custom-folder");
+        return configureCustomRangeFolderSetting(setting, context);
+      }),
+    },
+    {
+      name: t("settings.ranges.monthMaximum"),
+      control: {
+        type: "number",
+        key: "rangeNotes.monthViewLimit",
+        defaultValue: 2,
+        min: 1,
+        step: 1,
+      },
+    },
+    {
+      name: t("settings.ranges.weekMaximum"),
+      control: {
+        type: "number",
+        key: "rangeNotes.weekViewLimit",
+        defaultValue: 5,
+        min: 1,
+        step: 1,
+      },
     },
   ];
 }

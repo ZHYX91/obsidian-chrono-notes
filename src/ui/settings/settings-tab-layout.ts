@@ -50,7 +50,11 @@ export function createSettingsTabLayout(
       onSelect(tab.id);
     });
     buttonEl.addEventListener("keydown", (event) => {
-      const next = moveSettingsTab(tab.id, event.key);
+      const next = moveSettingsTab(
+        tab.id,
+        event.key,
+        getComputedStyle(tabListEl).direction === "rtl" ? "rtl" : "ltr",
+      );
       if (next === tab.id) return;
       event.preventDefault();
       onSelect(next);

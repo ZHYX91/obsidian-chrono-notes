@@ -78,9 +78,6 @@ export function formatNoteIndexStatus(
   if (status.readiness === "indexing") {
     return t("settings.index.status.indexing", parameters);
   }
-  if (status.backgroundVerificationActive) {
-    return t("settings.index.status.verifying", parameters);
-  }
   return t("settings.index.status.ready", parameters);
 }
 

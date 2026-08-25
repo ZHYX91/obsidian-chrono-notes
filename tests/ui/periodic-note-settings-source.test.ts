@@ -25,6 +25,10 @@ const templateSectionSource = readFileSync(
   new URL("../../src/ui/settings/template-settings.ts", import.meta.url),
   "utf8",
 );
+const settingsGuideSource = readFileSync(
+  new URL("../../src/ui/settings/settings-guide.ts", import.meta.url),
+  "utf8",
+);
 const extensionsAndIntegrationsSectionSource = readFileSync(
   new URL("../../src/ui/settings/extensions-and-integrations-settings-section.ts", import.meta.url),
   "utf8",
@@ -106,6 +110,15 @@ describe("periodic note settings structure", () => {
     expect(settingsTabSource).not.toContain('case "templates"');
   });
 
+  it("uses one accessible settings-guide structure for path and template help", () => {
+    expect(periodicSectionSource).toContain("createSettingsGuide");
+    expect(templateSectionSource).toContain("createSettingsGuide");
+    expect(settingsGuideSource).toContain('attr: { role: "note" }');
+    expect(settingsGuideSource).toContain('setIcon(iconEl, "info")');
+    expect(settingsGuideSource).toContain("chrono-notes-settings-guide-heading");
+    expect(settingsGuideSource).toContain("chrono-notes-settings-guide-body");
+  });
+
   it("groups independent Obsidian Properties integrations under General", () => {
     const heading = generalSectionSource.indexOf(
       't("settings.general.obsidianProperties")',
@@ -147,11 +160,19 @@ describe("periodic note settings structure", () => {
     expect(generalSectionSource).toContain("isValidPropertyDateFormat");
     expect(generalSectionSource).toContain("isValidPropertyTimeFormat");
     expect(generalSectionSource).toContain("PROPERTY_FORMAT_PREVIEW_VALUE");
+    expect(generalSectionSource).toContain(
+      'setting.settingEl.addClass("chrono-notes-property-custom-format-setting")',
+    );
     expect(
       generalSectionSource.match(
         /settingEl\.addClass\("chrono-notes-property-format-settings"\)/g,
       ),
     ).toHaveLength(2);
+  });
+
+  it("does not repeat active tab labels as panel headings", () => {
+    expect(generalSectionSource).not.toContain('t("settings.general.title")');
+    expect(rangeSectionSource).not.toContain('t("settings.ranges.title")');
   });
 
   it("debounces text persistence while serializing at the shared persistence boundary", () => {

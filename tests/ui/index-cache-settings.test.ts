@@ -144,7 +144,6 @@ function createHarness() {
       readiness: "ready",
       noteCount: 3,
       errorCount: 0,
-      backgroundVerificationActive: false,
       cacheConfigured: true,
       rebuildingCache: false,
     } as NonNullable<ReturnType<SettingsHost["getNoteIndexStatus"]>>,

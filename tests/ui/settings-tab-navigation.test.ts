@@ -13,6 +13,13 @@ describe("moveSettingsTab", () => {
     expect(moveSettingsTab("general", "ArrowLeft")).toBe("extensions-and-integrations");
   });
 
+  it("reverses horizontal arrows for right-to-left settings", () => {
+    expect(moveSettingsTab("general", "ArrowRight", "rtl")).toBe(
+      "extensions-and-integrations",
+    );
+    expect(moveSettingsTab("general", "ArrowLeft", "rtl")).toBe("appearance");
+  });
+
   it("jumps to the first or last tab", () => {
     expect(moveSettingsTab("periodic", "Home")).toBe("general");
     expect(moveSettingsTab("periodic", "End")).toBe("extensions-and-integrations");

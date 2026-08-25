@@ -8,6 +8,7 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock("obsidian", () => ({
+  setIcon: vi.fn(),
   Setting: class {
     readonly settingEl = document.createElement("div");
     readonly descEl = document.createElement("div");

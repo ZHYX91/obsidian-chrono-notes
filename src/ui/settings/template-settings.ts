@@ -3,6 +3,7 @@ import { Setting } from "obsidian";
 import { isTemplateEngine } from "../../shared/settings";
 import { preparePathInput } from "./path-input";
 import type { SettingsCleanup } from "./settings-cleanup";
+import { createSettingsGuide } from "./settings-guide";
 import type { SettingsSectionContext } from "./settings-section-context";
 import { MarkdownFileSuggest } from "./vault-path-suggest";
 
@@ -35,7 +36,10 @@ export function renderTemplateEngineGuide(
   context: SettingsSectionContext,
 ): void {
   const { t } = context.translator;
-  const guideEl = containerEl.createDiv({ cls: "chrono-notes-settings-guide" });
+  const engineTitle = context.host.settings.templateEngine === "builtin"
+    ? t("settings.templates.builtinEngine")
+    : t("settings.templates.templaterEngine");
+  const guideEl = createSettingsGuide(containerEl, engineTitle);
   if (context.host.settings.templateEngine === "builtin") {
     guideEl.createEl("p", { text: t("settings.templates.builtinHelp") });
     guideEl.createEl("p").createEl("code", {
