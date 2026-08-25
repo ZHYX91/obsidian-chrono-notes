@@ -8,6 +8,7 @@ export class FirstUseGuideModal extends Modal {
     app: App,
     private readonly translator: Translator,
     private readonly onOpenSettings: () => void,
+    private readonly onShown?: () => void,
   ) {
     super(app);
   }
@@ -31,6 +32,7 @@ export class FirstUseGuideModal extends Modal {
       .addButton((button) => {
         button.setButtonText(messages.dismiss).setCta().onClick(() => this.close());
       });
+    this.onShown?.();
   }
 
   override onClose(): void {

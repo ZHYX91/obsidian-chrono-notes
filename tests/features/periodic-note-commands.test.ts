@@ -45,18 +45,24 @@ function createSettings(
 function createPorts(existing: readonly string[] = []) {
   const paths = new Set(existing);
   const contents = new Map<string, string>();
+  const identities = new Map<string, object>();
   const files: PeriodicNoteFilePort = {
     exists: vi.fn((path) => paths.has(path)),
     create: vi.fn(async (path, content) => {
+      const identity = { path };
       paths.add(path);
       contents.set(path, content);
+      identities.set(path, identity);
+      return Object.freeze({ identity, initialContent: content, path });
     }),
-    modify: vi.fn(async (path, content) => {
-      contents.set(path, content);
-    }),
-    delete: vi.fn(async (path) => {
-      paths.delete(path);
-      contents.delete(path);
+    finalize: vi.fn(async (reference, content) => {
+      if (
+        identities.get(reference.path) !== reference.identity ||
+        contents.get(reference.path) !== reference.initialContent
+      ) {
+        throw new Error(`Created note changed: ${reference.path}`);
+      }
+      contents.set(reference.path, content);
     }),
   };
   const templates: NoteTemplatePort = {
@@ -67,7 +73,7 @@ function createPorts(existing: readonly string[] = []) {
   const workspace: PeriodicNoteWorkspacePort = {
     open: vi.fn(async () => undefined),
   };
-  return { files, templates, workspace, paths, contents };
+  return { files, templates, workspace, paths, contents, identities };
 }
 
 describe("PeriodicNoteCommands", () => {
@@ -232,7 +238,7 @@ describe("PeriodicNoteCommands", () => {
       "Quarterly/2026-Q2.md",
       "# rendered quarterly note",
     );
-    expect(ports.files.modify).not.toHaveBeenCalled();
+    expect(ports.files.finalize).not.toHaveBeenCalled();
     expect(ports.workspace.open).toHaveBeenCalledWith("Quarterly/2026-Q2.md", "default");
   });
 
@@ -257,12 +263,11 @@ describe("PeriodicNoteCommands", () => {
       cause: new Error("template boom"),
     } satisfies Partial<PeriodicNoteCreationError>);
     expect(ports.files.create).not.toHaveBeenCalled();
-    expect(ports.files.delete).not.toHaveBeenCalled();
     expect(ports.paths.has("Daily/2026-05-18.md")).toBe(false);
     expect(ports.workspace.open).not.toHaveBeenCalled();
   });
 
-  it("rolls back a Templater target when deferred rendering fails", async () => {
+  it("retains a Templater target when deferred rendering fails", async () => {
     const ports = createPorts();
     vi.mocked(ports.templates.prepare).mockResolvedValueOnce({
       initialContent: "",
@@ -280,9 +285,32 @@ describe("PeriodicNoteCommands", () => {
       settings,
     )).rejects.toThrow("templater boom");
     expect(ports.files.create).toHaveBeenCalledWith("Daily/2026-05-18.md", "");
-    expect(ports.files.modify).not.toHaveBeenCalled();
-    expect(ports.files.delete).toHaveBeenCalledWith("Daily/2026-05-18.md");
-    expect(ports.paths.has("Daily/2026-05-18.md")).toBe(false);
+    expect(ports.files.finalize).not.toHaveBeenCalled();
+    expect(ports.paths.has("Daily/2026-05-18.md")).toBe(true);
+    expect(ports.contents.get("Daily/2026-05-18.md")).toBe("");
+  });
+
+  it("refuses to overwrite a Templater target changed during rendering", async () => {
+    const ports = createPorts();
+    const path = "Daily/2026-05-18.md";
+    vi.mocked(ports.templates.prepare).mockResolvedValueOnce({
+      initialContent: "",
+      renderAfterCreate: vi.fn(async () => {
+        ports.contents.set(path, "# External edit");
+        return "# Rendered template";
+      }),
+    });
+    const commands = new PeriodicNoteCommands(ports.files, ports.templates, ports.workspace);
+    const settings = createSettings({
+      daily: { enabled: true, pattern: "[Daily]/YYYY-MM-DD" },
+    });
+
+    await expect(commands.openOrCreate(
+      { date: { year: 2026, month: 5, day: 18 }, noteType: "daily" },
+      settings,
+    )).rejects.toThrow("Created note changed");
+    expect(ports.contents.get(path)).toBe("# External edit");
+    expect(ports.paths.has(path)).toBe(true);
   });
 
   it("cascade-creates every enabled larger period and skips existing notes", async () => {
@@ -383,7 +411,6 @@ describe("PeriodicNoteCommands", () => {
         settings,
       ),
     ).rejects.toThrow("workspace unavailable");
-    expect(ports.files.delete).not.toHaveBeenCalled();
     expect(ports.paths.has("Daily/2026-05-18.md")).toBe(true);
   });
 });

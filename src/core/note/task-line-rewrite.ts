@@ -1,3 +1,5 @@
+import { projectMarkdownBody } from "../document/markdown-body-projection";
+import { parseNoteDocument } from "../document/parse-note-document";
 import {
   formatLocalDateKey,
   toDateTime,
@@ -43,7 +45,11 @@ function rewriteTaskLine(
   const range = findLineRange(content, expected.line);
   if (range === null) return Object.freeze({ status: "line-missing" });
   const line = content.slice(range.start, range.end);
-  const current = parseNoteTasks(line, expected.path, expected.line)[0];
+  const document = parseNoteDocument(content);
+  const projection = projectMarkdownBody(document.body, document.bodyStartLine);
+  const current = parseNoteTasks(projection, expected.path).find(
+    (task) => task.line === expected.line,
+  );
   if (current === undefined || !sameTaskIdentity(current, expected)) {
     return Object.freeze({ status: "stale" });
   }

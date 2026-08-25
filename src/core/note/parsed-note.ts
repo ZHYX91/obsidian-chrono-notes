@@ -3,6 +3,7 @@ import {
   type NoteContentState,
   type ParsedNoteDocument,
 } from "../document/parse-note-document";
+import { projectMarkdownBody } from "../document/markdown-body-projection";
 import {
   parseFrontmatter,
   type FrontmatterParseFailure,
@@ -46,8 +47,9 @@ export function parseNoteFromDocument(
 ): ParsedNote {
   const parsedFrontmatter = parseParsedFrontmatter(document);
   const parsedInterval = parseNoteInterval(parsedFrontmatter.value);
-  const tasks = parseNoteTasks(document.body, path, document.bodyStartLine);
-  const preview = deriveNotePreview(document.body);
+  const bodyProjection = projectMarkdownBody(document.body, document.bodyStartLine);
+  const tasks = parseNoteTasks(bodyProjection, path);
+  const preview = deriveNotePreview(bodyProjection);
   return Object.freeze({
     path,
     state: document.state,
@@ -59,7 +61,7 @@ export function parseNoteFromDocument(
     preview: preview.text,
     embeds: preview.embeds,
     tasks,
-    statistics: calculateNoteStatistics(document.body, tasks),
+    statistics: calculateNoteStatistics(bodyProjection, tasks),
   });
 }
 

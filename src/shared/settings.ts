@@ -242,6 +242,11 @@ export function isSettingsMigrationRequired(value: unknown): boolean {
   return getSettingsSchemaVersion(value.schemaVersion) < SETTINGS_SCHEMA_VERSION;
 }
 
+export function isFutureSettingsSchema(value: unknown): boolean {
+  return isRecord(value) &&
+    getSettingsSchemaVersion(value.schemaVersion) > SETTINGS_SCHEMA_VERSION;
+}
+
 export function normalizeSettings(value: unknown): ChronoNotesSettings {
   const defaults = createDefaultSettings();
   if (!isRecord(value)) return defaults;

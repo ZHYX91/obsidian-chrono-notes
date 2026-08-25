@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 
+import { projectMarkdownBody } from "../../src/core/document/markdown-body-projection";
 import {
   deriveNotePreview,
   EMPTY_NOTE_EMBED_STATISTICS,
@@ -7,6 +8,18 @@ import {
 } from "../../src/core/note/note-preview";
 import { calculateNoteStatistics } from "../../src/core/note/note-statistics";
 import { parseNoteTasks } from "../../src/core/note/note-tasks";
+
+function parseTasks(body: string, path: string, bodyStartLine: number) {
+  return parseNoteTasks(projectMarkdownBody(body, bodyStartLine), path);
+}
+
+function derivePreview(body: string) {
+  return deriveNotePreview(projectMarkdownBody(body, 0));
+}
+
+function calculateStatistics(body: string, tasks: ReturnType<typeof parseTasks>) {
+  return calculateNoteStatistics(projectMarkdownBody(body, 0), tasks);
+}
 
 describe("note content derivation", () => {
   it("creates a four-line preview without fenced code or Markdown decoration", () => {
@@ -25,7 +38,7 @@ describe("note content derivation", () => {
   });
 
   it("removes embeds from the excerpt and classifies them in one derivation", () => {
-    expect(deriveNotePreview([
+    expect(derivePreview([
       "Before ![[images/cover.png|300]] after",
       "![[paper.pdf]]",
       "![diagram](assets/flow.svg)",
@@ -48,14 +61,14 @@ describe("note content derivation", () => {
   });
 
   it("reuses the frozen empty embed statistics for notes without embeds", () => {
-    const derived = deriveNotePreview("Plain text");
+    const derived = derivePreview("Plain text");
 
     expect(derived.embeds).toBe(EMPTY_NOTE_EMBED_STATISTICS);
     expect(Object.isFrozen(derived.embeds)).toBe(true);
   });
 
   it("keeps balanced Markdown destinations out of the excerpt", () => {
-    expect(deriveNotePreview([
+    expect(derivePreview([
       "Before ![local](assets/image_(1).png) after",
       "![remote](https://example.com/image_(2).svg \"Preview (large)\")",
       String.raw`![escaped](assets/image_\(3\).webp)`,
@@ -73,7 +86,7 @@ describe("note content derivation", () => {
   });
 
   it("parses legacy task date markers with normalized source line positions", () => {
-    const tasks = parseNoteTasks([
+    const tasks = parseTasks([
       "  - [ ] Ship round 7 📅 2026-05-06 ⏳ 2026-05-05 🛫 2026-05-04",
       "* [X] Done item ✅ 2026-05-03",
       "Plain paragraph",
@@ -104,7 +117,7 @@ describe("note content derivation", () => {
   });
 
   it("does not project impossible task marker dates into the task model", () => {
-    const [task] = parseNoteTasks(
+    const [task] = parseTasks(
       "- [ ] Invalid dates 馃搮 2026-02-30 鈴?2026-13-01 馃洬 2026-00-10",
       "Tasks.md",
       0,
@@ -125,17 +138,52 @@ describe("note content derivation", () => {
       "- [x] done",
       "- [ ] open",
     ].join("\n");
-    const tasks = parseNoteTasks(body, "Daily.md", 0);
+    const tasks = parseTasks(body, "Daily.md", 0);
 
-    expect(calculateNoteStatistics(body, tasks)).toMatchObject({
+    expect(calculateStatistics(body, tasks)).toMatchObject({
       linkCount: 4,
       tagCount: 3,
       taskTotal: 2,
       taskCompleted: 1,
       taskCompletionRate: 50,
     });
-    expect(calculateNoteStatistics("你好 world it's state-of-the-art 1,024", [])).toMatchObject({
+    expect(calculateStatistics("你好 world it's state-of-the-art 1,024", [])).toMatchObject({
       wordCount: 6,
     });
+    expect(calculateStatistics("- --- ' --", [])).toMatchObject({ wordCount: 0 });
+  });
+
+  it("isolates fenced code, HTML comments, and inline code for all note consumers", () => {
+    const body = [
+      "Visible [[real]] #real ![[cover.png]]",
+      "`[[inline]] #inline ![[inline.png]] 📅 2026-09-01`",
+      "<!-- [[comment]] #comment ![[comment.png]] -->",
+      "````md",
+      "- [ ] hidden [[fence]] #fence ![[fence.png]]",
+      "````",
+      "- [ ] shown `📅 2026-09-02` 📅 2026-09-03",
+    ].join("\n");
+    const projection = projectMarkdownBody(body, 0);
+    const tasks = parseNoteTasks(projection, "Daily.md");
+    const preview = deriveNotePreview(projection);
+    const statistics = calculateNoteStatistics(projection, tasks);
+
+    expect(tasks).toEqual([expect.objectContaining({
+      text: "shown `📅 2026-09-02`",
+      dueDate: "2026-09-03",
+      line: 6,
+    })]);
+    expect(preview).toEqual({
+      text: "Visible real #real\nshown 📅 2026-09-03",
+      embeds: {
+        imageCount: 1,
+        pdfCount: 0,
+        audioCount: 0,
+        videoCount: 0,
+        noteCount: 0,
+        otherCount: 0,
+      },
+    });
+    expect(statistics).toMatchObject({ linkCount: 2, tagCount: 1, taskTotal: 1 });
   });
 });

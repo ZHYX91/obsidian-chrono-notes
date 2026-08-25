@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   SETTINGS_SCHEMA_VERSION,
   createDefaultSettings,
+  isFutureSettingsSchema,
   isSettingsMigrationRequired,
   migrateSettings,
   normalizeSettings,
@@ -670,6 +671,9 @@ describe("settings", () => {
       ...createDefaultSettings(),
       locale: "en",
     });
+    expect(isFutureSettingsSchema(raw)).toBe(true);
+    expect(isFutureSettingsSchema({ schemaVersion: SETTINGS_SCHEMA_VERSION })).toBe(false);
+    expect(isFutureSettingsSchema(null)).toBe(false);
   });
 
   it("requests persistence only for existing settings that require migration", () => {

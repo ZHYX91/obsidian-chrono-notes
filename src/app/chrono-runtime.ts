@@ -1,7 +1,6 @@
 import type {
   App,
   EventRef,
-  FileManager,
   Vault,
   Workspace,
 } from "obsidian";
@@ -35,7 +34,6 @@ import { NoteNavbarManager } from "../ui/note-navbar/note-navbar";
 export interface ChronoRuntimeHost {
   readonly app: App;
   readonly vault: Vault;
-  readonly fileManager: FileManager;
   readonly workspace: Workspace;
   getSettings(): Readonly<ChronoNotesSettings>;
   getTranslator(): Translator;
@@ -107,7 +105,7 @@ export function createChronoRuntime(host: ChronoRuntimeHost): ChronoRuntime {
     );
     const noteTemplates = new ObsidianNoteTemplatePort(host.app, host.vault);
     const periodicNoteCommands = new PeriodicNoteCommands(
-      new ObsidianPeriodicNoteFilePort(host.vault, host.fileManager),
+      new ObsidianPeriodicNoteFilePort(host.vault, host.workspace),
       noteTemplates,
       noteWorkspace,
     );
@@ -142,12 +140,12 @@ export function createChronoRuntime(host: ChronoRuntimeHost): ChronoRuntime {
       propertiesDateDocuments.removeDocument(closedWindow.document);
     }));
     const intervalNoteCommands = new IntervalNoteCommands(
-      new ObsidianIntervalNoteFilePort(host.vault, host.fileManager),
+      new ObsidianIntervalNoteFilePort(host.vault, host.workspace),
       noteTemplates,
       noteWorkspace,
     );
     const taskCommands = new TaskCommands(
-      new ObsidianTaskFilePort(host.vault),
+      new ObsidianTaskFilePort(host.vault, host.workspace),
       new ObsidianTaskWorkspacePort(host.vault, host.workspace),
     );
     const noteNavbar = new NoteNavbarManager(host.app, {

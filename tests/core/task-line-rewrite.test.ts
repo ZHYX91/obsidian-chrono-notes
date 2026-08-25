@@ -33,6 +33,18 @@ describe("task line rewriting", () => {
     });
   });
 
+  it.each([
+    ["fenced code", "```md\n- [ ] Example 📅 2026-01-05\n```"],
+    ["HTML comment", "<!--\n- [ ] Example 📅 2026-01-05\n-->"],
+  ])("refuses to rewrite a cached task now hidden by %s", (_label, content) => {
+    const expected = {
+      ...task("- [ ] Example 📅 2026-01-05"),
+      line: 1,
+    };
+
+    expect(toggleTaskInContent(content, expected)).toEqual({ status: "stale" });
+  });
+
   it("replaces only an existing due date and validates all refusal cases", () => {
     const content = "- [ ] Keep 📅 2026-01-05 ⏳ 2026-01-06 🛫 2026-01-07\r\n";
     expect(rescheduleTaskDueDateInContent(

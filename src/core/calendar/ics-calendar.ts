@@ -12,6 +12,8 @@ import {
 } from "../periodic/periodic-date";
 
 const MAX_EVENT_SPAN_DAYS = 366;
+export const MAX_ICS_SOURCE_BYTES = 5 * 1024 * 1024;
+export const MAX_ICS_EVENTS_PER_SOURCE = 10_000;
 
 export interface IcsParseOptions {
   readonly displayZone: string;
@@ -65,6 +67,17 @@ export function parseIcsCalendar(
   options: IcsParseOptions,
 ): IcsParseResult {
   validateDisplayZone(options.displayZone);
+  if (new TextEncoder().encode(content).byteLength > MAX_ICS_SOURCE_BYTES) {
+    throw new RangeError(`ICS source exceeds ${MAX_ICS_SOURCE_BYTES} bytes`);
+  }
+  let eventCount = 0;
+  const eventPattern = /^BEGIN:VEVENT\s*$/gimu;
+  while (eventPattern.exec(content) !== null) {
+    eventCount += 1;
+    if (eventCount > MAX_ICS_EVENTS_PER_SOURCE) {
+      throw new RangeError(`ICS source exceeds ${MAX_ICS_EVENTS_PER_SOURCE} events`);
+    }
+  }
   const normalized = content.startsWith("\uFEFF") ? content.slice(1) : content;
   const parsed: unknown = ICAL.parse(normalized);
   if (!isJCalComponent(parsed)) {

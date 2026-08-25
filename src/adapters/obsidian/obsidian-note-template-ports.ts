@@ -12,6 +12,12 @@ import type {
 } from "../../features/templates/note-template-port";
 import { isMarkdownFile } from "./obsidian-markdown-files";
 
+// Templater exposes no stable public render-only API. Keep the current
+// internal create-note mode isolated and serialize access to its mutable
+// running configuration so concurrent note creation cannot cross contexts.
+const TEMPLATER_CREATE_NEW_NOTE_RUN_MODE = 1;
+const templaterRenderTails = new WeakMap<object, Promise<void>>();
+
 export class ObsidianBuiltinTemplatePort implements NoteTemplatePort {
   constructor(
     private readonly vault: Vault,
@@ -95,6 +101,7 @@ class ObsidianTemplaterTemplatePort implements NoteTemplatePort {
     const createRunningConfig = templater?.create_running_config;
     const parseTemplate = templater?.parse_template;
     if (
+      templater === undefined ||
       typeof createRunningConfig !== "function" ||
       typeof parseTemplate !== "function"
     ) {
@@ -115,21 +122,52 @@ class ObsidianTemplaterTemplatePort implements NoteTemplatePort {
         if (!isMarkdownFile(target)) {
           throw new Error(`Target note not found: ${path}`);
         }
-        const config = createRunningConfig.call(templater, template, target, 1);
-        let rendered: unknown;
-        try {
-          rendered = await parseTemplate.call(
+        return runTemplaterExclusive(templater, async () => {
+          const config = createRunningConfig.call(
             templater,
-            config,
-            buildTemplaterTemplate(rawTemplate, context),
+            template,
+            target,
+            TEMPLATER_CREATE_NEW_NOTE_RUN_MODE,
           );
-        } catch (error) {
-          const message = error instanceof Error ? error.message : String(error);
-          throw new Error(`Templater rendering failed: ${message}`, { cause: error });
-        }
-        return Array.isArray(rendered) ? String(rendered[0]) : String(rendered);
+          let rendered: unknown;
+          try {
+            rendered = await parseTemplate.call(
+              templater,
+              config,
+              buildTemplaterTemplate(rawTemplate, context),
+            );
+          } catch (error) {
+            const message = error instanceof Error ? error.message : String(error);
+            throw new Error(`Templater rendering failed: ${message}`, { cause: error });
+          }
+          return Array.isArray(rendered) ? String(rendered[0]) : String(rendered);
+        });
       },
     });
+  }
+}
+
+async function runTemplaterExclusive<T>(
+  templater: object,
+  render: () => Promise<T>,
+): Promise<T> {
+  const previous = templaterRenderTails.get(templater) ?? Promise.resolve();
+  let release!: () => void;
+  const gate = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  const tail = previous.then(() => gate);
+  templaterRenderTails.set(templater, tail);
+  await previous;
+  try {
+    return await render();
+  } finally {
+    release();
+    if (templaterRenderTails.get(templater) === tail) {
+      void tail.then(() => {
+        if (templaterRenderTails.get(templater) === tail) templaterRenderTails.delete(templater);
+      });
+    }
   }
 }
 

@@ -26,6 +26,35 @@ function deferred<T>() {
 }
 
 describe("IcsEventIndex", () => {
+  it("caps configured sources and one revision's logically live reads", async () => {
+    const pending = Array.from({ length: 5 }, () => deferred<string>());
+    const read = vi.fn((_source: string) => {
+      const result = pending[read.mock.calls.length - 1];
+      if (result === undefined) throw new Error("Unexpected read");
+      return result.promise;
+    });
+    const reader: IcsSourceReader = { read };
+    const index = new IcsEventIndex(reader, { maxConcurrentReads: 2, maxSources: 5 });
+    const refresh = index.refresh({
+      enabled: true,
+      sources: Array.from({ length: 8 }, (_, index) => `${index}.ics`),
+      displayZone: "UTC",
+    });
+
+    await vi.waitFor(() => expect(reader.read).toHaveBeenCalledTimes(2));
+    expect(index.getSnapshot().totalSources).toBe(5);
+    for (let index = 0; index < pending.length; index += 1) {
+      pending[index]?.resolve(calendar(String(index), `2026050${index + 1}`));
+      if (index < pending.length - 2) {
+        await vi.waitFor(() => expect(reader.read).toHaveBeenCalledTimes(index + 3));
+      }
+    }
+    await refresh;
+
+    expect(reader.read).toHaveBeenCalledTimes(5);
+    expect(index.getSnapshot()).toMatchObject({ totalSources: 5, eventCount: 5 });
+  });
+
   it("deduplicates sources and preserves successful events beside source errors", async () => {
     const reader: IcsSourceReader = {
       read: vi.fn(async (source) => {
@@ -138,6 +167,37 @@ describe("IcsEventIndex", () => {
     oldRead.resolve(calendar("old", "20260506"));
     await first;
     expect(index.getSnapshot().eventsByDate["2026-05-07"]?.[0]?.id).toBe("latest");
+  });
+
+  it("starts the latest revision after stale reads saturate every slot", async () => {
+    const oldReads = [deferred<string>(), deferred<string>()];
+    const latestReads = [deferred<string>(), deferred<string>()];
+    const allReads = [...oldReads, ...latestReads];
+    const read = vi.fn(() => {
+      const pending = allReads[read.mock.calls.length - 1];
+      if (pending === undefined) throw new Error("Unexpected ICS read");
+      return pending.promise;
+    });
+    const index = new IcsEventIndex({ read }, { maxConcurrentReads: 2 });
+    const options = {
+      enabled: true,
+      sources: ["a.ics", "b.ics"],
+      displayZone: "UTC",
+    } as const;
+
+    const staleRefresh = index.refresh(options);
+    await vi.waitFor(() => expect(read).toHaveBeenCalledTimes(2));
+    const latestRefresh = index.refresh(options);
+    await vi.waitFor(() => expect(read).toHaveBeenCalledTimes(4));
+
+    latestReads[0]?.resolve(calendar("latest-a", "20260507"));
+    latestReads[1]?.resolve(calendar("latest-b", "20260508"));
+    await latestRefresh;
+    await staleRefresh;
+
+    expect(index.getSnapshot()).toMatchObject({ state: "ready", eventCount: 2 });
+    expect(index.getSnapshot().eventsByDate["2026-05-07"]?.[0]?.id).toBe("latest-a");
+    expect(index.getSnapshot().eventsByDate["2026-05-08"]?.[0]?.id).toBe("latest-b");
   });
 
   it("does not reuse an enabled read after a disable-enable revision boundary", async () => {

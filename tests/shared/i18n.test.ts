@@ -49,7 +49,12 @@ describe("createTranslator", () => {
       expect(catalog["settings.general.auto"]).toEqual(
         expect.stringContaining("Obsidian"),
       );
+      expect(catalog["settings.general.language"]).toBeTruthy();
+      expect(catalog["settings.general.languageDesc"]).toContain(
+        catalog["settings.general.auto"] as string,
+      );
     }
+    expect(MESSAGE_CATALOGS.ar["settings.general.languageEnglish"]).toBe("الإنجليزية");
   });
 
   it("translates and interpolates the three complete runtime catalogs", () => {

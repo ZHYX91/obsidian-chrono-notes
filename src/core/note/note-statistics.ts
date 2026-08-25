@@ -1,3 +1,4 @@
+import type { MarkdownBodyProjection } from "../document/markdown-body-projection";
 import type { NoteTask } from "./note-tasks";
 
 export interface NoteStatistics {
@@ -9,15 +10,16 @@ export interface NoteStatistics {
   readonly taskCompletionRate: number;
 }
 
-const WORD_PATTERN = /[一-鿿㐀-䶿豈-﫿]|[a-zA-Z''-]+|[0-9]+(?:[,.][0-9]+)*/g;
+const WORD_PATTERN = /[一-鿿㐀-䶿豈-﫿]|[a-zA-Z]+(?:['’-][a-zA-Z]+)*|[0-9]+(?:[,.][0-9]+)*/g;
 const WIKI_LINK_PATTERN = /!?\[\[[^[\]]+\]\]/g;
 const MARKDOWN_LINK_PATTERN = /!?\[[^\]]+\]\([^)]+\)/g;
 const TAG_PATTERN = /(^|[^\p{L}\p{N}_/])#([\p{L}\p{N}_/-]+)/gu;
 
 export function calculateNoteStatistics(
-  body: string,
+  projection: MarkdownBodyProjection,
   tasks: readonly NoteTask[],
 ): NoteStatistics {
+  const body = projection.lines.map((line) => line.semanticText).join("\n");
   const taskCompleted = tasks.filter((task) => task.completed).length;
   return Object.freeze({
     wordCount: body.match(WORD_PATTERN)?.length ?? 0,

@@ -2,10 +2,29 @@ import { describe, expect, it } from "vitest";
 
 import {
   buildIcsDateIndex,
+  MAX_ICS_EVENTS_PER_SOURCE,
+  MAX_ICS_SOURCE_BYTES,
   parseIcsCalendar,
 } from "../../src/core/calendar/ics-calendar";
 
 describe("ICS calendar parsing", () => {
+  it("rejects oversized byte and event inputs before constructing components", () => {
+    expect(() => parseIcsCalendar(
+      "x".repeat(MAX_ICS_SOURCE_BYTES + 1),
+      "large.ics",
+      { displayZone: "UTC" },
+    )).toThrow(`exceeds ${MAX_ICS_SOURCE_BYTES} bytes`);
+
+    const events = ["BEGIN:VCALENDAR"];
+    for (let index = 0; index <= MAX_ICS_EVENTS_PER_SOURCE; index += 1) {
+      events.push("BEGIN:VEVENT", "END:VEVENT");
+    }
+    events.push("END:VCALENDAR");
+    expect(() => parseIcsCalendar(events.join("\n"), "many.ics", {
+      displayZone: "UTC",
+    })).toThrow(`exceeds ${MAX_ICS_EVENTS_PER_SOURCE} events`);
+  });
+
   it("rejects ambiguous top-level parse results before component construction", () => {
     expect(() => parseIcsCalendar([
       "BEGIN:VCALENDAR",

@@ -47,67 +47,117 @@ class FakeVault {
 }
 
 describe("Obsidian periodic note ports", () => {
+  const closedWorkspace = () => ({ getLeavesOfType: vi.fn((): unknown[] => []) });
+
   it("creates interval note content after ensuring parent folders", async () => {
     const vault = new FakeVault();
-    const fileManager = {
-      trashFile: vi.fn(async (file: FakeFile) => {
-        vault.files.delete(file.path);
-        vault.contents.delete(file.path);
-      }),
-    };
+    const workspace = closedWorkspace();
     const files = new ObsidianIntervalNoteFilePort(
       vault as never,
-      fileManager as never,
+      workspace as never,
     );
 
-    await files.create("Calendar/Range Notes/trip.md", "---\nstart: 2026-05-01\n---");
+    const created = await files.create(
+      "Calendar/Range Notes/trip.md",
+      "---\nstart: 2026-05-01\n---",
+    );
     expect([...vault.folders]).toEqual(["Calendar", "Calendar/Range Notes"]);
     expect(vault.contents.get("Calendar/Range Notes/trip.md")).toContain("start: 2026-05-01");
     expect(files.exists("Calendar/Range Notes/trip.md")).toBe(true);
 
-    await files.modify(
-      "Calendar/Range Notes/trip.md",
+    await files.finalize(
+      created,
       "---\nstart: 2026-05-02\n---",
     );
     expect(vault.contents.get("Calendar/Range Notes/trip.md")).toContain("start: 2026-05-02");
-
-    await files.delete("Calendar/Range Notes/trip.md");
-    expect(files.exists("Calendar/Range Notes/trip.md")).toBe(false);
-    expect(fileManager.trashFile).toHaveBeenCalledWith(expect.objectContaining({
-      path: "Calendar/Range Notes/trip.md",
-    }));
+    expect(vault.process).toHaveBeenCalledOnce();
   });
 
-  it("creates missing parent folders and deletes only the addressed Markdown note", async () => {
+  it("creates missing parent folders and conditionally finalizes the same Markdown note", async () => {
     const vault = new FakeVault();
-    const fileManager = {
-      trashFile: vi.fn(async (file: FakeFile) => {
-        vault.files.delete(file.path);
-        vault.contents.delete(file.path);
-      }),
-    };
-    const files = new ObsidianPeriodicNoteFilePort(vault as never, fileManager as never);
+    const files = new ObsidianPeriodicNoteFilePort(
+      vault as never,
+      closedWorkspace() as never,
+    );
 
-    await files.create("Calendar/Daily/2026-05-18.md", "# Daily");
+    const created = await files.create("Calendar/Daily/2026-05-18.md", "# Daily");
     expect([...vault.folders]).toEqual(["Calendar", "Calendar/Daily"]);
     expect(vault.contents.get("Calendar/Daily/2026-05-18.md")).toBe("# Daily");
     expect(files.exists("Calendar/Daily/2026-05-18.md")).toBe(true);
 
-    await files.modify("Calendar/Daily/2026-05-18.md", "# Updated");
+    await files.finalize(created, "# Updated");
     expect(vault.contents.get("Calendar/Daily/2026-05-18.md")).toBe("# Updated");
+  });
 
-    await files.delete("Calendar/Daily/2026-05-18.md");
-    expect(files.exists("Calendar/Daily/2026-05-18.md")).toBe(false);
-    expect(fileManager.trashFile).toHaveBeenCalledWith(expect.objectContaining({
-      path: "Calendar/Daily/2026-05-18.md",
-    }));
+  it("preserves a created note changed before deferred template finalization", async () => {
+    const vault = new FakeVault();
+    const files = new ObsidianPeriodicNoteFilePort(
+      vault as never,
+      closedWorkspace() as never,
+    );
+    const created = await files.create("Daily/changed.md", "");
+    vault.contents.set("Daily/changed.md", "# External edit");
+
+    await expect(files.finalize(created, "# Rendered"))
+      .rejects.toThrow("changed during template rendering");
+    expect(vault.contents.get("Daily/changed.md")).toBe("# External edit");
+  });
+
+  it("rejects a same-path replacement even when its content is unchanged", async () => {
+    const vault = new FakeVault();
+    const files = new ObsidianPeriodicNoteFilePort(
+      vault as never,
+      closedWorkspace() as never,
+    );
+    const created = await files.create("Daily/replaced.md", "");
+    vault.files.set("Daily/replaced.md", { path: "Daily/replaced.md", extension: "md" });
+
+    await expect(files.finalize(created, "# Rendered"))
+      .rejects.toThrow("target changed during template rendering");
+    expect(vault.process).not.toHaveBeenCalled();
+    expect(vault.contents.get("Daily/replaced.md")).toBe("");
+  });
+
+  it("rejects a renamed target before deferred template finalization", async () => {
+    const vault = new FakeVault();
+    const files = new ObsidianPeriodicNoteFilePort(
+      vault as never,
+      closedWorkspace() as never,
+    );
+    const created = await files.create("Daily/original.md", "");
+    const original = created.identity as FakeFile;
+    vault.files.delete("Daily/original.md");
+    original.path = "Daily/renamed.md";
+    vault.files.set(original.path, original);
+
+    await expect(files.finalize(created, "# Rendered"))
+      .rejects.toThrow("target changed during template rendering");
+    expect(vault.process).not.toHaveBeenCalled();
+  });
+
+  it("refuses to finalize a note that opened in a Markdown editor", async () => {
+    const vault = new FakeVault();
+    const workspace = closedWorkspace();
+    const files = new ObsidianPeriodicNoteFilePort(vault as never, workspace as never);
+    const created = await files.create("Daily/open.md", "");
+    workspace.getLeavesOfType.mockReturnValue([{
+      view: {
+        file: { path: "Daily/open.md" },
+        editor: { getValue: vi.fn(() => "# Unsaved edit") },
+        requestSave: vi.fn(),
+      },
+    }]);
+
+    await expect(files.finalize(created, "# Rendered"))
+      .rejects.toThrow("opened during template rendering");
+    expect(vault.process).not.toHaveBeenCalled();
   });
 
   it("shares an in-flight parent-folder creation across different note ports", async () => {
     const vault = new FakeVault();
-    const fileManager = { trashFile: vi.fn() };
-    const periodic = new ObsidianPeriodicNoteFilePort(vault as never, fileManager as never);
-    const intervals = new ObsidianIntervalNoteFilePort(vault as never, fileManager as never);
+    const workspace = closedWorkspace();
+    const periodic = new ObsidianPeriodicNoteFilePort(vault as never, workspace as never);
+    const intervals = new ObsidianIntervalNoteFilePort(vault as never, workspace as never);
     let releaseSharedFolder: (() => void) | undefined;
     let signalSharedFolderStarted: (() => void) | undefined;
     const sharedFolderStarted = new Promise<void>((resolve) => {
@@ -145,7 +195,7 @@ describe("Obsidian periodic note ports", () => {
     const vault = new FakeVault();
     const files = new ObsidianPeriodicNoteFilePort(
       vault as never,
-      { trashFile: vi.fn() } as never,
+      closedWorkspace() as never,
     );
     vault.createFolder.mockRejectedValueOnce(new Error("temporary folder failure"));
 
@@ -162,7 +212,7 @@ describe("Obsidian periodic note ports", () => {
     const vault = new FakeVault();
     const files = new ObsidianPeriodicNoteFilePort(
       vault as never,
-      { trashFile: vi.fn() } as never,
+      closedWorkspace() as never,
     );
     vault.createFolder.mockImplementationOnce(async (path: string) => {
       vault.folders.add(path);
@@ -179,15 +229,67 @@ describe("Obsidian periodic note ports", () => {
     const vault = new FakeVault();
     vault.files.set("Tasks.md", { path: "Tasks.md", extension: "md" });
     vault.contents.set("Tasks.md", "- [ ] Work");
-    const tasks = new ObsidianTaskFilePort(vault as never);
+    const workspace = { getLeavesOfType: vi.fn(() => []) };
+    const tasks = new ObsidianTaskFilePort(vault as never, workspace as never);
 
     await tasks.process("Tasks.md", (content) => content.replace("[ ]", "[x]"));
     expect(vault.contents.get("Tasks.md")).toBe("- [x] Work");
+    expect(vault.process).toHaveBeenCalledOnce();
     await tasks.process("Tasks.md", () => null);
     expect(vault.contents.get("Tasks.md")).toBe("- [x] Work");
     await expect(tasks.process("Missing.md", () => null)).rejects.toThrow(
       "Markdown note not found",
     );
+  });
+
+  it("updates an unsaved task buffer in a background Markdown split", async () => {
+    const vault = new FakeVault();
+    vault.files.set("Tasks.md", { path: "Tasks.md", extension: "md" });
+    vault.contents.set("Tasks.md", "- [ ] stale disk task");
+    let editorContent = "- [ ] unsaved editor task";
+    const editor = {
+      getValue: vi.fn(() => editorContent),
+      offsetToPos: vi.fn((offset: number) => ({ line: 0, ch: offset })),
+      transaction: vi.fn((transaction: { changes: Array<{ text: string }> }) => {
+        editorContent = transaction.changes[0]?.text ?? editorContent;
+      }),
+    };
+    const requestSave = vi.fn();
+    const backgroundLeaf = { view: { file: { path: "Tasks.md" }, editor, requestSave } };
+    const workspace = { getLeavesOfType: vi.fn(() => [backgroundLeaf]) };
+    const tasks = new ObsidianTaskFilePort(vault as never, workspace as never);
+
+    await tasks.process("Tasks.md", (content) => content.replace("[ ]", "[x]"));
+
+    expect(editorContent).toBe("- [x] unsaved editor task");
+    expect(editor.transaction).toHaveBeenCalledWith({
+      changes: [{
+        from: { line: 0, ch: 0 },
+        to: { line: 0, ch: 25 },
+        text: "- [x] unsaved editor task",
+      }],
+    }, "chrono-notes-task");
+    expect(requestSave).toHaveBeenCalledOnce();
+    expect(vault.process).not.toHaveBeenCalled();
+    expect(vault.contents.get("Tasks.md")).toBe("- [ ] stale disk task");
+  });
+
+  it("fails closed when a task note is open in multiple Markdown editors", async () => {
+    const vault = new FakeVault();
+    vault.files.set("Tasks.md", { path: "Tasks.md", extension: "md" });
+    const createLeaf = () => ({
+      view: {
+        file: { path: "Tasks.md" },
+        editor: { getValue: vi.fn(() => "- [ ] Work") },
+        requestSave: vi.fn(),
+      },
+    });
+    const workspace = { getLeavesOfType: vi.fn(() => [createLeaf(), createLeaf()]) };
+    const tasks = new ObsidianTaskFilePort(vault as never, workspace as never);
+
+    await expect(tasks.process("Tasks.md", (content) => content.replace("[ ]", "[x]")))
+      .rejects.toThrow("open in multiple editors");
+    expect(vault.process).not.toHaveBeenCalled();
   });
 
   it("reads and renders a configured built-in template before target creation", async () => {
@@ -393,6 +495,56 @@ describe("Obsidian periodic note ports", () => {
     expect(injected).toContain("<% tp_calendar.startDate %>");
     expect(rendered).toBe("rendered range");
     expect(vault.modify).not.toHaveBeenCalled();
+  });
+
+  it("serializes Templater rendering across concurrently created notes", async () => {
+    const vault = new FakeVault();
+    const template = { path: "Templates/Daily.md", extension: "md" };
+    const firstTarget = { path: "Daily/first.md", extension: "md" };
+    const secondTarget = { path: "Daily/second.md", extension: "md" };
+    for (const file of [template, firstTarget, secondTarget]) vault.files.set(file.path, file);
+    vault.contents.set(template.path, "template");
+    let finishFirst!: (value: unknown) => void;
+    const firstRender = new Promise<unknown>((resolve) => {
+      finishFirst = resolve;
+    });
+    const parseTemplate = vi.fn()
+      .mockReturnValueOnce(firstRender)
+      .mockResolvedValueOnce("second rendered");
+    const templater = {
+      create_running_config: vi.fn((_template, target) => ({ target })),
+      parse_template: parseTemplate,
+    };
+    const templates = new ObsidianNoteTemplatePort({
+      plugins: { getPlugin: () => ({ templater }) },
+    } as never, vault as never);
+    const context = {
+      kind: "periodic" as const,
+      date: { year: 2026, month: 8, day: 21 },
+      locale: "en-US",
+      noteType: "daily" as const,
+      path: firstTarget.path,
+      templatePath: template.path,
+      templateEngine: "templater" as const,
+      title: "first",
+    };
+    const first = await templates.prepare(context, "");
+    const second = await templates.prepare({
+      ...context,
+      path: secondTarget.path,
+      title: "second",
+    }, "");
+
+    const firstResult = first.renderAfterCreate?.(firstTarget.path);
+    const secondResult = second.renderAfterCreate?.(secondTarget.path);
+    await vi.waitFor(() => expect(parseTemplate).toHaveBeenCalledOnce());
+    expect(templater.create_running_config).toHaveBeenCalledOnce();
+
+    finishFirst("first rendered");
+    await expect(firstResult).resolves.toBe("first rendered");
+    await expect(secondResult).resolves.toBe("second rendered");
+    expect(parseTemplate).toHaveBeenCalledTimes(2);
+    expect(templater.create_running_config).toHaveBeenCalledTimes(2);
   });
 
   it("reuses an already open Markdown leaf or opens a new tab", async () => {

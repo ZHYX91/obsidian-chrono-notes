@@ -1,3 +1,4 @@
+import type { MarkdownBodyProjection } from "../document/markdown-body-projection";
 import { parseLocalDateKey } from "../periodic/periodic-date";
 
 export interface NoteTask {
@@ -19,25 +20,33 @@ const TASK_LINE_PATTERN = /^(\s*)[-*]\s+\[([ xX])\]\s+(.+)$/;
 const DISPLAY_DATE_MARKER_PATTERN = /(📅|⏳|⌛|🛫|✅)\s*\d{4}-\d{2}-\d{2}/gu;
 
 export function parseNoteTasks(
-  body: string,
+  projection: MarkdownBodyProjection,
   path: string,
-  bodyStartLine: number,
 ): readonly NoteTask[] {
   const tasks: NoteTask[] = [];
-  for (const [index, line] of body.split("\n").entries()) {
-    const match = TASK_LINE_PATTERN.exec(line);
+  for (const line of projection.lines) {
+    const match = TASK_LINE_PATTERN.exec(line.visibleText);
     if (match === null) continue;
-    const rawText = match[3]?.trim() ?? "";
-    const text = rawText.replace(DISPLAY_DATE_MARKER_PATTERN, "").replace(/\s+/g, " ").trim();
+    const contentStart = match[0].length - (match[3]?.length ?? 0);
+    // RegExp indices are UTF-16 code-unit offsets, so keep the writable copy
+    // in the same coordinate system even when emoji markers use surrogate pairs.
+    const visibleWithoutDates = line.visibleText.split("");
+    for (const dateMarker of line.semanticText.matchAll(DISPLAY_DATE_MARKER_PATTERN)) {
+      const start = dateMarker.index;
+      const end = start + dateMarker[0].length;
+      for (let index = start; index < end; index += 1) visibleWithoutDates[index] = " ";
+    }
+    const rawText = line.visibleText.slice(contentStart).trim();
+    const text = visibleWithoutDates.join("").slice(contentStart).replace(/\s+/g, " ").trim();
     tasks.push(Object.freeze({
       text: text || rawText,
       completed: match[2] !== " ",
-      dueDate: parseTaskDate(DUE_PATTERN, line),
-      scheduledDate: parseTaskDate(SCHEDULED_PATTERN, line),
-      startDate: parseTaskDate(START_PATTERN, line),
-      doneDate: parseTaskDate(DONE_PATTERN, line),
+      dueDate: parseTaskDate(DUE_PATTERN, line.semanticText),
+      scheduledDate: parseTaskDate(SCHEDULED_PATTERN, line.semanticText),
+      startDate: parseTaskDate(START_PATTERN, line.semanticText),
+      doneDate: parseTaskDate(DONE_PATTERN, line.semanticText),
       path,
-      line: bodyStartLine + index,
+      line: line.sourceLine,
     }));
   }
   return Object.freeze(tasks);

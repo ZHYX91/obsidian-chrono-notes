@@ -15,13 +15,9 @@ import type {
   IntervalNoteTemplateContext,
   NoteTemplatePort,
 } from "../templates/note-template-port";
+import type { CreatedNoteFilePort } from "../templates/created-note-file-port";
 
-export interface IntervalNoteFilePort {
-  exists(path: string): boolean;
-  create(path: string, content: string): Promise<void>;
-  modify(path: string, content: string): Promise<void>;
-  delete(path: string): Promise<void>;
-}
+export type IntervalNoteFilePort = CreatedNoteFilePort;
 
 export interface IntervalNoteCommandSettings {
   readonly locale: string;
@@ -49,7 +45,7 @@ class IntervalNoteCreationError extends Error {
   constructor(
     readonly path: string,
     override readonly cause: unknown,
-    readonly rollbackCause?: unknown,
+    readonly retainedCreatedNote = false,
   ) {
     super(`Failed to create range note at ${path}: ${toErrorMessage(cause)}`, {
       cause,
@@ -122,7 +118,7 @@ export class IntervalNoteCommands {
     spec: IntervalNoteSpec,
     settings: IntervalNoteCommandSettings,
   ): Promise<void> {
-    let created = false;
+    let retainedCreatedNote = false;
     try {
       const context: IntervalNoteTemplateContext = Object.freeze({
         kind: "interval",
@@ -139,28 +135,20 @@ export class IntervalNoteCommands {
         context,
         buildIntervalNoteContent(spec),
       );
-      await this.files.create(
+      const created = await this.files.create(
         spec.path,
         applyIntervalNoteMetadata(prepared.initialContent, spec),
       );
-      created = true;
+      retainedCreatedNote = true;
       if (prepared.renderAfterCreate !== undefined) {
         const rendered = await prepared.renderAfterCreate(spec.path);
-        await this.files.modify(
-          spec.path,
+        await this.files.finalize(
+          created,
           applyIntervalNoteMetadata(rendered, spec),
         );
       }
     } catch (cause) {
-      let rollbackCause: unknown;
-      if (created) {
-        try {
-          await this.files.delete(spec.path);
-        } catch (error) {
-          rollbackCause = error;
-        }
-      }
-      throw new IntervalNoteCreationError(spec.path, cause, rollbackCause);
+      throw new IntervalNoteCreationError(spec.path, cause, retainedCreatedNote);
     }
   }
 }

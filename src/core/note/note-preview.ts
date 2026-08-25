@@ -51,10 +51,7 @@ export const EMPTY_NOTE_EMBED_STATISTICS: NoteEmbedStatistics = Object.freeze({
   otherCount: 0,
 });
 
-export function deriveNotePreview(body: string): NotePreviewSummary {
-  const withoutCodeFences = body
-    .replace(/^```[\s\S]*?^```[ \t]*$/gm, "")
-    .replace(/^~~~[\s\S]*?^~~~[ \t]*$/gm, "");
+export function deriveNotePreview(projection: MarkdownBodyProjection): NotePreviewSummary {
   const counts: MutableNoteEmbedStatistics = {
     imageCount: 0,
     pdfCount: 0,
@@ -67,12 +64,13 @@ export function deriveNotePreview(body: string): NotePreviewSummary {
   let totalLength = 0;
   let previewComplete = false;
 
-  for (const rawLine of withoutCodeFences.split("\n")) {
+  for (const line of projection.lines) {
+    const semanticLine = line.semanticText;
     if (previewComplete) {
-      stripAndCountEmbeds(rawLine, counts);
+      stripAndCountEmbeds(semanticLine, counts);
       continue;
     }
-    const cleaned = cleanPreviewLine(rawLine, counts);
+    const cleaned = cleanPreviewLine(semanticLine, counts);
     if (cleaned === null) continue;
 
     const remaining = NOTE_PREVIEW_MAX_LENGTH - totalLength;
@@ -96,7 +94,7 @@ export function deriveNotePreview(body: string): NotePreviewSummary {
 }
 
 export function summarizeNotePreview(body: string): string | null {
-  return deriveNotePreview(body).text;
+  return deriveNotePreview(projectMarkdownBody(body, 0)).text;
 }
 
 function cleanPreviewLine(
@@ -310,3 +308,7 @@ function freezeEmbedStatistics(
     counts.otherCount;
   return total === 0 ? EMPTY_NOTE_EMBED_STATISTICS : Object.freeze({ ...counts });
 }
+import {
+  projectMarkdownBody,
+  type MarkdownBodyProjection,
+} from "../document/markdown-body-projection";

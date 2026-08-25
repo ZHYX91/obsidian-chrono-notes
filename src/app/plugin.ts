@@ -27,6 +27,7 @@ import { createTranslator, type Translator } from "../shared/i18n";
 import { getCurrentLocalDate } from "../shared/local-date-clock";
 import {
   createDefaultSettings,
+  isFutureSettingsSchema,
   isSettingsMigrationRequired,
   migrateSettings,
   normalizeSettings,
@@ -72,6 +73,7 @@ export default class ChronoNotesPlugin extends Plugin {
   private readonly firstUseGuideGate = new FirstUseGuideGate();
   private settingsSaveTail: Promise<void> = Promise.resolve();
   private persistedSettings: ChronoNotesSettings = createDefaultSettings();
+  private settingsReadOnly = false;
   private intervalSettingsRevision = 0;
   private runtimeRevision = 0;
   private runtimeActive = false;
@@ -138,6 +140,7 @@ export default class ChronoNotesPlugin extends Plugin {
 
   async loadSettings(): Promise<void> {
     const loaded: unknown = await this.loadData();
+    this.settingsReadOnly = isFutureSettingsSchema(loaded);
     const migrationRequired = isSettingsMigrationRequired(loaded);
     const migrated = migrateSettings(loaded);
     this.settings = normalizeSettings(migrated);
@@ -151,6 +154,11 @@ export default class ChronoNotesPlugin extends Plugin {
   }
 
   async saveSettings(): Promise<void> {
+    if (this.settingsReadOnly) {
+      throw new Error(
+        "Chrono Notes settings were created by a newer plugin version and are read-only.",
+      );
+    }
     const runtimeRevision = this.runtimeRevision;
     const snapshot = normalizeSettings(this.settings);
     const save = this.settingsSaveTail.then(async () => {
@@ -210,7 +218,6 @@ export default class ChronoNotesPlugin extends Plugin {
     return {
       app: this.app,
       vault: this.app.vault,
-      fileManager: this.app.fileManager,
       workspace: this.app.workspace,
       getSettings: () => this.settings,
       getTranslator: () => this.getTranslator(),
@@ -524,13 +531,14 @@ export default class ChronoNotesPlugin extends Plugin {
     ).open();
   }
 
-  openFirstUseGuide(): void {
+  openFirstUseGuide(onShown?: () => void): void {
     new FirstUseGuideModal(
       this.app,
       this.getTranslator(),
       () => {
         openObsidianPluginSettings(this.app, this.manifest.id);
       },
+      onShown,
     ).open();
   }
 
@@ -751,17 +759,17 @@ export default class ChronoNotesPlugin extends Plugin {
 
   private async showFirstUseGuideOnce(runtimeRevision: number): Promise<void> {
     if (!this.firstUseGuideGate.trySchedule(this.settings.firstUseGuideSeen)) return;
-    this.settings.firstUseGuideSeen = true;
-    try {
-      await this.saveSettings();
-    } catch (error) {
-      this.settings.firstUseGuideSeen = false;
-      console.error("Chrono Notes: failed to persist first-use guide state", error);
-      return;
-    }
     if (!this.isRuntimeCurrent(runtimeRevision)) return;
     this.registerInterval(window.setTimeout(() => {
-      if (this.isRuntimeCurrent(runtimeRevision)) this.openFirstUseGuide();
+      if (!this.isRuntimeCurrent(runtimeRevision)) return;
+      this.openFirstUseGuide(() => {
+        if (!this.isRuntimeCurrent(runtimeRevision) || this.settings.firstUseGuideSeen) return;
+        this.settings.firstUseGuideSeen = true;
+        void this.saveSettings().catch((error: unknown) => {
+          this.settings.firstUseGuideSeen = false;
+          console.error("Chrono Notes: failed to persist first-use guide state", error);
+        });
+      });
     }, 0));
   }
 

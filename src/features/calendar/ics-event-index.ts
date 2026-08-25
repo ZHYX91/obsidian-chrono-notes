@@ -44,7 +44,12 @@ export interface IcsEventIndexSnapshot {
 
 export interface IcsEventIndexOptions {
   readonly now?: () => number;
+  readonly maxConcurrentReads?: number;
+  readonly maxSources?: number;
 }
+
+export const DEFAULT_ICS_MAX_CONCURRENT_READS = 4;
+export const DEFAULT_ICS_MAX_SOURCES = 32;
 
 interface CoordinatedRead {
   readonly revision: number;
@@ -55,7 +60,10 @@ export class IcsEventIndex {
   private readonly listeners = new Set<() => void>();
   private readonly inFlightReads = new Map<string, CoordinatedRead>();
   private readonly now: () => number;
+  private readonly maxSources: number;
+  private readonly readSlots: AsyncSlotLimiter;
   private requestRevision = 0;
+  private activeRevision: AbortController | null = null;
   private stopped = false;
   private snapshot: IcsEventIndexSnapshot = createDisabledSnapshot(0);
 
@@ -64,6 +72,11 @@ export class IcsEventIndex {
     options: IcsEventIndexOptions = {},
   ) {
     this.now = options.now ?? Date.now;
+    this.maxSources = normalizePositiveLimit(options.maxSources, DEFAULT_ICS_MAX_SOURCES);
+    this.readSlots = new AsyncSlotLimiter(normalizePositiveLimit(
+      options.maxConcurrentReads,
+      DEFAULT_ICS_MAX_CONCURRENT_READS,
+    ));
   }
 
   subscribe = (listener: () => void): (() => void) => {
@@ -76,7 +89,10 @@ export class IcsEventIndex {
   async refresh(options: IcsRefreshOptions): Promise<void> {
     if (this.stopped) return;
     const revision = ++this.requestRevision;
-    const sources = normalizeSources(options.sources);
+    this.activeRevision?.abort();
+    const revisionController = new AbortController();
+    this.activeRevision = revisionController;
+    const sources = normalizeSources(options.sources).slice(0, this.maxSources);
     if (!options.enabled) {
       this.publish(createDisabledSnapshot(
         this.snapshot.version + 1,
@@ -96,7 +112,11 @@ export class IcsEventIndex {
     const pendingResults = await Promise.all(sources.map(async (source) => {
       const sourceLabel = getSourceLabel(source);
       try {
-        const content = await this.readForRevision(source, revision);
+        const content = await this.readForRevision(
+          source,
+          revision,
+          revisionController.signal,
+        );
         // Parsing can be materially more expensive than the read itself. A
         // superseded request must not consume that work or expose its content.
         if (content === null || this.stopped || revision !== this.requestRevision) {
@@ -166,6 +186,8 @@ export class IcsEventIndex {
     if (this.stopped) return;
     this.stopped = true;
     this.requestRevision += 1;
+    this.activeRevision?.abort();
+    this.activeRevision = null;
     this.listeners.clear();
     this.inFlightReads.clear();
     this.snapshot = createDisabledSnapshot(
@@ -174,14 +196,18 @@ export class IcsEventIndex {
     );
   }
 
-  private readForRevision(source: string, revision: number): Promise<string | null> {
+  private readForRevision(
+    source: string,
+    revision: number,
+    signal: AbortSignal,
+  ): Promise<string | null> {
     const existing = this.inFlightReads.get(source);
     if (existing?.revision === revision) return existing.promise;
 
     // A later revision starts a genuinely fresh read immediately. Waiting for
     // an older source promise could indefinitely block the authoritative
     // refresh; the revision gates discard that older result instead.
-    const pending = this.startRead(source, revision);
+    const pending = this.startRead(source, revision, signal);
     const coordinated = { revision, promise: pending };
     this.inFlightReads.set(source, coordinated);
     const cleanup = () => {
@@ -193,12 +219,20 @@ export class IcsEventIndex {
     return pending;
   }
 
-  private startRead(source: string, revision: number): Promise<string | null> {
-    if (this.stopped || revision !== this.requestRevision) return Promise.resolve(null);
+  private async startRead(
+    source: string,
+    revision: number,
+    signal: AbortSignal,
+  ): Promise<string | null> {
+    if (this.stopped || signal.aborted || revision !== this.requestRevision) return null;
+    const release = this.readSlots.acquireImmediately() ?? await this.readSlots.acquire();
     try {
-      return Promise.resolve(this.reader.read(source));
+      if (this.stopped || signal.aborted || revision !== this.requestRevision) return null;
+      return await readUntilAborted(this.reader, source, signal);
     } catch (error) {
-      return Promise.reject(normalizeError(error));
+      throw normalizeError(error);
+    } finally {
+      release();
     }
   }
 
@@ -207,6 +241,73 @@ export class IcsEventIndex {
     this.snapshot = snapshot;
     notifyListeners(this.listeners);
   }
+}
+
+function readUntilAborted(
+  reader: IcsSourceReader,
+  source: string,
+  signal: AbortSignal,
+): Promise<string | null> {
+  if (signal.aborted) return Promise.resolve(null);
+  let pending: Promise<string>;
+  try {
+    pending = reader.read(source);
+  } catch (error) {
+    return Promise.reject(normalizeError(error));
+  }
+  return new Promise((resolve, reject) => {
+    const onAbort = () => {
+      signal.removeEventListener("abort", onAbort);
+      resolve(null);
+    };
+    signal.addEventListener("abort", onAbort, { once: true });
+    void pending.then(
+      (content) => {
+        signal.removeEventListener("abort", onAbort);
+        resolve(content);
+      },
+      (error: unknown) => {
+        signal.removeEventListener("abort", onAbort);
+        reject(normalizeError(error));
+      },
+    );
+  });
+}
+
+class AsyncSlotLimiter {
+  private available: number;
+  private readonly queue: Array<(release: () => void) => void> = [];
+
+  constructor(limit: number) {
+    this.available = limit;
+  }
+
+  acquireImmediately(): (() => void) | null {
+    if (this.available <= 0) return null;
+    this.available -= 1;
+    return this.createRelease();
+  }
+
+  acquire(): Promise<() => void> {
+    const immediate = this.acquireImmediately();
+    if (immediate !== null) return Promise.resolve(immediate);
+    return new Promise((resolve) => this.queue.push(resolve));
+  }
+
+  private createRelease(): () => void {
+    let released = false;
+    return () => {
+      if (released) return;
+      released = true;
+      const next = this.queue.shift();
+      if (next === undefined) this.available += 1;
+      else next(this.createRelease());
+    };
+  }
+}
+
+function normalizePositiveLimit(value: number | undefined, fallback: number): number {
+  return typeof value === "number" && Number.isInteger(value) && value > 0 ? value : fallback;
 }
 
 function createDisabledSnapshot(

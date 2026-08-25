@@ -50,6 +50,7 @@ const mocks = vi.hoisted(() => {
     settingsTabInstances: [] as MockSettingsTab[],
     intervalModalHosts: [] as unknown[],
     firstUseGuideOpen: vi.fn(),
+    firstUseGuideShown: null as (() => void) | null,
     loadData: vi.fn<() => Promise<unknown>>(),
     saveData: vi.fn<(data: unknown) => Promise<void>>(),
     noteListPaths: vi.fn<() => readonly string[]>(),
@@ -213,10 +214,15 @@ const mocks = vi.hoisted(() => {
   }
 
   class MockFirstUseGuideModal {
-    constructor(..._args: unknown[]) {}
+    constructor(...args: unknown[]) {
+      state.firstUseGuideShown = typeof args[3] === "function"
+        ? args[3] as () => void
+        : null;
+    }
 
     open(): void {
       state.firstUseGuideOpen();
+      state.firstUseGuideShown?.();
     }
   }
 
@@ -1082,14 +1088,19 @@ describe("ChronoNotesPlugin lifecycle composition", () => {
     plugin.unload();
   });
 
-  it("does not open the first-use guide when its save settles after unload", async () => {
-    vi.useFakeTimers();
-    const save = mocks.createDeferred<void>();
+  it("marks the first-use guide seen only after the modal is shown", async () => {
+    let show!: () => void;
+    vi.stubGlobal("window", {
+      setTimeout: vi.fn((callback: () => void) => {
+        show = callback;
+        return 1;
+      }),
+      clearTimeout: vi.fn(),
+    });
     mocks.state.loadData.mockResolvedValue({
       ...createDefaultSettings(),
       firstUseGuideSeen: false,
     });
-    mocks.state.saveData.mockReturnValue(save.promise);
     const plugin = createPlugin();
     await plugin.onload();
     const firstUseCallback = mocks.state.layoutReadyCallbacks[0];
@@ -1098,18 +1109,53 @@ describe("ChronoNotesPlugin lifecycle composition", () => {
     }
 
     firstUseCallback();
+    expect(plugin.settings.firstUseGuideSeen).toBe(false);
+    expect(mocks.state.saveData).not.toHaveBeenCalled();
+    show();
     await vi.waitFor(() => expect(mocks.state.saveData).toHaveBeenCalledOnce());
-    plugin.unload();
-    save.resolve(undefined);
-    await Promise.resolve();
-    await Promise.resolve();
-    await vi.runAllTimersAsync();
 
-    expect(mocks.state.firstUseGuideOpen).not.toHaveBeenCalled();
+    expect(mocks.state.firstUseGuideOpen).toHaveBeenCalledOnce();
+    expect(plugin.settings.firstUseGuideSeen).toBe(true);
+    expect(mocks.state.saveData).toHaveBeenCalledOnce();
+    plugin.unload();
   });
 
-  it("does not open the first-use guide when persisting its seen marker fails", async () => {
-    vi.useFakeTimers();
+  it("does not mark or show the first-use guide if unloaded before display", async () => {
+    let show!: () => void;
+    vi.stubGlobal("window", {
+      setTimeout: vi.fn((callback: () => void) => {
+        show = callback;
+        return 1;
+      }),
+      clearTimeout: vi.fn(),
+    });
+    mocks.state.loadData.mockResolvedValue({
+      ...createDefaultSettings(),
+      firstUseGuideSeen: false,
+    });
+    const plugin = createPlugin();
+    await plugin.onload();
+    const firstUseCallback = mocks.state.layoutReadyCallbacks[0];
+    if (firstUseCallback === undefined) throw new Error("Expected layout-ready callback.");
+
+    firstUseCallback();
+    plugin.unload();
+    show();
+
+    expect(mocks.state.firstUseGuideOpen).not.toHaveBeenCalled();
+    expect(plugin.settings.firstUseGuideSeen).toBe(false);
+    expect(mocks.state.saveData).not.toHaveBeenCalled();
+  });
+
+  it("keeps the guide unseen when persisting after display fails", async () => {
+    let show!: () => void;
+    vi.stubGlobal("window", {
+      setTimeout: vi.fn((callback: () => void) => {
+        show = callback;
+        return 1;
+      }),
+      clearTimeout: vi.fn(),
+    });
     mocks.state.loadData.mockResolvedValue({
       ...createDefaultSettings(),
       firstUseGuideSeen: false,
@@ -1124,15 +1170,35 @@ describe("ChronoNotesPlugin lifecycle composition", () => {
     }
 
     firstUseCallback();
+    show();
     await vi.waitFor(() => expect(mocks.state.saveData).toHaveBeenCalledOnce());
-    await vi.runAllTimersAsync();
 
-    expect(mocks.state.firstUseGuideOpen).not.toHaveBeenCalled();
+    expect(mocks.state.firstUseGuideOpen).toHaveBeenCalledOnce();
     expect(plugin.settings.firstUseGuideSeen).toBe(false);
     expect(error).toHaveBeenCalledWith(
       "Chrono Notes: failed to persist first-use guide state",
       expect.any(Error),
     );
+    plugin.unload();
+  });
+
+  it("loads future-schema settings for runtime use but refuses every write", async () => {
+    mocks.state.loadData.mockResolvedValue({
+      ...createDefaultSettings(),
+      schemaVersion: createDefaultSettings().schemaVersion + 1,
+      locale: "zh-CN",
+      futureSetting: { preserve: true },
+    });
+    const plugin = createPlugin();
+    await plugin.onload();
+
+    expect(plugin.settings.locale).toBe("zh-CN");
+    expect(mocks.state.saveData).not.toHaveBeenCalled();
+    plugin.settings.locale = "en";
+    await expect(plugin.saveSettings()).rejects.toThrow(
+      "created by a newer plugin version and are read-only",
+    );
+    expect(mocks.state.saveData).not.toHaveBeenCalled();
     plugin.unload();
   });
 });
@@ -1219,4 +1285,5 @@ function resetCollections(): void {
   mocks.state.propertiesDateDocumentFailure = null;
   mocks.state.settingsTabInstances.length = 0;
   mocks.state.intervalModalHosts.length = 0;
+  mocks.state.firstUseGuideShown = null;
 }

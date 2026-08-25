@@ -11,15 +11,11 @@ import type {
   NoteTemplatePort,
   PeriodicNoteTemplateContext,
 } from "../templates/note-template-port";
+import type { CreatedNoteFilePort } from "../templates/created-note-file-port";
 
 export type NoteOpenTarget = "default" | "tab";
 
-export interface PeriodicNoteFilePort {
-  exists(path: string): boolean;
-  create(path: string, content: string): Promise<void>;
-  modify(path: string, content: string): Promise<void>;
-  delete(path: string): Promise<void>;
-}
+export type PeriodicNoteFilePort = CreatedNoteFilePort;
 
 export interface PeriodicNoteWorkspacePort {
   open(path: string, target: NoteOpenTarget): Promise<void>;
@@ -77,7 +73,7 @@ export class PeriodicNoteCreationError extends Error {
     readonly noteType: PeriodicNoteType,
     readonly path: string,
     override readonly cause: unknown,
-    readonly rollbackCause?: unknown,
+    readonly retainedCreatedNote = false,
   ) {
     super(`Failed to create ${noteType} note at ${path}: ${toFailure(cause).message}`, {
       cause,
@@ -219,7 +215,7 @@ export class PeriodicNoteCommands {
     path: string,
     settings: PeriodicNoteCommandSettings,
   ): Promise<void> {
-    let created = false;
+    let retainedCreatedNote = false;
     try {
       const config = settings.periodicNotes[noteType];
       const context: PeriodicNoteTemplateContext = Object.freeze({
@@ -233,21 +229,18 @@ export class PeriodicNoteCommands {
         title: getNoteTitle(path),
       });
       const prepared = await this.templates.prepare(context, "");
-      await this.files.create(path, prepared.initialContent);
-      created = true;
+      const created = await this.files.create(path, prepared.initialContent);
+      retainedCreatedNote = true;
       if (prepared.renderAfterCreate !== undefined) {
-        await this.files.modify(path, await prepared.renderAfterCreate(path));
+        await this.files.finalize(created, await prepared.renderAfterCreate(path));
       }
     } catch (cause) {
-      let rollbackCause: unknown;
-      if (created) {
-        try {
-          await this.files.delete(path);
-        } catch (error) {
-          rollbackCause = error;
-        }
-      }
-      throw new PeriodicNoteCreationError(noteType, path, cause, rollbackCause);
+      throw new PeriodicNoteCreationError(
+        noteType,
+        path,
+        cause,
+        retainedCreatedNote,
+      );
     }
   }
 }
