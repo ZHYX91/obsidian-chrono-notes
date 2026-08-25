@@ -1448,6 +1448,9 @@ describe("NoteIndex", () => {
       "Daily/B.md",
     ]);
     expect(index.get("Daily/temp.md").kind).toBe("missing");
+    await vi.waitFor(() => {
+      expect(index.getSnapshot().readiness).toBe("ready");
+    });
     expect(listener).toHaveBeenCalledTimes(4);
   });
 

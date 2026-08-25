@@ -70,7 +70,6 @@ export interface NoteIndexStatus {
   readonly readiness: NoteIndexReadiness;
   readonly noteCount: number;
   readonly errorCount: number;
-  readonly backgroundVerificationActive: boolean;
   readonly cacheConfigured: boolean;
 }
 
@@ -98,7 +97,7 @@ interface InFlightRead {
 interface InitialStaging {
   readonly lifecycle: number;
   readonly entries: Map<string, PresentNoteIndexEntry>;
-  readonly documents: Map<string, ParsedNoteDocument>;
+  readonly documentFingerprints: Map<string, bigint>;
 }
 
 interface InitialReadTask {
@@ -138,8 +137,6 @@ export interface NoteIndexOptions {
   readonly cache?: NoteIndexCache;
   /** Schedules a quiet, batched cache write after the index becomes idle. */
   readonly scheduleCacheSave?: (callback: () => void) => () => void;
-  /** Starts full cache verification in the next host task after fast readiness. */
-  readonly scheduleBackgroundVerification?: (callback: () => void) => () => void;
 }
 
 /** Optional mutable counters for deterministic tests and local benchmarks. */
@@ -173,7 +170,7 @@ type NoteIndexDiagnosticCounter = Exclude<keyof NoteIndexDiagnostics, "timings">
 type ReadPublication =
   | { readonly kind: "initial"; readonly staging: InitialStaging }
   | {
-    readonly kind: "live" | "verification";
+    readonly kind: "live";
     readonly forceParse: boolean;
     readonly batch: LiveReadBatch;
   };
@@ -202,13 +199,12 @@ interface PendingLiveCommit {
   readonly revision: number;
   readonly lifecycle: number;
   readonly entry: PresentNoteIndexEntry;
-  readonly document: ParsedNoteDocument | null;
+  readonly documentFingerprint: bigint | null;
   readonly resolve: () => void;
 }
 
 interface LiveReadBatch {
   readonly lifecycle: number;
-  readonly diagnosticKind: "incremental" | "verification";
   pendingReads: number;
   readonly commits: PendingLiveCommit[];
   cancelCheckpoint: (() => void) | null;
@@ -242,7 +238,7 @@ const EMPTY_PATH_SET: ReadonlySet<string> = Object.freeze(new Set<string>());
  */
 export class NoteIndex {
   private readonly entries = new Map<string, PresentNoteIndexEntry>();
-  private readonly documents = new Map<string, ParsedNoteDocument>();
+  private readonly documentFingerprints = new Map<string, bigint>();
   private readonly projections = new NoteIndexProjections();
   private readonly revisions = new Map<string, number>();
   private readonly inFlight = new Map<string, InFlightRead>();
@@ -273,14 +269,11 @@ export class NoteIndex {
   private readonly scheduleReadinessCheckpoint: (callback: () => void) => () => void;
   private readonly cache: NoteIndexCache | null;
   private readonly scheduleCacheSave: (callback: () => void) => () => void;
-  private readonly scheduleBackgroundVerification: (callback: () => void) => () => void;
   private diagnosticsEnabled: boolean;
   private scheduledEventFlush: ScheduledFlush | null = null;
   private cancelReadinessCheckpoint: (() => void) | null = null;
   private cancelCacheSave: (() => void) | null = null;
-  private cancelBackgroundVerification: (() => void) | null = null;
   private cacheSaveTail: Promise<void> = Promise.resolve();
-  private backgroundVerificationActive = false;
   private lastFullIndex: NoteIndexOperationDiagnostics | null = null;
   private lastIncrementalUpdate: NoteIndexOperationDiagnostics | null = null;
 
@@ -312,8 +305,6 @@ export class NoteIndex {
     this.cache = options.cache ?? null;
     this.scheduleCacheSave = options.scheduleCacheSave
       ?? ((callback) => scheduleTimeout(callback, DEFAULT_CACHE_SAVE_DELAY_MS));
-    this.scheduleBackgroundVerification = options.scheduleBackgroundVerification
-      ?? scheduleMacrotaskCheckpoint;
     this.diagnosticsEnabled = this.diagnostics !== null;
   }
 
@@ -334,7 +325,7 @@ export class NoteIndex {
     const staging: InitialStaging = {
       lifecycle: startLifecycle,
       entries: new Map(),
-      documents: new Map(),
+      documentFingerprints: new Map(),
     };
     this.initialStaging = staging;
     this.bufferedStartupEvents = [];
@@ -394,12 +385,6 @@ export class NoteIndex {
         this.initialStaging = null;
         this.initialKnownPaths = null;
       }
-      if (cachedPaths.size > 0) {
-        this.cancelBackgroundVerification = this.scheduleBackgroundVerification(() => {
-          this.cancelBackgroundVerification = null;
-          void this.verifyCachedEntries([...cachedPaths], startLifecycle);
-        });
-      }
     } catch (error) {
       this.rollbackFailedStart(startLifecycle);
       throw error;
@@ -419,15 +404,12 @@ export class NoteIndex {
     this.cancelReadinessCheckpoint = null;
     this.cancelCacheSave?.();
     this.cancelCacheSave = null;
-    this.cancelBackgroundVerification?.();
-    this.cancelBackgroundVerification = null;
-    this.backgroundVerificationActive = false;
     this.cancelLiveReadBatches();
     this.cancelQueuedReads();
     this.releaseRunningReadSlots();
     this.inFlight.clear();
     this.initialStaging?.entries.clear();
-    this.initialStaging?.documents.clear();
+    this.initialStaging?.documentFingerprints.clear();
     this.initialStaging = null;
     this.initialKnownPaths = null;
     this.bufferedStartupEvents = null;
@@ -436,7 +418,7 @@ export class NoteIndex {
     if (this.entries.size > 0 || this.snapshot.readiness !== "indexing") {
       const hadPublishedEntries = Object.keys(this.snapshot.notes).length > 0;
       this.entries.clear();
-      this.documents.clear();
+      this.documentFingerprints.clear();
       this.projections.clear();
       if (hadPublishedEntries) this.publish(true, "indexing");
       else this.publish(false, "indexing");
@@ -454,7 +436,6 @@ export class NoteIndex {
       readiness: this.snapshot.readiness,
       noteCount: notes.length,
       errorCount: notes.filter((entry) => entry.kind === "error").length,
-      backgroundVerificationActive: this.backgroundVerificationActive,
       cacheConfigured: this.cache !== null,
     });
   }
@@ -484,7 +465,6 @@ export class NoteIndex {
     if (
       !this.active ||
       this.snapshot.readiness !== "ready" ||
-      this.backgroundVerificationActive ||
       !this.isLiveWorkIdle()
     ) {
       throw new Error("NoteIndex must be ready and idle before persisting its cache");
@@ -560,65 +540,6 @@ export class NoteIndex {
       restored.add(cached.file.path);
     }
     return restored;
-  }
-
-  private async verifyCachedEntries(
-    paths: readonly string[],
-    lifecycle: number,
-  ): Promise<void> {
-    if (!this.active || this.lifecycle !== lifecycle || paths.length === 0) return;
-    this.backgroundVerificationActive = true;
-    let nextPathIndex = 0;
-    let timeSliceStarted = this.initialIndexClock();
-    let pendingYield: Promise<void> | null = null;
-    const yieldWhenTimeSliceExpires = async (): Promise<void> => {
-      if (this.initialIndexClock() - timeSliceStarted < this.initialIndexTimeSliceMs) {
-        return;
-      }
-      if (pendingYield === null) {
-        const yielding = (async () => {
-          await this.yieldInitialIndex();
-          timeSliceStarted = this.initialIndexClock();
-        })();
-        pendingYield = yielding.finally(() => {
-          pendingYield = null;
-        });
-      }
-      await pendingYield;
-    };
-    const runWorker = async (): Promise<void> => {
-      while (this.active && this.lifecycle === lifecycle && nextPathIndex < paths.length) {
-        const path = paths[nextPathIndex];
-        nextPathIndex += 1;
-        if (path === undefined) continue;
-        const revision = this.revisions.get(path);
-        if (revision === undefined || !this.entries.has(path)) continue;
-        if (this.pendingEventIntents.has(path)) continue;
-        const currentRead = this.inFlight.get(path);
-        if (
-          currentRead?.lifecycle === lifecycle &&
-          currentRead.revision === revision
-        ) {
-          await currentRead.promise;
-          continue;
-        }
-        await this.beginRead(path, revision, {
-          kind: "verification",
-          forceParse: false,
-          batch: this.createLiveReadBatch(1, "verification"),
-        });
-        await yieldWhenTimeSliceExpires();
-      }
-    };
-    try {
-      const workerCount = Math.min(this.readConcurrency, paths.length);
-      await Promise.all(Array.from({ length: workerCount }, () => runWorker()));
-    } finally {
-      if (this.lifecycle === lifecycle) {
-        this.backgroundVerificationActive = false;
-        this.scheduleCachePersistence();
-      }
-    }
   }
 
   /**
@@ -732,7 +653,7 @@ export class NoteIndex {
   private invalidateAsyncWork(path: string): void {
     this.inFlight.delete(path);
     this.initialStaging?.entries.delete(path);
-    this.initialStaging?.documents.delete(path);
+    this.initialStaging?.documentFingerprints.delete(path);
   }
 
   private removePublishedEntry(
@@ -740,7 +661,7 @@ export class NoteIndex {
     readiness: NoteIndexReadiness = this.snapshot.readiness,
   ): boolean {
     if (this.entries.delete(path)) {
-      this.documents.delete(path);
+      this.documentFingerprints.delete(path);
       this.projections.replace(path, null);
       this.publish(true, readiness);
       return true;
@@ -997,7 +918,7 @@ export class NoteIndex {
     }
 
     let entry: PresentNoteIndexEntry;
-    let parsedDocument: ParsedNoteDocument | null = null;
+    let documentFingerprint: bigint | null = null;
     try {
       this.incrementDiagnostic("reads");
       const readStarted = this.startDiagnosticTiming();
@@ -1018,10 +939,11 @@ export class NoteIndex {
       } finally {
         this.finishDiagnosticTiming("documentParsesMs", documentParseStarted);
       }
+      const fingerprint = createParsedNoteDocumentFingerprint(document);
       if (
         publication.kind === "live" &&
         !publication.forceParse &&
-        this.isSamePublishedDocument(path, document)
+        this.isSamePublishedDocument(path, fingerprint)
       ) {
         return this.finishRead(publication, null);
       }
@@ -1033,20 +955,12 @@ export class NoteIndex {
       } finally {
         this.finishDiagnosticTiming("noteParsesMs", noteParseStarted);
       }
-      if (
-        publication.kind === "verification" &&
-        !publication.forceParse &&
-        this.isSamePublishedNote(path, note)
-      ) {
-        this.documents.set(path, document);
-        return this.finishRead(publication, null);
-      }
       entry = Object.freeze({
         kind: "parsed",
         revision,
         note,
       });
-      parsedDocument = document;
+      documentFingerprint = fingerprint;
     } catch (error) {
       if (!this.canCommit(path, revision, lifecycle)) {
         return this.finishRead(publication, null);
@@ -1057,7 +971,7 @@ export class NoteIndex {
         revision,
         error: toReadFailure(error),
       });
-      parsedDocument = null;
+      documentFingerprint = null;
     }
 
     if (publication.kind !== "initial") {
@@ -1066,31 +980,27 @@ export class NoteIndex {
         revision,
         lifecycle,
         entry,
-        document: parsedDocument,
+        documentFingerprint,
       });
     }
 
     if (this.initialStaging === publication.staging) {
       publication.staging.entries.set(path, entry);
-      if (parsedDocument === null) publication.staging.documents.delete(path);
-      else publication.staging.documents.set(path, parsedDocument);
+      if (documentFingerprint === null) {
+        publication.staging.documentFingerprints.delete(path);
+      } else {
+        publication.staging.documentFingerprints.set(path, documentFingerprint);
+      }
     }
     return { publication: Promise.resolve() };
   }
 
-  private isSamePublishedDocument(path: string, document: ParsedNoteDocument): boolean {
+  private isSamePublishedDocument(path: string, fingerprint: bigint): boolean {
     const current = this.entries.get(path);
-    const currentDocument = this.documents.get(path);
+    const currentFingerprint = this.documentFingerprints.get(path);
     return current?.kind === "parsed" &&
       current.note.path === path &&
-      currentDocument !== undefined &&
-      areParsedNoteDocumentsEqual(currentDocument, document);
-  }
-
-  private isSamePublishedNote(path: string, note: IndexedNote): boolean {
-    const current = this.entries.get(path);
-    return current?.kind === "parsed" &&
-      areIndexedNotesEqual(current.note, note);
+      currentFingerprint === fingerprint;
   }
 
   private finishRead(
@@ -1111,13 +1021,9 @@ export class NoteIndex {
     }
   }
 
-  private createLiveReadBatch(
-    pendingReads: number,
-    diagnosticKind: LiveReadBatch["diagnosticKind"] = "incremental",
-  ): LiveReadBatch {
+  private createLiveReadBatch(pendingReads: number): LiveReadBatch {
     const batch: LiveReadBatch = {
       lifecycle: this.lifecycle,
-      diagnosticKind,
       pendingReads,
       commits: [],
       cancelCheckpoint: null,
@@ -1170,8 +1076,11 @@ export class NoteIndex {
         for (const commit of commits) {
           if (!this.canCommit(commit.path, commit.revision, commit.lifecycle)) continue;
           this.entries.set(commit.path, commit.entry);
-          if (commit.document === null) this.documents.delete(commit.path);
-          else this.documents.set(commit.path, commit.document);
+          if (commit.documentFingerprint === null) {
+            this.documentFingerprints.delete(commit.path);
+          } else {
+            this.documentFingerprints.set(commit.path, commit.documentFingerprint);
+          }
           projectionChanges.push([
             commit.path,
             commit.entry.kind === "parsed" ? commit.entry.note : null,
@@ -1188,11 +1097,7 @@ export class NoteIndex {
     if (final) {
       batch.active = false;
       this.liveReadBatches.delete(batch);
-      if (
-        batch.diagnosticKind === "incremental" &&
-        this.active &&
-        this.lifecycle === batch.lifecycle
-      ) {
+      if (this.active && this.lifecycle === batch.lifecycle) {
         this.lastIncrementalUpdate = this.completeOperation(
           batch.startedAt,
           batch.affectedPathCount,
@@ -1233,9 +1138,9 @@ export class NoteIndex {
       for (const [path, entry] of staging.entries) {
         if (this.revisions.get(path) !== entry.revision) continue;
         this.entries.set(path, entry);
-        const document = staging.documents.get(path);
-        if (document === undefined) this.documents.delete(path);
-        else this.documents.set(path, document);
+        const fingerprint = staging.documentFingerprints.get(path);
+        if (fingerprint === undefined) this.documentFingerprints.delete(path);
+        else this.documentFingerprints.set(path, fingerprint);
         projectionChanges.push([
           path,
           entry.kind === "parsed" ? entry.note : null,
@@ -1244,7 +1149,7 @@ export class NoteIndex {
       }
       this.projections.replaceBatch(projectionChanges);
       staging.entries.clear();
-      staging.documents.clear();
+      staging.documentFingerprints.clear();
     } finally {
       this.finishDiagnosticTiming("initialCommitsMs", commitStarted);
     }
@@ -1280,15 +1185,12 @@ export class NoteIndex {
     this.cancelReadinessCheckpoint = null;
     this.cancelCacheSave?.();
     this.cancelCacheSave = null;
-    this.cancelBackgroundVerification?.();
-    this.cancelBackgroundVerification = null;
-    this.backgroundVerificationActive = false;
     this.cancelLiveReadBatches();
     this.cancelQueuedReads();
     this.releaseRunningReadSlots();
     this.inFlight.clear();
     this.initialStaging?.entries.clear();
-    this.initialStaging?.documents.clear();
+    this.initialStaging?.documentFingerprints.clear();
     this.initialStaging = null;
     this.initialIndexing = null;
     this.initialKnownPaths = null;
@@ -1296,7 +1198,7 @@ export class NoteIndex {
     this.revisions.clear();
     const hadPublishedEntries = this.entries.size > 0;
     this.entries.clear();
-    this.documents.clear();
+    this.documentFingerprints.clear();
     this.projections.clear();
     if (hadPublishedEntries || this.snapshot.readiness !== "indexing") {
       this.publish(hadPublishedEntries, "indexing");
@@ -1397,7 +1299,6 @@ export class NoteIndex {
       if (
         !this.active ||
         this.snapshot.readiness !== "ready" ||
-        this.backgroundVerificationActive ||
         !this.isLiveWorkIdle()
       ) {
         this.scheduleCachePersistence();
@@ -1538,89 +1439,35 @@ function scheduleTimeout(callback: () => void, delayMs: number): () => void {
   return () => window.clearTimeout(handle);
 }
 
-function areParsedNoteDocumentsEqual(
-  left: ParsedNoteDocument,
-  right: ParsedNoteDocument,
-): boolean {
-  return left.state === right.state &&
-    left.frontmatterStatus === right.frontmatterStatus &&
-    left.frontmatterText === right.frontmatterText &&
-    left.body === right.body &&
-    left.bodyStartLine === right.bodyStartLine &&
-    left.hadBom === right.hadBom &&
-    left.lineEnding === right.lineEnding;
-}
+function createParsedNoteDocumentFingerprint(document: ParsedNoteDocument): bigint {
+  let first = 0x811c9dc5;
+  let second = 0x9e3779b9;
+  const mix = (value: number): void => {
+    first = Math.imul(first ^ value, 0x01000193);
+    second = Math.imul(second ^ value, 0x85ebca6b);
+  };
+  const mixString = (value: string | null): void => {
+    if (value === null) {
+      mix(0xffffffff);
+    } else {
+      mix(value.length);
+      for (let index = 0; index < value.length; index += 1) {
+        mix(value.charCodeAt(index));
+      }
+    }
+    mix(0x7f4a7c15);
+  };
 
-function areIndexedNotesEqual(left: IndexedNote, right: IndexedNote): boolean {
-  return left.path === right.path &&
-    left.state === right.state &&
-    left.preview === right.preview &&
-    areIntervalsEqual(left.interval, right.interval) &&
-    areEmbedStatisticsEqual(left.embeds, right.embeds) &&
-    areTasksEqual(left.tasks, right.tasks) &&
-    areStatisticsEqual(left.statistics, right.statistics);
-}
-
-function areIntervalsEqual(
-  left: IndexedNote["interval"],
-  right: IndexedNote["interval"],
-): boolean {
-  if (left === null || right === null) return left === right;
-  return left.dayCount === right.dayCount &&
-    areIntervalBoundariesEqual(left.start, right.start) &&
-    areIntervalBoundariesEqual(left.end, right.end);
-}
-
-function areIntervalBoundariesEqual(
-  left: NonNullable<IndexedNote["interval"]>["start"],
-  right: NonNullable<IndexedNote["interval"]>["start"],
-): boolean {
-  return left.value === right.value &&
-    left.dateKey === right.dateKey &&
-    left.hasTime === right.hasTime &&
-    left.epochMillis === right.epochMillis;
-}
-
-function areEmbedStatisticsEqual(
-  left: IndexedNote["embeds"],
-  right: IndexedNote["embeds"],
-): boolean {
-  return left.imageCount === right.imageCount &&
-    left.pdfCount === right.pdfCount &&
-    left.audioCount === right.audioCount &&
-    left.videoCount === right.videoCount &&
-    left.noteCount === right.noteCount &&
-    left.otherCount === right.otherCount;
-}
-
-function areTasksEqual(
-  left: IndexedNote["tasks"],
-  right: IndexedNote["tasks"],
-): boolean {
-  return left.length === right.length && left.every((task, index) => {
-    const candidate = right[index];
-    return candidate !== undefined &&
-      task.text === candidate.text &&
-      task.completed === candidate.completed &&
-      task.dueDate === candidate.dueDate &&
-      task.scheduledDate === candidate.scheduledDate &&
-      task.startDate === candidate.startDate &&
-      task.doneDate === candidate.doneDate &&
-      task.path === candidate.path &&
-      task.line === candidate.line;
-  });
-}
-
-function areStatisticsEqual(
-  left: IndexedNote["statistics"],
-  right: IndexedNote["statistics"],
-): boolean {
-  return left.wordCount === right.wordCount &&
-    left.linkCount === right.linkCount &&
-    left.tagCount === right.tagCount &&
-    left.taskTotal === right.taskTotal &&
-    left.taskCompleted === right.taskCompleted &&
-    left.taskCompletionRate === right.taskCompletionRate;
+  mixString(document.state);
+  mixString(document.frontmatterStatus);
+  mixString(document.frontmatterText);
+  mixString(document.body);
+  mix(document.bodyStartLine);
+  mix(document.hadBom ? 1 : 0);
+  mixString(document.lineEnding);
+  first = Math.imul(first ^ (first >>> 16), 0x85ebca6b);
+  second = Math.imul(second ^ (second >>> 13), 0xc2b2ae35);
+  return (BigInt(first >>> 0) << 32n) | BigInt(second >>> 0);
 }
 
 function reconcileStartupPaths(

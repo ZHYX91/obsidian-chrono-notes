@@ -140,7 +140,7 @@ describe("persistent NoteIndex cache", () => {
 
     await expect(index.persistCacheNow()).resolves.toBeUndefined();
     expect(cache.save).toHaveBeenCalledOnce();
-    expect(cache.value).toMatchObject({ schema: 1 });
+    expect(cache.value).toMatchObject({ schema: 2 });
 
     const saveError = new Error("save failed");
     const consoleError = vi.spyOn(console, "error").mockImplementation(() => undefined);
@@ -154,11 +154,10 @@ describe("persistent NoteIndex cache", () => {
     consoleError.mockRestore();
   });
 
-  it("restores a matching derived entry before background verification settles", async () => {
+  it("restores a matching derived entry without rereading the source", async () => {
     const source = new MetadataNoteSource();
     source.files = [FILE];
-    const verification = new Deferred<string>();
-    source.read.mockReturnValue(verification.promise);
+    source.read.mockRejectedValue(new Error("matching cache entries must not be reread"));
     const cache = new MemoryNoteIndexCache(cached("old"));
     const index = new NoteIndex(source, { cache });
 
@@ -170,46 +169,30 @@ describe("persistent NoteIndex cache", () => {
       note: { preview: "old" },
     });
     expect(source.read).not.toHaveBeenCalled();
-    const warmVersion = index.getSnapshot().version;
-
-    await vi.waitFor(() => expect(source.read).toHaveBeenCalledTimes(1));
-    verification.resolve("old");
-    await new Promise((resolve) => setTimeout(resolve, 0));
-
-    expect(index.getSnapshot().version).toBe(warmVersion);
+    expect(index.getStatus().noteCount).toBe(1);
     index.stop();
   });
 
-  it("does not report background verification as a live incremental update", async () => {
+  it("does not report warm cache restoration as a live incremental update", async () => {
     const source = new MetadataNoteSource();
     source.files = [FILE];
-    source.read.mockResolvedValue("old");
-    const verificationCallbacks: Array<() => void> = [];
+    source.read.mockRejectedValue(new Error("matching cache entries must not be reread"));
     const index = new NoteIndex(source, {
       cache: new MemoryNoteIndexCache(cached("old")),
       operationClock: () => 10,
       wallClock: () => 1_000,
-      scheduleBackgroundVerification: (callback) => {
-        verificationCallbacks.push(callback);
-        return () => undefined;
-      },
     });
 
     await index.start();
     expect(index.getDiagnostics().lastIncrementalUpdate).toBeNull();
-    verificationCallbacks[0]?.();
-    await vi.waitFor(() => expect(source.read).toHaveBeenCalledOnce());
-    await new Promise((resolve) => setTimeout(resolve, 0));
-
-    expect(index.getDiagnostics().lastIncrementalUpdate).toBeNull();
+    expect(source.read).not.toHaveBeenCalled();
     index.stop();
   });
 
-  it("lets background verification repair same-metadata external edits", async () => {
+  it("repairs same-metadata external edits reported by the source", async () => {
     const source = new MetadataNoteSource();
     source.files = [FILE];
-    const verification = new Deferred<string>();
-    source.read.mockReturnValue(verification.promise);
+    source.read.mockResolvedValue("new");
     const index = new NoteIndex(source, {
       cache: new MemoryNoteIndexCache(cached("old")),
     });
@@ -220,14 +203,14 @@ describe("persistent NoteIndex cache", () => {
       note: { preview: "old" },
     });
 
-    await vi.waitFor(() => expect(source.read).toHaveBeenCalledTimes(1));
-    verification.resolve("new");
+    source.emit({ type: "modify", path: FILE.path });
     await vi.waitFor(() => {
       expect(index.get(FILE.path)).toMatchObject({
         kind: "parsed",
         note: { preview: "new" },
       });
     });
+    expect(source.read).toHaveBeenCalledTimes(1);
     index.stop();
   });
 
@@ -249,11 +232,11 @@ describe("persistent NoteIndex cache", () => {
     index.stop();
   });
 
-  it("clears a malformed snapshot and falls back to a complete scan", async () => {
+  it("clears an old parser-semantic snapshot and falls back to a complete scan", async () => {
     const source = new MetadataNoteSource();
     source.files = [FILE];
     source.read.mockResolvedValue("fresh");
-    const cache = new MemoryNoteIndexCache({ schema: 1, entries: [{ broken: true }] });
+    const cache = new MemoryNoteIndexCache({ ...cached("old"), schema: 1 });
     const index = new NoteIndex(source, { cache });
 
     await index.start();
@@ -388,9 +371,10 @@ describe("persistent NoteIndex cache", () => {
     index.stop();
   });
 
-  it("starts verification in a later host task and keeps yielding by time budget", async () => {
+  it("restores a large matching cache without starting a full Vault reread", async () => {
     const source = new MetadataNoteSource();
-    source.files = [0, 1, 2].map((index) => Object.freeze({
+    const noteCount = 10_000;
+    source.files = Array.from({ length: noteCount }, (_, index) => Object.freeze({
       path: `Daily/${index}.md`,
       mtime: 1,
       size: 4,
@@ -401,48 +385,29 @@ describe("persistent NoteIndex cache", () => {
         file,
         note: createIndexedNote(parseNote(file.path, "body")),
       })));
-    const verificationCallbacks: Array<() => void> = [];
-    let clock = 0;
-    const yieldToHost = vi.fn(async () => undefined);
     const index = new NoteIndex(source, {
       cache: new MemoryNoteIndexCache(snapshot),
-      initialIndexClock: () => {
-        clock += 10;
-        return clock;
-      },
-      yieldInitialIndex: yieldToHost,
-      scheduleBackgroundVerification: (callback) => {
-        verificationCallbacks.push(callback);
-        return () => undefined;
-      },
     });
 
     await index.start();
     expect(source.read).not.toHaveBeenCalled();
     expect(index.getSnapshot().readiness).toBe("ready");
-
-    verificationCallbacks[0]?.();
-    await vi.waitFor(() => expect(source.read).toHaveBeenCalledTimes(3));
-    await vi.waitFor(() => expect(yieldToHost).toHaveBeenCalled());
+    expect(index.getStatus()).toMatchObject({
+      noteCount,
+    });
     index.stop();
   });
 
-  it("lets a pending live modification replace background verification", async () => {
+  it("reads a restored path exactly once when a live modification arrives", async () => {
     const source = new MetadataNoteSource();
     source.files = [FILE];
     source.read.mockResolvedValue("live");
-    const verificationCallbacks: Array<() => void> = [];
     const index = new NoteIndex(source, {
       cache: new MemoryNoteIndexCache(cached("old")),
-      scheduleBackgroundVerification: (callback) => {
-        verificationCallbacks.push(callback);
-        return () => undefined;
-      },
     });
 
     await index.start();
     source.emit({ type: "modify", path: FILE.path });
-    verificationCallbacks[0]?.();
 
     await vi.waitFor(() => {
       expect(index.get(FILE.path)).toMatchObject({
@@ -461,7 +426,7 @@ describe("persistent NoteIndex cache", () => {
       entries: [duplicate.entries[0], duplicate.entries[0]],
     })).toBeNull();
     expect(parsePersistedNoteIndexSnapshot({
-      schema: 1,
+      schema: 2,
       entries: [{
         ...duplicate.entries[0],
         file: { ...FILE, mtime: Number.NaN },

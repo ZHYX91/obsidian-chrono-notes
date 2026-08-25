@@ -125,7 +125,6 @@ const NODE_NOTE_INDEX_RUNTIME = Object.freeze({
   scheduleLiveCommitCheckpoint: scheduleNodeTask,
   scheduleReadinessCheckpoint: scheduleNodeTask,
   scheduleCacheSave: () => () => undefined,
-  scheduleBackgroundVerification: scheduleNodeTask,
 });
 
 function yieldNodeTask(): Promise<void> {

@@ -141,7 +141,8 @@ describe(`performance baseline (${__CHRONO_BENCHMARK_NOTE_COUNT__} notes)`, () =
     expect(source.initialPathCount).toBe(__CHRONO_BENCHMARK_NOTE_COUNT__);
     expect(initialDiagnostics.reads).toBe(__CHRONO_BENCHMARK_NOTE_COUNT__);
     expect(initialDiagnostics.publishes).toBe(1);
-    expect(warmCache.readsBeforeReady).toBe(dataset.errorCount);
+    expect(warmCache.readsDuringStart).toBe(dataset.errorCount);
+    expect(warmCache.matchingCacheRereads).toBe(0);
     expect(indexedEntries).toBe(__CHRONO_BENCHMARK_NOTE_COUNT__);
     expect(eventMeasurements.algorithm.maxReadsPerFinalPath).toBe(1);
     // An unknown path intentionally publishes one lightweight "indexing" transition
@@ -165,8 +166,8 @@ async function measureWarmCacheReady(
 ): Promise<Readonly<{
   milliseconds: number;
   restoredEntries: number;
-  readsBeforeReady: number;
-  verificationScheduled: boolean;
+  readsDuringStart: number;
+  matchingCacheRereads: number;
 }>> {
   const source = new BenchmarkNoteSource(contents);
   const files = new Map(source.listFiles().map((file) => [file.path, file]));
@@ -186,26 +187,24 @@ async function measureWarmCacheReady(
     save: async () => undefined,
     clear: async () => undefined,
   };
-  let verificationScheduled = false;
   const index = new NoteIndex(source, {
     ...NODE_NOTE_INDEX_RUNTIME,
     cache,
-    scheduleBackgroundVerification: () => {
-      verificationScheduled = true;
-      return () => undefined;
-    },
   });
   const milliseconds = await measureAsync(() => index.start());
   const restoredEntries = Object.values(index.getSnapshot().notes)
     .filter((entry) => entry.kind === "parsed")
     .length;
-  const readsBeforeReady = source.readCount;
+  const readsDuringStart = source.readCount;
+  const matchingCacheRereads = Math.max(0, readsDuringStart - (
+    contents.size - entries.length
+  ));
   index.stop();
   return Object.freeze({
     milliseconds: round(milliseconds),
     restoredEntries,
-    readsBeforeReady,
-    verificationScheduled,
+    readsDuringStart,
+    matchingCacheRereads,
   });
 }
 
@@ -284,7 +283,6 @@ const NODE_NOTE_INDEX_RUNTIME = Object.freeze({
   scheduleLiveCommitCheckpoint: scheduleNodeTask,
   scheduleReadinessCheckpoint: scheduleNodeTask,
   scheduleCacheSave: () => () => undefined,
-  scheduleBackgroundVerification: scheduleNodeTask,
 });
 
 function yieldNodeTask(): Promise<void> {
