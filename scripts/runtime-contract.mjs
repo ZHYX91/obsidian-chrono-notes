@@ -3,15 +3,15 @@ import assert from "node:assert/strict";
 export function assertRuntimeContract({
   configuredNodeVersion,
   currentNodeVersion,
-  currentPnpmVersion,
+  currentNpmVersion,
   packageJson,
 }) {
-  const packageManagerMatch = /^pnpm@(\d+\.\d+\.\d+)$/u.exec(
+  const packageManagerMatch = /^npm@(\d+\.\d+\.\d+)$/u.exec(
     packageJson.packageManager ?? "",
   );
   assert.ok(
     packageManagerMatch,
-    "package.json packageManager must pin pnpm to an exact version",
+    "package.json packageManager must pin npm to an exact version",
   );
 
   assert.match(
@@ -30,14 +30,14 @@ export function assertRuntimeContract({
     `Node.js ${configuredNodeVersion} is required; received ${currentNodeVersion}`,
   );
   assert.equal(
-    currentPnpmVersion,
+    currentNpmVersion,
     packageManagerMatch[1],
-    `pnpm ${packageManagerMatch[1]} is required; received ${currentPnpmVersion}`,
+    `npm ${packageManagerMatch[1]} is required; received ${currentNpmVersion}`,
   );
 }
 
-export function parsePnpmVersion(userAgent) {
-  const match = /(?:^|\s)pnpm\/(\d+\.\d+\.\d+)(?:\s|$)/u.exec(userAgent ?? "");
-  assert.ok(match, "Run the runtime check through pnpm so its exact version can be verified");
+export function parseNpmVersion(userAgent) {
+  const match = /(?:^|\s)npm\/(\d+\.\d+\.\d+)(?:\s|$)/u.exec(userAgent ?? "");
+  assert.ok(match, "Run the runtime check through npm so its exact version can be verified");
   return match[1];
 }

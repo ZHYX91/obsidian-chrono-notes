@@ -1,6 +1,6 @@
 import { readFile } from "node:fs/promises";
 
-import { assertRuntimeContract, parsePnpmVersion } from "./runtime-contract.mjs";
+import { assertRuntimeContract, parseNpmVersion } from "./runtime-contract.mjs";
 
 const [nodeVersionSource, packageSource] = await Promise.all([
   readFile(".node-version", "utf8"),
@@ -8,15 +8,15 @@ const [nodeVersionSource, packageSource] = await Promise.all([
 ]);
 const configuredNodeVersion = nodeVersionSource.trim();
 const packageJson = JSON.parse(packageSource);
-const currentPnpmVersion = parsePnpmVersion(process.env.npm_config_user_agent);
+const currentNpmVersion = parseNpmVersion(process.env.npm_config_user_agent);
 
 assertRuntimeContract({
   configuredNodeVersion,
   currentNodeVersion: process.versions.node,
-  currentPnpmVersion,
+  currentNpmVersion,
   packageJson,
 });
 
 process.stdout.write(
-  `Runtime contract passed for Node.js ${configuredNodeVersion} and pnpm ${currentPnpmVersion}.\n`,
+  `Runtime contract passed for Node.js ${configuredNodeVersion} and npm ${currentNpmVersion}.\n`,
 );

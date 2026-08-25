@@ -20,7 +20,7 @@ describe("release workflow contract", () => {
     const parsed = parseYaml(workflow) as { jobs?: Record<string, unknown> };
     expect(Object.keys(parsed.jobs ?? {})).toEqual([
       "preflight",
-      "prepare-release",
+      "verify",
       "publish",
     ]);
   });
@@ -50,7 +50,7 @@ describe("release workflow contract", () => {
 
   it("keeps dispatch preflight read-only and grants writes only to tag publication", () => {
     const preflightStart = workflow.indexOf("\n  preflight:");
-    const prepareStart = workflow.indexOf("\n  prepare-release:");
+    const prepareStart = workflow.indexOf("\n  verify:");
     const publishStart = workflow.indexOf("\n  publish:");
     expect(preflightStart).toBeGreaterThan(-1);
     expect(prepareStart).toBeGreaterThan(preflightStart);
@@ -70,15 +70,15 @@ describe("release workflow contract", () => {
     expect(prepareJob).not.toContain("contents: write");
     expect(prepareJob).toContain("persist-credentials: false");
     expect(publishJob).toContain(
-      "if: github.event_name == 'push' && needs.prepare-release.outputs.release_exists == 'false'",
+      "if: github.event_name == 'push' && needs.verify.outputs.release_exists == 'false'",
     );
-    expect(publishJob).toContain("needs: prepare-release");
+    expect(publishJob).toContain("needs: verify");
     expect(publishJob).toContain("attestations: write");
     expect(publishJob).toContain("contents: write");
     expect(publishJob).toContain("id-token: write");
     expect(publishJob).not.toContain("actions/checkout@");
     expect(publishJob).not.toContain("actions/setup-node@");
-    expect(publishJob).not.toContain("pnpm install");
+    expect(publishJob).not.toContain("npm ci");
     expect(publishJob).not.toContain("node scripts/");
     expect(publishJob).toMatch(
       /steps:\n\s+- name: Reverify release identity before using write credentials/u,
@@ -94,10 +94,10 @@ describe("release workflow contract", () => {
   it("pins one exact runtime contract in CI and release", () => {
     expect(ciWorkflow).toContain("node-version-file: .node-version");
     expect(workflow).toContain("node-version-file: .node-version");
-    expect(workflow).toContain("version: 11.9.0");
+    expect(workflow).toContain("npm@11.17.0");
     expect(workflow).toContain("fetch-depth: 0");
-    expect(ciWorkflow).toMatch(/Verify runtime contract[\s\S]*pnpm install --frozen-lockfile/u);
-    expect(workflow).toMatch(/Verify runtime contract[\s\S]*pnpm install --frozen-lockfile/u);
+    expect(ciWorkflow).toMatch(/Verify runtime contract[\s\S]*npm ci/u);
+    expect(workflow).toMatch(/Verify runtime contract[\s\S]*npm ci/u);
     expect(workflow).not.toMatch(/node-version:\s*24\s*$/mu);
   });
 
@@ -124,7 +124,7 @@ describe("release workflow contract", () => {
   });
 
   it("accepts an existing tagged Release only when immutable assets match", () => {
-    const prepareStart = workflow.indexOf("\n  prepare-release:");
+    const prepareStart = workflow.indexOf("\n  verify:");
     const publishStart = workflow.indexOf("\n  publish:");
     const prepareJob = workflow.slice(prepareStart, publishStart);
     const publishJob = workflow.slice(publishStart);
@@ -226,7 +226,7 @@ describe("release workflow contract", () => {
     );
   });
 
-  it("hands an exact current-attempt candidate from read-only prepare to publish", () => {
+  it("hands an exact current-attempt candidate from read-only verify to publish", () => {
     expect(workflow).toContain(
       'artifact_name="release-candidate-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"',
     );

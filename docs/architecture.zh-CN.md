@@ -11,7 +11,7 @@ translation_status: source
 
 插件 ID 为 `chrono-notes`，标准生产产物为 `dist/main.js`、`dist/manifest.json` 与 `dist/styles.css`，构建分析文件为 `dist/chrono-notes.meta.json`。相邻参考项目只作为只读需求、算法和回归样例来源，不属于运行时依赖，也不接收本仓库修改；产品范围以当前需求与功能清单为准。
 
-发布边界分为只读 prepare 与仅用于缺失版本的写入 publish。prepare 在构建后先查询同标签 Release：只有 immutable 状态、四项附件字节、每项精确 provenance 及最终标签提交都一致时才接受 no-op，并使整个 publish job 跳过；明确 404 才继续候选 handoff。数字稳定版本标签的仓库 ruleset 与 GitHub Release immutability 是并列的外部前置：ruleset 必须限制 update 和 delete，且实际 release actor 不得拥有 bypass。仓库 workflow 只记录和依赖这些设置，不读取或修改管理配置。
+发布边界分为只读 verify 与仅用于缺失版本的写入 publish。prepare 在构建后先查询同标签 Release：只有 immutable 状态、四项附件字节、每项精确 provenance 及最终标签提交都一致时才接受 no-op，并使整个 publish job 跳过；明确 404 才继续候选 handoff。数字稳定版本标签的仓库 ruleset 与 GitHub Release immutability 是并列的外部前置：ruleset 必须限制 update 和 delete，且实际 release actor 不得拥有 bypass。仓库 workflow 只记录和依赖这些设置，不读取或修改管理配置。
 
 ## 2. 分层
 
@@ -172,3 +172,11 @@ Properties 日期/时间显示与打开行为使用两个独立 Obsidian 适配�
 设置页显示期间由一个可释放的共享路径目录持有按路径预排序的文件夹与 Markdown 文件元数据。Vault create/delete/rename 只标记目录失效，下次查询再重建；modify 不触发。空查询直接截取候选上限，模糊查询扫描全部候选以保持 Obsidian 排名，但只用有界 top-K 结构选择实际建议，不对全部命中排序。隐藏设置页时注销 Vault 监听并清空目录。
 
 插件组合不等待完整 Vault 扫描，先注册日历、命令、设置和宿主监听；Obsidian 报告布局就绪后，再并行后台启动 NoteIndex 与首次 ICS 刷新。快照中独立、稳定、可订阅的 readiness 是权威边界：未知路径派生为 indexing，创建命令延后到 ready；后台启动失败通过 Obsidian Notice 暴露，但不让已注册 UI 整体不可用。运行时 revision 检查与 `stop()` 共同阻止卸载后迟到的启动工作重新激活插件。NoteIndex 还在现有状态上维护一个有界的内存诊断快照：待处理工作数、最近全量索引和最近实时增量批次的完成时间、耗时及影响路径数；后台缓存核对不会覆盖“最近增量”指标。诊断使用独立订阅通道，因此更新时间不会唤醒日历查询订阅，也不会触发额外 Vault 读取。所有运行时服务都位于 `createChronoRuntime()` 创建的单一 `ChronoRuntime` 实例内：插件只通过该对象访问索引、命令、Navbar 与 Properties 适配器，`dispose()` 与插件卸载路径合并，卸载后不再持有或触碰已释放服务。
+
+## 7. 解析与外部输入安全边界
+
+一次 Markdown 正文扫描同时保留原始行、源行号、可见文本和等长语义文本。代码围栏与 HTML 注释在可见和语义文本中都被空格遮罩；CommonMark 等长反引号 code span 在任务展示文本中保留，但在语义文本中遮罩。任务用可见文本识别正文行、用语义文本解释日期标记；预览、字数、链接、标签、附件和嵌入只消费语义文本。因此代码示例不能生成可写任务、统计或嵌入，所有消费者也不再各自维护围栏正则。
+
+高于当前版本的设置 schema 只归一化已知字段供本次运行读取，整个插件实例拒绝持久化设置，避免回滚版本删除未知字段。首次引导只有在 modal 完成实际渲染后才设置并保存 seen；卸载前未显示不改变状态，保存失败则恢复 unseen。
+
+Templater 的 render-only 集成仍是明确标注的内部兼容边界。创建 running config 与解析模板在同一 Templater 实例上串行执行，运行模式集中为一个具名常量；缺少预期内部方法时直接失败，不静默退回内置引擎。ICS 每次刷新只接受去重后的前 32 个来源，一个权威 revision 最多持有 4 个逻辑活跃读取；该 revision 被替代或索引停止时立即释放逻辑槽，因此即使宿主读取不可取消并仍在后台收尾，最新 revision 也能开始，且迟到完成仍有处理器接收后丢弃。单来源上限为 5 MiB 和 10,000 个 VEVENT，解析前即拒绝超限输入。跨 revision 的旧结果仍由 revision gate 丢弃，等待槽位的旧工作在获得槽位后会先重新检查权威 revision。

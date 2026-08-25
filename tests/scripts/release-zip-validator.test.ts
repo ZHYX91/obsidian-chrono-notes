@@ -20,6 +20,40 @@ const workflow = readFileSync(
 );
 const pythonCommand = process.platform === "win32" ? "python" : "python3";
 const version = "1.2.3";
+const validatorTestTimeout = process.platform === "win32" ? 30_000 : 15_000;
+const legalScenarios = ["legal", "legal_dos_outer"] as const;
+const outerRejectionScenarios = [
+  ["outer_missing", "inventory mismatch"],
+  ["outer_extra_nested", "inventory mismatch"],
+  ["outer_duplicate", "duplicate archive entry"],
+  ["outer_dotdot", "path is not canonical"],
+  ["outer_absolute", "path is absolute"],
+  ["outer_backslash", "path contains a backslash"],
+  ["outer_control", "path contains a control character"],
+  ["outer_nul", "contains a NUL byte"],
+  ["outer_directory", "directory archive entry"],
+  ["outer_symlink", "non-regular archive entry"],
+  ["outer_encrypted", "encrypted archive entry"],
+  ["outer_oversize_entry", "entry exceeds the 8388608-byte limit"],
+  ["outer_oversize_total", "archive exceeds the 25165824-byte total limit"],
+] as const;
+const innerRejectionScenarios = [
+  ["inner_extra_nested", "inventory mismatch"],
+  ["inner_duplicate", "duplicate archive entry"],
+  ["inner_reordered", "entry order mismatch"],
+  ["inner_wrong_mode", "mode is not fixed"],
+  ["inner_symlink", "non-regular archive entry"],
+  ["wrong_checksum", "SHA256SUMS mismatch"],
+  ["checksum_missing", "exact four checksums"],
+  ["checksum_duplicate", "duplicate file entry"],
+  ["checksum_extra", "exact four checksums"],
+  ["checksum_reordered", "not in canonical order"],
+] as const;
+const fixtureScenarios = [
+  ...legalScenarios,
+  ...outerRejectionScenarios.map(([scenario]) => scenario),
+  ...innerRejectionScenarios.map(([scenario]) => scenario),
+];
 
 const fixtureBuilder = String.raw`
 import hashlib
@@ -180,16 +214,13 @@ let validatorPath: string;
 let fixtureBuilderPath: string;
 
 beforeAll(() => {
-  execFileSync(pythonCommand, [
-    "-c",
-    "import sys; raise SystemExit(0 if sys.version_info >= (3, 9) else 'Python 3.9 or newer is required')",
-  ]);
   temporaryRoot = mkdtempSync(path.join(os.tmpdir(), "chrono-release-validator-"));
   validatorPath = path.join(temporaryRoot, "validator.py");
   fixtureBuilderPath = path.join(temporaryRoot, "fixture-builder.py");
   writeFileSync(validatorPath, extractValidator(workflow));
   writeFileSync(fixtureBuilderPath, fixtureBuilder);
-});
+  buildFixtures();
+}, validatorTestTimeout);
 
 afterAll(() => {
   rmSync(temporaryRoot, { force: true, recursive: true });
@@ -205,7 +236,7 @@ describe("inline release ZIP validator", () => {
     );
   });
 
-  it.each(["legal", "legal_dos_outer"])(
+  it.each(legalScenarios)(
     "accepts the exact %s artifact boundary and extracts only five verified files",
     (scenario) => {
       const fixtureRoot = buildFixture(scenario);
@@ -224,23 +255,10 @@ describe("inline release ZIP validator", () => {
         "console.log('safe');\n",
       );
     },
+    validatorTestTimeout,
   );
 
-  it.each([
-    ["outer_missing", "inventory mismatch"],
-    ["outer_extra_nested", "inventory mismatch"],
-    ["outer_duplicate", "duplicate archive entry"],
-    ["outer_dotdot", "path is not canonical"],
-    ["outer_absolute", "path is absolute"],
-    ["outer_backslash", "path contains a backslash"],
-    ["outer_control", "path contains a control character"],
-    ["outer_nul", "contains a NUL byte"],
-    ["outer_directory", "directory archive entry"],
-    ["outer_symlink", "non-regular archive entry"],
-    ["outer_encrypted", "encrypted archive entry"],
-    ["outer_oversize_entry", "entry exceeds the 8388608-byte limit"],
-    ["outer_oversize_total", "archive exceeds the 25165824-byte total limit"],
-  ])("rejects %s before extracting any artifact member", (scenario, expectedError) => {
+  it.each(outerRejectionScenarios)("rejects %s before extracting any artifact member", (scenario, expectedError) => {
     const fixtureRoot = buildFixture(scenario);
     const candidate = path.join(fixtureRoot, "candidate");
     const result = runValidator(fixtureRoot, candidate);
@@ -248,27 +266,16 @@ describe("inline release ZIP validator", () => {
     expect(result.status).not.toBe(0);
     expect(result.stderr).toContain(expectedError);
     expect(existsSync(candidate)).toBe(false);
-  });
+  }, validatorTestTimeout);
 
-  it.each([
-    ["inner_extra_nested", "inventory mismatch"],
-    ["inner_duplicate", "duplicate archive entry"],
-    ["inner_reordered", "entry order mismatch"],
-    ["inner_wrong_mode", "mode is not fixed"],
-    ["inner_symlink", "non-regular archive entry"],
-    ["wrong_checksum", "SHA256SUMS mismatch"],
-    ["checksum_missing", "exact four checksums"],
-    ["checksum_duplicate", "duplicate file entry"],
-    ["checksum_extra", "exact four checksums"],
-    ["checksum_reordered", "not in canonical order"],
-  ])("rejects %s after safe outer extraction", (scenario, expectedError) => {
+  it.each(innerRejectionScenarios)("rejects %s after safe outer extraction", (scenario, expectedError) => {
     const fixtureRoot = buildFixture(scenario);
     const candidate = path.join(fixtureRoot, "candidate");
     const result = runValidator(fixtureRoot, candidate);
 
     expect(result.status).not.toBe(0);
     expect(result.stderr).toContain(expectedError);
-  });
+  }, validatorTestTimeout);
 });
 
 function extractValidator(source: string): string {
@@ -288,10 +295,35 @@ function extractValidator(source: string): string {
 
 function buildFixture(scenario: string): string {
   const fixtureRoot = path.join(temporaryRoot, scenario);
-  execFileSync(pythonCommand, [fixtureBuilderPath, scenario, fixtureRoot, version], {
-    encoding: "utf8",
-  });
+  if (!existsSync(fixtureRoot)) throw new Error(`Release fixture was not built: ${scenario}`);
   return fixtureRoot;
+}
+
+function buildFixtures(): void {
+  const batchBuilder = [
+    "import sys",
+    "from pathlib import Path",
+    "if sys.version_info < (3, 9): raise SystemExit('Python 3.9 or newer is required')",
+    "builder_path = Path(sys.argv[1])",
+    "source = builder_path.read_text(encoding='utf-8')",
+    "root = Path(sys.argv[2])",
+    "version = sys.argv[3]",
+    "for scenario in sys.argv[4:]:",
+    "    previous_argv = sys.argv",
+    "    try:",
+    "        sys.argv = [str(builder_path), scenario, str(root / scenario), version]",
+    "        exec(compile(source, str(builder_path), 'exec'), {'__name__': '__main__'})",
+    "    finally:",
+    "        sys.argv = previous_argv",
+  ].join("\n");
+  execFileSync(pythonCommand, [
+    "-c",
+    batchBuilder,
+    fixtureBuilderPath,
+    temporaryRoot,
+    version,
+    ...fixtureScenarios,
+  ], { encoding: "utf8" });
 }
 
 function runValidator(fixtureRoot: string, candidate: string) {

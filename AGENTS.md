@@ -2,7 +2,7 @@
 
 ## Project Scope
 
-Chrono Notes is an Obsidian workspace for periodic notes, calendar extensions, regional holidays, tasks, statistics, and time ranges. The sibling project at `../obsidian-calendar` is read-only reference material. Do not modify it while working in this repository.
+Chrono Notes is an Obsidian workspace for periodic notes, calendar extensions, regional holidays, tasks, statistics, and time ranges. Keep all implementation and documentation self-contained within this repository.
 
 Current date, note, task, template, interval-note, holiday, and ICS semantics are defined by the stable product, architecture, UX, and testing documents. Preserve them unless a documented decision changes them; do not expand the plugin into unrelated product scope.
 
@@ -21,12 +21,12 @@ Source code lives in `src/`:
 
 ## Commands
 
-- `pnpm dev`: development bundle in watch mode.
-- `pnpm typecheck`: strict TypeScript validation.
-- `pnpm test`: run Vitest once.
-- `pnpm build`: type-check and create the standard plugin assets at `dist/`.
-- `pnpm run check`: lint, source-format checks, strict type checking, the complete Vitest suite, production bundling, and artifact contracts.
-- `pnpm release:check`: `pnpm run check` plus time-zone tests, the quick benchmark, and the annual holiday-data gate.
+- `npm run dev`: development bundle in watch mode.
+- `npm run typecheck`: strict TypeScript validation.
+- `npm run test`: run Vitest once.
+- `npm run build`: type-check and create the standard plugin assets at `dist/`.
+- `npm run check`: lint, source-format checks, strict type checking, the complete Vitest suite, production bundling, and artifact contracts.
+- `npm run release:check`: `npm run check` plus time-zone tests, the quick benchmark, and the annual holiday-data gate.
 
 ## Code Style
 
@@ -42,7 +42,7 @@ Vault indexing must handle `create`, `modify`, `rename`, and `delete`, deduplica
 
 ## Documentation
 
-Simplified Chinese is the source language for product and architecture decisions. Stable user and design documents use paired `.zh-CN.md` and `.en.md` files with matching section structure and translation metadata. The root `README.md` is English; translations use `docs/i18n/README.<locale>.md`. Every README variant starts with the canonical product title followed by the same native-language navigation order. Because the Obsidian plugin catalog renders only the English root README without rewriting repository-relative URLs, root navigation and repository-document links use canonical GitHub `blob/main` URLs and root images use canonical `raw.githubusercontent.com` URLs. Translated READMEs use repository-relative navigation, document, image, and license targets so GitHub resolves them naturally. Release, Issues, Discussions, Security, acknowledgements, and other external resources remain absolute HTTPS URLs in every language. `pnpm check:readme-i18n` enforces this split offline, including target existence and repository-boundary checks. The current capability checklist may remain Chinese-only. Never place two full languages in the same Markdown document.
+Simplified Chinese is the source language for product and architecture decisions. Stable user and design documents use paired `.zh-CN.md` and `.en.md` files with matching section structure and translation metadata. The root `README.md` is English; translations use `docs/i18n/README.<locale>.md`. Every README variant starts with the canonical product title followed by the same native-language navigation order. Because the Obsidian plugin catalog renders only the English root README without rewriting repository-relative URLs, root navigation and repository-document links use canonical GitHub `blob/main` URLs and root images use canonical `raw.githubusercontent.com` URLs. Translated READMEs use repository-relative navigation, document, image, and license targets so GitHub resolves them naturally. Release, Issues, Discussions, Security, acknowledgements, and other external resources remain absolute HTTPS URLs in every language. `npm run check:readme-i18n` enforces this split offline, including target existence and repository-boundary checks. The current capability checklist may remain Chinese-only. Never place two full languages in the same Markdown document.
 
 Documentation describes current behavior and current verification requirements. Remove superseded plans, handoff notes, progress logs, dated audit narratives, and obsolete alternatives after their durable decisions have been incorporated into stable documents.
 
@@ -52,7 +52,7 @@ When changing a paired stable document, update its translation in the same chang
 
 Tests live in `tests/` and mirror source areas. Prioritize contract and boundary tests over superficial component snapshots. Critical areas include document parsing, periodic date anchors, path resolution, settings normalization, Vault event ordering, stale async results, templates, task dates, interval notes, and ICS parsing.
 
-Before handoff, run `pnpm run check`.
+Before handoff, run `npm run check`.
 
 ## Deployment and host acceptance
 

@@ -82,12 +82,23 @@ Chrono Notes 通过 Obsidian 或本地文件系统边界读取 Vault 笔记和�
 
 ## 开发
 
+开发环境严格要求 Node.js 24.19.0 和 npm 11.17.0。
+
 ```bash
-pnpm install
-pnpm run check
+npm ci
+npm run check
 ```
 
-开发环境需要 Node.js 22.13 及以上的 22.x 版本，或 Node.js 24 及更高版本，以及 pnpm 11.7.0。架构与测试细节见[开发者文档](../architecture.zh-CN.md)。
+开发者参考文档：
+
+- [产品需求](../product-requirements.zh-CN.md)
+- [交互规范](../ux-spec.zh-CN.md)
+- [架构说明](../architecture.zh-CN.md)
+- [测试策略](../testing-strategy.zh-CN.md)
+- [发布流程](../release.zh-CN.md)
+- [变更日志](../../CHANGELOG.md)
+- [贡献指南](../../CONTRIBUTING.md)
+- [安全策略](../../SECURITY.md)
 
 ## 支持
 

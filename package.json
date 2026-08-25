@@ -6,15 +6,15 @@
   "main": "dist/main.js",
   "scripts": {
     "dev": "node esbuild.config.mjs",
-    "build": "pnpm typecheck && pnpm build:bundle && pnpm artifact:check",
+    "build": "npm run typecheck && npm run build:bundle && npm run artifact:check",
     "build:bundle": "node esbuild.config.mjs production",
     "artifact:check": "node scripts/check-production-bundle.mjs",
     "release:archive": "node scripts/release-assets.mjs archive",
-    "acceptance:vault:create": "pnpm build && node scripts/acceptance-vault.mjs create",
+    "acceptance:vault:create": "npm run build && node scripts/acceptance-vault.mjs create",
     "acceptance:vault:verify": "node scripts/acceptance-vault.mjs verify",
     "acceptance:vault:clean": "node scripts/acceptance-vault.mjs clean",
     "acceptance:vault:prune": "node scripts/acceptance-vault.mjs prune",
-    "size": "pnpm build:bundle && node scripts/check-production-bundle.mjs --details",
+    "size": "npm run build:bundle && node scripts/check-production-bundle.mjs --details",
     "bench:quick": "vitest run --config vitest.performance.config.ts --mode quick --reporter=verbose",
     "bench:large": "vitest run --config vitest.performance.config.ts --mode large --reporter=verbose",
     "bench:single-file:large": "vitest run benchmarks/single-file-update-guardrail.test.ts --config vitest.performance.config.ts --mode large --reporter=verbose",
@@ -28,8 +28,8 @@
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
     "test:timezones": "node scripts/run-tests-in-timezones.mjs",
-    "check": "node scripts/check-runtime.mjs && pnpm lint && pnpm format:check && pnpm check:readme-i18n && pnpm check:docs-i18n && pnpm typecheck && pnpm test && pnpm build:bundle && pnpm artifact:check",
-    "release:check": "pnpm run check && pnpm test:timezones && pnpm bench:quick && pnpm bench:single-file:large && pnpm holiday:check"
+    "check": "node scripts/check-runtime.mjs && npm run lint && npm run format:check && npm run check:readme-i18n && npm run check:docs-i18n && npm run typecheck && npm run test:coverage && npm run build:bundle && npm run artifact:check",
+    "release:check": "node scripts/check-release-version.mjs && npm run check && npm run test:timezones && npm run bench:quick && npm run bench:single-file:large && npm run holiday:check"
   },
   "keywords": [
     "obsidian",
@@ -42,9 +42,12 @@
   ],
   "author": "ZhengYX",
   "license": "MIT",
-  "packageManager": "pnpm@11.9.0",
+  "packageManager": "npm@11.17.0",
   "engines": {
-    "node": "24.18.0"
+    "node": "24.19.0"
+  },
+  "overrides": {
+    "brace-expansion": "5.0.9"
   },
   "devDependencies": {
     "@types/luxon": "^3.7.2",
@@ -52,7 +55,7 @@
     "@types/react": "^18.3.31",
     "@types/react-dom": "^18.3.7",
     "@vitest/coverage-v8": "4.1.10",
-    "esbuild": "^0.27.0",
+    "esbuild": "^0.28.1",
     "eslint": "10.7.0",
     "eslint-plugin-obsidianmd": "0.4.1",
     "globals": "^15.15.0",
@@ -70,5 +73,8 @@
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "yaml": "^2.9.0"
+  },
+  "allowScripts": {
+    "esbuild": true
   }
 }

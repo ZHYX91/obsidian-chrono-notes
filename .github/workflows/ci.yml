@@ -19,41 +19,42 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
-      - name: Set up pnpm
-        uses: pnpm/action-setup@b0f76dfb45f55f8421693e4803ac7bb65143bd34 # v6
-        with:
-          version: 11.9.0
-          run_install: false
-
       - name: Set up Node.js
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
         with:
           node-version-file: .node-version
-          cache: pnpm
+          cache: npm
+
+      - name: Install exact npm
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm install --global npm@11.17.0
+          test "$(npm --version)" = "11.17.0"
 
       - name: Verify runtime contract
-        run: pnpm check:runtime
+        run: npm run check:runtime
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: npm ci
 
       - name: Type-check, test, and build
-        run: pnpm run check
+        run: npm run check
 
       - name: Test deterministic date behavior across time zones
-        run: pnpm test:timezones
+        run: npm run test:timezones
 
       - name: Run the quick algorithmic benchmark gate
-        run: pnpm bench:quick
+        run: npm run bench:quick
 
       - name: Run the 10k single-file update guardrail
-        run: pnpm bench:single-file:large
+        run: npm run bench:single-file:large
 
       - name: Generate coverage report
-        run: pnpm test:coverage
+        run: npm run test:coverage
 
       - name: Report production artifact gate
-        run: pnpm artifact:check -- --details
+        run: npm run artifact:check -- --details
 
       - name: Upload coverage report
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7

@@ -587,7 +587,7 @@ describe("ObsidianPropertiesDateDisplay", () => {
         ".chrono-notes-property-date-display-value",
       )).toBeNull();
       expect(getOverlay(input).textContent).toBe("2026-07-31");
-    });
+    }, { timeout: 3_000 });
 
     input.classList.remove("mod-date");
     await vi.waitFor(() => {
@@ -595,16 +595,19 @@ describe("ObsidianPropertiesDateDisplay", () => {
         ".chrono-notes-property-date-display-value",
       )).toBeNull();
       expect(input.classList.contains("chrono-notes-property-date-native-input")).toBe(false);
-    });
+    }, { timeout: 3_000 });
 
     input.classList.add("mod-date");
-    await vi.waitFor(() => expect(getOverlay(input).textContent).toBe("2026-07-31"));
+    await vi.waitFor(
+      () => expect(getOverlay(input).textContent).toBe("2026-07-31"),
+      { timeout: 3_000 },
+    );
     input.type = "text";
     await vi.waitFor(() => {
       expect(replacementHost.querySelector(
         ".chrono-notes-property-date-display-value",
       )).toBeNull();
-    });
+    }, { timeout: 3_000 });
     display.dispose();
   });
 

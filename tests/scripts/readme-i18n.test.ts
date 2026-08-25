@@ -16,7 +16,10 @@ beforeEach(async () => {
   fixtureRoot = await mkdtemp(path.join(tmpdir(), "chrono-notes-readme-"));
   temporaryDirectories.push(fixtureRoot);
   await Promise.all([
+    cp(path.join(projectRoot, "CHANGELOG.md"), path.join(fixtureRoot, "CHANGELOG.md")),
+    cp(path.join(projectRoot, "CONTRIBUTING.md"), path.join(fixtureRoot, "CONTRIBUTING.md")),
     cp(path.join(projectRoot, "README.md"), path.join(fixtureRoot, "README.md")),
+    cp(path.join(projectRoot, "SECURITY.md"), path.join(fixtureRoot, "SECURITY.md")),
     cp(path.join(projectRoot, "manifest.json"), path.join(fixtureRoot, "manifest.json")),
     cp(path.join(projectRoot, "LICENSE"), path.join(fixtureRoot, "LICENSE")),
     cp(path.join(projectRoot, "docs"), path.join(fixtureRoot, "docs"), { recursive: true }),

@@ -82,12 +82,23 @@ Chrono Notes reads Vault notes and user-selected local ICS files through Obsidia
 
 ## Development
 
+Development requires exactly Node.js 24.19.0 and npm 11.17.0.
+
 ```bash
-pnpm install
-pnpm run check
+npm ci
+npm run check
 ```
 
-Development requires Node.js 22.13 or later in the 22.x line, or Node.js 24 and later, plus pnpm 11.7.0. See the [developer documentation](https://github.com/ZHYX91/obsidian-chrono-notes/blob/main/docs/architecture.en.md) for architecture and testing details.
+Developer references:
+
+- [Product requirements](https://github.com/ZHYX91/obsidian-chrono-notes/blob/main/docs/product-requirements.en.md)
+- [UX specification](https://github.com/ZHYX91/obsidian-chrono-notes/blob/main/docs/ux-spec.en.md)
+- [Architecture](https://github.com/ZHYX91/obsidian-chrono-notes/blob/main/docs/architecture.en.md)
+- [Testing strategy](https://github.com/ZHYX91/obsidian-chrono-notes/blob/main/docs/testing-strategy.en.md)
+- [Release procedure](https://github.com/ZHYX91/obsidian-chrono-notes/blob/main/docs/release.en.md)
+- [Changelog](https://github.com/ZHYX91/obsidian-chrono-notes/blob/main/CHANGELOG.md)
+- [Contributing guide](https://github.com/ZHYX91/obsidian-chrono-notes/blob/main/CONTRIBUTING.md)
+- [Security policy](https://github.com/ZHYX91/obsidian-chrono-notes/blob/main/SECURITY.md)
 
 ## Support
 

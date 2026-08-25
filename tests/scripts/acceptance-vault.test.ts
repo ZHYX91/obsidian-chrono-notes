@@ -214,7 +214,7 @@ describe("acceptance Vault lifecycle", () => {
     ).rejects.toThrow("Generated JSON changed: .obsidian/appearance.json");
   }, ACCEPTANCE_TEST_TIMEOUT_MS);
 
-  it("accepts pnpm's literal argument separator in CLI commands", async () => {
+  it("accepts a package manager's literal argument separator in CLI commands", async () => {
     const harness = await createHarness();
     const target = await createAcceptanceVault({
       acceptanceRoot: harness.acceptanceRoot,
