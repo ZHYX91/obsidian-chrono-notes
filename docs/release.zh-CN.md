@@ -3,7 +3,7 @@ source_language: zh-CN
 translation_status: source
 ---
 
-# 发布流程
+# Chrono Notes — 发布流程
 
 ## 1. 目的与边界
 

@@ -3,7 +3,7 @@ source_language: zh-CN
 translation_status: source
 ---
 
-# 产品需求
+# Chrono Notes — 产品需求
 
 ## 1. 产品定位
 
@@ -107,7 +107,7 @@ Chrono Notes 是周期笔记工作空间，而不只是一个日期选择器。�
 
 ## 9. 设置与语言
 
-- 设置页固定使用“常规、外观与视图、周期笔记、区间笔记、扩展与集成”五个选项卡；Obsidian 1.12 的 imperative 设置 API 与 1.13 的 declarative 设置 API 必须保持相同顺序和页面结构。插件内动作只承诺打开 Chrono Notes 设置根页，文案不得暗示当前 Obsidian 公共 API 无法保证的“直接打开区间笔记页”。
+- 所有受支持 Obsidian 版本都固定使用 imperative 顶部页签设置界面，并依次提供“常规、外观与视图、周期笔记、区间笔记、扩展与集成”五个选项卡。声明式设置保持关闭，因为它会绕过这套布局。插件内动作只承诺打开 Chrono Notes 设置根页，文案不得暗示当前 Obsidian 公共 API 无法保证的“直接打开区间笔记页”。
 - 设置数据有 schema 版本、校验和迁移机制。
 - 设置变化只刷新受影响的数据与界面。
 - “常规”页提供最小化的索引与缓存状态，以及“清除缓存并重建”动作。该动作只停止当前运行时的 NoteIndex、等待已排队写入结束、删除当前 Vault 对应的 Chrono Notes 派生索引快照与条目数 sidecar、重启索引，并且只有重建后的 ready 快照连同新 sidecar 保存完成后才结束；它不得修改笔记、插件设置、其他 Vault 的缓存或其他 IndexedDB 数据。索引未运行或重建进行中时动作禁用，空缓存、条目数未知的旧版缓存与 IndexedDB 不可用必须作为不同状态呈现。

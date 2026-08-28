@@ -19,6 +19,26 @@ Source code lives in `src/`:
 
 `NoteIndex` is the single source of truth for note existence, parsed document state, tasks, previews, statistics, and range-note projections. Views must not read Vault files directly.
 
+## Settings surface policy
+
+Declarative settings are intentionally disabled because Obsidian 1.13 bypasses `display()` for
+non-empty definitions, which removes Chrono Notes' five-tab settings layout and degrades the user
+experience. Preserve the imperative `PluginSettingTab.display()` surface and keep
+`getSettingDefinitions()` empty. Dormant declarative builders and tests may remain, but must not be
+activated accidentally. Do not flag the `display()` deprecation, empty definitions, the disabled
+feature switch, or missing settings search, and do not propose a declarative migration unless the
+user explicitly asks to revisit this decision. Documentation that describes the 1.13 declarative
+surface as active is stale and must not override this policy.
+
+## Manual installation release policy
+
+The versioned `chrono-notes-<version>.zip` is an intentional required public release asset for
+users who install without the Obsidian Community marketplace. Community ignores it during plugin
+ingestion, so the automated-review `extra unsupported files` recommendation is expected and must
+not be treated as a defect or a reason to remove the archive. The deterministic ZIP contains one
+`chrono-notes/` directory with `main.js`, `manifest.json`, and `styles.css`, byte-identical to the
+three loose release assets. Release checks must preserve and verify all four public assets.
+
 ## Commands
 
 - `npm run dev`: development bundle in watch mode.

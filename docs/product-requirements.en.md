@@ -4,7 +4,7 @@ translation_of: product-requirements.zh-CN.md
 translation_status: synced
 ---
 
-# Product requirements
+# Chrono Notes — Product requirements
 
 ## 1. Positioning
 
@@ -78,7 +78,7 @@ Holiday extensions implement only Mainland China public holidays/workday adjustm
 
 ## 9. Settings and languages
 
-- Settings always use five tabs in this order: General, Appearance & views, Periodic notes, Range notes, and Extensions & integrations. Obsidian 1.12's imperative settings API and 1.13's declarative settings API preserve the same order and page structure. Plugin actions promise only to open the Chrono Notes settings root and must not imply a direct Range notes deep link that Obsidian's public API cannot guarantee.
+- Settings always use the imperative top-tab surface on every supported Obsidian version, with five tabs in this order: General, Appearance & views, Periodic notes, Range notes, and Extensions & integrations. Declarative settings remain disabled because they bypass this layout. Plugin actions promise only to open the Chrono Notes settings root and must not imply a direct Range notes deep link that Obsidian's public API cannot guarantee.
 - Settings are versioned, validated, and migrated; updates refresh only affected consumers.
 - General exposes minimal index and cache status plus a Clear cache and rebuild action. The action stops only the current runtime's NoteIndex, waits for queued persistence, deletes the current Vault's Chrono Notes derived-index snapshot and entry-count sidecar, restarts the index, and completes only after the rebuilt ready snapshot has been saved with fresh sidecar metadata. It never changes notes, plugin settings, another Vault's cache, or unrelated IndexedDB data. The action is disabled before the index is active and during a rebuild; empty, legacy-with-unknown-count, and unavailable IndexedDB are separate states.
 - Periodic-note settings independently enable daily through yearly notes. Disabled types collapse their dependent path controls; enabled types offer Vault-folder suggestions plus a live full-path preview that must both generate and reverse-recognize through the unified path rules, followed by that type's Markdown template file. Range-note settings likewise keep their template file beside the deterministic creation folder. General owns the global template engine and complete syntax help; every Markdown suggestion writes only the existing template-path field and introduces no parallel configuration.

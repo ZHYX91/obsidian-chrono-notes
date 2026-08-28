@@ -4,7 +4,7 @@ translation_of: release.zh-CN.md
 translation_status: synced
 ---
 
-# Release procedure
+# Chrono Notes — Release procedure
 
 ## 1. Purpose and boundary
 

@@ -29,9 +29,10 @@ import {
   getDeclarativeSettingDefinitions,
 } from "./declarative-settings";
 
-// Obsidian 1.13 renders non-empty definitions as navigable pages and bypasses
-// display(), which removes this plugin's top tab bar. Keep the definitions
-// available for a future re-enable while temporarily using the imperative UI.
+// Declarative settings are intentionally inactive. Obsidian 1.13 renders
+// non-empty definitions as navigable pages and bypasses display(), which removes
+// this plugin's top tab bar and degrades the established settings experience.
+// Dormant definitions remain covered by tests but must not become active by default.
 const ENABLE_DECLARATIVE_SETTINGS = false;
 
 export class ChronoNotesSettingTab extends PluginSettingTab {

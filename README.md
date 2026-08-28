@@ -6,12 +6,6 @@ Chrono Notes is an Obsidian calendar workspace for periodic notes, optional cale
 
 ## Screenshots
 
-### Periodic note navigation
-
-Move between adjacent periodic notes, jump to the parent period, or return to the calendar without leaving the note.
-
-![Chrono Notes periodic note navigation and month calendar](https://raw.githubusercontent.com/ZHYX91/obsidian-chrono-notes/main/docs/assets/chrono-notes-navigation-en.png)
-
 ### Calendar workspace
 
 See note state, tasks, local ICS events, holidays, and range notes together in the month calendar.
@@ -78,7 +72,7 @@ Settings cover periodic-note paths and templates, calendar and holiday extension
 
 ## Privacy and security
 
-Chrono Notes reads Vault notes and user-selected local ICS files through Obsidian or local filesystem boundaries. It does not upload notes, tasks, calendars, or ICS data and does not require an account. Its derived NoteIndex cache stays in device-local IndexedDB and can be rebuilt from the source notes.
+Chrono Notes enumerates Markdown files and reads relevant Vault notes to build its note, calendar, task, statistics, and path-suggestion indexes. It also reads user-selected local ICS files through the local filesystem boundary. It does not upload notes, tasks, calendars, or ICS data and does not require an account. Its derived NoteIndex cache stays in device-local IndexedDB and can be rebuilt from the source notes. The plugin writes a formatted date to the system clipboard only after the user chooses **Copy date**; it never reads the clipboard.
 
 ## Development
 
