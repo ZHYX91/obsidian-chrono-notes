@@ -11,6 +11,7 @@ import {
   type LunarDateContext,
 } from "./lunar-date-context";
 import {
+  localizeLunarFestivalName,
   localizeSolarTermName,
   withLunarLibraryLanguage,
 } from "./lunar-library-language";
@@ -51,12 +52,27 @@ function buildChineseLunarDay(context: LunarDateContext): ChineseLunarDay {
     ? `${lunar.getMonthInChinese()}月`
     : `${isLeapMonth ? "Leap lunar month" : "Lunar month"} ${lunarMonth}`;
   const lunarDayName = chinese ? lunar.getDayInChinese() : `day ${lunarDay}`;
-  const rawFestivals = lunar.getFestivals();
-  const canonicalFestivals = withLunarLibraryLanguage(
+  const localizedPrimaryFestivals = [...lunar.getFestivals()];
+  const canonicalPrimaryFestivals = withLunarLibraryLanguage(
     "zh-CN",
     () => [...lunar.getFestivals()],
   );
-  const festivals = Object.freeze([...rawFestivals]);
+  const canonicalOtherFestivals = withLunarLibraryLanguage(
+    "zh-CN",
+    () => [...lunar.getOtherFestivals()],
+  );
+  const festivalEntries = mergeFestivalEntries([
+    ...localizedPrimaryFestivals.map((text, index) => ({
+      canonicalName:
+        canonicalPrimaryFestivals[index] ?? `${signedMonth}:${lunarDay}:${index}`,
+      text,
+    })),
+    ...canonicalOtherFestivals.map((canonicalName) => ({
+      canonicalName,
+      text: localizeLunarFestivalName(canonicalName, I18n.getLanguage()),
+    })),
+  ]);
+  const festivals = Object.freeze(festivalEntries.map(({ text }) => text));
   const rawSolarTerm = lunar.getCurrentJieQi()?.getName() ?? null;
   const canonicalSolarTerm = withLunarLibraryLanguage(
     "zh-CN",
@@ -70,10 +86,10 @@ function buildChineseLunarDay(context: LunarDateContext): ChineseLunarDay {
     ? lunarDay === 1 ? lunarMonthName : lunarDayName
     : `Lunar ${isLeapMonth ? "L" : ""}${lunarMonth}/${lunarDay}`;
   const events = Object.freeze([
-    ...festivals.map((festival, index) => createCalendarExtensionEvent(
-      `festival:${canonicalFestivals[index] ?? `${signedMonth}:${lunarDay}:${index}`}`,
+    ...festivalEntries.map(({ canonicalName, text }) => createCalendarExtensionEvent(
+      `festival:${canonicalName}`,
       "festival",
-      festival,
+      text,
       "chinese-lunar",
     )),
     ...(solarTerm === null || canonicalSolarTerm === null
@@ -103,4 +119,18 @@ function buildChineseLunarDay(context: LunarDateContext): ChineseLunarDay {
     transition,
     accessibilityText,
   });
+}
+
+interface FestivalEntry {
+  readonly canonicalName: string;
+  readonly text: string;
+}
+
+function mergeFestivalEntries(entries: readonly FestivalEntry[]): readonly FestivalEntry[] {
+  const merged = new Map<string, string>();
+  for (const { canonicalName, text } of entries) {
+    if (!merged.has(canonicalName)) merged.set(canonicalName, text);
+  }
+  return Object.freeze(Array.from(merged, ([canonicalName, text]) =>
+    Object.freeze({ canonicalName, text })));
 }

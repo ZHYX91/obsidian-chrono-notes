@@ -48,6 +48,62 @@ describe("getChineseLunarDay", () => {
       });
   });
 
+  it("includes primary, other, and dynamically calculated library festivals", () => {
+    expect(getChineseLunarDay({ year: 2026, month: 3, day: 20 }, "zh-CN"))
+      .toMatchObject({
+        festivals: ["龙头节", "社日节"],
+        events: [
+          { id: "festival:龙头节", text: "龙头节" },
+          { id: "festival:社日节", text: "社日节" },
+          { id: "solar-term:春分", text: "春分" },
+        ],
+      });
+    expect(getChineseLunarDay({ year: 2026, month: 2, day: 24 }, "zh-CN"))
+      .toMatchObject({
+        festivals: ["谷日", "顺星节"],
+        events: [
+          { id: "festival:谷日", text: "谷日" },
+          { id: "festival:顺星节", text: "顺星节" },
+        ],
+      });
+    expect(getChineseLunarDay({ year: 2026, month: 4, day: 4 }, "zh-CN"))
+      .toMatchObject({
+        festivals: ["寒食节"],
+        events: [{ id: "festival:寒食节", text: "寒食节" }],
+      });
+  });
+
+  it("localizes Zhongyuan while preserving its canonical event id", () => {
+    const simplified = getChineseLunarDay(
+      { year: 2026, month: 8, day: 27 },
+      "zh-CN",
+    );
+    const traditional = getChineseLunarDay(
+      { year: 2026, month: 8, day: 27 },
+      "zh-TW",
+    );
+    const englishFallback = getChineseLunarDay(
+      { year: 2026, month: 8, day: 27 },
+      "ja-JP",
+    );
+
+    expect(simplified).toMatchObject({
+      lunarMonth: 7,
+      lunarDay: 15,
+      festivals: ["中元节"],
+      events: [{ id: "festival:中元节", text: "中元节" }],
+    });
+    expect(traditional).toMatchObject({
+      festivals: ["中元節"],
+      events: [{ id: "festival:中元节", text: "中元節" }],
+    });
+    expect(englishFallback).toMatchObject({
+      dateText: "Lunar 7/15",
+      festivals: ["Zhongyuan Festival"],
+      events: [{ id: "festival:中元节", text: "Zhongyuan Festival" }],
+    });
+  });
+
   it("keeps solar terms separate from ordinary lunar day text", () => {
     expect(getChineseLunarDay({ year: 2026, month: 4, day: 5 }, "zh-CN"))
       .toMatchObject({

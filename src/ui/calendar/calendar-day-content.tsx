@@ -12,6 +12,8 @@ export interface CalendarDayStatusRowProps {
   readonly translator: Translator;
 }
 
+const MAX_VISIBLE_CALENDAR_EVENTS = 2;
+
 export function CalendarDayStatusRow({
   day,
   showNoteIndicators,
@@ -60,6 +62,14 @@ export function CalendarDayCalendarDetails({
   translator: Translator;
 }>) {
   const groups = groupHolidayNames(day);
+  const visibleCalendarEvents = day.calendarEvents.slice(
+    0,
+    MAX_VISIBLE_CALENDAR_EVENTS,
+  );
+  const hiddenCalendarEventCount = Math.max(
+    0,
+    day.calendarEvents.length - visibleCalendarEvents.length,
+  );
   return (
     <>
       {day.calendarExtensions.length === 0 ? null : (
@@ -87,7 +97,7 @@ export function CalendarDayCalendarDetails({
           className="chrono-notes-calendar-extension-events"
           aria-hidden="true"
         >
-          {day.calendarEvents.map((event) => (
+          {visibleCalendarEvents.map((event) => (
             <span
               className="chrono-notes-calendar-extension-event"
               data-calendar-event-id={event.id}
@@ -97,6 +107,11 @@ export function CalendarDayCalendarDetails({
               {event.text}
             </span>
           ))}
+          {hiddenCalendarEventCount === 0 ? null : (
+            <span className="chrono-notes-calendar-extension-event-overflow">
+              +{hiddenCalendarEventCount}
+            </span>
+          )}
         </span>
       )}
       {groups.length === 0 ? null : (

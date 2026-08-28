@@ -1,7 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { I18n } from "lunar-typescript";
+import { I18n, LunarUtil } from "lunar-typescript";
 
-import { withLunarLibraryLanguage } from "../../src/core/calendar/lunar-library-language";
+import {
+  localizeLunarFestivalName,
+  withLunarLibraryLanguage,
+} from "../../src/core/calendar/lunar-library-language";
 
 describe("withLunarLibraryLanguage", () => {
   beforeEach(() => I18n.setLanguage("chs"));
@@ -65,5 +68,23 @@ describe("withLunarLibraryLanguage", () => {
 
     expect(visited).toEqual(["chs", "cht", "en"]);
     expect(I18n.getLanguage()).toBe("chs");
+  });
+
+  it("localizes every additional festival supplied by the pinned library", () => {
+    const names = new Set([
+      ...Object.values(LunarUtil.OTHER_FESTIVAL).flat(),
+      "寒食节",
+      "春社",
+      "秋社",
+    ]);
+
+    expect(names.size).toBe(31);
+    for (const name of names) {
+      expect(localizeLunarFestivalName(name, "fr-FR")).not.toBe(name);
+    }
+    expect(localizeLunarFestivalName("中元节", "zh-CN")).toBe("中元节");
+    expect(localizeLunarFestivalName("中元节", "zh-TW")).toBe("中元節");
+    expect(localizeLunarFestivalName("中元节", "en-US")).toBe("Zhongyuan Festival");
+    expect(localizeLunarFestivalName("中元节", "ja-JP")).toBe("Zhongyuan Festival");
   });
 });

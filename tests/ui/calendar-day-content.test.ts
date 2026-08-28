@@ -2,6 +2,7 @@ import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 
+import type { CalendarExtensionEvent } from "../../src/core/calendar/calendar-extension";
 import type { IcsEventOccurrence } from "../../src/core/calendar/ics-calendar";
 import type { CalendarDay } from "../../src/features/calendar/calendar-day-query";
 import { createTranslator } from "../../src/shared/i18n";
@@ -137,6 +138,31 @@ describe("calendar day content", () => {
       .toBeLessThan(markup.indexOf("chrono-notes-calendar-extension-events"));
     expect(markup).not.toContain("title=");
   });
+
+  it("shows two calendar events and summarizes the remaining complete model", () => {
+    const day: CalendarDay = Object.freeze({
+      ...emptyDay(),
+      calendarEvents: Object.freeze([
+        calendarEvent("festival:first", "First"),
+        calendarEvent("festival:second", "Second"),
+        calendarEvent("festival:third", "Third"),
+      ]),
+    });
+    const markup = renderToStaticMarkup(
+      createElement(CalendarDayCalendarDetails, {
+        day,
+        translator: createTranslator("en", "en"),
+      }),
+    );
+
+    expect(markup).toContain('data-calendar-event-id="festival:first"');
+    expect(markup).toContain('data-calendar-event-id="festival:second"');
+    expect(markup).not.toContain('data-calendar-event-id="festival:third"');
+    expect(markup).toContain(
+      'class="chrono-notes-calendar-extension-event-overflow">+1</span>',
+    );
+    expect(day.calendarEvents).toHaveLength(3);
+  });
 });
 
 function emptyDay(): CalendarDay {
@@ -170,5 +196,16 @@ function occurrence(id: string): IcsEventOccurrence {
     continuesAfter: false,
     timeLabel: null,
     sortTimestamp: 0,
+  });
+}
+
+function calendarEvent(id: string, text: string): CalendarExtensionEvent {
+  return Object.freeze({
+    id,
+    kind: "festival",
+    text,
+    sources: Object.freeze([
+      Object.freeze({ id: "chinese-lunar", transitionTime: null }),
+    ]),
   });
 }

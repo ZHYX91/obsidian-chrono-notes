@@ -972,10 +972,15 @@ body.is-mobile
   width: 100%;
 }
 
-.chrono-notes-calendar-extension-event {
+.chrono-notes-calendar-extension-event,
+.chrono-notes-calendar-extension-event-overflow {
   color: var(--text-accent);
   flex: 0 1 auto;
   font-size: 9px;
   min-width: 0;
   white-space: nowrap;
+}
+
+.chrono-notes-calendar-extension-event-overflow {
+  flex: none;
 }
