@@ -43,7 +43,14 @@ export function hasIndexedPeriodicNote(
 export function canOpenOrCreateIndexedPeriodicNote(
   state: IndexedPeriodicNoteState,
 ): boolean {
-  return state !== "indexing" && state !== "not-configured";
+  return state !== "not-configured";
+}
+
+export function getIndexedPeriodicNoteExistence(
+  state: IndexedPeriodicNoteState,
+): boolean | null {
+  if (state === "indexing" || state === "not-configured") return null;
+  return hasIndexedPeriodicNote(state);
 }
 
 export interface PeriodicNoteRule {
@@ -109,18 +116,6 @@ export function selectIndexedPeriodicNote(
     embeds: entry.note.embeds,
     statistics: entry.note.statistics,
   });
-}
-
-export function isPeriodicNotePathIndexing(
-  date: LocalDate,
-  noteType: PeriodicNoteType,
-  snapshot: NoteIndexSnapshot,
-  context: PeriodicNotePathContext,
-  rule: PeriodicNoteRule,
-): boolean {
-  if (snapshot.readiness !== "indexing") return false;
-  const notePath = resolveIndexedPeriodicNotePath(date, noteType, context, rule);
-  return notePath !== null && snapshot.notes[notePath] === undefined;
 }
 
 function resolveIndexedPeriodicNotePath(

@@ -32,6 +32,18 @@ describe("buildDateContextMenuActions", () => {
     });
   });
 
+  it("offers a neutral open-or-create action while existence is unknown", () => {
+    expect(buildDateContextMenuActions({
+      configured: true,
+      noteExists: null,
+      rangeConfigured: false,
+    })[0]).toEqual({
+      id: "open-default",
+      group: "note",
+      icon: "file-question",
+    });
+  });
+
   it("does not offer fake note commands when daily notes are not configured", () => {
     expect(buildDateContextMenuActions({
       configured: false,

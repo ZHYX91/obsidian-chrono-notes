@@ -17,7 +17,7 @@ import {
 } from "../../core/periodic/periodic-date";
 import {
   canOpenOrCreateIndexedPeriodicNote,
-  hasIndexedPeriodicNote,
+  getIndexedPeriodicNoteExistence,
 } from "../../features/calendar/indexed-periodic-note";
 import type { WeekCalendarQuery } from "../../features/calendar/week-calendar-query";
 import type { NoteOpenTarget } from "../../features/periodic/periodic-note-commands";
@@ -87,7 +87,7 @@ export interface WeekViewProps {
   readonly onOpenDateContextMenu: (
     date: LocalDate,
     configured: boolean,
-    noteExists: boolean,
+    noteExists: boolean | null,
     event: MouseEvent,
   ) => void;
   readonly longPress: LongPressGesture;
@@ -243,7 +243,7 @@ export function WeekView({
                   onOpenDateContextMenu(
                     day.date,
                     canOpenOrCreateIndexedPeriodicNote(day.noteState),
-                    hasIndexedPeriodicNote(day.noteState),
+                    getIndexedPeriodicNoteExistence(day.noteState),
                     event.nativeEvent,
                   );
                 }}

@@ -3,11 +3,12 @@ import type { Translator } from "../../shared/i18n";
 
 export function getDateContextMenuActionLabel(
   actionId: DateContextMenuActionId,
-  noteExists: boolean,
+  noteExists: boolean | null,
   t: Translator["t"],
 ): string {
   switch (actionId) {
     case "open-default":
+      if (noteExists === null) return t("dateContextMenu.openOrCreateNote");
       return noteExists
         ? t("dateContextMenu.openNote")
         : t("dateContextMenu.createNote");

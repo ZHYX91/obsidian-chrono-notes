@@ -389,6 +389,7 @@ vi.mock("../../src/ui/modals/mini-calendar-modal", () => ({
 import type { App, PluginManifest } from "obsidian";
 
 import { openObsidianPluginSettings } from "../../src/adapters/obsidian/obsidian-plugin-settings";
+import type { ChronoRuntime } from "../../src/app/chrono-runtime";
 import ChronoNotesPlugin from "../../src/app/plugin";
 import { createDefaultSettings } from "../../src/shared/settings";
 
@@ -698,6 +699,52 @@ describe("ChronoNotesPlugin lifecycle composition", () => {
       (unsubscribe) => unsubscribe.mock.calls.length === 1,
     )).toBe(true);
     expect(index.getSnapshot().readiness).toBe("ready");
+    plugin.unload();
+  });
+
+  it("runs periodic-note navigation before the deferred note index is ready", async () => {
+    const plugin = createPlugin();
+    await plugin.onload();
+    const noteIndex = plugin.noteIndex;
+    const runtime = (plugin as unknown as { runtime: ChronoRuntime | null }).runtime;
+    if (noteIndex === null || runtime === null) {
+      throw new Error("Expected the runtime and note index to be composed.");
+    }
+    expect(noteIndex.getSnapshot().readiness).toBe("indexing");
+    const openOrCreate = vi.spyOn(runtime.periodicNoteCommands, "openOrCreate")
+      .mockResolvedValue({
+        status: "opened",
+        path: "Daily/2026-08-28.md",
+        created: false,
+        cascade: [],
+      });
+    const openPeriodicNote = (
+      plugin as unknown as {
+        openPeriodicNote(
+          date: { year: number; month: number; day: number },
+          noteType: "daily",
+          target: "default",
+        ): Promise<void>;
+      }
+    ).openPeriodicNote.bind(plugin);
+
+    await openPeriodicNote(
+      { year: 2026, month: 8, day: 28 },
+      "daily",
+      "default",
+    );
+
+    expect(openOrCreate).toHaveBeenCalledOnce();
+    expect(openOrCreate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        date: { year: 2026, month: 8, day: 28 },
+        noteType: "daily",
+        target: "default",
+      }),
+      expect.objectContaining({
+        periodicNotes: plugin.settings.periodicNotes,
+      }),
+    );
     plugin.unload();
   });
 

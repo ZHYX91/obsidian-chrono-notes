@@ -11,7 +11,6 @@ import { findPeriodicNotePathMatch } from "../core/periodic/periodic-note-path";
 import { normalizeIntervalNoteFolder } from "../core/note/interval-note-spec";
 import type { NoteTask } from "../core/note/note-tasks";
 import { IcsEventIndex, type IcsEventIndexSnapshot } from "../features/calendar/ics-event-index";
-import { isPeriodicNotePathIndexing } from "../features/calendar/indexed-periodic-note";
 import { notifyListeners } from "../features/notify-listeners";
 import { resolveNoteCreationConfirmation } from "../features/notes/note-creation-confirmation";
 import {
@@ -56,7 +55,6 @@ import {
   formatPeriodicNotConfiguredNotice,
   formatPluginErrorNotice,
   getInvalidRangeNotice,
-  getNoteIndexingNotice,
   getPluginCommandMessages,
   getRangeNotConfiguredNotice,
   getTaskCommandNotice,
@@ -339,10 +337,6 @@ export default class ChronoNotesPlugin extends Plugin {
   ): Promise<void> {
     const runtime = this.runtime;
     if (runtime === null) return;
-    if (this.isPeriodicNotePathIndexing(date, noteType)) {
-      new Notice(getNoteIndexingNotice(this.getTranslator().t));
-      return;
-    }
     try {
       const result = await runtime.periodicNoteCommands.openOrCreate(
         {
@@ -387,26 +381,6 @@ export default class ChronoNotesPlugin extends Plugin {
       const message = error instanceof Error ? error.message : String(error);
       new Notice(formatPluginErrorNotice(message, this.getTranslator().t));
     }
-  }
-
-  private isPeriodicNotePathIndexing(
-    date: LocalDate,
-    noteType: PeriodicNoteType,
-  ): boolean {
-    const noteIndex = this.noteIndex;
-    if (noteIndex === null) return false;
-    const snapshot = noteIndex.getSnapshot();
-    const config = this.settings.periodicNotes[noteType];
-    return isPeriodicNotePathIndexing(
-      date,
-      noteType,
-      snapshot,
-      {
-        locale: this.getTranslator().locale,
-        weekStartDay: this.settings.weekStartDay,
-      },
-      config,
-    );
   }
 
   private async openIntervalNote(start: LocalDate, end: LocalDate): Promise<void> {

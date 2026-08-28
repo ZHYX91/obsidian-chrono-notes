@@ -18,7 +18,7 @@ import {
 } from "../../core/periodic/periodic-date";
 import {
   canOpenOrCreateIndexedPeriodicNote,
-  hasIndexedPeriodicNote,
+  getIndexedPeriodicNoteExistence,
 } from "../../features/calendar/indexed-periodic-note";
 import type { MonthCalendarQuery } from "../../features/calendar/month-calendar-query";
 import type { NoteOpenTarget } from "../../features/periodic/periodic-note-commands";
@@ -86,7 +86,7 @@ export interface MonthViewProps {
   readonly onOpenDateContextMenu: (
     date: LocalDate,
     configured: boolean,
-    noteExists: boolean,
+    noteExists: boolean | null,
     event: MouseEvent,
   ) => void;
 }
@@ -401,7 +401,7 @@ export function MonthView({
                       onOpenDateContextMenu(
                         day.date,
                         canOpenOrCreateIndexedPeriodicNote(day.noteState),
-                        hasIndexedPeriodicNote(day.noteState),
+                        getIndexedPeriodicNoteExistence(day.noteState),
                         event.nativeEvent,
                       );
                     }}

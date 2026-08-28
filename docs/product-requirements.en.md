@@ -54,7 +54,7 @@ Holiday extensions implement only Mainland China public holidays/workday adjustm
 
 ## 5. Documents, tasks, and statistics
 
-- Note states include transient indexing, missing, empty, YAML-only, body content, and read failure. An unknown path while NoteIndex is updating must remain indexing rather than being reported as missing or offered for creation.
+- Note states include transient indexing, missing, empty, YAML-only, body content, and read failure. An unknown path while NoteIndex is updating remains indexing rather than being reported as missing; this derived state limits previews, tasks, and statistics but never blocks Navbar, calendar, or direct commands. The periodic-note use case bypasses index uncertainty by checking the canonical target through its file port: an existing file opens immediately, and confirmation or creation occurs only when the file is actually absent.
 - State, preview, tasks, and statistics come from one parsed document.
 - Parsing covers BOM, LF, CRLF, CR, mixed endings, and closing YAML delimiters at EOF.
 - Statistics cover word, link, tag, and task-completion dimensions with one shared display contract.

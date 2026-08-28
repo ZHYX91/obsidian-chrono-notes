@@ -13,7 +13,7 @@ export interface DateContextMenuAction {
 
 export interface DateContextMenuOptions {
   readonly configured: boolean;
-  readonly noteExists: boolean;
+  readonly noteExists: boolean | null;
   readonly rangeConfigured: boolean;
 }
 
@@ -26,7 +26,9 @@ export function buildDateContextMenuActions(
       Object.freeze({
         id: "open-default",
         group: "note",
-        icon: options.noteExists ? "file-text" : "square-pen",
+        icon: options.noteExists === null
+          ? "file-question"
+          : options.noteExists ? "file-text" : "square-pen",
       }),
       Object.freeze({
         id: "open-tab",

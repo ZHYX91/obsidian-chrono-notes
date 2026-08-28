@@ -36,7 +36,7 @@ export interface ChronoNotesViewHost {
   openDateContextMenu(
     date: LocalDate,
     configured: boolean,
-    noteExists: boolean,
+    noteExists: boolean | null,
     event: MouseEvent,
   ): void;
 }

@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   canOpenOrCreateIndexedPeriodicNote,
-  isPeriodicNotePathIndexing,
+  getIndexedPeriodicNoteExistence,
   selectIndexedPeriodicNote,
 } from "../../src/features/calendar/indexed-periodic-note";
 import { createParsedNoteIndexSnapshot } from "../support/note-index-snapshot";
@@ -12,11 +12,19 @@ const CONTEXT = Object.freeze({ locale: "en", weekStartDay: "monday" as const })
 const RULE = Object.freeze({ enabled: true, pattern: "[Daily]/YYYY-MM-DD" });
 
 describe("indexed periodic note", () => {
-  it("withholds note actions only while a configured path is unknown", () => {
-    expect(canOpenOrCreateIndexedPeriodicNote("indexing")).toBe(false);
+  it("allows note actions for every configured state", () => {
+    expect(canOpenOrCreateIndexedPeriodicNote("indexing")).toBe(true);
     expect(canOpenOrCreateIndexedPeriodicNote("not-configured")).toBe(false);
     expect(canOpenOrCreateIndexedPeriodicNote("missing")).toBe(true);
     expect(canOpenOrCreateIndexedPeriodicNote("has-body")).toBe(true);
+  });
+
+  it("keeps index-derived existence honest while a path is unknown", () => {
+    expect(getIndexedPeriodicNoteExistence("indexing")).toBeNull();
+    expect(getIndexedPeriodicNoteExistence("not-configured")).toBeNull();
+    expect(getIndexedPeriodicNoteExistence("missing")).toBe(false);
+    expect(getIndexedPeriodicNoteExistence("has-body")).toBe(true);
+    expect(getIndexedPeriodicNoteExistence("error")).toBe(true);
   });
 
   it("keeps an absent path unknown while the index is updating", () => {
@@ -34,13 +42,6 @@ describe("indexed periodic note", () => {
       CONTEXT,
       RULE,
     ).noteState).toBe("indexing");
-    expect(isPeriodicNotePathIndexing(
-      DATE,
-      "daily",
-      indexing,
-      CONTEXT,
-      RULE,
-    )).toBe(true);
     expect(selectIndexedPeriodicNote(
       DATE,
       "daily",
@@ -50,7 +51,7 @@ describe("indexed periodic note", () => {
     ).noteState).toBe("missing");
   });
 
-  it("allows an already indexed path and ignores disabled rules", () => {
+  it("reports already indexed paths during a live update", () => {
     const parsed = createParsedNoteIndexSnapshot({
       "Daily/2026-07-20.md": "existing",
     }, 1);
@@ -60,19 +61,19 @@ describe("indexed periodic note", () => {
       readiness: "indexing" as const,
     });
 
-    expect(isPeriodicNotePathIndexing(
+    expect(getIndexedPeriodicNoteExistence(selectIndexedPeriodicNote(
       DATE,
       "daily",
       indexing,
       CONTEXT,
       RULE,
-    )).toBe(false);
-    expect(isPeriodicNotePathIndexing(
+    ).noteState)).toBe(true);
+    expect(selectIndexedPeriodicNote(
       DATE,
       "daily",
       indexing,
       CONTEXT,
       { ...RULE, enabled: false },
-    )).toBe(false);
+    ).noteState).toBe("not-configured");
   });
 });

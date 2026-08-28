@@ -20,7 +20,7 @@ export interface ObsidianDateContextMenuOptions {
   readonly event: MouseEvent;
   readonly date: LocalDate;
   readonly configured: boolean;
-  readonly noteExists: boolean;
+  readonly noteExists: boolean | null;
   readonly rangeConfigured: boolean;
   readonly translator: Translator;
   readonly onOpenDaily: (target: NoteOpenTarget) => Promise<void>;

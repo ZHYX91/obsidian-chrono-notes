@@ -34,10 +34,6 @@ export function formatPeriodicNotConfiguredNotice(
   });
 }
 
-export function getNoteIndexingNotice(t: Translator["t"]): string {
-  return t("pluginNotice.noteIndexing");
-}
-
 export function getRangeNotConfiguredNotice(t: Translator["t"]): string {
   return t("pluginNotice.rangeNotConfigured");
 }

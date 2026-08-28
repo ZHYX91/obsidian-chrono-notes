@@ -97,7 +97,7 @@ export interface CalendarAppProps {
   readonly onOpenDateContextMenu: (
     date: LocalDate,
     configured: boolean,
-    noteExists: boolean,
+    noteExists: boolean | null,
     event: MouseEvent,
   ) => void;
   readonly navigationRequest: CalendarNavigationRequest | null;

@@ -13,6 +13,9 @@ describe("date context menu presentation", () => {
 
     expect(getDateContextMenuActionLabel("open-default", true, t)).toBe("打开日记");
     expect(getDateContextMenuActionLabel("open-default", false, t)).toBe("创建日记");
+    expect(getDateContextMenuActionLabel("open-default", null, t)).toBe(
+      "打开或创建日记",
+    );
     expect(getDateContextMenuActionLabel("open-tab", false, t)).toBe("在新标签页中打开");
     expect(getDateContextMenuActionLabel("create-range", false, t)).toBe("创建区间笔记");
     expect(getDateContextMenuActionLabel("copy-date", false, t)).toBe("复制日期");

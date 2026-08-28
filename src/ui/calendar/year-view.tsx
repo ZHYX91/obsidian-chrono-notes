@@ -28,7 +28,7 @@ import type {
 } from "../../features/calendar/year-calendar-query";
 import {
   canOpenOrCreateIndexedPeriodicNote,
-  hasIndexedPeriodicNote,
+  getIndexedPeriodicNoteExistence,
 } from "../../features/calendar/indexed-periodic-note";
 import type { NoteOpenTarget } from "../../features/periodic/periodic-note-commands";
 import type { Translator } from "../../shared/i18n";
@@ -93,7 +93,7 @@ export interface YearViewProps {
   readonly onOpenDateContextMenu: (
     date: LocalDate,
     configured: boolean,
-    noteExists: boolean,
+    noteExists: boolean | null,
     event: MouseEvent,
   ) => void;
   readonly longPress: LongPressGesture;
@@ -821,7 +821,7 @@ function HeatmapDayButton({
         onOpenDateContextMenu(
           cell.date,
           canOpenOrCreateIndexedPeriodicNote(cell.noteState),
-          hasIndexedPeriodicNote(cell.noteState),
+          getIndexedPeriodicNoteExistence(cell.noteState),
           event.nativeEvent,
         );
       }}
