@@ -2,6 +2,18 @@
 
 Notable changes to Chrono Notes are documented in this file. The repository's numeric Git tags are the evidence for released versions; an entry without a corresponding local tag remains unreleased even if the manifests already contain that version.
 
+## 0.5.0
+
+### Added
+
+- Added every formal, additional, and dynamically calculated traditional festival exposed by the pinned Chinese lunar calendar library, with simplified Chinese, traditional Chinese, and English names.
+
+### Changed
+
+- Limited each date cell to two visible calendar-extension events plus a `+N` summary while retaining every event in hover previews and accessibility text.
+- Kept periodic-note navigation available while the note index updates; existing targets open directly and absent targets continue through the normal confirmation, template, and cascade workflow.
+- Added a neutral Open or create daily note context action while a target's indexed existence remains unknown.
+
 ## 0.4.3
 
 ### Changed
