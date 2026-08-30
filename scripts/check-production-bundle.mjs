@@ -10,7 +10,6 @@ import {
   productionJavascriptBudgetBytes,
   productionJavascriptReferenceBytes,
 } from "./build-contract.mjs";
-import { assertPackageVersionContract } from "./release-contract.mjs";
 import { verifyProductionBundleRebuild } from "./verify-production-rebuild.mjs";
 
 const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -21,8 +20,6 @@ const [
   stylesSource,
   builtManifestSource,
   sourceManifestSource,
-  packageSource,
-  versionsSource,
   metafileSource,
   settingsTabSource,
   mainStats,
@@ -31,8 +28,6 @@ const [
   readFile(resolveProjectPath(artifactPaths.styles), "utf8"),
   readFile(resolveProjectPath(artifactPaths.manifest), "utf8"),
   readFile(resolveProjectPath("manifest.json"), "utf8"),
-  readFile(resolveProjectPath("package.json"), "utf8"),
-  readFile(resolveProjectPath("versions.json"), "utf8"),
   readFile(resolveProjectPath(artifactPaths.metafile), "utf8"),
   readFile(resolveProjectPath("src/ui/settings/settings-tab.ts"), "utf8"),
   stat(resolveProjectPath(artifactPaths.main)),
@@ -40,12 +35,13 @@ const [
 
 const builtManifest = JSON.parse(builtManifestSource);
 const sourceManifest = JSON.parse(sourceManifestSource);
-const packageJson = JSON.parse(packageSource);
-const versions = JSON.parse(versionsSource);
 const metafile = JSON.parse(metafileSource);
 
 assert.deepEqual(builtManifest, sourceManifest, "Built manifest must match manifest.json");
-assertPackageVersionContract(sourceManifest, packageJson, versions);
+
+const packageJson = JSON.parse(
+  await readFile(resolveProjectPath("package.json"), "utf8"),
+);
 
 const obsidianApiVersion = packageJson.devDependencies?.obsidian;
 assert.match(

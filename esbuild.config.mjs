@@ -1,5 +1,6 @@
 import esbuild from "esbuild";
 import { copyFile, mkdir, writeFile } from "node:fs/promises";
+import path from "node:path";
 
 import {
   artifactPaths,
@@ -25,6 +26,7 @@ const styleContext = await esbuild.context({
 });
 
 if (production) {
+  await mkdir(path.dirname(artifactPaths.metafile), { recursive: true });
   const [scriptResult] = await Promise.all([
     scriptContext.rebuild(),
     styleContext.rebuild(),
