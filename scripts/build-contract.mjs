@@ -2,7 +2,7 @@ export const artifactPaths = Object.freeze({
   directory: "dist",
   main: "dist/main.js",
   manifest: "dist/manifest.json",
-  metafile: "dist/chrono-notes.meta.json",
+  metafile: "build/chrono-notes.meta.json",
   styles: "dist/styles.css",
 });
 

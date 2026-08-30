@@ -9,7 +9,6 @@
     "build": "npm run typecheck && npm run build:bundle && npm run artifact:check",
     "build:bundle": "node esbuild.config.mjs production",
     "artifact:check": "node scripts/check-production-bundle.mjs",
-    "release:archive": "node scripts/release-assets.mjs archive",
     "acceptance:vault:create": "npm run build && node scripts/acceptance-vault.mjs create",
     "acceptance:vault:verify": "node scripts/acceptance-vault.mjs verify",
     "acceptance:vault:clean": "node scripts/acceptance-vault.mjs clean",
@@ -28,8 +27,14 @@
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
     "test:timezones": "node scripts/run-tests-in-timezones.mjs",
-    "check": "node scripts/check-runtime.mjs && npm run lint && npm run format:check && npm run check:readme-i18n && npm run check:docs-i18n && npm run typecheck && npm run test:coverage && npm run build:bundle && npm run artifact:check",
-    "release:check": "node scripts/check-release-version.mjs && npm run check && npm run test:timezones && npm run bench:quick && npm run bench:single-file:large && npm run holiday:check"
+    "release:validate": "node scripts/release.mjs validate",
+    "release:validate-tag": "node scripts/release.mjs validate-tag",
+    "release:candidate": "node scripts/release.mjs candidate",
+    "release:verify-handoff": "node scripts/release.mjs verify-handoff",
+    "release:publish-github": "node scripts/release.mjs publish-github",
+    "release:post-verify": "node scripts/release.mjs post-verify",
+    "check": "node scripts/check-runtime.mjs && npm run lint && npm run format:check && npm run check:readme-i18n && npm run check:docs-i18n && npm run typecheck && npm run test:coverage && npm run build:bundle && npm run artifact:check && npm run release:validate",
+    "release:check": "npm run check && npm run test:timezones && npm run bench:quick && npm run bench:single-file:large && npm run holiday:check && npm run release:validate-tag"
   },
   "keywords": [
     "obsidian",
