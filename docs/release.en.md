@@ -42,7 +42,8 @@ production Vault may change only after separate approval for the exact target.
   private workspace: an independent clone can still install, test, build, and verify its handoff.
 - The candidate enters a one-use isolated Vault. Desktop and the Android surfaces required by the
   current manifest must produce product evidence bound to the same commit, tree, and asset hashes.
-  Automation, emulator, physical-device, and screenshot evidence remain distinct.
+  Automation, Android-emulator, and screenshot evidence remain distinct. Android physical devices
+  and iOS are out of scope.
 - `acceptance-closure.json` says only that the gate passed and fixes
   `authorizesPublication: false`; it cannot create a tag, dispatch a workflow, or publish a Release.
 

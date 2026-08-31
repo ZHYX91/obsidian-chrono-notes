@@ -35,7 +35,8 @@ Release 与正式 Vault 只有在精确目标得到单独授权时才可变更�
 - workspace 从实时活跃清单生成 `plan.json`，在隔离 clone 中用仓库自身命令重建并核对候选；公开仓库
   不依赖该私有 workspace，独立 clone 仍可安装、测试、构建和验证交接。
 - 候选进入一次性隔离 Vault 后，桌面及当前 manifest 要求的 Android 场景必须形成与同一
-  commit/tree/资产哈希绑定的产品证据。自动化、模拟器、实机与截图仍分别记录。
+  commit/tree/资产哈希绑定的产品证据。自动化、Android 模拟器与截图仍分别记录；Android 真机和
+  iOS 不在范围内。
 - `acceptance-closure.json` 只表示门禁通过，并固定 `authorizesPublication: false`；它不能创建标签、
   dispatch workflow 或发布 Release。
 
