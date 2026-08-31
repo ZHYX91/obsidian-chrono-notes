@@ -4,6 +4,7 @@ export default defineConfig({
   test: {
     setupFiles: ["./tests/setup/obsidian-dom.ts"],
     coverage: {
+      exclude: ["scripts/vendor/**"],
       provider: "v8",
       reporter: ["text", "json-summary", "html"],
       thresholds: {
