@@ -127,13 +127,13 @@ ICS core 契约覆盖 UTF-8 BOM、CRLF/LF、折叠行、转义文本、多 `VEVE
 - `npm run bench:quick` 与 `npm run bench:large` 分别生成 1,000/10,000 篇确定性内存数据，记录 opt-in 的 list/read/document-parse/note-derivation/initial/live-commit/materialize/notify 阶段计时，以及 month/week/interval/year/heatmap、农历双扩展与 `Intl` 双扩展的冷/热月装饰、事件风暴、多订阅者和 ICS 状态/内容变化；计时报告 p50/p95/max。8/16/32 初扫矩阵使用受控释放并硬性比较峰值并发、逻辑完成轮次、在途内容量、单路径读取、初始发布次数，并深比较排序后的完整 note entry、task date bucket 与 interval 投影语义，不以聚合数量或墙钟代替正确性。单文件更新 guardrail 在两种规模下反复修改同一篇普通笔记：每次已结算更新固定 1 次读取、1 次物化、1 次发布与 1 次通知，计时统计只包含这些更新样本；p95 更新延迟预算为 1,000 篇 100ms、10,000 篇 250ms，snapshot 物化预算为 10/50ms，通知预算为 25ms；`--expose-gc` 可用时 GC 后 retained heap 增量上限为 64/128 MiB。CI 和发布门禁除快速基准外，还通过 `npm run bench:single-file:large` 单独执行 10,000 篇场景；这些阈值只用于稳定环境捕获数量级退化，不是精确剖析承诺。process `heapUsed` 只是可选 GC 下的 best-effort 同机线索，不能冒充真实宿主 heap snapshot；读取次数、发布次数、最终路径每批最多一次 read、访问 bucket 数和产物大小才适合硬门禁。
 - `npm run holiday:check` 检查当前年与下一年，要求每个 release verdict 都有一手来源核验记录；当年缺失、下一年已发布但未补齐、未核验或状态矛盾以非零状态退出，下一年官方尚未发布则保留 unavailable、输出警告并返回成功。`npm run release:check` 串联自动代码门禁、双时区、快速基准、10,000 篇单文件更新门禁和该节假日门禁；它不代替真实 Obsidian、真实移动端、React Profiler、长任务或 heap snapshot。发布说明必须如实区分自动证据、针对性真实宿主回归和未取得的设备或性能证据。
 
-## 可再生验收 Vault
+## 绑定候选包的验收物化
 
-桌面与 Android 模拟器验收使用同一套自动生成的确定性 Vault。`npm run acceptance:vault:create` 先构建当前生产产物，再在系统临时目录的 `chrono-notes-acceptance/<run-id>/` 下生成唯一 Vault；生成内容包括五类周期笔记、正文与仅 frontmatter 状态、任务进度、调休组合、三条重叠区间、全天/定时/跨日/重复 ICS、多语言历法参考文本，以及周期与区间内置模板创建 canary。夹具关闭创建确认、开启较大周期级联，并把全部周期类型指向同一确定性模板，使桌面和模拟器都能从一次日记创建同时检查目标日期渲染、未知占位符保留、已启用上级周期创建及既有上级笔记不覆盖。默认启用太阳希吉拉历与乌姆库拉历以覆盖多个非公历 provider。`.obsidian` 只启用 Chrono Notes，并部署当前构建的 `main.js`、`manifest.json` 与 `styles.css`。
+桌面与 Android 模拟器验收从同一个精确 Candidate Bundle v3，以及 `acceptance/product-scenarios.json` 声明的静态资源开始。仓库自有夹具提供 Chrono 冒烟笔记及每日、每周笔记。工作区自有的通用物化器先对 Bundle 做源验证，只复制由 Bundle 哈希绑定的产品资源，安装三个精确候选资产，只启用被测插件，并写出宿主专用配置与物化清单。这个公共仓库刻意不包含宿主启动器、Vault 生命周期命令或清理适配器。
 
-每个生成目录都有专用标记和逐文件 SHA-256 清单。`npm run acceptance:vault:verify -- --target <path>` 检查标记、生产版本和所有预期文件；夹具与插件产物仍按字节严格核验，Obsidian 管理的 JSON 改按语义核验，以允许宿主重写格式。核心插件的必需值不得改变，但允许宿主补充自己管理的键。Obsidian 可以增加自己的工作区文件，但不得静默改变生成夹具、插件设置或插件产物。`npm run acceptance:vault:clean -- --target <path>` 只允许删除指定临时根目录下、不是符号链接且带有效标记的单个 Vault。每次创建前还会清理超过七天且满足相同安全条件的残留；无标记目录和根目录外路径始终跳过。失败 Vault 可以暂留诊断，验收闭环成功后必须显式清理。
+共享 acceptance kit 负责隔离 Vault 标记、输入与输出清单、生命周期转换和归档。桌面与 Android 使用各自的宿主 profile 和运行身份，同时保持相同的候选与产品资源哈希。宿主管理的 workspace 状态作为输出记录；不得静默改变冻结的产品夹具、插件设置或候选资产。
 
-固定的用户 Vault、OneDrive Vault、私有 ICS、个人设置和旧工作区不得作为生成输入或提交进仓库。桌面与 Android 必须部署同一个已验证生成目录；模拟器传输、真实 UI 操作、日志采集和结果判定仍属于宿主验收，不因夹具可再生而宣称已自动化。
+固定的用户 Vault、OneDrive Vault、私有 ICS、个人设置和旧工作区不得作为物化输入或提交进仓库。模拟器传输、真实 UI 操作、日志采集和结果判定仍属于宿主验收；确定性物化不等于这些步骤已经自动化。
 
 ## 人工发布门禁
 
