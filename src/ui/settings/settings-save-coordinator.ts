@@ -9,10 +9,22 @@ export interface SettingsSaveCoordinatorOptions {
   readonly clock?: SettingsSaveClock;
 }
 
+export type SettingsSaveStatus =
+  | Readonly<{ readonly state: "idle" }>
+  | Readonly<{ readonly state: "scheduled" }>
+  | Readonly<{ readonly state: "saving" }>
+  | Readonly<{ readonly state: "failed"; readonly error: unknown }>;
+
+export type SettingsSaveStatusListener = (status: SettingsSaveStatus) => void;
+
 const BROWSER_CLOCK: SettingsSaveClock = {
   setTimeout: (callback, delayMs) => window.setTimeout(callback, delayMs),
   clearTimeout: (handle) => window.clearTimeout(handle),
 };
+
+const IDLE_STATUS: SettingsSaveStatus = Object.freeze({ state: "idle" });
+const SCHEDULED_STATUS: SettingsSaveStatus = Object.freeze({ state: "scheduled" });
+const SAVING_STATUS: SettingsSaveStatus = Object.freeze({ state: "saving" });
 
 export class SettingsSaveCoordinator {
   private readonly clock: SettingsSaveClock;
@@ -21,6 +33,9 @@ export class SettingsSaveCoordinator {
   private hasPendingSave = false;
   private pendingTimer: number | null = null;
   private latestSave: Promise<void> = Promise.resolve();
+  private operationRevision = 0;
+  private status: SettingsSaveStatus = IDLE_STATUS;
+  private readonly statusListeners = new Set<SettingsSaveStatusListener>();
 
   constructor(
     private readonly saveSettings: () => Promise<void>,
@@ -32,7 +47,9 @@ export class SettingsSaveCoordinator {
   }
 
   schedule(): void {
+    this.operationRevision += 1;
     this.hasPendingSave = true;
+    this.setStatus(SCHEDULED_STATUS);
     this.cancelPendingTimer();
     this.pendingTimer = this.clock.setTimeout(() => {
       this.pendingTimer = null;
@@ -43,9 +60,52 @@ export class SettingsSaveCoordinator {
   saveNow(): Promise<void> {
     this.cancelPendingTimer();
     this.hasPendingSave = false;
-    const save = this.saveSettings();
-    this.latestSave = save.catch(() => undefined);
-    return save;
+    const operationRevision = ++this.operationRevision;
+    this.setStatus(SAVING_STATUS);
+
+    let save: Promise<void>;
+    try {
+      save = this.saveSettings();
+    } catch (error) {
+      this.recordFailure(operationRevision, error);
+      return Promise.resolve().then(() => {
+        throw error;
+      });
+    }
+
+    const observedSave = save.then(
+      () => {
+        if (operationRevision === this.operationRevision) {
+          this.setStatus(IDLE_STATUS);
+        }
+      },
+      (error: unknown) => {
+        this.recordFailure(operationRevision, error);
+        throw error;
+      },
+    );
+    this.latestSave = observedSave.catch(() => undefined);
+    return observedSave;
+  }
+
+  retry(): Promise<void> {
+    return this.status.state === "failed"
+      ? this.saveNow()
+      : this.latestSave;
+  }
+
+  retryInBackground(): void {
+    void this.retry().catch((error: unknown) => this.reportError(error));
+  }
+
+  getStatus(): SettingsSaveStatus {
+    return this.status;
+  }
+
+  subscribe(listener: SettingsSaveStatusListener): () => void {
+    this.statusListeners.add(listener);
+    listener(this.status);
+    return () => this.statusListeners.delete(listener);
   }
 
   flush(): Promise<void> {
@@ -72,6 +132,22 @@ export class SettingsSaveCoordinator {
       this.onError(error);
     } catch {
       // Background error reporting must not create another rejected promise.
+    }
+  }
+
+  private recordFailure(operationRevision: number, error: unknown): void {
+    if (operationRevision !== this.operationRevision) return;
+    this.setStatus(Object.freeze({ state: "failed", error }));
+  }
+
+  private setStatus(status: SettingsSaveStatus): void {
+    this.status = status;
+    for (const listener of [...this.statusListeners]) {
+      try {
+        listener(status);
+      } catch {
+        // Presentation listeners must not change persistence semantics.
+      }
     }
   }
 

@@ -87,7 +87,11 @@ export function configureNoteIndexCacheSetting(
   setting.addButton((button) => {
     const refreshButton = (): void => {
       const status = context.host.getNoteIndexStatus();
-      buttonDisabled = rebuilding || status === null || !status.active || !status.cacheConfigured;
+      buttonDisabled = context.host.isSettingsReadOnly()
+        || rebuilding
+        || status === null
+        || !status.active
+        || !status.cacheConfigured;
       button
         .setButtonText(rebuilding
           ? t("settings.index.rebuildingAction")

@@ -63,6 +63,16 @@ import type {
 } from "../../src/ui/settings/settings-section-context";
 import { installObsidianDomFactories } from "../setup/obsidian-dom";
 
+function deferred<T>() {
+  let resolve!: (value: T) => void;
+  let reject!: (error: unknown) => void;
+  const promise = new Promise<T>((resolvePromise, rejectPromise) => {
+    resolve = resolvePromise;
+    reject = rejectPromise;
+  });
+  return { promise, resolve, reject };
+}
+
 describe("ChronoNotesSettingTab save orchestration", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -215,6 +225,43 @@ describe("ChronoNotesSettingTab save orchestration", () => {
     });
   });
 
+  it("shows a localized future-schema warning and disables only settings controls", async () => {
+    mocks.renderGeneral.mockImplementationOnce((containerEl: HTMLElement) => {
+      containerEl.append(document.createElement("input"));
+      containerEl.append(document.createElement("select"));
+      containerEl.append(document.createElement("textarea"));
+      containerEl.append(document.createElement("button"));
+    });
+    const { tab, host, saveSettings } = createTab();
+    host.settings.locale = "zh-CN";
+    host.isSettingsReadOnly = () => true;
+
+    tab.display();
+
+    const warningEl = tab.containerEl.querySelector<HTMLElement>(
+      ".chrono-notes-settings-read-only-status",
+    );
+    const panelEl = tab.containerEl.querySelector<HTMLElement>(
+      ".chrono-notes-settings-panel",
+    );
+    expect(warningEl?.textContent).toContain("较新版本");
+    expect(warningEl?.getAttribute("role")).toBe("alert");
+    expect(panelEl?.getAttribute("aria-disabled")).toBe("true");
+    expect([
+      ...(panelEl?.querySelectorAll<
+        HTMLButtonElement | HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+      >("button, input, select, textarea") ?? []),
+    ].every((control) => control.disabled)).toBe(true);
+    expect([
+      ...tab.containerEl.querySelectorAll<HTMLButtonElement>('[role="tab"]'),
+    ].every((control) => !control.disabled)).toBe(true);
+    expect(tab.getSettingDefinitions()).toEqual([]);
+
+    await tab.setControlValue("locale", "en");
+    expect(host.settings.locale).toBe("zh-CN");
+    expect(saveSettings).not.toHaveBeenCalled();
+  });
+
   it("applies locale direction to the declarative 1.13 surface", () => {
     const { tab, host } = createTab();
     host.settings.locale = "ar";
@@ -278,6 +325,72 @@ describe("ChronoNotesSettingTab save orchestration", () => {
     expect(mocks.baseHide).toHaveBeenCalledOnce();
     await vi.advanceTimersByTimeAsync(300);
     expect(saveSettings).toHaveBeenCalledOnce();
+  });
+
+  it("shows a localized failure with explicit retry and keeps session edits", async () => {
+    const error = new Error("disk full");
+    const { tab, host, context, saveSettings } = displayAndGetGeneralContext();
+    host.settings.locale = "zh-CN";
+    tab.display();
+    const localizedContext = mocks.renderGeneral.mock.calls.at(-1)?.[1] as
+      | SettingsSectionContext
+      | undefined;
+    if (localizedContext === undefined) {
+      throw new Error("Expected the localized settings section context.");
+    }
+    saveSettings.mockRejectedValueOnce(error).mockResolvedValueOnce(undefined);
+    host.settings.showNoteNavbar = false;
+
+    await expect(localizedContext.persistSettings()).rejects.toBe(error);
+
+    const statusEl = tab.containerEl.querySelector<HTMLElement>(
+      ".chrono-notes-settings-save-status",
+    );
+    const retryButtonEl = statusEl?.querySelector<HTMLButtonElement>(
+      ".chrono-notes-settings-save-retry",
+    );
+    expect(statusEl).toMatchObject({ hidden: false });
+    expect(statusEl?.getAttribute("role")).toBe("alert");
+    expect(statusEl?.textContent).toContain("设置未能保存");
+    expect(retryButtonEl?.textContent).toBe("重试");
+    expect(retryButtonEl?.disabled).toBe(false);
+    expect(host.settings.showNoteNavbar).toBe(false);
+
+    retryButtonEl?.click();
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(saveSettings).toHaveBeenCalledTimes(2);
+    expect(statusEl).toMatchObject({ hidden: true });
+    expect(host.settings.showNoteNavbar).toBe(false);
+    expect(context.host.settings).toBe(host.settings);
+  });
+
+  it("retains a failed hide flush and shows it when settings reopen", async () => {
+    const pendingSave = deferred<void>();
+    const error = new Error("permission denied");
+    const consoleError = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    const { tab, context, saveSettings } = displayAndGetGeneralContext();
+    saveSettings.mockReturnValueOnce(pendingSave.promise);
+    context.scheduleSettingsSave();
+
+    tab.hide();
+    pendingSave.reject(error);
+    await Promise.resolve();
+    await Promise.resolve();
+    tab.display();
+
+    const statusEl = tab.containerEl.querySelector<HTMLElement>(
+      ".chrono-notes-settings-save-status",
+    );
+    expect(statusEl).toMatchObject({ hidden: false });
+    expect(statusEl?.dataset.state).toBe("failed");
+    expect(statusEl?.getAttribute("role")).toBe("alert");
+    expect(consoleError).toHaveBeenCalledWith(
+      "Chrono Notes: failed to save settings",
+      error,
+    );
+    consoleError.mockRestore();
   });
 
   it("cancels a scheduled timer when the section persists immediately", async () => {
@@ -380,6 +493,7 @@ function createTab(): {
   const settings = createDefaultSettings();
   const host = {
     settings,
+    isSettingsReadOnly: () => false,
     getTranslator: () => createTranslator(settings.locale, "en"),
     saveSettings,
     openIntervalNoteList: vi.fn(),
@@ -403,6 +517,7 @@ function createTab(): {
 
 function displayAndGetGeneralContext(): {
   readonly tab: ChronoNotesSettingTab;
+  readonly host: SettingsHost;
   readonly context: SettingsSectionContext;
   readonly saveSettings: ReturnType<typeof vi.fn<() => Promise<void>>>;
 } {

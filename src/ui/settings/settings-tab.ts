@@ -17,7 +17,10 @@ import {
   type SettingsHost,
   type SettingsSectionContext,
 } from "./settings-section-context";
-import { SettingsSaveCoordinator } from "./settings-save-coordinator";
+import {
+  SettingsSaveCoordinator,
+  type SettingsSaveStatus,
+} from "./settings-save-coordinator";
 import type { SettingsCleanup } from "./settings-cleanup";
 import { createSettingsTabLayout } from "./settings-tab-layout";
 import type { SettingsTabId } from "./settings-tab-navigation";
@@ -42,6 +45,7 @@ export class ChronoNotesSettingTab extends PluginSettingTab {
   private readonly settingsSave: SettingsSaveCoordinator;
   private readonly vaultPathSuggestionCatalog: VaultPathSuggestionCatalog;
   private imperativeSectionCleanup: SettingsCleanup | null = null;
+  private imperativeSaveStatusCleanup: SettingsCleanup | null = null;
   private surfaceRevision = 0;
   private surfaceVisible = false;
   private translator: Translator = createTranslator("en", "en");
@@ -91,6 +95,7 @@ export class ChronoNotesSettingTab extends PluginSettingTab {
   }
 
   override async setControlValue(key: string, value: unknown): Promise<void> {
+    if (this.host.isSettingsReadOnly()) return;
     const surfaceRevision = this.surfaceRevision;
     const mutation = applyDeclarativeControlValue(this.host.settings, key, value);
     if (mutation.persistence === "scheduled") {
@@ -122,6 +127,10 @@ export class ChronoNotesSettingTab extends PluginSettingTab {
     }
   }
 
+  flushSettingsSaveOnUnload(): void {
+    this.settingsSave.close();
+  }
+
   private render(focusTab: SettingsTabId | null): void {
     if (!this.surfaceVisible) return;
     const surfaceRevision = ++this.surfaceRevision;
@@ -141,6 +150,9 @@ export class ChronoNotesSettingTab extends PluginSettingTab {
         this.render(tabId);
       },
     );
+    const settingsReadOnly = this.host.isSettingsReadOnly();
+    if (settingsReadOnly) this.renderReadOnlyStatus(panelEl);
+    this.imperativeSaveStatusCleanup = this.renderSaveStatus(panelEl);
     const sectionContext = this.createSectionContext(undefined, surfaceRevision);
 
     let cleanup: SettingsCleanup | void;
@@ -163,6 +175,7 @@ export class ChronoNotesSettingTab extends PluginSettingTab {
         break;
     }
     this.imperativeSectionCleanup = cleanup ?? null;
+    if (settingsReadOnly) this.disableSettingsControls(panelEl);
 
     if (focusTab !== null) {
       activeTabEl.focus();
@@ -170,6 +183,10 @@ export class ChronoNotesSettingTab extends PluginSettingTab {
   }
 
   private cleanupImperativeSection(): void {
+    const saveStatusCleanup = this.imperativeSaveStatusCleanup;
+    this.imperativeSaveStatusCleanup = null;
+    saveStatusCleanup?.();
+
     const cleanup = this.imperativeSectionCleanup;
     this.imperativeSectionCleanup = null;
     if (cleanup === null) return;
@@ -179,6 +196,72 @@ export class ChronoNotesSettingTab extends PluginSettingTab {
     } catch (error) {
       console.error("Chrono Notes: failed to clean up settings section", error);
     }
+  }
+
+  private renderSaveStatus(containerEl: HTMLElement): SettingsCleanup {
+    const statusEl = containerEl.createDiv({
+      cls: "chrono-notes-settings-save-status",
+    });
+    const messageEl = statusEl.createSpan({
+      cls: "chrono-notes-settings-save-message",
+    });
+    const retryButtonEl = statusEl.createEl("button", {
+      cls: "chrono-notes-settings-save-retry",
+      text: this.translator.t("settings.save.retry"),
+    });
+    retryButtonEl.type = "button";
+    const retry = (): void => this.settingsSave.retryInBackground();
+    retryButtonEl.addEventListener("click", retry);
+
+    const renderStatus = (status: SettingsSaveStatus): void => {
+      statusEl.dataset.state = status.state;
+      statusEl.hidden = status.state === "idle";
+      statusEl.classList.toggle("is-error", status.state === "failed");
+      statusEl.setAttribute("role", status.state === "failed" ? "alert" : "status");
+      statusEl.setAttribute(
+        "aria-live",
+        status.state === "failed" ? "assertive" : "polite",
+      );
+      retryButtonEl.hidden = status.state !== "failed";
+      retryButtonEl.disabled = status.state !== "failed";
+      switch (status.state) {
+        case "scheduled":
+          messageEl.textContent = this.translator.t("settings.save.scheduled");
+          break;
+        case "saving":
+          messageEl.textContent = this.translator.t("settings.save.saving");
+          break;
+        case "failed":
+          messageEl.textContent = this.translator.t("settings.save.failed");
+          break;
+        case "idle":
+        default:
+          messageEl.textContent = "";
+          break;
+      }
+    };
+    const unsubscribe = this.settingsSave.subscribe(renderStatus);
+    return () => {
+      unsubscribe();
+      retryButtonEl.removeEventListener("click", retry);
+    };
+  }
+
+  private renderReadOnlyStatus(containerEl: HTMLElement): void {
+    const statusEl = containerEl.createDiv({
+      cls: "chrono-notes-settings-read-only-status",
+      text: this.translator.t("settings.readOnly.futureSchema"),
+    });
+    statusEl.setAttribute("role", "alert");
+    statusEl.setAttribute("aria-live", "polite");
+  }
+
+  private disableSettingsControls(containerEl: HTMLElement): void {
+    containerEl.setAttribute("aria-disabled", "true");
+    const controls = containerEl.querySelectorAll<
+      HTMLButtonElement | HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+    >("button, input, select, textarea");
+    for (const control of controls) control.disabled = true;
   }
 
   private applySurfaceSemantics(): void {

@@ -133,6 +133,7 @@ export default class ChronoNotesPlugin extends Plugin {
   }
 
   override onunload(): void {
+    this.settingsTab?.flushSettingsSaveOnUnload();
     this.endRuntime();
   }
 
@@ -817,6 +818,10 @@ export default class ChronoNotesPlugin extends Plugin {
 
   getTranslator(): Translator {
     return createTranslator(this.settings.locale, getLanguage());
+  }
+
+  isSettingsReadOnly(): boolean {
+    return this.settingsReadOnly;
   }
 }
 

@@ -85,6 +85,18 @@ describe("index and cache settings", () => {
       "The cache could not be cleared or the note index could not be rebuilt.",
     );
   });
+
+  it("keeps cache maintenance disabled while future settings are read-only", async () => {
+    const harness = createHarness();
+    vi.spyOn(harness.context.host, "isSettingsReadOnly").mockReturnValue(true);
+
+    configureNoteIndexCacheSetting(harness.setting, harness.context);
+    await Promise.resolve();
+    await harness.clickButton();
+
+    expect(harness.setDisabled).toHaveBeenLastCalledWith(true);
+    expect(harness.rebuild).not.toHaveBeenCalled();
+  });
 });
 
 function createHarness() {
@@ -166,6 +178,7 @@ function createHarness() {
     },
   };
   const host = {
+    isSettingsReadOnly: () => false,
     getNoteIndexStatus: () => harness.status,
     subscribeNoteIndex: (listener: () => void) => {
       listeners.add(listener);

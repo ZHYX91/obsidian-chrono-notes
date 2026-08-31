@@ -45,6 +45,24 @@ describe("settings tab layout CSS", () => {
     );
   });
 
+  it("keeps save failures visible without showing an idle status row", () => {
+    expect(styles).toMatch(
+      /\.chrono-notes-settings-save-status\s*\{[^}]*border:\s*1px solid var\(--background-modifier-border\);[^}]*display:\s*flex;/s,
+    );
+    expect(styles).toMatch(
+      /\.chrono-notes-settings-save-status\[hidden\]\s*\{[^}]*display:\s*none;/s,
+    );
+    expect(styles).toMatch(
+      /\.chrono-notes-settings-save-status\.is-error\s*\{[^}]*border-color:\s*var\(--background-modifier-error\);[^}]*color:\s*var\(--text-error\);/s,
+    );
+    expect(styles).toMatch(
+      /\.chrono-notes-settings-save-message\s*\{[^}]*overflow-wrap:\s*anywhere;/s,
+    );
+    expect(styles).toMatch(
+      /\.chrono-notes-settings-read-only-status\s*\{[^}]*border:\s*1px solid var\(--text-warning\);[^}]*color:\s*var\(--text-warning\);[^}]*overflow-wrap:\s*anywhere;/s,
+    );
+  });
+
   it("separates periodic path guidance and validation errors visually", () => {
     expect(styles).toMatch(
       /\.chrono-notes-settings-guide\s*\{[^}]*border-inline-start:\s*3px solid var\(--interactive-accent\);[^}]*box-shadow:\s*none;[^}]*padding:\s*12px 14px;/s,

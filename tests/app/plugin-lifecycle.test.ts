@@ -188,6 +188,7 @@ const mocks = vi.hoisted(() => {
 
   class MockSettingsTab {
     readonly activate = vi.fn();
+    readonly flushSettingsSaveOnUnload = vi.fn();
 
     constructor(_app: unknown, _host: unknown) {
       state.settingsTabInstances.push(this);
@@ -501,6 +502,8 @@ describe("ChronoNotesPlugin lifecycle composition", () => {
 
     plugin.unload();
 
+    expect(mocks.state.settingsTabInstances[0]?.flushSettingsSaveOnUnload)
+      .toHaveBeenCalledOnce();
     expect(stopNotes).toHaveBeenCalledOnce();
     expect(stopIcs).toHaveBeenCalledOnce();
     expect(navbar.unmount).toHaveBeenCalledOnce();
@@ -1240,6 +1243,7 @@ describe("ChronoNotesPlugin lifecycle composition", () => {
     await plugin.onload();
 
     expect(plugin.settings.locale).toBe("zh-CN");
+    expect(plugin.isSettingsReadOnly()).toBe(true);
     expect(mocks.state.saveData).not.toHaveBeenCalled();
     plugin.settings.locale = "en";
     await expect(plugin.saveSettings()).rejects.toThrow(

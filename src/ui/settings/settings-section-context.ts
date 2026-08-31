@@ -12,6 +12,7 @@ import type { VaultPathSuggestionCatalog } from "./vault-path-suggest";
 
 export interface SettingsHost {
   settings: ChronoNotesSettings;
+  isSettingsReadOnly(): boolean;
   getTranslator(): Translator;
   saveSettings(): Promise<void>;
   openIntervalNoteList(): void;

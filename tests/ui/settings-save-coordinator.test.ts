@@ -60,6 +60,30 @@ describe("SettingsSaveCoordinator", () => {
     await coordinator.flush();
 
     expect(saveSettings).toHaveBeenCalledOnce();
+    expect(coordinator.getStatus()).toEqual({ state: "idle" });
+  });
+
+  it("publishes scheduled and saving states before clearing a successful save", async () => {
+    const clock = new FakeClock();
+    const pendingSave = deferred<void>();
+    const coordinator = new SettingsSaveCoordinator(
+      () => pendingSave.promise,
+      { delayMs: 300, onError: vi.fn(), clock },
+    );
+    const states: string[] = [];
+    const unsubscribe = coordinator.subscribe(({ state }) => states.push(state));
+
+    coordinator.schedule();
+    clock.fireAll();
+    expect(states).toEqual(["idle", "scheduled", "saving"]);
+
+    pendingSave.resolve();
+    await coordinator.flush();
+    expect(states).toEqual(["idle", "scheduled", "saving", "idle"]);
+
+    unsubscribe();
+    coordinator.schedule();
+    expect(states).toEqual(["idle", "scheduled", "saving", "idle"]);
   });
 
   it("flushes pending edits immediately and waits for the active save", async () => {
@@ -110,6 +134,54 @@ describe("SettingsSaveCoordinator", () => {
     await Promise.all([firstSave, secondSave]);
   });
 
+  it("keeps only the latest operation responsible for visible save status", async () => {
+    const first = deferred<void>();
+    const second = deferred<void>();
+    const firstError = new Error("older save failed");
+    const saveSettings = vi.fn()
+      .mockReturnValueOnce(first.promise)
+      .mockReturnValueOnce(second.promise);
+    const coordinator = new SettingsSaveCoordinator(saveSettings, {
+      delayMs: 300,
+      onError: vi.fn(),
+      clock: new FakeClock(),
+    });
+
+    const firstSave = coordinator.saveNow();
+    const secondSave = coordinator.saveNow();
+    second.resolve();
+    await secondSave;
+    expect(coordinator.getStatus()).toEqual({ state: "idle" });
+
+    first.reject(firstError);
+    await expect(firstSave).rejects.toBe(firstError);
+    expect(coordinator.getStatus()).toEqual({ state: "idle" });
+  });
+
+  it("retains a failed save for explicit retry and clears it after retry succeeds", async () => {
+    const error = new Error("disk full");
+    let sessionValue = "first edit";
+    const attemptedValues: string[] = [];
+    const saveSettings = vi.fn(async () => {
+      attemptedValues.push(sessionValue);
+      if (attemptedValues.length === 1) throw error;
+    });
+    const coordinator = new SettingsSaveCoordinator(saveSettings, {
+      delayMs: 300,
+      onError: vi.fn(),
+      clock: new FakeClock(),
+    });
+
+    await expect(coordinator.saveNow()).rejects.toBe(error);
+    expect(coordinator.getStatus()).toEqual({ state: "failed", error });
+
+    sessionValue = "latest in-session edit";
+    await coordinator.retry();
+
+    expect(attemptedValues).toEqual(["first edit", "latest in-session edit"]);
+    expect(coordinator.getStatus()).toEqual({ state: "idle" });
+  });
+
   it("reports background failures without changing direct-save rejection semantics", async () => {
     const clock = new FakeClock();
     const error = new Error("disk full");
@@ -123,6 +195,7 @@ describe("SettingsSaveCoordinator", () => {
 
     await expect(coordinator.saveNow()).rejects.toBe(error);
     expect(onError).not.toHaveBeenCalled();
+    expect(coordinator.getStatus()).toEqual({ state: "failed", error });
 
     coordinator.schedule();
     clock.fireAll();
@@ -130,6 +203,7 @@ describe("SettingsSaveCoordinator", () => {
     await Promise.resolve();
     expect(onError).toHaveBeenCalledOnce();
     expect(onError).toHaveBeenCalledWith(error);
+    expect(coordinator.getStatus()).toEqual({ state: "failed", error });
     await expect(coordinator.flush()).resolves.toBeUndefined();
   });
 
@@ -150,6 +224,7 @@ describe("SettingsSaveCoordinator", () => {
     expect(clock.pending).toBe(0);
     expect(onError).toHaveBeenCalledOnce();
     expect(onError).toHaveBeenCalledWith(error);
+    expect(coordinator.getStatus()).toEqual({ state: "failed", error });
   });
 
   it("contains failures from the background error reporter", async () => {
