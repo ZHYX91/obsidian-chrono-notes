@@ -22,7 +22,7 @@
       "steps": [
         "Open the Chrono workspace and navigate between the seeded daily and weekly notes",
         "Open every settings tab and switch language between Follow Obsidian, English, and Simplified Chinese",
-        "Create a note from the seeded template without modifying the fixture notes"
+        "Use the daily-note command and approve its preview to create today's note from the seeded template"
       ],
       "expected": [
         "Calendar selection and periodic-note anchors remain consistent",

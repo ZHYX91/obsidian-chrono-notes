@@ -129,7 +129,7 @@ ICS core 契约覆盖 UTF-8 BOM、CRLF/LF、折叠行、转义文本、多 `VEVE
 
 ## 绑定候选包的验收物化
 
-桌面与 Android 模拟器验收从同一个精确 Candidate Bundle v3，以及 `acceptance/product-scenarios.json` 声明的静态资源开始。仓库自有夹具提供 Chrono 冒烟笔记及每日、每周笔记。工作区自有的通用物化器先对 Bundle 做源验证，只复制由 Bundle 哈希绑定的产品资源，安装三个精确候选资产，只启用被测插件，并写出宿主专用配置与物化清单。这个公共仓库刻意不包含宿主启动器、Vault 生命周期命令或清理适配器。
+桌面与 Android 模拟器验收从同一个精确 Candidate Bundle v3，以及 `acceptance/product-scenarios.json` 声明的静态资源开始。仓库自有夹具提供 Chrono 冒烟笔记、每日与每周笔记、确定性插件设置，以及场景实际使用的周期笔记模板。工作区自有的通用物化器先对 Bundle 做源验证，只复制由 Bundle 哈希绑定的产品资源，安装三个精确候选资产，只启用被测插件，并写出宿主专用配置与物化清单。这个公共仓库刻意不包含宿主启动器、Vault 生命周期命令或清理适配器。
 
 共享 acceptance kit 负责隔离 Vault 标记、输入与输出清单、生命周期转换和归档。桌面与 Android 使用各自的宿主 profile 和运行身份，同时保持相同的候选与产品资源哈希。宿主管理的 workspace 状态作为输出记录；不得静默改变冻结的产品夹具、插件设置或候选资产。
 

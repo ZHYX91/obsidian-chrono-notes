@@ -1,0 +1,73 @@
+{
+  "schemaVersion": 18,
+  "locale": "en",
+  "weekStartDay": "monday",
+  "calendarExtensions": [
+    "chinese-lunar"
+  ],
+  "holidayRegions": [
+    "cn",
+    "sg"
+  ],
+  "showNoteIndicators": true,
+  "quarterNameMode": "number",
+  "fontSizeMode": "immutable",
+  "immutableFontSizeFactor": 10,
+  "showTaskProgress": true,
+  "propertyDateDisplayFormat": "system",
+  "propertyTimeDisplayFormat": "system",
+  "propertyDateCustomFormat": "YYYY-MM-DD dddd",
+  "propertyTimeCustomFormat": "HH:mm",
+  "interceptPropertyDateClicks": true,
+  "showHoverPreview": true,
+  "showNoteNavbar": true,
+  "relatedIntervalNotesCollapsed": false,
+  "firstUseGuideSeen": true,
+  "statisticDisplayDimension": "word-count",
+  "statisticValueStep": 200,
+  "yearViewHeatmap": false,
+  "confirmPeriodicNoteCreation": true,
+  "confirmIntervalNoteCreation": true,
+  "cascadeLargerNotes": false,
+  "templateEngine": "builtin",
+  "periodicNotes": {
+    "daily": {
+      "enabled": true,
+      "pattern": "[Daily]/YYYY-MM-DD",
+      "templatePath": "Templates/Periodic.md"
+    },
+    "weekly": {
+      "enabled": true,
+      "pattern": "[Weekly]/GGGG-[W]WW",
+      "templatePath": "Templates/Periodic.md"
+    },
+    "monthly": {
+      "enabled": false,
+      "pattern": "",
+      "templatePath": ""
+    },
+    "quarterly": {
+      "enabled": false,
+      "pattern": "",
+      "templatePath": ""
+    },
+    "yearly": {
+      "enabled": false,
+      "pattern": "",
+      "templatePath": ""
+    }
+  },
+  "rangeNotes": {
+    "showInCalendar": true,
+    "folder": "Calendar/Range Notes",
+    "templatePath": "",
+    "scanScope": "range-folder",
+    "customFolder": "",
+    "monthViewLimit": 2,
+    "weekViewLimit": 5
+  },
+  "ics": {
+    "enabled": false,
+    "sources": []
+  }
+}
