@@ -2,6 +2,14 @@
 
 Notable changes to Chrono Notes are documented in this file. The repository's numeric Git tags are the evidence for released versions; an entry without a corresponding local tag remains unreleased even if the manifests already contain that version.
 
+## 0.5.1
+
+### Fixed
+
+- Surfaced settings persistence failures with visible save progress and retry controls, and kept
+  settings created by a newer plugin version visibly read-only instead of accepting incompatible
+  edits.
+
 ## 0.5.0
 
 ### Added
