@@ -33,6 +33,8 @@
     "release:verify-handoff": "node scripts/release.mjs verify-handoff",
     "release:publish-github": "node scripts/release.mjs publish-github",
     "release:post-verify": "node scripts/release.mjs post-verify",
+    "clean": "node scripts/clean.mjs",
+    "clean:deps": "node scripts/clean.mjs --deps",
     "check": "node scripts/check-runtime.mjs && npm run lint && npm run format:check && npm run check:readme-i18n && npm run check:docs-i18n && npm run typecheck && npm run test:coverage && npm run build:bundle && npm run artifact:check && npm run release:validate",
     "release:check": "npm run check && npm run test:timezones && npm run bench:quick && npm run bench:single-file:large && npm run holiday:check && npm run release:validate-tag"
   },
