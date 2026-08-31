@@ -11,7 +11,7 @@ translation_status: source
 
 插件 ID 为 `chrono-notes`，标准生产产物为 `dist/main.js`、`dist/manifest.json` 与 `dist/styles.css`，构建分析文件写入非发布目录 `build/chrono-notes.meta.json`。相邻参考项目只作为只读需求、算法和回归样例来源，不属于运行时依赖，也不接收本仓库修改；产品范围以当前需求与功能清单为准。
 
-发布工具由仓库内精确锁定的 release-core runtime、薄适配器和声明式配置组成；独立 clone 不依赖私有 workspace。workflow 只响应显式 `workflow_dispatch`：默认 `verify` 保持只读，`publish` 才可进入下游写权限 job。确定性 `candidate.json` 绑定 commit、tree、目标标签名称/提交、核心身份和全部资产哈希；实际标签观测态留在 tag-aware 门禁，因此同提交标签出现不会改变候选字节。workspace 另以便携 acceptance closure 与独立 authorization 绑定同一候选，普通标签 push 不发布。
+发布工具由仓库内精确锁定的 release-core 2.0 runtime、薄适配器、声明式配置和生成后签入的 standalone workflow 组成；独立 clone 不依赖私有 workspace。workflow 只响应显式 `workflow_dispatch`：默认 `verify` 保持只读，`publish` 才可进入下游写权限 job。唯一 Candidate Bundle v3 绑定 commit、tree、核心/config/workflow/工具链身份、产品 payload、场景合同和全部资产哈希。verify job 只执行一次完整 CI 重建与 source verification；下游只对下载的同一 Bundle 做 transport verification。便携 acceptance closure 与独立 authorization 绑定该 Bundle，普通标签 push 不发布。
 
 首次 attestation 前的只读 GitHub 预检与发布后核验都必须验证精确标签目标、四项附件字节与 provenance；同标签 Release 只有在 immutable 稳定状态和全部身份已经完全一致时才是零写入安全 no-op。数字稳定版本标签 ruleset 与 GitHub Release immutability 是管理员控制的外部前置，仓库 workflow 只记录和依赖这些设置，不读取或修改管理配置。
 

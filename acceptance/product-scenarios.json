@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 1,
+  "kind": "obsidian-plugin/product-scenarios-v1",
+  "pluginId": "chrono-notes",
+  "materializer": {
+    "kind": "copy-v1",
+    "roots": [
+      {
+        "source": "acceptance/fixtures",
+        "target": ""
+      }
+    ]
+  },
+  "scenarios": [
+    {
+      "id": "periodic-navigation-and-settings",
+      "title": "Periodic-note navigation and tabbed settings",
+      "surfaces": [
+        "desktop",
+        "android-emulator"
+      ],
+      "steps": [
+        "Open the Chrono workspace and navigate between the seeded daily and weekly notes",
+        "Open every settings tab and switch language between Follow Obsidian, English, and Simplified Chinese",
+        "Create a note from the seeded template without modifying the fixture notes"
+      ],
+      "expected": [
+        "Calendar selection and periodic-note anchors remain consistent",
+        "The imperative tabbed settings surface remains complete and usable",
+        "Template creation is previewable and creates only the requested note"
+      ]
+    }
+  ]
+}
