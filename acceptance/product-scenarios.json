@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 1,
-  "kind": "obsidian-plugin/product-scenarios-v1",
+  "schemaVersion": 2,
+  "kind": "obsidian-plugin/product-scenarios-v2",
   "pluginId": "chrono-notes",
   "materializer": {
     "kind": "copy-v1",
@@ -19,6 +19,10 @@
         "desktop",
         "android-emulator"
       ],
+      "requiredCapabilities": {
+        "desktop": [],
+        "android-emulator": []
+      },
       "steps": [
         "Open the Chrono workspace and navigate between the seeded daily and weekly notes",
         "Open every settings tab and switch language between Follow Obsidian, English, and Simplified Chinese",
