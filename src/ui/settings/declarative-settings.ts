@@ -722,6 +722,7 @@ function getRangeDefinitions(
     },
     {
       name: t("settings.ranges.scanScope"),
+      desc: t("settings.ranges.scanScopeDesc"),
       control: {
         type: "dropdown",
         key: "rangeNotes.scanScope",

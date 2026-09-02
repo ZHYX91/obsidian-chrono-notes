@@ -171,6 +171,33 @@ describe("selectNoteNavbarContext", () => {
       ?.relatedIntervals).toEqual([]);
   });
 
+  it("keeps explicit related ranges outside the unmarked recognition scope", () => {
+    const value = settings();
+    value.rangeNotes.scanScope = "range-folder";
+    value.rangeNotes.folder = "Ranges";
+    const source = snapshot({
+      "Ranges/unmarked.md": "---\nstart: 2026-01-01\nend: 2026-01-02\n---",
+      "Other/explicit.md": [
+        "---",
+        "chrono-notes: interval",
+        "start: 2026-01-03",
+        "end: 2026-01-04",
+        "---",
+      ].join("\n"),
+      "Other/unmarked.md": "---\nstart: 2026-01-05\nend: 2026-01-06\n---",
+    });
+
+    expect(selectNoteNavbarContext("Weekly/2026-01.md", source, {
+      locale: "en-US",
+      weekStartDay: "monday",
+      periodicNotes: value.periodicNotes,
+      rangeNotes: value.rangeNotes,
+    })?.relatedIntervals.map((item) => item.path)).toEqual([
+      "Ranges/unmarked.md",
+      "Other/explicit.md",
+    ]);
+  });
+
   it("keeps related ranges independent from calendar-bar visibility and carries statistics", () => {
     const value = settings();
     value.rangeNotes.showInCalendar = false;

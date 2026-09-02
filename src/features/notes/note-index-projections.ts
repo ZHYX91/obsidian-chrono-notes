@@ -1,4 +1,7 @@
-import type { NoteIntervalBoundary } from "../../core/note/note-interval";
+import type {
+  NoteIntervalBoundary,
+  NoteIntervalRecognition,
+} from "../../core/note/note-interval";
 import type { NoteStatistics } from "../../core/note/note-statistics";
 import type { NoteTask } from "../../core/note/note-tasks";
 import type { IndexedNote } from "./indexed-note";
@@ -25,6 +28,7 @@ export interface TaskDateIndexSnapshot {
 export interface IntervalNoteRef {
   readonly path: string;
   readonly title: string;
+  readonly recognition: NoteIntervalRecognition;
   readonly start: NoteIntervalBoundary;
   readonly end: NoteIntervalBoundary;
   readonly dayCount: number;
@@ -277,6 +281,7 @@ function collectIntervalNoteRef(note: IndexedNote): IntervalNoteRef | null {
   return Object.freeze({
     path: note.path,
     title: getTitle(note.path),
+    recognition: note.interval.recognition,
     start: note.interval.start,
     end: note.interval.end,
     dayCount: note.interval.dayCount,
@@ -291,6 +296,7 @@ function areIntervalNoteRefsEqual(
   if (left === null || right === null) return left === right;
   return left.path === right.path &&
     left.title === right.title &&
+    left.recognition === right.recognition &&
     areIntervalBoundariesEqual(left.start, right.start) &&
     areIntervalBoundariesEqual(left.end, right.end) &&
     left.dayCount === right.dayCount &&

@@ -170,6 +170,19 @@ describe("imperative settings cleanup", () => {
     )).toBe(true);
   });
 
+  it("explains explicit and unmarked range-note recognition before controls", () => {
+    const container = document.createElement("div");
+
+    renderRangeSettingsSection(container, createContext());
+
+    const guide = container.querySelector<HTMLElement>(".chrono-notes-settings-guide");
+    expect(guide?.getAttribute("role")).toBe("note");
+    expect(guide?.textContent).toContain("Range-note recognition rules");
+    expect(guide?.textContent).toContain("chrono-notes: interval");
+    expect(guide?.textContent).toContain("does not modify existing notes automatically");
+    expect(container.firstElementChild).toBe(guide);
+  });
+
   it("runs every cleanup in reverse order before reporting the first failure", () => {
     const order: string[] = [];
     const cleanup = combineSettingsCleanups([

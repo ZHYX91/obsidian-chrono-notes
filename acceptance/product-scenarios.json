@@ -33,6 +33,28 @@
         "The imperative tabbed settings surface remains complete and usable",
         "Template creation is previewable and creates only the requested note"
       ]
+    },
+    {
+      "id": "range-note-identity-and-settings",
+      "title": "Explicit and unmarked range-note recognition",
+      "surfaces": [
+        "desktop",
+        "android-emulator"
+      ],
+      "requiredCapabilities": {
+        "desktop": [],
+        "android-emulator": []
+      },
+      "steps": [
+        "Open the Range notes settings tab and read the recognition guide and unmarked-note scope",
+        "Open the range-note list with the default range-folder scope",
+        "Create a range note and inspect its Properties"
+      ],
+      "expected": [
+        "The guide states that chrono-notes: interval is recognized across the Vault and that unmarked notes use the configured scope",
+        "The seeded explicit note outside the range folder and the unmarked note inside it are listed, while the seeded note with chrono-notes: daily is excluded",
+        "The new note contains chrono-notes: interval with canonical start and end properties"
+      ]
     }
   ]
 }

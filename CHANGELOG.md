@@ -2,7 +2,19 @@
 
 Notable changes to Chrono Notes are documented in this file. The repository's numeric Git tags are the evidence for released versions; an entry without a corresponding local tag remains unreleased even if the manifests already contain that version.
 
-## 0.5.1
+## 0.6.0
+
+### Added
+
+- Added the `chrono-notes: interval` identity property so explicitly marked range notes are
+  recognized anywhere in the Vault.
+- Added a localized Range notes guide that explains explicit identity, unmarked-note scope, and
+  the no-migration behavior.
+
+### Changed
+
+- New range notes now write `chrono-notes: interval` with canonical `start` and `end`; existing
+  notes remain unchanged and continue to use the configured unmarked range-note scope.
 
 ### Fixed
 

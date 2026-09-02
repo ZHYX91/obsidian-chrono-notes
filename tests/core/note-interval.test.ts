@@ -17,6 +17,7 @@ describe("parseNoteInterval", () => {
     expect(result).toMatchObject({
       error: null,
       value: {
+        recognition: "unmarked",
         start: {
           value: "2026-12-31",
           date: { year: 2026, month: 12, day: 31 },
@@ -37,6 +38,29 @@ describe("parseNoteInterval", () => {
     expect(Object.isFrozen(result.value)).toBe(true);
     expect(Object.isFrozen(result.value?.start)).toBe(true);
     expect(Object.isFrozen(result.value?.start.date)).toBe(true);
+  });
+
+  it("distinguishes explicit intervals and excludes every other explicit value", () => {
+    expect(parseNoteInterval({
+      "chrono-notes": "interval",
+      start: "2026-05-01",
+      end: "2026-05-02",
+    }).value).toMatchObject({ recognition: "explicit", dayCount: 2 });
+
+    for (const value of ["daily", "Interval", "", null, ["interval"]]) {
+      expect(parseNoteInterval({
+        "chrono-notes": value,
+        start: "2026-05-01",
+        end: "2026-05-02",
+      })).toEqual({ value: null, error: null });
+    }
+  });
+
+  it("reports missing boundaries for an explicitly marked interval", () => {
+    const result = parseNoteInterval({ "chrono-notes": "interval" });
+
+    expect(result.value).toBeNull();
+    expect(result.error).toMatchObject({ reason: "missing-boundary" });
   });
 
   it("accepts same-day ranges and trims quoted values", () => {

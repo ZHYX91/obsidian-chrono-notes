@@ -22,6 +22,10 @@ function range(start: string, end: string): string {
   return `---\nstart: ${start}\nend: ${end}\n---`;
 }
 
+function explicitRange(start: string, end: string): string {
+  return `---\nchrono-notes: interval\nstart: ${start}\nend: ${end}\n---`;
+}
+
 const SETTINGS: RangeNoteSettings = {
   showInCalendar: true,
   folder: "Ranges",
@@ -101,6 +105,34 @@ describe("interval note queries", () => {
       "Projects/custom.md",
       "Ranges/zeta.md",
     ]);
+  });
+
+  it("recognizes explicit intervals anywhere while scoping only unmarked notes", () => {
+    const source = snapshot({
+      "Ranges/unmarked-in-scope.md": range("2026-05-03", "2026-05-04"),
+      "Other/unmarked-outside.md": range("2026-05-05", "2026-05-06"),
+      "Other/explicit.md": explicitRange("2026-05-01", "2026-05-02"),
+      "Ranges/excluded.md": [
+        "---",
+        "chrono-notes: daily",
+        "start: 2026-05-07",
+        "end: 2026-05-08",
+        "---",
+      ].join("\n"),
+    });
+
+    expect(selectIntervalNotes(source, SETTINGS).items.map((item) => [
+      item.path,
+      item.recognition,
+    ])).toEqual([
+      ["Other/explicit.md", "explicit"],
+      ["Ranges/unmarked-in-scope.md", "unmarked"],
+    ]);
+    expect(selectIntervalNotes(source, {
+      ...SETTINGS,
+      folder: "",
+      scanScope: "range-folder",
+    }).items.map((item) => item.path)).toEqual(["Other/explicit.md"]);
   });
 
   it("returns before touching notes when the configured scope folder is empty", () => {

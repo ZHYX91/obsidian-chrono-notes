@@ -196,7 +196,9 @@ describe("IntervalNoteCommands", () => {
     });
     expect(ports.files.create).toHaveBeenCalledWith(
       "Ranges/2026-05-06 - 2026-05-08.md",
-      expect.stringContaining("start: 2026-05-06\nend: 2026-05-08"),
+      expect.stringContaining(
+        "chrono-notes: interval\nstart: 2026-05-06\nend: 2026-05-08",
+      ),
     );
     expect(ports.workspace.open).toHaveBeenCalledWith(
       "Ranges/2026-05-06 - 2026-05-08.md",
@@ -243,7 +245,7 @@ describe("IntervalNoteCommands", () => {
       expect.stringContaining("start: 2026-07-01\nend: 2026-07-07"),
     );
     expect(ports.contents.get("Ranges/2026-07-01 - 2026-07-07.md")).toContain(
-      "start: 2026-07-01\nproject: travel\nend: 2026-07-07",
+      "start: 2026-07-01\nproject: travel\nchrono-notes: interval\nend: 2026-07-07",
     );
   });
 
@@ -332,7 +334,7 @@ describe("IntervalNoteCommands", () => {
     expect(renderAfterCreate).toHaveBeenCalledWith(path);
     expect(ports.files.finalize).toHaveBeenCalledOnce();
     expect(ports.contents.get(path)).toContain(
-      "start: 2026-07-01\nproject: travel\nend: 2026-07-07",
+      "start: 2026-07-01\nproject: travel\nchrono-notes: interval\nend: 2026-07-07",
     );
   });
 

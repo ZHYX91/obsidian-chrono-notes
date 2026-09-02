@@ -49,6 +49,7 @@ Vault create/modify/rename/delete
 
 ### 3.1 Data contracts
 
+- Range identity is part of the derived range value: `chrono-notes: interval` is explicit, an absent `chrono-notes` property is unmarked compatibility, and every other explicit value excludes the note without folder-scope fallback. Both recognizable identities still pass the same strict `start`/`end` validation.
 - `NoteSource` exposes only Markdown path enumeration, complete-text reads, and normalized event subscriptions; it does not leak `TFile` or Vault objects.
 - `ParsedNote` combines a path, structured frontmatter, parse failures, preview, embed-type counts, tasks, statistics, and one `parseNoteDocument()` result as a recursively frozen value. Preview text and embed counts share one body pass: actual `![[...]]` / `![...](...)` embeds leave the excerpt and increment image, PDF, audio, video, note, or other counts, while ordinary links retain their visible text. Only counts are retained; embedded notes are never recursively read. No derived field may introduce another read path. The YAML root must be a mapping; syntax failures, type failures, and alias-expansion limits remain note-local parse failures rather than masquerading as Vault read failures. Tasks are extracted only from normalized body content while preserving original file line numbers and the supported Tasks emoji date-marker semantics.
 - `IndexedNote` is the recursively frozen query-facing subset of `ParsedNote`: path, content state, range, preview, embed counts, tasks, and statistics. It intentionally excludes the source document and frontmatter so neither can enter the persistent derived-data cache. NoteIndex retains canonical parsed documents only in private memory for same-document live-update suppression.
@@ -73,6 +74,8 @@ Vault create/modify/rename/delete
 - `NoteIndexSnapshot.taskDates` and `NoteIndexSnapshot.intervals` are incremental immutable sub-snapshots owned exclusively by NoteIndex. Initial and live publication both pass the batch's final per-path contributions once to `replaceBatch()`: task projection copies and sorts each affected bucket once, while interval projection sorts once after every contribution in the batch has been replaced. A sub-snapshot changes revision and identity only for a real domain change; a no-op batch retains its existing buckets, array, and sub-snapshot identity. Neither projection is a separate manager or a second owner of Vault facts.
 
 ## 5. Commands, queries, and UI
+
+Canonical range metadata always includes `chrono-notes: interval` plus canonical `start` and `end`, and is enforced only for new range notes and their creation-time template finalization; the plugin does not scan, migrate, or rewrite existing notes. Folder-scope filtering below applies only to unmarked valid ranges, while explicit valid ranges always bypass it.
 
 The app composition root obtains Obsidian's configured interface language through the public `getLanguage()` API and injects one translator contract into settings, calendar, Navbar, commands, and modals. In `auto`, the host language is authoritative; browser and operating-system locales are not consulted.
 

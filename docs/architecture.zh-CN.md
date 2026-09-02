@@ -48,6 +48,7 @@ Vault create/modify/rename/delete
 
 ### 3.1 数据契约
 
+- 区间身份是区间派生值的一部分：`chrono-notes: interval` 表示明确标记，没有 `chrono-notes` 属性表示未标记兼容，任何其他显式值都排除该笔记且不得回退到目录范围。两类可识别身份仍必须通过同一套严格 `start`/`end` 校验。
 - `NoteSource` 只暴露 Markdown 相对路径枚举、完整文本读取和归一化事件订阅，不泄露 `TFile` 或 Vault。
 - `ParsedNote` 把路径、结构化 frontmatter、解析错误、预览、嵌入类型计数、任务和统计与一次 `parseNoteDocument()` 的结果聚合为递归冻结值。正文摘要与嵌入计数共用一次正文扫描：真正的 `![[...]]` / `![...](...)` 嵌入从摘要移除并分别计入图片、PDF、音频、视频、嵌入笔记或其他附件，普通链接仍保留可见文字；索引只保存数量，不递归读取嵌入笔记。任何派生字段都不能另起读取通道。YAML 根节点必须是 mapping；语法错误、类型错误和别名展开上限作为笔记内解析错误保留，不得误报为 Vault 读取失败。任务只从规范化正文提取，并保留原文件行号与受支持的 Tasks emoji 日期标记语义。
 - `IndexedNote` 是 `ParsedNote` 面向查询的递归冻结子集，只包含路径、内容状态、区间、预览、嵌入计数、任务与统计；它刻意排除源文档和 frontmatter，确保两者不会进入持久化派生缓存。NoteIndex 只在私有内存中保留规范解析文档，用于实时更新的同文档短路。
@@ -72,6 +73,8 @@ Vault create/modify/rename/delete
 - `NoteIndexSnapshot.taskDates` 与 `NoteIndexSnapshot.intervals` 是 NoteIndex 独占维护的增量、不可变子快照；initial 与 live publication 都把该批最终逐路径贡献一次交给 `replaceBatch()`，任务投影只复制并排序受影响 bucket 一次，区间投影只在整批贡献替换完成后统一排序一次，避免逐文件反复复制。只有对应领域贡献真实变化时才更换自身 revision/identity；无变化批次保留既有 bucket、数组和子快照身份。它们不是独立 Manager，也不拥有第二份 Vault 事实。
 
 ## 5. 命令、查询与 UI
+
+规范区间元数据固定包含 `chrono-notes: interval` 与规范 `start`/`end`，只在新建区间笔记及其创建期模板最终写入中强制合并；插件不扫描、迁移或改写既有笔记。下文的目录范围过滤只适用于未标记有效区间，明确标记的有效区间始终绕过目录范围。
 
 - 查询侧由 NoteIndex 和其他只读索引提供不可变快照。
 - 命令侧由用例处理创建、打开、模板、任务改期和区间笔记写入。

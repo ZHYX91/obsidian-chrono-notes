@@ -17,10 +17,13 @@ export interface NoteIntervalBoundary {
 }
 
 export interface NoteInterval {
+  readonly recognition: NoteIntervalRecognition;
   readonly start: NoteIntervalBoundary;
   readonly end: NoteIntervalBoundary;
   readonly dayCount: number;
 }
+
+export type NoteIntervalRecognition = "explicit" | "unmarked";
 
 export interface NoteIntervalParseFailure {
   readonly name: "NoteIntervalError";
@@ -34,6 +37,8 @@ export interface ParsedNoteInterval {
 }
 
 const EMPTY_RESULT: ParsedNoteInterval = Object.freeze({ value: null, error: null });
+export const CHRONO_NOTES_PROPERTY = "chrono-notes";
+export const CHRONO_NOTES_INTERVAL_VALUE = "interval";
 const COMPLETE_DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/u;
 const COMPLETE_DATE_TIME_PATTERN =
   /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2}(?:[.,]\d+)?)?(?:Z|[+-]\d{2}(?::?\d{2})?)?$/u;
@@ -42,13 +47,23 @@ export function parseNoteInterval(
   frontmatter: Readonly<Record<string, unknown>> | null,
 ): ParsedNoteInterval {
   if (frontmatter === null) return EMPTY_RESULT;
+  const hasChronoNotes = Object.hasOwn(frontmatter, CHRONO_NOTES_PROPERTY);
+  if (
+    hasChronoNotes &&
+    frontmatter[CHRONO_NOTES_PROPERTY] !== CHRONO_NOTES_INTERVAL_VALUE
+  ) {
+    return EMPTY_RESULT;
+  }
   const hasStart = Object.hasOwn(frontmatter, "start");
   const hasEnd = Object.hasOwn(frontmatter, "end");
-  if (!hasStart && !hasEnd) return EMPTY_RESULT;
+  if (!hasStart && !hasEnd && !hasChronoNotes) return EMPTY_RESULT;
   if (!hasStart || !hasEnd) {
+    const missing = !hasStart && !hasEnd
+      ? "start and end"
+      : hasStart ? "end" : "start";
     return failure(
       "missing-boundary",
-      `Interval frontmatter requires both start and end properties; missing ${hasStart ? "end" : "start"}`,
+      `Interval frontmatter requires both start and end properties; missing ${missing}`,
     );
   }
 
@@ -67,6 +82,7 @@ export function parseNoteInterval(
 
   return Object.freeze({
     value: Object.freeze({
+      recognition: hasChronoNotes ? "explicit" : "unmarked",
       start: start.value,
       end: end.value,
       dayCount: Math.floor(calendarOrder) + 1,

@@ -59,6 +59,14 @@ Back up and preserve `Vault/.obsidian/plugins/chrono-notes/data.json` when it ex
 3. Optionally enable calendar and holiday extensions or add local ICS sources.
 4. Select a date to open or create its periodic note.
 
+### Range-note recognition
+
+A range note must contain valid `start` and `end` properties. New range notes created by Chrono
+Notes also write `chrono-notes: interval` and are recognized anywhere in the Vault. A note without
+the `chrono-notes` property is recognized only within the configured unmarked range-note scope. A
+different `chrono-notes` value excludes the note from range-note recognition. Existing notes are
+not modified automatically.
+
 ## Settings
 
 Settings cover periodic-note paths and templates, calendar and holiday extensions, task and statistics display, local ICS sources, time-range notes, and Obsidian Date and Date & time property display. Defaults are stored in the plugin's `data.json`; note content and frontmatter remain in the Vault.

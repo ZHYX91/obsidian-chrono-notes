@@ -74,6 +74,12 @@ describe("settings tab layout CSS", () => {
       /\.chrono-notes-settings-guide-body\s*\{[^}]*max-inline-size:\s*68ch;/s,
     );
     expect(styles).toMatch(
+      /\.chrono-notes-settings-guide-body ul\s*\{[^}]*padding-inline-start:\s*20px;/s,
+    );
+    expect(styles).toMatch(
+      /\.chrono-notes-settings-guide-body code\s*\{[^}]*overflow-wrap:\s*anywhere;/s,
+    );
+    expect(styles).toMatch(
       /\.chrono-notes-periodic-path-feedback\.is-error\s*\{[^}]*color:\s*var\(--text-error\);/s,
     );
   });

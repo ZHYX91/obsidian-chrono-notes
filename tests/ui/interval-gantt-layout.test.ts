@@ -231,6 +231,7 @@ button:not(.clickable-icon) {
       items: [0, 1, 2].map((lane) => ({
         path: `Ranges/lane-${lane}.md`,
         title: `Lane ${lane + 1}`,
+        recognition: "unmarked",
         start: interval!.start,
         end: interval!.end,
         dayCount: interval!.dayCount,
@@ -247,6 +248,7 @@ button:not(.clickable-icon) {
       hiddenItems: [{
         path: "Ranges/hidden.md",
         title: "Hidden lane",
+        recognition: "unmarked",
         start: interval!.start,
         end: interval!.end,
         dayCount: interval!.dayCount,
@@ -298,6 +300,7 @@ button:not(.clickable-icon) {
       items: [{
         path: "Ranges/continuing.md",
         title: "Continuing lane",
+        recognition: "unmarked",
         start: interval!.start,
         end: interval!.end,
         dayCount: interval!.dayCount,
@@ -403,6 +406,7 @@ button:not(.clickable-icon) {
       items: [{
         path: "Ranges/planning.md",
         title: "Planning",
+        recognition: "unmarked",
         start: interval!.start,
         end: interval!.end,
         dayCount: interval!.dayCount,
@@ -426,6 +430,7 @@ button:not(.clickable-icon) {
       hiddenItems: [{
         path: "Ranges/hidden-follow-up.md",
         title: "Hidden follow-up",
+        recognition: "unmarked",
         start: interval!.start,
         end: interval!.end,
         dayCount: interval!.dayCount,

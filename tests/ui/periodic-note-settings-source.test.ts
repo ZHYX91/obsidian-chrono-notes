@@ -113,6 +113,10 @@ describe("periodic note settings structure", () => {
   it("uses one accessible settings-guide structure for path and template help", () => {
     expect(periodicSectionSource).toContain("createSettingsGuide");
     expect(templateSectionSource).toContain("createSettingsGuide");
+    expect(rangeSectionSource).toContain("createSettingsGuide");
+    expect(rangeSectionSource).toContain("settings.ranges.recognitionGuideTitle");
+    expect(rangeSectionSource).toContain("chrono-notes: interval");
+    expect(rangeSectionSource).toContain("settings.ranges.scanScopeDesc");
     expect(settingsGuideSource).toContain('attr: { role: "note" }');
     expect(settingsGuideSource).toContain('setIcon(iconEl, "info")');
     expect(settingsGuideSource).toContain("chrono-notes-settings-guide-heading");

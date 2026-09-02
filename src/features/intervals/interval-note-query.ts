@@ -73,19 +73,14 @@ export function selectIntervalNotesFromProjection(
   snapshotVersion = intervals.revision,
 ): IntervalNoteQuery {
   const scopeFolder = getIntervalNoteScanFolder(settings);
-  if (scopeFolder === "") {
-    return Object.freeze({
-      snapshotVersion,
-      items: EMPTY_INTERVAL_ITEMS,
-    });
-  }
   const items = scopeFolder === null
     ? intervals.items
     : Object.freeze(intervals.items.filter((item) =>
-        isPathInFolder(item.path, scopeFolder)));
+        item.recognition === "explicit" ||
+        (scopeFolder !== "" && isPathInFolder(item.path, scopeFolder))));
   return Object.freeze({
     snapshotVersion,
-    items,
+    items: items.length === 0 ? EMPTY_INTERVAL_ITEMS : items,
   });
 }
 

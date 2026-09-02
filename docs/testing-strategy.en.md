@@ -12,6 +12,8 @@ Testing is layered: pure core unit tests, port contracts, feature integrations, 
 
 ## Critical invariants
 
+The range-identity regression matrix covers `chrono-notes: interval` outside scope, an absent `chrono-notes` property only inside configured scope, every other explicit value excluded even inside scope, and invalid `start`/`end` excluded for every identity. References below to “minimal `start/end` Markdown” now include `chrono-notes: interval`; the three scope cases constrain only unmarked ranges. Creation and template tests prove that new notes write the identity property while existing notes receive no background migration or rewrite. Cache tests reject old-schema or contradictory identity data. Settings tests pin the leading guide, the renamed scope, and copy that the scope affects only notes without `chrono-notes`.
+
 Critical invariants include equivalent BOM/line-ending/frontmatter inputs producing the same state, stale asynchronous work never overwriting a newer revision, complete Vault event convergence, shared month/year statistics semantics, reversible periodic path rules, and independent mutable setting arrays and nested configuration objects.
 
 Every bug fix starts with a reproduction. Coverage reveals gaps but does not replace contract tests.
@@ -121,6 +123,8 @@ A separate focus-visible source contract pins the plugin outer frame for buttons
 - `npm run holiday:check` checks the current and following year and requires primary-source verification for every release verdict. A missing current year, a published-but-unrecorded following year, an unverified source, or a contradictory state exits nonzero; a following year verified as not yet officially published remains unavailable, emits a warning, and succeeds. `npm run release:check` combines automated code gates, both time zones, the quick benchmark, the targeted 10,000-note single-file update guardrail, and this holiday gate. It does not replace real Obsidian, real mobile, React Profiler, long-task, or heap-snapshot evidence. Release notes must distinguish automated evidence, targeted real-host regression, and device or performance evidence that was not obtained.
 
 ## Bundle-bound acceptance materialization
+
+Repository fixtures also provide an in-scope unmarked range, an out-of-scope `chrono-notes: interval` range, and an in-scope range with another explicit value. The same desktop and Android-emulator scenario verifies that the first two are visible, the last is excluded, the settings guide is readable, and new range creation writes all three canonical properties.
 
 Desktop and Android-emulator acceptance start from the same exact Candidate Bundle v3 and the static resources declared by `acceptance/product-scenarios.json`. The repository-owned fixtures seed the Chrono smoke note, daily and weekly notes, deterministic plugin settings, and the periodic-note template exercised by the scenario. The workspace-owned generic materializer source-verifies the Bundle, copies only Bundle-hashed product resources, installs the three exact candidate assets, enables only the tested plugin, and writes a host-specific configuration and materialization manifest. This public repository deliberately contains no host launcher, Vault lifecycle command, or cleanup adapter.
 

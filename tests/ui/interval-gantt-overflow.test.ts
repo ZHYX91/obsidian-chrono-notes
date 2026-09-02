@@ -29,6 +29,7 @@ describe("IntervalGantt overflow", () => {
       hiddenItems: [{
         path: "Ranges/hidden.md",
         title: "Hidden range",
+        recognition: "unmarked",
         start: interval.start,
         end: interval.end,
         dayCount: interval.dayCount,

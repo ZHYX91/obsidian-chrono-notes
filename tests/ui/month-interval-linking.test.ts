@@ -31,6 +31,7 @@ const monthQuery = vi.hoisted(() => {
   const planning = Object.freeze({
     path: "Ranges/Planning.md",
     title: "Planning",
+    recognition: "unmarked",
     start,
     end,
     dayCount: 14,
@@ -42,6 +43,7 @@ const monthQuery = vi.hoisted(() => {
     ...planning,
     path: "Ranges/Review.md",
     title: "Review",
+    recognition: "unmarked",
     lane: 1,
     colorIndex: 2,
   });

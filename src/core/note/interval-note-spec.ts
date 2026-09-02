@@ -2,6 +2,10 @@ import { isMap, parseDocument } from "yaml";
 
 import { parseNoteDocument } from "../document/parse-note-document";
 import {
+  CHRONO_NOTES_INTERVAL_VALUE,
+  CHRONO_NOTES_PROPERTY,
+} from "./note-interval";
+import {
   formatLocalDateKey,
   toDateTime,
   toLocalDate,
@@ -54,6 +58,7 @@ export function buildIntervalNoteSpec(
 export function buildIntervalNoteContent(spec: IntervalNoteSpec): string {
   return [
     "---",
+    `${CHRONO_NOTES_PROPERTY}: ${CHRONO_NOTES_INTERVAL_VALUE}`,
     `start: ${formatLocalDateKey(spec.start)}`,
     `end: ${formatLocalDateKey(spec.end)}`,
     "---",
@@ -81,6 +86,7 @@ export function applyIntervalNoteMetadata(
     throw new RangeError("Interval note template frontmatter must be a mapping");
   }
 
+  frontmatter.set(CHRONO_NOTES_PROPERTY, CHRONO_NOTES_INTERVAL_VALUE);
   frontmatter.set("start", formatLocalDateKey(spec.start));
   frontmatter.set("end", formatLocalDateKey(spec.end));
   const yaml = frontmatter.toString({ lineWidth: 0 }).trimEnd();

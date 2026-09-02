@@ -35,7 +35,7 @@ The product remains focused on periodic-note calendar workflows, with consistenc
 - Daily, weekly, monthly, quarterly, and yearly notes.
 - Independent enablement and path patterns, with each template file configured beside the note type that consumes it.
 - One date model for path generation, reverse recognition, navigation, and template context.
-- Built-in periodic and range-note templates plus an explicit Templater adapter with no silent fallback; range creation always enforces canonical `start`/`end` metadata after rendering.
+- Built-in periodic and range-note templates plus an explicit Templater adapter with no silent fallback; range creation always enforces `chrono-notes: interval` and canonical `start`/`end` metadata after rendering.
 - Periodic-note and range-note creation confirmations are configured independently. Confirming a creation may disable later confirmations for that category; cancellation, closing, or Escape never changes settings. A periodic-note cascade is covered by its single primary confirmation rather than prompting for every larger period.
 
 ## 4. Calendar and holiday extensions
@@ -62,7 +62,7 @@ Holiday extensions implement only Mainland China public holidays/workday adjustm
 
 ## 6. Range notes
 
-- Range notes use `start` and `end` frontmatter and support lightweight calendar display, creation, search, filtering, and sorting. Disabling range-creation confirmation does not skip date entry, path-conflict handling, or error feedback. Normal Month view and Week view use simplified Gantt lanes across date columns, while Month heatmap renders no range Gantt: overlapping ranges separate, non-overlapping ranges reuse a lane, and cross-week segments retain a stable identity color.
+- Range notes use `start` and `end` frontmatter and support lightweight calendar display, creation, search, filtering, and sorting. A valid range explicitly marked with `chrono-notes: interval` is recognized anywhere in the Vault. A valid range without the `chrono-notes` property is recognized only within the configured unmarked range-note scope; any other explicit value excludes it. Existing notes are not migrated or rewritten automatically. Disabling range-creation confirmation does not skip date entry, path-conflict handling, or error feedback. Normal Month view and Week view use simplified Gantt lanes across date columns, while Month heatmap renders no range Gantt: overlapping ranges separate, non-overlapping ranges reuse a lane, and cross-week segments retain a stable identity color.
 
 ## 7. External calendars
 

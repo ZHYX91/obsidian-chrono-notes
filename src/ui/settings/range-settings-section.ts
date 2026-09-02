@@ -8,6 +8,7 @@ import {
   type SettingsCleanup,
 } from "./settings-cleanup";
 import type { SettingsSectionContext } from "./settings-section-context";
+import { createSettingsGuide } from "./settings-guide";
 import { renderTemplatePathSetting } from "./template-settings";
 import { VaultFolderSuggest } from "./vault-path-suggest";
 
@@ -17,6 +18,32 @@ export function renderRangeSettingsSection(
 ): SettingsCleanup {
   const { t } = context.translator;
   const settings = context.host.settings.rangeNotes;
+  const recognitionGuideEl = createSettingsGuide(
+    containerEl,
+    t("settings.ranges.recognitionGuideTitle"),
+  );
+  recognitionGuideEl.createEl("p", {
+    text: t("settings.ranges.recognitionRequirements"),
+  });
+  const recognitionRulesEl = recognitionGuideEl.createEl("ul");
+  appendRecognitionRule(
+    recognitionRulesEl,
+    "chrono-notes: interval",
+    t("settings.ranges.recognitionExplicit"),
+  );
+  appendRecognitionRule(
+    recognitionRulesEl,
+    "chrono-notes",
+    t("settings.ranges.recognitionUnmarked"),
+  );
+  appendRecognitionRule(
+    recognitionRulesEl,
+    "chrono-notes",
+    t("settings.ranges.recognitionExcluded"),
+  );
+  recognitionGuideEl.createEl("p", {
+    text: t("settings.ranges.recognitionNoMigration"),
+  });
   const listSetting = new Setting(containerEl)
     .setName(t("settings.ranges.list"))
     .setDesc(t("settings.ranges.listDesc"));
@@ -57,19 +84,22 @@ export function renderRangeSettingsSection(
     },
     context,
   );
-  new Setting(containerEl).setName(t("settings.ranges.scanScope")).addDropdown((dropdown) => {
-    dropdown
-      .addOption("range-folder", t("settings.ranges.rangeFolder"))
-      .addOption("custom-folder", t("settings.ranges.customFolder"))
-      .addOption("entire-vault", t("settings.ranges.entireVault"))
-      .setValue(settings.scanScope)
-      .onChange(async (value) => {
-        if (!isRangeNoteScanScope(value)) return;
-        settings.scanScope = value;
-        await context.persistSettings();
-        context.display();
-      });
-  });
+  new Setting(containerEl)
+    .setName(t("settings.ranges.scanScope"))
+    .setDesc(t("settings.ranges.scanScopeDesc"))
+    .addDropdown((dropdown) => {
+      dropdown
+        .addOption("range-folder", t("settings.ranges.rangeFolder"))
+        .addOption("custom-folder", t("settings.ranges.customFolder"))
+        .addOption("entire-vault", t("settings.ranges.entireVault"))
+        .setValue(settings.scanScope)
+        .onChange(async (value) => {
+          if (!isRangeNoteScanScope(value)) return;
+          settings.scanScope = value;
+          await context.persistSettings();
+          context.display();
+        });
+    });
   const customFolder = new Setting(containerEl);
   const customFolderCleanup = configureCustomRangeFolderSetting(customFolder, context);
   customFolder.setDisabled(settings.scanScope !== "custom-folder");
@@ -96,6 +126,16 @@ export function renderRangeSettingsSection(
     templateCleanup,
     customFolderCleanup,
   ]);
+}
+
+function appendRecognitionRule(
+  listEl: HTMLUListElement,
+  property: string,
+  description: string,
+): void {
+  const itemEl = listEl.createEl("li");
+  itemEl.createEl("code", { text: property });
+  itemEl.append(` — ${description}`);
 }
 
 export function configureRangeFolderSetting(

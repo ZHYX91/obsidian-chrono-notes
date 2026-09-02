@@ -4,10 +4,14 @@ import {
   parseLocalDateKey,
   type LocalDate,
 } from "../../core/periodic/periodic-date";
-import { parseNoteInterval } from "../../core/note/note-interval";
+import {
+  CHRONO_NOTES_INTERVAL_VALUE,
+  CHRONO_NOTES_PROPERTY,
+  parseNoteInterval,
+} from "../../core/note/note-interval";
 import type { IndexedNote } from "./indexed-note";
 
-const NOTE_INDEX_CACHE_SCHEMA = 2;
+const NOTE_INDEX_CACHE_SCHEMA = 3;
 const NOTE_INDEX_CACHE_METADATA_SCHEMA = 1;
 
 export type NoteIndexCacheStorageStatus =
@@ -189,16 +193,26 @@ function parseIndexedNote(value: unknown): IndexedNote | null {
 }
 
 function parseInterval(value: unknown): IndexedNote["interval"] {
-  if (!isRecord(value) || !isPositiveInteger(value.dayCount)) return null;
+  if (
+    !isRecord(value) ||
+    !isPositiveInteger(value.dayCount) ||
+    (value.recognition !== "explicit" && value.recognition !== "unmarked")
+  ) {
+    return null;
+  }
   const start = parseBoundary(value.start);
   const end = parseBoundary(value.end);
   if (start === null || end === null) return null;
   const canonical = parseNoteInterval({
+    ...(value.recognition === "explicit"
+      ? { [CHRONO_NOTES_PROPERTY]: CHRONO_NOTES_INTERVAL_VALUE }
+      : {}),
     start: start.value,
     end: end.value,
   }).value;
   if (
     canonical === null ||
+    value.recognition !== canonical.recognition ||
     value.dayCount !== canonical.dayCount ||
     !isSameBoundary(start, canonical.start) ||
     !isSameBoundary(end, canonical.end)

@@ -34,7 +34,7 @@ describe("interval note spec", () => {
     expect(Object.isFrozen(spec.start)).toBe(true);
   });
 
-  it("emits minimal start/end frontmatter and rejects an empty folder", () => {
+  it("emits explicit interval frontmatter and rejects an empty folder", () => {
     const spec = buildIntervalNoteSpec(
       { year: 2026, month: 12, day: 31 },
       { year: 2027, month: 1, day: 2 },
@@ -42,6 +42,7 @@ describe("interval note spec", () => {
     );
     expect(buildIntervalNoteContent(spec)).toBe([
       "---",
+      "chrono-notes: interval",
       "start: 2026-12-31",
       "end: 2027-01-02",
       "---",
@@ -74,6 +75,7 @@ describe("interval note spec", () => {
       "start: 2026-07-01",
       "tags:",
       "  - trip",
+      "chrono-notes: interval",
       "end: 2026-07-07",
       "---",
       "",
@@ -90,6 +92,7 @@ describe("interval note spec", () => {
     );
     expect(applyIntervalNoteMetadata("# Body", spec)).toBe([
       "---",
+      "chrono-notes: interval",
       "start: 2026-07-01",
       "end: 2026-07-07",
       "---",

@@ -348,6 +348,7 @@ describe("MonthView interactions", () => {
             hiddenItems: Object.freeze([{
               path: "Ranges/hidden.md",
               title: "Hidden range",
+              recognition: hiddenInterval.recognition,
               start: hiddenInterval.start,
               end: hiddenInterval.end,
               dayCount: hiddenInterval.dayCount,
@@ -392,6 +393,7 @@ describe("MonthView interactions", () => {
           items: Object.freeze([Object.freeze({
             path: "Ranges/visible.md",
             title: "Visible range",
+            recognition: interval.recognition,
             start: interval.start,
             end: interval.end,
             dayCount: interval.dayCount,

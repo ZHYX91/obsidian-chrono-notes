@@ -15,6 +15,8 @@ translation_status: source
 
 ## 关键不变量
 
+区间身份回归矩阵必须同时覆盖：`chrono-notes: interval` 在范围外仍识别、没有 `chrono-notes` 时只在配置范围内识别、其他显式值即使位于范围内也排除，以及任一身份下无效 `start`/`end` 都不产生区间。后文所称“最小 `start/end` Markdown”现在固定包含 `chrono-notes: interval`；三类范围测试只约束未标记区间。创建和模板测试必须证明新笔记写入身份属性，现有笔记没有后台迁移或改写；缓存测试必须拒绝身份字段缺失或矛盾的旧 schema；设置测试必须固定顶部说明卡片、范围命名和“只影响未设置 `chrono-notes` 的笔记”说明。
+
 - 等价的 BOM/换行/frontmatter 输入产生相同正文状态。
 - Vault 最新修订永远不能被较旧异步结果覆盖。
 - create/modify/rename/delete 后查询快照最终一致。
@@ -128,6 +130,8 @@ ICS core 契约覆盖 UTF-8 BOM、CRLF/LF、折叠行、转义文本、多 `VEVE
 - `npm run holiday:check` 检查当前年与下一年，要求每个 release verdict 都有一手来源核验记录；当年缺失、下一年已发布但未补齐、未核验或状态矛盾以非零状态退出，下一年官方尚未发布则保留 unavailable、输出警告并返回成功。`npm run release:check` 串联自动代码门禁、双时区、快速基准、10,000 篇单文件更新门禁和该节假日门禁；它不代替真实 Obsidian、真实移动端、React Profiler、长任务或 heap snapshot。发布说明必须如实区分自动证据、针对性真实宿主回归和未取得的设备或性能证据。
 
 ## 绑定候选包的验收物化
+
+仓库夹具还必须提供范围内未标记区间、范围外 `chrono-notes: interval` 区间和范围内其他显式值区间；桌面与 Android 模拟器用同一场景验证前两者可见、后一项排除、设置说明卡片可读，以及新建区间写入三项规范属性。
 
 桌面与 Android 模拟器验收从同一个精确 Candidate Bundle v3，以及 `acceptance/product-scenarios.json` 声明的静态资源开始。仓库自有夹具提供 Chrono 冒烟笔记、每日与每周笔记、确定性插件设置，以及场景实际使用的周期笔记模板。工作区自有的通用物化器先对 Bundle 做源验证，只复制由 Bundle 哈希绑定的产品资源，安装三个精确候选资产，只启用被测插件，并写出宿主专用配置与物化清单。这个公共仓库刻意不包含宿主启动器、Vault 生命周期命令或清理适配器。
 

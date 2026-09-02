@@ -204,6 +204,19 @@
   margin-top: 6px;
 }
 
+.chrono-notes-settings-guide-body ul {
+  margin: 6px 0;
+  padding-inline-start: 20px;
+}
+
+.chrono-notes-settings-guide-body li + li {
+  margin-top: 4px;
+}
+
+.chrono-notes-settings-guide-body code {
+  overflow-wrap: anywhere;
+}
+
 :is(
   .chrono-notes-periodic-path-setting,
   .chrono-notes-template-path-setting
