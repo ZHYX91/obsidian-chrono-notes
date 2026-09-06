@@ -58,4 +58,4 @@ Before requesting review:
 3. Describe the user-visible behavior, safety boundary, tests run, and anything not verified.
 4. Keep commits reviewable and use Conventional Commit subjects.
 
-Do not publish tags, releases, or deployment artifacts from a contribution branch. The maintainer release procedure is documented in [docs/release.en.md](docs/release.en.md).
+Do not publish tags, releases, or deployment artifacts from a contribution branch.

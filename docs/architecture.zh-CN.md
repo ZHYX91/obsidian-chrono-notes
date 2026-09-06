@@ -9,7 +9,7 @@ translation_status: source
 
 当前架构优先保证数据只有一个所有者、解析口径一致、外部边界可替换、异步结果不会倒退，以及核心规则可以脱离 Obsidian 测试。
 
-插件 ID 为 `chrono-notes`，标准生产产物为 `dist/main.js`、`dist/manifest.json` 与 `dist/styles.css`，构建分析文件写入非发布目录 `build/chrono-notes.meta.json`。相邻参考项目只作为只读需求、算法和回归样例来源，不属于运行时依赖，也不接收本仓库修改；产品范围以当前需求与功能清单为准。
+插件 ID 为 `chrono-notes`，标准生产产物为 `dist/main.js`、`dist/manifest.json` 与 `dist/styles.css`，构建分析文件写入非发布目录 `build/chrono-notes.meta.json`。产品范围以[产品需求](product-requirements.zh-CN.md)为准。
 
 仓库内 release-core 3.0 runtime 与薄适配器统一管理确定性的 Candidate Bundle 和生成的独立工作流。获授权的稳定版本 tag push 或该 tag 上的手动 publish 派发共用流水线；手动 verify 模式保持只读。CI 安装锁定依赖，执行一次 release:check，验证 Bundle 源码，并固定 artifact ID/digest。发布核对精确事件、源码、tag、传输字节和 SLSA 构建证明；先下载验证草稿，再发布 immutable Release，最后下载回验。产品验收可选且单独报告，独立克隆无需外部编排。
 

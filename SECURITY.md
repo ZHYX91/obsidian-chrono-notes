@@ -12,4 +12,4 @@ Include the Chrono Notes version, Obsidian version, operating system, impact, an
 
 ## Response and disclosure
 
-Maintainers will validate the report, determine affected supported versions, and coordinate remediation and disclosure through the private advisory. Do not interpret acknowledgement, a local fix, or a passing build as evidence that a fixed release has been published. Publication requires a versioned immutable release whose hosted assets have been verified according to the [release procedure](docs/release.en.md).
+Maintainers will validate the report, determine affected supported versions, and coordinate remediation and disclosure through the private advisory. Do not interpret acknowledgement, a local fix, or a passing build as evidence that a fixed release has been published. Publication requires a versioned immutable release whose hosted assets have been verified by the repository release workflow.

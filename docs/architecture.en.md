@@ -10,7 +10,7 @@ translation_status: synced
 
 Chrono Notes is designed around single data ownership, consistent parsing, replaceable external boundaries, monotonic asynchronous state, and core rules that are testable without Obsidian.
 
-The plugin ID is `chrono-notes`. Standard production assets are `dist/main.js`, `dist/manifest.json`, and `dist/styles.css`, while build analysis is written outside the release inventory at `build/chrono-notes.meta.json`. The sibling reference project is read-only input for requirements, verified algorithms, and regression cases. It is not a runtime dependency and must not be modified from this repository; the current requirements and capability checklist define product scope.
+The plugin ID is `chrono-notes`. Standard production assets are `dist/main.js`, `dist/manifest.json`, and `dist/styles.css`, while build analysis is written outside the release inventory at `build/chrono-notes.meta.json`. The [product requirements](product-requirements.en.md) define product scope.
 
 The repository-local release-core 3.0 runtime and thin adapter own one deterministic Candidate Bundle and a generated standalone workflow. An authorized stable version tag push or manual publish dispatch on that tag uses the same pipeline; manual verify mode remains read-only. CI installs locked dependencies, runs release:check once, source-verifies the Bundle, and pins its artifact ID/digest. Publication verifies the exact event, source, tag, transported bytes, and SLSA build provenance, then verifies draft downloads before immutable publication and hosted downloads afterward. Product acceptance is optional and reported separately. An independent clone needs no external orchestration.
 

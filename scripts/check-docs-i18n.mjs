@@ -6,9 +6,6 @@ const scriptPath = fileURLToPath(import.meta.url);
 const defaultProjectRoot = path.resolve(path.dirname(scriptPath), "..");
 const docsDirectory = path.join(defaultProjectRoot, "docs");
 
-// Stable capability checklists may stay Chinese-only without an English pair.
-const chineseOnlyDocs = new Set(["features.zh-CN.md"]);
-
 function parseFrontmatter(filePath, source, errors) {
   if (!source.startsWith("---")) {
     errors.push(`${filePath} must start with a YAML frontmatter block`);
@@ -118,22 +115,12 @@ export function checkDocsI18n(projectRoot = defaultProjectRoot) {
     }
   }
   for (const sourceName of sources) {
-    if (chineseOnlyDocs.has(sourceName)) continue;
     const translationName = `${sourceName.slice(0, -".zh-CN.md".length)}.en.md`;
     if (!translations.includes(translationName)) {
       errors.push(`Missing paired translation: docs/${translationName}`);
       continue;
     }
     validatePair(projectRoot, sourceName, translationName, errors);
-  }
-  for (const sourceName of sources) {
-    if (!chineseOnlyDocs.has(sourceName)) continue;
-    const translationName = `${sourceName.slice(0, -".zh-CN.md".length)}.en.md`;
-    if (translations.includes(translationName)) {
-      errors.push(
-        `Chinese-only document docs/${sourceName} must not have an English pair`,
-      );
-    }
   }
   return errors;
 }
