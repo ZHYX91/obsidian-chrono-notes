@@ -22,7 +22,7 @@ worktree before release; a same-version tag must be absent or already point at t
 
 ## Candidate Bundle v3
 
-The vendored release-core `3.0.0` and thin adapter create the sole Candidate Bundle v3. It binds
+The vendored release-core `3.0.1` and thin adapter create the sole Candidate Bundle v3. It binds
 source, build toolchain, core/config/workflow, product payload, scenario contract, and fixture
 hashes, and contains `main.js`, `manifest.json`, `styles.css`, `chrono-notes-x.y.z.zip`,
 `SHA256SUMS`, and `candidate-bundle.json`. There is no second receipt, envelope, or compatibility

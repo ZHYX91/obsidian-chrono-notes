@@ -20,7 +20,7 @@ GitHub 发布与正式 Vault 部署是彼此独立的证据和授权边界。
 
 ## Candidate Bundle v3
 
-vendored release-core `3.0.0` 通过薄 adapter 创建唯一 Candidate Bundle v3。Bundle 绑定源码、
+vendored release-core `3.0.1` 通过薄 adapter 创建唯一 Candidate Bundle v3。Bundle 绑定源码、
 构建工具链、core/config/workflow、产品 payload、场景合同及 fixture 哈希，并包含 `main.js`、
 `manifest.json`、`styles.css`、`chrono-notes-x.y.z.zip`、`SHA256SUMS` 与
 `candidate-bundle.json`。不存在第二份 receipt、envelope 或兼容候选对象。
