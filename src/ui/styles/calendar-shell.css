@@ -199,6 +199,50 @@
   grid-template-columns: repeat(5, minmax(0, 1fr));
 }
 
+.chrono-notes-long-period-picker {
+  container-type: inline-size;
+  max-height: min(520px, calc(100dvh - 120px));
+  overflow-y: auto;
+}
+
+.chrono-notes-long-period-picker .chrono-notes-period-picker-nav {
+  grid-template-columns: 44px minmax(0, 1fr) 44px;
+}
+
+.chrono-notes-long-period-picker button {
+  min-height: 44px;
+}
+
+.chrono-notes-long-period-picker-grid {
+  display: grid;
+  gap: 6px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.chrono-notes-long-period-picker-grid > button {
+  flex-direction: column;
+  gap: 2px;
+  height: auto;
+  padding: 6px;
+  white-space: normal;
+}
+
+.chrono-notes-period-picker-label {
+  font-weight: var(--font-semibold);
+}
+
+.chrono-notes-period-picker-detail {
+  font-size: var(--font-ui-smaller);
+  opacity: 0.8;
+  overflow-wrap: anywhere;
+}
+
+@container (min-width: 400px) {
+  .chrono-notes-long-period-picker-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
 .chrono-notes-month-picker-grid {
   display: grid;
   gap: 3px;
@@ -262,7 +306,9 @@
   font-weight: var(--font-semibold);
 }
 
-.chrono-notes-calendar-header button {
+.chrono-notes-calendar-navigation > button,
+.chrono-notes-calendar-picker-trigger,
+.chrono-notes-calendar-header > .chrono-notes-today {
   box-shadow: none;
   min-height: 30px;
   padding: 4px 8px;

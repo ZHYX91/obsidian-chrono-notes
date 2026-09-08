@@ -48,7 +48,7 @@ import {
   createPeriodicCalendarPreview,
 } from "./calendar-period-preview";
 import type { CalendarPreviewCell } from "./calendar-preview-tooltip";
-import type { CalendarSelectionKind } from "./year-view";
+import type { CalendarSelectionKind } from "./calendar-selection";
 
 export interface WeekViewProps {
   readonly query: WeekCalendarQuery;

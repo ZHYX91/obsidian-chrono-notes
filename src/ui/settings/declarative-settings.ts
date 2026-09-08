@@ -54,8 +54,8 @@ import {
 } from "./range-settings-section";
 import {
   configureTemplatePathSetting,
-  renderTemplateEngineGuide,
 } from "./template-settings";
+import { renderTemplateSyntaxGuide } from "./template-guide";
 import { getPeriodicNoteTemplatePathExample } from "./periodic-note-settings-presentation";
 import { normalizeSourceInput } from "./extensions-and-integrations-settings-section";
 
@@ -450,7 +450,7 @@ function getGeneralDefinitions(
           searchable: false,
           render: (setting) => {
             setting.settingEl.empty();
-            renderTemplateEngineGuide(setting.settingEl, context);
+            renderTemplateSyntaxGuide(setting.settingEl, context);
           },
         },
       ],
@@ -975,7 +975,7 @@ function buttonDefinition(
 }
 
 function parsePeriodicEnabledKey(key: string): PeriodicNoteType | null {
-  const match = /^periodicNotes\.(daily|weekly|monthly|quarterly|yearly)\.enabled$/.exec(key);
+  const match = /^periodicNotes\.(daily|weekly|monthly|quarterly|yearly|decadal|century)\.enabled$/.exec(key);
   return match === null ? null : match[1] as PeriodicNoteType;
 }
 

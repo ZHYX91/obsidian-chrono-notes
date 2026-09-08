@@ -123,10 +123,10 @@ describe("settings presentation", () => {
     const english = createTranslator("en", "en").t("settings.periodic.pathsDesc");
     const chinese = createTranslator("zh-CN", "en").t("settings.periodic.pathsDesc");
 
-    expect(english).toContain("Obsidian/Moment");
-    expect(english).toContain("[diary]/YYYY/YYYY-MM/YYYY-MM-DD");
-    expect(english).toContain("square brackets");
-    expect(chinese).toContain("Obsidian/Moment");
+    expect(createTranslator("en", "en").t("settings.formats.date")).toContain("Obsidian/Moment");
+    expect(createTranslator("zh-CN", "en").t("settings.formats.date")).toContain("Obsidian/Moment");
+    expect(english).toContain("[diary]/YYYY/YYYY-MM-DD");
+    expect(english).toContain("brackets");
     expect(chinese).toContain("英文方括号");
   });
 

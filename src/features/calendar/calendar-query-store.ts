@@ -1,3 +1,9 @@
+import {
+  buildCenturyGroups,
+  selectCenturyCalendar,
+  type CenturyCalendarOptions,
+  type CenturyCalendarQuery,
+} from "./century-calendar-query";
 import { buildMonthGrid } from "../../core/calendar/month-grid";
 import type { IcsEventOccurrence } from "../../core/calendar/ics-calendar";
 import { normalizeIntervalNoteFolder } from "../../core/note/interval-note-spec";
@@ -60,12 +66,20 @@ export interface YearCalendarQueryRequest {
   readonly options: YearCalendarQueryOptions;
 }
 
+export interface CenturyCalendarQueryRequest {
+  readonly kind: "century";
+  readonly year: number;
+  readonly options: CenturyCalendarOptions;
+}
+
 export type CalendarQueryRequest =
+  | CenturyCalendarQueryRequest
   | MonthCalendarQueryRequest
   | WeekCalendarQueryRequest
   | YearCalendarQueryRequest;
 
 export type CalendarQuerySnapshot =
+  | Readonly<{ kind: "century"; query: CenturyCalendarQuery }>
   | Readonly<{ kind: "month"; query: MonthCalendarQuery }>
   | Readonly<{ kind: "week"; query: WeekCalendarQuery }>
   | Readonly<{ kind: "year"; query: YearCalendarQuery }>;
@@ -129,7 +143,15 @@ interface YearDependencies {
   readonly quarters: readonly YearQuarterDependencies[];
 }
 
+interface CenturyDependencies {
+  readonly kind: "century";
+  readonly noteReadiness: NoteIndexReadiness;
+  readonly key: string;
+  readonly entries: readonly NoteEntryReference[];
+}
+
 type CalendarQueryDependencies =
+  | CenturyDependencies
   | MonthDependencies
   | WeekDependencies
   | YearDependencies;
@@ -273,6 +295,11 @@ function selectQuery(
   icsSnapshot: IcsEventIndexSnapshot,
 ): CalendarQuerySnapshot {
   switch (request.kind) {
+    case "century":
+      return Object.freeze({
+        kind: "century",
+        query: selectCenturyCalendar(request.year, noteSnapshot, request.options),
+      });
     case "month":
       return Object.freeze({
         kind: "month",
@@ -308,6 +335,23 @@ function collectDependencies(
   icsSnapshot: IcsEventIndexSnapshot,
 ): CalendarQueryDependencies {
   switch (request.kind) {
+    case "century": {
+      const { range, groups } = buildCenturyGroups(request.year);
+      const entries = [getPeriodicEntry(noteSnapshot, range.start, "century",
+        request.options, request.options.century)];
+      for (const group of groups) {
+        entries.push(getPeriodicEntry(noteSnapshot, group.date, "decadal", request.options,
+          request.options.decadal));
+        for (const date of group.years) entries.push(getPeriodicEntry(noteSnapshot, date,
+          "yearly", request.options, request.options.yearly));
+      }
+      return Object.freeze({
+        kind: "century",
+        noteReadiness: noteSnapshot.readiness,
+        key: keyOf(request.year, request.options),
+        entries: Object.freeze(entries),
+      });
+    }
     case "month":
       return collectMonthDependencies(request, noteSnapshot, icsSnapshot);
     case "week":
@@ -617,6 +661,9 @@ function equalDependencies(
 ): boolean {
   if (left.kind !== right.kind) return false;
   switch (left.kind) {
+    case "century":
+      return right.kind === "century" && left.key === right.key &&
+        left.noteReadiness === right.noteReadiness && equalReferences(left.entries, right.entries);
     case "month":
       return right.kind === "month" &&
         left.noteReadiness === right.noteReadiness &&

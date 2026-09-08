@@ -14,74 +14,12 @@
   grid-template-columns: minmax(64px, 0.75fr) repeat(3, minmax(0, 1fr));
 }
 
-.chrono-notes-year-period {
-  --no-tooltip: true;
-  align-items: center;
-  background: transparent;
-  border: 1px solid transparent;
-  border-radius: 5px;
-  box-shadow: none !important;
-  color: var(--text-normal);
-  display: flex;
-  flex-direction: column;
-  font-size: var(--font-ui-smaller);
-  isolation: isolate;
-  justify-content: center;
-  min-height: 48px;
-  min-width: 0;
-  overflow: hidden;
-  padding: 10px 4px 6px;
-  position: relative;
-}
-
-.chrono-notes-year-period-status {
-  align-items: center;
-  display: flex;
-  inset-inline: 4px;
-  justify-content: center;
-  min-height: 0;
-  min-width: 0;
-  position: absolute;
-  top: 4px;
-  z-index: 1;
-}
-
-.chrono-notes-year-period-label {
-  max-width: 100%;
-  overflow: hidden;
-  position: relative;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  z-index: 1;
-}
-
-.chrono-notes-year-period.is-current-period
-  .chrono-notes-year-period-label {
-  background: var(--chrono-notes-current-period-fill);
-  border-radius: 4px;
-  box-shadow: 0 0 0 2px var(--chrono-notes-current-period-fill);
-  color: var(--chrono-notes-current-period-foreground);
-}
-
-.chrono-notes-year-period-status > .chrono-notes-calendar-indicator.is-top {
-  flex: 0 1 auto;
-}
-
-.chrono-notes-year-period:hover {
-  background: var(--background-modifier-hover);
-}
-
-.chrono-notes-year-period:focus-visible {
-  outline: 2px solid var(--interactive-accent);
-  outline-offset: 3px;
-}
-
 .chrono-notes-year-heatmap-quarter {
   border-top: 1px solid var(--background-modifier-border);
   padding-top: 5px;
 }
 
-.chrono-notes-year-heatmap-quarter > .chrono-notes-year-period {
+.chrono-notes-year-heatmap-quarter > .chrono-notes-period-cell {
   min-height: 28px;
   width: 100%;
 }
@@ -101,7 +39,7 @@
   min-width: 0;
 }
 
-.chrono-notes-year-heatmap-month > .chrono-notes-year-period {
+.chrono-notes-year-heatmap-month > .chrono-notes-period-cell {
   min-height: 26px;
   padding-block: 2px;
   width: 100%;
@@ -213,7 +151,7 @@
 .chrono-notes-week-day.is-selected,
 .chrono-notes-weekly-note.is-selected,
 .chrono-notes-week-number-button.is-selected,
-.chrono-notes-year-period.is-selected,
+.chrono-notes-period-cell.is-selected,
 .chrono-notes-year-heatmap-day.is-selected {
   box-shadow: 0 0 0 2px var(--interactive-accent) !important;
 }
@@ -616,7 +554,7 @@
   .chrono-notes-view-mode button,
   .chrono-notes-period-picker button,
   .chrono-notes-day-number,
-  .chrono-notes-year-period,
+  .chrono-notes-period-cell,
   .chrono-notes-week-day-date,
   .chrono-notes-weekly-note
 ) {
@@ -765,7 +703,7 @@
     grid-template-columns: minmax(64px, 0.75fr) repeat(3, minmax(0, 1fr));
   }
 
-  .chrono-notes-year-period {
+  .chrono-notes-period-cell {
     font-size: 10px;
     padding-inline: 4px;
   }
@@ -891,10 +829,10 @@
     --chrono-notes-month-interval-lane-height: 18px;
   }
 
-  .chrono-notes-year-heatmap-quarter > .chrono-notes-year-period,
-  .chrono-notes-year-heatmap-month > .chrono-notes-year-period,
-  .chrono-notes-year-summary-row > .chrono-notes-year-period {
-    min-height: 48px;
+  .chrono-notes-year-heatmap-quarter > .chrono-notes-period-cell,
+  .chrono-notes-year-heatmap-month > .chrono-notes-period-cell,
+  .chrono-notes-year-summary-row > .chrono-notes-period-cell {
+    min-height: max(48px, calc(1.2em + 32px));
   }
 
   .chrono-notes-year-heatmap-months {

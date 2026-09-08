@@ -95,6 +95,8 @@ describe("declarative settings", () => {
       "periodicNotes.monthly.enabled",
       "periodicNotes.quarterly.enabled",
       "periodicNotes.yearly.enabled",
+      "periodicNotes.decadal.enabled",
+      "periodicNotes.century.enabled",
       "confirmIntervalNoteCreation",
       "rangeNotes.showInCalendar",
       "rangeNotes.scanScope",

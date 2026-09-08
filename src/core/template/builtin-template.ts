@@ -1,10 +1,11 @@
 import { DateTime } from "luxon";
 
-import { compileMomentFormat } from "../periodic/moment-format";
-import { toDateTime, type LocalDate } from "../periodic/periodic-date";
+import { formatPeriodDate } from "../periodic/period-format";
+import { toDateTime, type LocalDate, type PeriodRange } from "../periodic/periodic-date";
 
 export interface BuiltinTemplateContext {
   readonly date: LocalDate;
+  readonly range: PeriodRange;
   readonly title: string;
   readonly now: Date;
   readonly locale: string;
@@ -29,14 +30,14 @@ export function renderBuiltinTemplate(
   const targetDate = toDateTime(context.date).setLocale(context.locale);
   const currentTime = getCurrentTime(context);
 
-  return content
-    .replace(/\{\{date:(.*?)\}\}/g, (match, format: string) =>
-      renderMomentFormat(match, format, targetDate))
-    .replace(/\{\{date\}\}/g, targetDate.toFormat("yyyy-MM-dd"))
-    .replace(/\{\{time:(.*?)\}\}/g, (match, format: string) =>
-      renderMomentFormat(match, format, currentTime))
-    .replace(/\{\{time\}\}/g, currentTime.toFormat("HH:mm"))
-    .replace(/\{\{title\}\}/g, context.title);
+  return renderTemplate(content, {
+    date: targetDate,
+    start: toDateTime(context.range.start).setLocale(context.locale),
+    end: toDateTime(context.range.end).setLocale(context.locale),
+    days: String(context.range.dayCount),
+    time: currentTime,
+    title: context.title,
+  });
 }
 
 export function renderBuiltinIntervalTemplate(
@@ -47,18 +48,9 @@ export function renderBuiltinIntervalTemplate(
   const end = toDateTime(context.end).setLocale(context.locale);
   const currentTime = getCurrentTime(context);
 
-  return content
-    .replace(/\{\{start:(.*?)\}\}/g, (match, format: string) =>
-      renderMomentFormat(match, format, start))
-    .replace(/\{\{start\}\}/g, start.toFormat("yyyy-MM-dd"))
-    .replace(/\{\{end:(.*?)\}\}/g, (match, format: string) =>
-      renderMomentFormat(match, format, end))
-    .replace(/\{\{end\}\}/g, end.toFormat("yyyy-MM-dd"))
-    .replace(/\{\{days\}\}/g, String(context.dayCount))
-    .replace(/\{\{time:(.*?)\}\}/g, (match, format: string) =>
-      renderMomentFormat(match, format, currentTime))
-    .replace(/\{\{time\}\}/g, currentTime.toFormat("HH:mm"))
-    .replace(/\{\{title\}\}/g, context.title);
+  return renderTemplate(content, {
+    start, end, days: String(context.dayCount), time: currentTime, title: context.title,
+  });
 }
 
 function getCurrentTime(
@@ -71,11 +63,12 @@ function getCurrentTime(
   return currentTime;
 }
 
-function renderMomentFormat(
-  fallback: string,
-  format: string,
-  value: DateTime,
-): string {
-  const compiled = compileMomentFormat(format, "date-time");
-  return compiled === null ? fallback : value.toFormat(compiled);
+/** One pass prevents rendered titles or literals from becoming template instructions. */
+function renderTemplate(content: string, values: Readonly<Record<string, DateTime | string>>): string {
+  return content.replace(/\{\{([a-z]+)(?::(.*?))?\}\}/g, (match, key: string, format?: string) => {
+    const value = values[key];
+    if (value === undefined) return match;
+    if (typeof value === "string") return format === undefined ? value : match;
+    return formatPeriodDate(value, format ?? (key === "time" ? "HH:mm" : "YYYY-MM-DD")) ?? match;
+  });
 }

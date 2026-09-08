@@ -3,7 +3,9 @@
 @import "./note-navbar.css";
 @import "./calendar-shell.css";
 @import "./month-and-interval.css";
+@import "./period-cell.css";
 @import "./year-and-week.css";
+@import "./long-period.css";
 
 :is(
   .chrono-notes-calendar,

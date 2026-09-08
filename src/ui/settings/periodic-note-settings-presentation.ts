@@ -7,7 +7,7 @@ import {
   formatPeriodicNotePath,
   parsePeriodicNotePath,
 } from "../../core/periodic/periodic-note-path";
-import { quoteMomentLiteral } from "../../core/periodic/moment-format";
+import { parseMomentFormat, quoteMomentLiteral } from "../../core/periodic/moment-format";
 
 export type PeriodicNotePathPreview = Readonly<
   | { status: "empty"; path: null }
@@ -30,6 +30,8 @@ const DEFAULT_FILENAME_PATTERNS: Readonly<Record<PeriodicNoteType, string>> = Ob
   monthly: "YYYY-MM",
   quarterly: "YYYY-[Q]Q",
   yearly: "YYYY",
+  decadal: "DEC[s]",
+  century: "[C]CEN",
 });
 
 const PATH_PATTERN_EXAMPLES: Readonly<Record<PeriodicNoteType, string>> = Object.freeze({
@@ -38,6 +40,8 @@ const PATH_PATTERN_EXAMPLES: Readonly<Record<PeriodicNoteType, string>> = Object
   monthly: "[diary]/YYYY/YYYY-MM",
   quarterly: "[diary]/YYYY/YYYY-[Q]Q",
   yearly: "[diary]/YYYY",
+  decadal: "[diary]/DEC[s]",
+  century: "[diary]/[C]CEN",
 });
 
 const TEMPLATE_PATH_EXAMPLES: Readonly<Record<PeriodicNoteType, string>> = Object.freeze({
@@ -46,6 +50,8 @@ const TEMPLATE_PATH_EXAMPLES: Readonly<Record<PeriodicNoteType, string>> = Objec
   monthly: "Templates/Monthly.md",
   quarterly: "Templates/Quarterly.md",
   yearly: "Templates/Yearly.md",
+  decadal: "Templates/Decadal.md",
+  century: "Templates/Century.md",
 });
 
 export function createPeriodicNotePathPreview(
@@ -128,7 +134,7 @@ function decodeMomentLiteral(value: string): string {
 }
 
 function hasPeriodicDateTokens(value: string): boolean {
-  return /Y{2,4}|G{2,4}|M{1,4}|D{1,2}|W{1,2}|Q/.test(value);
+  return parseMomentFormat(value, "date")?.some((part) => part.token !== null) ?? false;
 }
 
 function normalizeFolderPath(path: string): string {

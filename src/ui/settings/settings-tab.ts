@@ -66,6 +66,7 @@ export class ChronoNotesSettingTab extends PluginSettingTab {
     );
   }
 
+
   override display(): void {
     this.surfaceVisible = true;
     this.vaultPathSuggestionCatalog.start();

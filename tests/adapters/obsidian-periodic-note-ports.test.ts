@@ -1,3 +1,4 @@
+import { getPeriodRange } from "../../src/core/periodic/periodic-date";
 import { describe, expect, it, vi } from "vitest";
 
 import {
@@ -305,6 +306,7 @@ describe("Obsidian periodic note ports", () => {
     const prepared = await templates.prepare({
       kind: "periodic",
       date: { year: 2026, month: 5, day: 18 },
+      range: getPeriodRange({ year: 2026, month: 5, day: 18 }, "daily", "monday"),
       locale: "en-US",
       noteType: "daily",
       path: "Daily/2026-05-18.md",
@@ -353,6 +355,7 @@ describe("Obsidian periodic note ports", () => {
     const context = {
       kind: "periodic" as const,
       date: { year: 2026, month: 5, day: 18 },
+      range: getPeriodRange({ year: 2026, month: 5, day: 18 }, "daily", "monday"),
       locale: "en-US",
       noteType: "daily" as const,
       path: "Daily/today.md",
@@ -385,6 +388,7 @@ describe("Obsidian periodic note ports", () => {
       templates.prepare({
         kind: "periodic",
         date: { year: 2026, month: 5, day: 18 },
+        range: getPeriodRange({ year: 2026, month: 5, day: 18 }, "daily", "monday"),
         locale: "en-US",
         noteType: "daily",
         path: "Daily/today.md",
@@ -425,6 +429,7 @@ describe("Obsidian periodic note ports", () => {
     const prepared = await templates.prepare({
       kind: "periodic",
       date: { year: 2026, month: 4, day: 1 },
+      range: getPeriodRange({ year: 2026, month: 4, day: 1 }, "quarterly", "monday"),
       locale: "en-US",
       noteType: "quarterly",
       path: target.path,
@@ -521,6 +526,7 @@ describe("Obsidian periodic note ports", () => {
     const context = {
       kind: "periodic" as const,
       date: { year: 2026, month: 8, day: 21 },
+      range: getPeriodRange({ year: 2026, month: 8, day: 21 }, "daily", "monday"),
       locale: "en-US",
       noteType: "daily" as const,
       path: firstTarget.path,

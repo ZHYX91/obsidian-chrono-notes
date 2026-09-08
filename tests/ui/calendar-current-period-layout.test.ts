@@ -1,4 +1,5 @@
 import { Window } from "happy-dom";
+import type { CalendarSelectionKind } from "../../src/ui/calendar/calendar-selection";
 import { createElement } from "react";
 import { describe, expect, it } from "vitest";
 
@@ -16,7 +17,6 @@ import { LongPressGesture } from "../../src/ui/calendar/long-press";
 import { MonthDayCell } from "../../src/ui/calendar/month-day-cell";
 import {
   YearView,
-  type CalendarSelectionKind,
 } from "../../src/ui/calendar/year-view";
 import {
   createNoteIndexSnapshot,
@@ -171,10 +171,10 @@ describe("calendar current-period layout", () => {
   it("marks exactly the current quarter and month without replacing selection", () => {
     const document = renderYear(false, APRIL_18, "month", APRIL_18);
     const currentPeriods = document.querySelectorAll(
-      '.chrono-notes-year-period[aria-current="true"]',
+      '.chrono-notes-period-cell[aria-current="true"]',
     );
     const selectedMonth = document.querySelector(
-      '.chrono-notes-year-period[aria-pressed="true"]',
+      '.chrono-notes-period-cell[aria-pressed="true"]',
     );
 
     expect(currentPeriods).toHaveLength(2);
@@ -189,10 +189,10 @@ describe("calendar current-period layout", () => {
   it("keeps the current quarter marker when that quarter is selected", () => {
     const document = renderYear(false, APRIL_18, "quarter", APRIL_18);
     const selectedQuarter = document.querySelector(
-      '.chrono-notes-year-period[data-period-kind="quarter"][aria-pressed="true"]',
+      '.chrono-notes-period-cell[data-period-kind="quarter"][aria-pressed="true"]',
     );
     const currentMonth = document.querySelector(
-      '.chrono-notes-year-period[data-period-kind="month"][aria-current="true"]',
+      '.chrono-notes-period-cell[data-period-kind="month"][aria-current="true"]',
     );
 
     expect(selectedQuarter?.classList.contains("is-current-period")).toBe(true);
@@ -204,12 +204,12 @@ describe("calendar current-period layout", () => {
   it("keeps the active day in the accessible year-summary label", () => {
     const document = renderYear(false, APRIL_18, "day", APRIL_18);
     const selectedMonth = document.querySelector(
-      '.chrono-notes-year-period[data-period-kind="month"].is-selected',
+      '.chrono-notes-period-cell[data-period-kind="month"].is-selected',
     );
 
     expect(selectedMonth?.getAttribute("data-period-month")).toBe("4");
     expect(selectedMonth?.querySelector(
-      ".chrono-notes-year-period-selection",
+      ".chrono-notes-period-cell-selection",
     )).toBeNull();
     expect(selectedMonth?.getAttribute("aria-label")).toContain("18");
   });
@@ -222,12 +222,12 @@ describe("calendar current-period layout", () => {
       { year: 2026, month: 7, day: 16 },
     );
     const selectedMonth = document.querySelector(
-      '.chrono-notes-year-period[data-period-kind="month"].is-selected',
+      '.chrono-notes-period-cell[data-period-kind="month"].is-selected',
     );
 
     expect(selectedMonth?.getAttribute("data-period-month")).toBe("7");
     expect(selectedMonth?.querySelector(
-      ".chrono-notes-year-period-selection",
+      ".chrono-notes-period-cell-selection",
     )).toBeNull();
     expect(selectedMonth?.getAttribute("aria-label")).toContain("W29");
   });
@@ -240,11 +240,11 @@ describe("calendar current-period layout", () => {
       APRIL_18,
     );
 
-    expect(document.querySelector(".chrono-notes-year-period.is-current-period"))
+    expect(document.querySelector(".chrono-notes-period-cell.is-current-period"))
       .toBeNull();
     expect(document.querySelector('[aria-current="true"]')).toBeNull();
     const selectedMonth = document.querySelector(
-      '.chrono-notes-year-period[aria-pressed="true"]',
+      '.chrono-notes-period-cell[aria-pressed="true"]',
     );
     expect(selectedMonth?.classList.contains("is-selected")).toBe(true);
     expect(selectedMonth?.classList.contains("is-current-period")).toBe(false);
@@ -254,7 +254,7 @@ describe("calendar current-period layout", () => {
   it("keeps heatmap data backgrounds while today and selection coexist", () => {
     const document = renderYear(true, APRIL_18, "day", APRIL_18);
     const currentPeriods = document.querySelectorAll(
-      '.chrono-notes-year-period[aria-current="true"]',
+      '.chrono-notes-period-cell[aria-current="true"]',
     );
     const today = document.querySelector(
       '.chrono-notes-year-heatmap-day[aria-current="date"]',

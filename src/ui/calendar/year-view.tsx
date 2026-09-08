@@ -13,7 +13,6 @@ import {
 import {
   formatLocalDateKey,
   isSameLocalDate,
-  isSamePeriod,
   shiftPeriod,
   type LocalDate,
   type PeriodicNoteType,
@@ -35,13 +34,11 @@ import type { Translator } from "../../shared/i18n";
 import type { QuarterNameMode } from "../../shared/settings";
 import { formatShortMonthLabels } from "../date-presentation";
 import { useHostEnvironment } from "../host-environment";
-import { CalendarNoteIndicator } from "./calendar-note-indicator";
 import { bindLongPress, type LongPressGesture } from "./long-press";
 import { CalendarPreviewTooltip } from "./calendar-preview-tooltip";
 import type { CalendarPreviewCell } from "./calendar-preview-tooltip";
 import {
   createDailyCalendarPreview,
-  createPeriodicCalendarPreview,
 } from "./calendar-period-preview";
 import { useCalendarPreview } from "./use-calendar-preview";
 import {
@@ -53,21 +50,16 @@ import {
 import {
   formatYearHeatmapDayLabel,
   formatYearHeatmapGridLabel,
-  formatYearPeriodLabel,
   formatYearQuarterLabel,
   resolveYearHeatmapTabIndex,
 } from "./year-view-presentation";
 
+import { CalendarPeriodCell, type CalendarPeriodCellProps } from "./calendar-period-cell";
+import { getPeriodicSelectionKind, type CalendarSelectionKind } from "./calendar-selection";
+
 const QUARTER_OBSERVER_MARGIN = "220px 0px";
 const QUARTER_PLACEHOLDER_HEIGHT_PROPERTY =
   "--chrono-notes-year-quarter-height";
-
-export type CalendarSelectionKind =
-  | "day"
-  | "week"
-  | "month"
-  | "quarter"
-  | "year";
 
 export interface YearViewProps {
   readonly query: YearCalendarQuery;
@@ -468,121 +460,12 @@ function SummaryQuarter({
   );
 }
 
-function PeriodButton({
-  summary,
-  label,
-  selectionDetail,
-  translator,
-  showNoteIndicators,
-  showTaskProgress,
-  today,
-  selected,
-  onSelect,
-  onOpenPeriodic,
-  weekStartDay,
-  activePreviewKey,
-  previewId,
-  onSchedulePreview,
-  onDismissPreview,
-  longPress,
-}: Readonly<{
-  summary: YearPeriodicSummary;
-  label: string;
-  selectionDetail?: string | undefined;
-  translator: Translator;
-  showNoteIndicators: boolean;
-  showTaskProgress: boolean;
-  today: LocalDate;
-  selected: boolean;
-  onSelect: YearViewProps["onSelect"];
-  onOpenPeriodic: YearViewProps["onOpenPeriodic"];
-  weekStartDay: WeekStartDay;
-  activePreviewKey: string | null;
-  previewId: string;
-  onSchedulePreview: LazyQuarterProps["onSchedulePreview"];
-  onDismissPreview: () => void;
-  longPress: LongPressGesture;
-}>) {
-  const periodLabel = selectionDetail === undefined
-    ? label
-    : `${label} ${selectionDetail}`;
-  const accessibleLabel = formatYearPeriodLabel(
-    periodLabel,
-    summary.noteState,
-    summary.errorMessage,
-    summary.statistics,
-    translator.t,
-  );
-  const kind = summary.noteType === "monthly" ? "month" : "quarter";
-  const current = isSamePeriod(today, summary.date, summary.noteType, "monday");
-  const select = () => onSelect(kind, summary.date);
-  const open = (target: NoteOpenTarget) =>
-    onOpenPeriodic(summary.date, summary.noteType, target);
-  const touch = bindLongPress(longPress, () => void open("default"));
-  const showStatus =
-    showNoteIndicators && summary.noteState !== "not-configured";
-  const periodPreview = createPeriodicCalendarPreview(
-    summary,
-    summary.noteType,
-    weekStartDay,
-  );
-  const previewKey = periodPreview.previewTitle;
-  const previewActive = activePreviewKey === previewKey;
-  return (
-    <button
-      type="button"
-      className={`chrono-notes-year-period${current ? " is-current-period" : ""}${selected ? " is-selected" : ""}`}
-      data-period-kind={kind}
-      data-period-month={summary.date.month}
-      data-note-state={summary.noteState}
-      data-show-note-indicators={String(showNoteIndicators)}
-      aria-label={accessibleLabel}
-      aria-describedby={previewActive ? previewId : undefined}
-      aria-current={current ? "true" : undefined}
-      aria-pressed={selected}
-      onClick={(event) => {
-        if (touch.consumeClick()) {
-          event.preventDefault();
-          event.stopPropagation();
-          return;
-        }
-        select();
-        if (event.ctrlKey || event.metaKey) void open("tab");
-      }}
-      onDoubleClick={() => void open("default")}
-      onAuxClick={(event) => {
-        if (event.button === 1) void open("tab");
-      }}
-      onKeyDown={(event) => {
-        if (event.key !== "Enter") return;
-        event.preventDefault();
-        select();
-        void open("default");
-      }}
-      onTouchStart={touch.onTouchStart}
-      onTouchMove={touch.onTouchMove}
-      onTouchEnd={touch.onTouchEnd}
-      onTouchCancel={touch.onTouchCancel}
-      onMouseEnter={(event) =>
-        onSchedulePreview(previewKey, periodPreview, event.currentTarget)}
-      onMouseLeave={onDismissPreview}
-      onFocus={(event) =>
-        onSchedulePreview(previewKey, periodPreview, event.currentTarget)}
-      onBlur={onDismissPreview}
-    >
-      {showStatus ? (
-        <span className="chrono-notes-year-period-status">
-          <CalendarNoteIndicator
-            show
-            noteState={summary.noteState}
-            statistics={summary.statistics}
-            showTaskProgress={showTaskProgress}
-          />
-        </span>
-      ) : null}
-      <span className="chrono-notes-year-period-label">{label}</span>
-    </button>
-  );
+function PeriodButton({ summary, onSelect, ...props }: Omit<CalendarPeriodCellProps, "summary" | "noteType" | "onSelect"> & {
+  readonly summary: YearPeriodicSummary;
+  readonly onSelect: YearViewProps["onSelect"];
+}) {
+  return <CalendarPeriodCell {...props} summary={summary} noteType={summary.noteType}
+    onSelect={() => onSelect(getPeriodicSelectionKind(summary.noteType), summary.date)} />;
 }
 
 function HeatmapQuarter(props: LazyQuarterProps) {

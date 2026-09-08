@@ -2,6 +2,35 @@
 
 Notable changes to Chrono Notes are documented in this file. The repository's numeric Git tags are the evidence for released versions; an entry without a corresponding local tag remains unreleased even if the manifests already contain that version.
 
+## 0.7.0
+
+### Added
+
+- Added independently configurable decadal and century notes, including commands, templates,
+  parent-period navigation, and cascade creation.
+- Added fixed-digit `DEC` and `CEN` date-format extensions for note paths, built-in templates,
+  and the Templater `tp_calendar` helpers.
+- Added a century calendar with decade groups, five years per row, a century picker, and
+  automatic navigation to the selected or current decade.
+
+### Changed
+
+- Unified periodic calendar cells, note indicators, task progress, previews, and pointer,
+  keyboard, and touch interactions across the year and century views.
+- Kept century navigation visible while the years scroll, with responsive decade labels for
+  narrow sidebars and larger interface fonts.
+- Separated general template syntax, periodic-note paths and placeholders, and range-note
+  recognition and placeholders into focused settings guides with examples.
+- Clarified complete-period template boundaries and century/decade folder behavior. Existing
+  note paths and content remain unchanged; decadal and century notes are disabled by default.
+
+### Fixed
+
+- Centered month, quarter, year, decade, and week labels independently of note enablement or
+  indicator visibility, keeping dots and progress bars above the labels.
+- Improved release verification recovery for temporary GitHub read failures without retrying
+  unconfirmed remote changes.
+
 ## 0.6.0
 
 ### Added

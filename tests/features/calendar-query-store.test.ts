@@ -37,6 +37,33 @@ const RANGE_NOTES_ON: RangeNoteSettings = Object.freeze({
 });
 
 describe("CalendarQueryStore", () => {
+
+  it("invalidates long-period queries only for the visible note entries", () => {
+    const initial = createParsedNoteIndexSnapshot({ "diary/2020s.md": "old" }, 1);
+    const noteSource = new MutableSnapshotSource(initial);
+    const icsSource = new MutableSnapshotSource(icsSnapshot(1, "disabled", {}));
+    const store = new CalendarQueryStore(noteSource, icsSource, {
+      kind: "century", year: 2026, options: {
+        locale: "en", weekStartDay: "monday",
+        yearly: { enabled: true, pattern: "[diary]/YYYY" },
+        decadal: { enabled: true, pattern: "[diary]/DEC[s]" },
+        century: { enabled: true, pattern: "[diary]/[C]CEN" },
+      },
+    });
+    const first = store.getSnapshot();
+    const listener = vi.fn();
+    const unsubscribe = store.subscribe(listener);
+    noteSource.publish(createNoteIndexSnapshot({ ...initial.notes,
+      ...createParsedNoteIndexSnapshot({ "other.md": "irrelevant" }, 2).notes,
+    }, 2));
+    expect(store.getSnapshot()).toBe(first);
+    expect(listener).not.toHaveBeenCalled();
+    noteSource.publish(createParsedNoteIndexSnapshot({ "diary/2020s.md": "updated" }, 3));
+    expect(store.getSnapshot()).not.toBe(first);
+    expect(listener).toHaveBeenCalledOnce();
+    unsubscribe();
+    store.dispose();
+  });
   it("skips dependency collection without subscribers when source identities are stable", () => {
     let notesReads = 0;
     const baseNotes = createNoteIndexSnapshot({}, 0);

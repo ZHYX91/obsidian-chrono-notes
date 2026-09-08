@@ -5,10 +5,9 @@ import { describe, expect, it } from "vitest";
 import { createTranslator } from "../../src/shared/i18n";
 import {
   buildMonthPickerRows,
-  getYearPickerWindow,
+  getPeriodPickerWindow,
   resolvePeriodPickerKeyboardAction,
   resolvePeriodPickerAction,
-  shiftYearPickerWindow,
 } from "../../src/ui/calendar/calendar-period-picker";
 import { CalendarPeriodPickerPopover } from "../../src/ui/calendar/calendar-period-picker-popover";
 import { readPluginStyles } from "../support/plugin-styles";
@@ -24,24 +23,22 @@ describe("calendar period picker", () => {
     [2040, 2021, 2040],
     [2041, 2041, 2060],
   ])("aligns year %i to a stable 20-year window", (year, start, end) => {
-    const result = getYearPickerWindow(year);
+    const result = getPeriodPickerWindow("year", year);
 
-    expect(result.start).toBe(start);
-    expect(result.end).toBe(end);
-    expect(result.years).toHaveLength(20);
-    expect(result.years[0]).toBe(start);
-    expect(result.years.at(-1)).toBe(end);
+    expect(result.items[0]?.start).toBe(start);
+    expect(result.items.at(-1)?.end).toBe(end);
+    expect(result.items).toHaveLength(20);
+    expect(result.items[0]?.start).toBe(start);
+    expect(result.items.at(-1)?.start).toBe(end);
     expect(Object.isFrozen(result)).toBe(true);
-    expect(Object.isFrozen(result.years)).toBe(true);
+    expect(Object.isFrozen(result.items)).toBe(true);
   });
 
   it("moves an existing year window by complete 20-year pages", () => {
-    expect(shiftYearPickerWindow(getYearPickerWindow(2026), -1)).toEqual(
-      getYearPickerWindow(2001),
-    );
-    expect(shiftYearPickerWindow(getYearPickerWindow(2026), 1)).toEqual(
-      getYearPickerWindow(2041),
-    );
+    const page = getPeriodPickerWindow("year", 2026);
+    expect(page.previousYear).toBe(2001);
+    expect(page.nextYear).toBe(2041);
+
   });
 
   it("builds four frozen quarter rows with their canonical month anchors", () => {

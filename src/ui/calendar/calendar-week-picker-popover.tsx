@@ -6,7 +6,6 @@ import {
   type KeyboardEvent,
   type RefObject,
 } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
 
 import {
   buildCalendarWeeks,
@@ -20,8 +19,6 @@ import type { Translator } from "../../shared/i18n";
 import { useHostEnvironment } from "../host-environment";
 import {
   formatPeriodPickerTargetLabel,
-  getYearPickerWindow,
-  shiftYearPickerWindow,
 } from "./calendar-period-picker";
 import {
   getWeekPickerContentBoxWidth,
@@ -31,6 +28,7 @@ import {
   type WeekPickerColumnCount,
 } from "./calendar-week-picker";
 import { createWeekPickerLabelFormatter } from "./week-view-presentation";
+import { CalendarPeriodGrid } from "./calendar-period-grid";
 import { useCalendarPickerDialog } from "./use-calendar-picker-dialog";
 
 interface CalendarWeekPickerPopoverProps {
@@ -63,7 +61,6 @@ export function CalendarWeekPickerPopover(
     weekYear,
   } = props;
   const rootRef = useCalendarPickerDialog(anchorRef, onClose, kind === "week");
-  const [yearWindow, setYearWindow] = useState(() => getYearPickerWindow(weekYear));
   const [columns, setColumns] = useState<WeekPickerColumnCount>(3);
   const typeaheadRef = useRef("");
   const typeaheadTimerRef = useRef<number | null>(null);
@@ -175,65 +172,17 @@ export function CalendarWeekPickerPopover(
       ref={rootRef}
       className={`chrono-notes-period-picker${kind === "week" ? " chrono-notes-week-picker" : ""}`}
       role="dialog"
+      dir={translator.direction}
       aria-label={translator.t(
         kind === "year" ? "calendar.weekYearPicker" : "calendar.weekPicker",
       )}
     >
       {kind === "year" ? (
-        <>
-          <div className="chrono-notes-period-picker-nav">
-            <button
-              type="button"
-              aria-label={translator.t("calendar.previousYearWindow")}
-              onClick={() => setYearWindow((current) =>
-                shiftYearPickerWindow(current, -1))}
-            >
-              <ChevronLeft size={15} aria-hidden="true" />
-            </button>
-            <strong>{yearWindow.start} - {yearWindow.end}</strong>
-            <button
-              type="button"
-              aria-label={translator.t("calendar.nextYearWindow")}
-              onClick={() => setYearWindow((current) =>
-                shiftYearPickerWindow(current, 1))}
-            >
-              <ChevronRight size={15} aria-hidden="true" />
-            </button>
-          </div>
-          <div className="chrono-notes-year-picker-grid">
-            {yearWindow.years.map((value) => {
-              const selected = value === weekYear;
-              const current = value === currentWeek.weekYear;
-              const targetLabel = translator.t("calendar.selectWeekYear", {
-                year: value,
-              });
-              return (
-                <button
-                  type="button"
-                  key={value}
-                  className={[
-                    current ? "is-current" : "",
-                    selected ? "is-selected" : "",
-                  ].filter(Boolean).join(" ")}
-                  data-selected={String(selected)}
-                  aria-current={current ? "true" : undefined}
-                  aria-label={formatPeriodPickerTargetLabel(
-                    targetLabel,
-                    current,
-                    translator,
-                  )}
-                  aria-pressed={selected}
-                  onClick={() => {
-                    onSelectWeekYear(value);
-                    onClose();
-                  }}
-                >
-                  {value}
-                </button>
-              );
-            })}
-          </div>
-        </>
+        <CalendarPeriodGrid kind="year" year={weekYear} currentYear={currentWeek.weekYear}
+          translator={translator} weekYear={true} onSelect={(value) => {
+            onSelectWeekYear(value);
+            onClose();
+          }} />
       ) : (
         <div
           className="chrono-notes-week-picker-grid"

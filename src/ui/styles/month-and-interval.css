@@ -505,7 +505,7 @@ body.is-mobile
   height: 100%;
   isolation: isolate;
   justify-content: center;
-  min-height: 44px;
+  min-height: max(44px, calc(1.2em + 32px));
   min-width: 0;
   padding: 3px 2px;
   position: relative;
@@ -529,7 +529,8 @@ body.is-mobile
   min-height: 0;
   min-width: 0;
   position: absolute;
-  top: 6px;
+  top: calc(50% - 0.6em - 4px);
+  transform: translateY(-100%);
   z-index: 1;
 }
 

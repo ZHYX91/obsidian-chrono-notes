@@ -1,0 +1,63 @@
+.chrono-notes-period-cell {
+  --no-tooltip: true;
+  align-items: center;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 5px;
+  box-shadow: none !important;
+  color: var(--text-normal);
+  display: flex;
+  flex-direction: column;
+  font-size: var(--font-ui-smaller);
+  isolation: isolate;
+  justify-content: center;
+  min-height: max(48px, calc(1.2em + 32px));
+  min-width: 0;
+  overflow: hidden;
+  padding: 8px 4px;
+  position: relative;
+}
+
+.chrono-notes-period-cell-status {
+  align-items: center;
+  display: flex;
+  inset-inline: 4px;
+  justify-content: center;
+  min-height: 0;
+  min-width: 0;
+  position: absolute;
+  top: calc(50% - 0.6em - 4px);
+  transform: translateY(-100%);
+  z-index: 1;
+}
+
+.chrono-notes-period-cell-label {
+  line-height: 1.2;
+  max-width: 100%;
+  overflow: hidden;
+  position: relative;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  z-index: 1;
+}
+
+.chrono-notes-period-cell.is-current-period
+  .chrono-notes-period-cell-label {
+  background: var(--chrono-notes-current-period-fill);
+  border-radius: 4px;
+  box-shadow: 0 0 0 2px var(--chrono-notes-current-period-fill);
+  color: var(--chrono-notes-current-period-foreground);
+}
+
+.chrono-notes-period-cell-status > .chrono-notes-calendar-indicator.is-top {
+  flex: 0 1 auto;
+}
+
+.chrono-notes-period-cell:hover {
+  background: var(--background-modifier-hover);
+}
+
+.chrono-notes-period-cell:focus-visible {
+  outline: 2px solid var(--interactive-accent);
+  outline-offset: 3px;
+}

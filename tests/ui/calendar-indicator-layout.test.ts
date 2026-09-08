@@ -24,6 +24,10 @@ const monthWeekNumber = readFileSync(
   new URL("../../src/ui/calendar/month-week-number.tsx", import.meta.url),
   "utf8",
 );
+const periodCell = readFileSync(
+  new URL("../../src/ui/calendar/calendar-period-cell.tsx", import.meta.url),
+  "utf8",
+);
 const yearView = readFileSync(
   new URL("../../src/ui/calendar/year-view.tsx", import.meta.url),
   "utf8",
@@ -35,6 +39,7 @@ const calendarViewSources = [
   monthView,
   monthWeekNumber,
   yearView,
+  periodCell,
 ].join("\n");
 
 function declarationsForSelector(selector: string): string {
@@ -170,7 +175,7 @@ describe("calendar indicator layout", () => {
   it("provides one fixed top slot for month, week, and year cells", () => {
     for (const selector of [
       ".chrono-notes-day-status > .chrono-notes-calendar-indicator.is-top",
-      ".chrono-notes-year-period-status > .chrono-notes-calendar-indicator.is-top",
+      ".chrono-notes-period-cell-status > .chrono-notes-calendar-indicator.is-top",
       ".chrono-notes-week-number-status > .chrono-notes-calendar-indicator.is-top",
     ]) {
       expect(styles).toContain(selector);
@@ -188,18 +193,18 @@ describe("calendar indicator layout", () => {
       /\.chrono-notes-week-number-button\s*\{[^}]*justify-content:\s*center;[^}]*position:\s*relative;/s,
     );
     expect(styles).toMatch(
-      /\.chrono-notes-week-number-status\s*\{[^}]*min-height:\s*0;[^}]*position:\s*absolute;[^}]*top:\s*6px;/s,
+      /\.chrono-notes-week-number-status\s*\{[^}]*min-height:\s*0;[^}]*position:\s*absolute;[^}]*top:\s*calc\(50% - 0\.6em - 4px\);[^}]*transform:\s*translateY\(-100%\);/s,
     );
     expect(styles).toMatch(
-      /\.chrono-notes-year-period\s*\{[^}]*justify-content:\s*center;[^}]*position:\s*relative;/s,
+      /\.chrono-notes-period-cell\s*\{[^}]*justify-content:\s*center;[^}]*position:\s*relative;/s,
     );
     expect(styles).toMatch(
-      /\.chrono-notes-year-period-status\s*\{[^}]*min-height:\s*0;[^}]*position:\s*absolute;[^}]*top:\s*4px;/s,
+      /\.chrono-notes-period-cell-status\s*\{[^}]*min-height:\s*0;[^}]*position:\s*absolute;[^}]*top:\s*calc\(50% - 0\.6em - 4px\);[^}]*transform:\s*translateY\(-100%\);/s,
     );
     expect(monthWeekNumber).toContain(
       'showNoteIndicators && note.noteState !== "not-configured"',
     );
-    expect(yearView).toContain(
+    expect(periodCell).toContain(
       'showNoteIndicators && summary.noteState !== "not-configured"',
     );
     expect(yearView).toContain("showNoteIndicators={false}");
@@ -284,7 +289,7 @@ describe("calendar indicator layout", () => {
     for (const selector of [
       ".chrono-notes-week-day.is-selected",
       ".chrono-notes-week-number-button.is-selected",
-      ".chrono-notes-year-period.is-selected",
+      ".chrono-notes-period-cell.is-selected",
       ".chrono-notes-year-heatmap-day.is-selected",
     ]) {
       const selectedRule = declarationsForSelector(selector);
@@ -319,7 +324,7 @@ describe("calendar indicator layout", () => {
     }
     for (const selector of [
       ".chrono-notes-week-number-button.is-current-period .chrono-notes-week-number-label",
-      ".chrono-notes-year-period.is-current-period .chrono-notes-year-period-label",
+      ".chrono-notes-period-cell.is-current-period .chrono-notes-period-cell-label",
     ]) {
       const labelRule = declarationsForSelector(selector);
       expect(labelRule, selector).toContain(
@@ -344,7 +349,7 @@ describe("calendar indicator layout", () => {
       ".chrono-notes-day.is-current-period",
       ".chrono-notes-week-day.is-current-period",
       ".chrono-notes-week-number-button.is-current-period",
-      ".chrono-notes-year-period.is-current-period",
+      ".chrono-notes-period-cell.is-current-period",
     ]) {
       expect(declarationsForSelector(selector), selector).not.toContain(
         "background:",
@@ -354,7 +359,7 @@ describe("calendar indicator layout", () => {
       ".chrono-notes-day.is-current-period:not(.is-range-preview):not(.is-range-start):not(.is-range-end)::after",
       ".chrono-notes-week-day.is-current-period:not(.is-drop-target)::after",
       ".chrono-notes-week-number-button.is-current-period::after",
-      ".chrono-notes-year-period.is-current-period::after",
+      ".chrono-notes-period-cell.is-current-period::after",
     ]) {
       expect(declarationsForSelector(selector), selector).toBe("");
     }
@@ -376,7 +381,7 @@ describe("calendar indicator layout", () => {
     expect(heatmapMarkerRule).toContain("width: clamp(3px, 20%, 6px);");
     expect(heatmapMarkerRule).toContain("z-index: 1;");
 
-    expect(yearView).toContain("data-period-kind={kind}");
+    expect(periodCell).toContain("data-period-kind={kind}");
     expect(styles).not.toContain("--chrono-notes-current-period-inset");
     expect(styles).not.toContain("--chrono-notes-current-period-radius");
     for (const level of [1, 2, 3, 4]) {
@@ -396,13 +401,13 @@ describe("calendar indicator layout", () => {
       /\.chrono-notes-year-summary-row\s*\{[^}]*grid-template-columns:\s*minmax\(64px, 0\.75fr\) repeat\(3, minmax\(0, 1fr\)\);/s,
     );
     expect(styles).toMatch(
-      /\.chrono-notes-year-period\s*\{[^}]*min-height:\s*48px;[^}]*padding:\s*10px 4px 6px;/s,
+      /\.chrono-notes-period-cell\s*\{[^}]*min-height:\s*max\(48px, calc\(1\.2em \+ 32px\)\);[^}]*padding:\s*8px 4px;/s,
     );
     expect(styles).toMatch(
       /@container \(max-width: 360px\)[\s\S]*?\.chrono-notes-month-grid\s*\{[^}]*grid-template-columns:\s*34px var\(--chrono-notes-week-date-gap\)/s,
     );
-    expect(styles).not.toContain(".chrono-notes-year-period-selection");
-    expect(yearView).not.toContain("chrono-notes-year-period-selection");
+    expect(styles).not.toContain(".chrono-notes-period-cell-selection");
+    expect(yearView).not.toContain("chrono-notes-period-cell-selection");
   });
 
   it("keeps focus visible and independent on every selectable calendar cell", () => {
@@ -420,7 +425,7 @@ describe("calendar indicator layout", () => {
     for (const selector of [
       ".chrono-notes-week-day:focus-visible",
       ".chrono-notes-week-number-button:focus-visible",
-      ".chrono-notes-year-period:focus-visible",
+      ".chrono-notes-period-cell:focus-visible",
       ".chrono-notes-year-heatmap-day:focus-visible",
     ]) {
       const focusRule = declarationsForSelector(selector);

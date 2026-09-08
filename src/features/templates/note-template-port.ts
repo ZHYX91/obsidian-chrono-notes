@@ -1,4 +1,4 @@
-import type { LocalDate, PeriodicNoteType } from "../../core/periodic/periodic-date";
+import type { LocalDate, PeriodicNoteType, PeriodRange } from "../../core/periodic/periodic-date";
 import type { TemplateEngine } from "../../shared/settings";
 
 interface BaseNoteTemplateContext {
@@ -13,6 +13,7 @@ export interface PeriodicNoteTemplateContext extends BaseNoteTemplateContext {
   readonly kind: "periodic";
   readonly date: LocalDate;
   readonly noteType: PeriodicNoteType;
+  readonly range: PeriodRange;
 }
 
 export interface IntervalNoteTemplateContext extends BaseNoteTemplateContext {

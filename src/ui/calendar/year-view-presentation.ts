@@ -1,9 +1,7 @@
 import type { HeatmapMetric } from "../../core/statistics/heatmap";
-import type { NoteStatistics } from "../../core/note/note-statistics";
 import type { YearHeatmapDay } from "../../features/calendar/year-calendar-query";
 import type { Translator } from "../../shared/i18n";
 import type { QuarterNameMode } from "../../shared/settings";
-import { formatNoteTaskProgress } from "../note-task-progress-presentation";
 import { formatCalendarHeatmapMetric } from "./calendar-heatmap-presentation";
 import { formatCalendarNoteState } from "./calendar-note-presentation";
 
@@ -17,24 +15,6 @@ export function formatYearQuarterLabel(
       ?? t("yearView.quarter", { quarter });
   }
   return t("yearView.quarter", { quarter });
-}
-
-export function formatYearPeriodLabel(
-  label: string,
-  state: YearHeatmapDay["noteState"],
-  errorMessage: string | undefined,
-  statistics: NoteStatistics,
-  t: Translator["t"],
-): string {
-  return [
-    label,
-    formatCalendarNoteState(state, errorMessage, t),
-    ...(statistics.taskTotal === 0
-      ? []
-      : [formatNoteTaskProgress(statistics, t)]),
-  ].join(
-    t("calendar.itemSeparator"),
-  );
 }
 
 export function formatYearHeatmapGridLabel(

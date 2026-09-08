@@ -428,7 +428,12 @@ function createDefaultPeriodicNotes(): Record<PeriodicNoteType, PeriodicNoteSett
   return Object.fromEntries(
     PERIODIC_NOTE_TYPES.map((noteType) => [
       noteType,
-      { enabled: false, pattern: "", templatePath: "" },
+      {
+        enabled: false,
+        pattern: noteType === "decadal" ? "[diary]/DEC[s]"
+          : noteType === "century" ? "[diary]/[C]CEN" : "",
+        templatePath: "",
+      },
     ]),
   ) as Record<PeriodicNoteType, PeriodicNoteSettings>;
 }

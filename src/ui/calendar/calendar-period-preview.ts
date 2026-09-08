@@ -1,6 +1,7 @@
 import {
   formatLocalDateKey,
   getPeriodAnchor,
+  getCenturyNumber,
   shiftPeriod,
   type LocalDate,
   type PeriodicNoteType,
@@ -52,6 +53,10 @@ function formatPeriodTitle(
       return `${anchor.year}-${String(anchor.month).padStart(2, "0")}`;
     case "quarterly":
       return `${anchor.year}-Q${Math.floor((anchor.month - 1) / 3) + 1}`;
+    case "decadal":
+      return `${String(anchor.year).padStart(4, "0")}s`;
+    case "century":
+      return `C${getCenturyNumber(anchor.year)}`;
     case "yearly":
       return String(anchor.year);
   }

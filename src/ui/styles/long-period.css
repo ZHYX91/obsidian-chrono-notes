@@ -1,0 +1,72 @@
+.chrono-notes-calendar:has(> [data-view-mode="century"]) {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.chrono-notes-calendar:has(> [data-view-mode="century"]) > .chrono-notes-calendar-header,
+.chrono-notes-calendar:has(> [data-view-mode="century"]) > .chrono-notes-calendar-toolbar {
+  flex-shrink: 0;
+}
+
+.chrono-notes-long-period {
+  container: chrono-long-period / inline-size;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  font-size: var(--chrono-notes-font-normal);
+  gap: var(--chrono-notes-cell-gap);
+  margin-top: 8px;
+  min-height: 0;
+  overflow: auto;
+}
+
+.chrono-notes-long-period-group {
+  display: grid;
+  gap: var(--chrono-notes-cell-gap);
+  grid-template-columns: max-content minmax(0, 1fr);
+}
+
+.chrono-notes-long-period-group + .chrono-notes-long-period-group {
+  margin-top: 6px;
+}
+
+.chrono-notes-long-period-heading,
+.chrono-notes-long-period-years {
+  display: grid;
+  gap: var(--chrono-notes-cell-gap);
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.chrono-notes-long-period-years {
+  grid-auto-rows: minmax(48px, auto);
+}
+
+.chrono-notes-long-period-decade {
+  display: grid;
+  min-width: 0;
+}
+
+.chrono-notes-long-period-decade > .chrono-notes-period-cell {
+  height: 100%;
+  padding-inline: 8px;
+}
+
+/* Account for both the available width and the actual year-label font size. */
+@container chrono-long-period (width < calc(25ch + 96px)) {
+  .chrono-notes-long-period-group {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .chrono-notes-long-period-decade {
+    justify-self: start;
+  }
+}
+
+.chrono-notes-calendar .chrono-notes-view-mode {
+  flex-wrap: wrap;
+}
+
+.chrono-notes-calendar-header:has(+ [data-view-mode="century"]) {
+  flex-wrap: wrap;
+}

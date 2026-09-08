@@ -1,3 +1,4 @@
+import { formatCalendarPeriodLabel } from "../../src/ui/calendar/calendar-note-presentation";
 import { describe, expect, it } from "vitest";
 
 import { createTranslator } from "../../src/shared/i18n";
@@ -5,7 +6,6 @@ import {
   formatYearHeatmapDayLabel,
   formatYearHeatmapGridLabel,
   formatYearHeatmapMetric,
-  formatYearPeriodLabel,
   formatYearQuarterLabel,
   resolveYearHeatmapTabIndex,
 } from "../../src/ui/calendar/year-view-presentation";
@@ -35,7 +35,7 @@ describe("year view presentation", () => {
   it("combines shared note states and task progress in period labels", () => {
     const t = createTranslator("zh-TW", "en").t;
 
-    expect(formatYearPeriodLabel(
+    expect(formatCalendarPeriodLabel(
       "7月",
       "error",
       "permission denied",
@@ -44,7 +44,7 @@ describe("year view presentation", () => {
     )).toBe(
       "7月，筆記讀取錯誤：permission denied",
     );
-    expect(formatYearPeriodLabel(
+    expect(formatCalendarPeriodLabel(
       "7月",
       "has-body",
       undefined,

@@ -1,9 +1,20 @@
 import type { Translator } from "../../shared/i18n";
+import { getCenturyNumber, getPeriodAnchor, type PeriodicNoteType } from "../../core/periodic/periodic-date";
 
-export interface YearPickerWindow {
+export type PeriodGridKind = "year" | "century";
+
+export interface PeriodPickerItem {
   readonly start: number;
   readonly end: number;
-  readonly years: readonly number[];
+  readonly label: string;
+  readonly detail: string | null;
+}
+
+export interface PeriodPickerWindow {
+  readonly title: string;
+  readonly previousYear: number | null;
+  readonly nextYear: number | null;
+  readonly items: readonly PeriodPickerItem[];
 }
 
 interface MonthPickerItem {
@@ -33,7 +44,12 @@ export interface PeriodPickerKeyboardInput {
 
 export type PeriodPickerAction = "select" | "open-default" | "open-tab" | "ignore";
 
-const YEAR_WINDOW_SIZE = 20;
+const GRID_PERIODS = {
+  year: { noteType: "yearly", step: 1, origin: 1, count: 20 },
+  century: { noteType: "century", step: 100, origin: 1, count: 10 },
+} as const satisfies Record<PeriodGridKind, {
+  noteType: PeriodicNoteType; step: number; origin: number; count: number;
+}>;
 
 export function formatPeriodPickerTargetLabel(
   target: string,
@@ -45,20 +61,51 @@ export function formatPeriodPickerTargetLabel(
     : target;
 }
 
-export function getYearPickerWindow(year: number): YearPickerWindow {
-  if (!Number.isInteger(year)) throw new RangeError("Picker year must be an integer");
-  const start = Math.floor((year - 1) / YEAR_WINDOW_SIZE) * YEAR_WINDOW_SIZE + 1;
-  const years = Object.freeze(
-    Array.from({ length: YEAR_WINDOW_SIZE }, (_, index) => start + index),
-  );
-  return Object.freeze({ start, end: start + YEAR_WINDOW_SIZE - 1, years });
+export function getPeriodPickerAnchor(kind: PeriodGridKind, year: number): number {
+  return getPeriodAnchor({ year, month: 1, day: 1 }, GRID_PERIODS[kind].noteType, "monday").year;
 }
 
-export function shiftYearPickerWindow(
-  window: YearPickerWindow,
-  direction: -1 | 1,
-): YearPickerWindow {
-  return getYearPickerWindow(window.start + direction * YEAR_WINDOW_SIZE);
+export function getPeriodPickerWindow(kind: PeriodGridKind, year: number): PeriodPickerWindow {
+  if (!Number.isInteger(year) || year < 1 || year > 9999) {
+    throw new RangeError("Picker year must be between 1 and 9999");
+  }
+  const { step, origin, count } = GRID_PERIODS[kind];
+  const span = step * count;
+  const start = Math.floor((year - origin) / span) * span + origin;
+  const items = Object.freeze(Array.from({ length: count }, (_, index) => {
+    const first = start + index * step;
+    const last = first + step - 1;
+    return Object.freeze({
+      start: first,
+      end: last,
+      label: kind === "century" ? `C${getCenturyNumber(first)}` : String(first),
+      detail: kind === "year" ? null : `${first}–${last}`,
+    });
+  }).filter((item) => item.start <= 9999));
+  const first = items[0];
+  const last = items.at(-1);
+  if (first === undefined || last === undefined) throw new RangeError("Empty picker page");
+  return Object.freeze({
+    title: kind === "century" ? `${first.label}–${last.label}` : `${first.start}–${last.end}`,
+    previousYear: start > origin ? Math.max(1, start - span) : null,
+    nextYear: last.end < 9999 ? last.end + 1 : null,
+    items,
+  });
+}
+
+export function resolvePeriodGridNavigation(
+  key: string,
+  index: number,
+  count: number,
+  columns: number,
+  rtl: boolean,
+): number | null {
+  const offset = key === "ArrowLeft" ? (rtl ? 1 : -1)
+    : key === "ArrowRight" ? (rtl ? -1 : 1)
+      : key === "ArrowUp" ? -columns : key === "ArrowDown" ? columns : null;
+  if (key === "Home") return 0;
+  if (key === "End") return count - 1;
+  return offset === null ? null : Math.max(0, Math.min(count - 1, index + offset));
 }
 
 export function buildMonthPickerRows(

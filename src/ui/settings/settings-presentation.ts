@@ -114,6 +114,10 @@ export function periodicNoteLabel(
       return t("settings.periodic.monthly");
     case "quarterly":
       return t("settings.periodic.quarterly");
+    case "decadal":
+      return t("settings.periodic.decadal");
+    case "century":
+      return t("settings.periodic.century");
     case "yearly":
       return t("settings.periodic.yearly");
   }

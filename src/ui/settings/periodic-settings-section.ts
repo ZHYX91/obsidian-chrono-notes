@@ -1,3 +1,5 @@
+import { renderNoteTemplateGuide } from "./template-guide";
+import { renderDateFormatGuide } from "./date-format-guide";
 import { Setting } from "obsidian";
 
 import {
@@ -50,6 +52,10 @@ export function renderPeriodicSettingsSection(
   containerEl.createEl("h3", { text: t("settings.periodic.paths") });
   const pathGuideEl = createSettingsGuide(containerEl, t("settings.periodic.paths"));
   pathGuideEl.createEl("p", { text: t("settings.periodic.pathsDesc") });
+  renderDateFormatGuide(pathGuideEl, context.translator, false);
+  pathGuideEl.createEl("p", { text: t("settings.periodic.longGrouping") });
+
+  renderNoteTemplateGuide(containerEl, context, "periodic");
 
   const cleanups: SettingsCleanup[] = [];
   for (const noteType of PERIODIC_NOTE_TYPES) {

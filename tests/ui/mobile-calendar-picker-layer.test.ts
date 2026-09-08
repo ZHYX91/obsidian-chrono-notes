@@ -29,7 +29,7 @@ describe("mobile calendar picker layer", () => {
       "this.pickerModalHost = createCalendarPickerModalHost(this.app)",
     );
     expect(calendarView).toContain("pickerModalHost={this.pickerModalHost}");
-    expect(calendarApp.match(/<CalendarPickerLayer/g)).toHaveLength(2);
+    expect(calendarApp.match(/<CalendarPickerLayer/g)).toHaveLength(1);
     expect(pickerLayer).not.toContain('from "obsidian"');
     expect(modalHost).toContain("class CalendarPickerModal extends Modal");
     expect(pickerLayer).toContain('document.body.hasClass("is-mobile")');

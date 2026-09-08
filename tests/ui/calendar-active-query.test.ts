@@ -542,6 +542,126 @@ describe("CalendarApp active query", () => {
     document.dispatchEvent(new Event("visibilitychange"));
     expect(cancel).toHaveBeenCalledTimes(mountedCancelCount + 2);
   });
+  it.each([
+    ["century", 3, "Choose a century", "Select century C22 · 2101–2200", "C22 · 2101–2200"],
+  ] as const)("selects a %s in its own picker without opening any note", async (_kind, index, label, target, heading) => {
+    const container = document.createElement("div");
+    document.body.append(container);
+    const root = createRoot(container);
+    const props = createProps(() => () => undefined, () => () => undefined);
+    const open = vi.fn(async () => undefined);
+    await act(async () => root.render(createElement(CalendarApp, { ...props, onOpenPeriodic: open })));
+    const views = container.querySelectorAll<HTMLButtonElement>(".chrono-notes-view-mode button");
+    await act(async () => views[index]?.click());
+    const trigger = container.querySelector<HTMLButtonElement>(`[aria-label="${label}"]`);
+    if (trigger === null) throw new Error("Expected the view's period picker trigger");
+    await act(async () => { trigger.focus(); trigger.click(); });
+    expect(container.querySelectorAll(".chrono-notes-long-period-picker-grid button")).toHaveLength(10);
+    expect(container.querySelector(".chrono-notes-year-picker-grid")).toBeNull();
+    await act(async () => container.querySelector<HTMLButtonElement>(`[aria-label="${target}"]`)
+      ?.dispatchEvent(new MouseEvent("click", { bubbles: true, ctrlKey: true, detail: 2 })));
+    expect(container.querySelector('[role="dialog"]')).toBeNull();
+    expect(views[index]?.getAttribute("aria-pressed")).toBe("true");
+    expect(trigger.textContent).toBe(heading);
+    expect(trigger.getAttribute("aria-expanded")).toBe("false");
+    expect(document.activeElement).toBe(trigger);
+    expect(open).not.toHaveBeenCalled();
+    await act(async () => root.unmount());
+  });
+
+  it("reveals the selected decade on entry and repeats This century without changing note settings", async () => {
+    const scroll = vi.spyOn(HTMLElement.prototype, "scrollIntoView").mockImplementation(() => undefined);
+    const frame = vi.spyOn(window, "requestAnimationFrame").mockImplementation((callback) => {
+      callback(0);
+      return 1;
+    });
+    const container = document.createElement("div");
+    document.body.append(container);
+    const root = createRoot(container);
+    const props = createProps(() => () => undefined, () => () => undefined);
+    const settings = JSON.stringify(props.getSettings());
+    try {
+      await act(async () => root.render(createElement(CalendarApp, {
+        ...props, navigationRequest: {
+          date: { year: 2067, month: 3, day: 4 }, noteType: "daily", mode: "jump", revision: 1,
+        },
+      })));
+      const views = container.querySelectorAll<HTMLButtonElement>(".chrono-notes-view-mode button");
+      await act(async () => views[3]?.click());
+      const revealedDecade = () => (scroll.mock.contexts.at(-1) as HTMLElement).dataset.decadeYear;
+      expect(revealedDecade()).toBe("2060");
+      const count = scroll.mock.calls.length;
+      await act(async () => container.querySelector<HTMLButtonElement>('[data-period-kind="year"][data-period-year="2055"]')?.click());
+      expect(scroll).toHaveBeenCalledTimes(count);
+      for (let repeat = 0; repeat < 2; repeat += 1) {
+        await act(async () => container.querySelector<HTMLButtonElement>(".chrono-notes-today")?.click());
+        expect(revealedDecade()).toBe("2020");
+        expect(scroll).toHaveBeenCalledTimes(count + repeat + 1);
+      }
+      expect(JSON.stringify(props.getSettings())).toBe(settings);
+    } finally {
+      await act(async () => root.unmount());
+      scroll.mockRestore();
+      frame.mockRestore();
+    }
+  });
+
+  it.each(["jump", "sync"] as const)("routes decade note %s requests into the century containing their anchor", async (mode) => {
+    const container = document.createElement("div");
+    document.body.append(container);
+    const root = createRoot(container);
+    const props = createProps(() => () => undefined, () => () => undefined);
+    try {
+      await act(async () => root.render(createElement(CalendarApp, {
+        ...props, navigationRequest: {
+          date: { year: 2000, month: 1, day: 1 }, noteType: "decadal", mode, revision: 1,
+        },
+      })));
+      expect(container.querySelector('[data-view-mode="century"]')).not.toBeNull();
+      expect(container.querySelector(".chrono-notes-calendar-picker-trigger")?.textContent).toBe("C20 · 1901–2000");
+      expect(container.querySelector('[data-period-kind="decade"][data-period-year="2000"]')?.getAttribute("aria-pressed"))
+        .toBe("true");
+    } finally {
+      await act(async () => root.unmount());
+    }
+  });
+
+  it("browses and creates long-period notes directly in the right calendar", async () => {
+    const container = document.createElement("div");
+    document.body.append(container);
+    const root = createRoot(container);
+    const props = createProps(() => () => undefined, () => () => undefined);
+    const settings = props.getSettings();
+    settings.periodicNotes.century.enabled = true;
+    settings.periodicNotes.decadal.enabled = true;
+    const open = vi.fn(async () => undefined);
+    await act(async () => root.render(createElement(CalendarApp, {
+      ...props, onOpenPeriodic: open,
+    })));
+    const viewButtons = container.querySelectorAll<HTMLButtonElement>(".chrono-notes-view-mode button");
+    expect([...viewButtons].map((button) => button.textContent)).toEqual(["Week", "Month", "Year", "Century"]);
+    await act(async () => viewButtons[3]?.click());
+    expect(container.textContent).toContain("C21 · 2001–2100");
+    expect(container.querySelectorAll('.chrono-notes-long-period [data-period-kind="year"]')).toHaveLength(100);
+    expect(container.querySelector(".chrono-notes-heatmap-tools")).toBeNull();
+    await act(async () => container.querySelector<HTMLButtonElement>('.chrono-notes-long-period [data-period-kind="century"]')
+      ?.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true })));
+    expect(open).toHaveBeenLastCalledWith({ year: 2001, month: 1, day: 1 }, "century", "default");
+    await act(async () => container.querySelector<HTMLButtonElement>(".chrono-notes-calendar-navigation > button")?.click());
+    expect(container.textContent).toContain("C20 · 1901–2000");
+    await act(async () => container.querySelector<HTMLButtonElement>(".chrono-notes-today")?.click());
+    expect(container.textContent).toContain("C21 · 2001–2100");
+    await act(async () => container.querySelector<HTMLButtonElement>('[data-period-kind="decade"][data-period-year="2020"]')
+      ?.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true })));
+    expect(open).toHaveBeenLastCalledWith({ year: 2020, month: 1, day: 1 }, "decadal", "default");
+    expect(container.querySelectorAll('.chrono-notes-long-period [data-period-kind="year"]')).toHaveLength(100);
+    await act(async () => container.querySelector<HTMLButtonElement>('[data-period-kind="year"][data-period-year="2020"]')?.click());
+    expect(viewButtons[3]?.getAttribute("aria-pressed")).toBe("true");
+    await act(async () => viewButtons[2]?.click());
+    expect(container.querySelector(".chrono-notes-calendar-picker-trigger")?.textContent).toBe("2020");
+    await act(async () => root.unmount());
+  });
+
 });
 
 function createProps(

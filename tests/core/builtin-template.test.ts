@@ -1,3 +1,4 @@
+import { getPeriodRange } from "../../src/core/periodic/periodic-date";
 import { describe, expect, it } from "vitest";
 
 import {
@@ -18,6 +19,7 @@ describe("renderBuiltinTemplate", () => {
         ].join("\n"),
         {
           date: { year: 2026, month: 4, day: 1 },
+          range: getPeriodRange({ year: 2026, month: 4, day: 1 }, "daily", "monday"),
           title: "2026-Q2",
           now: new Date("2030-08-09T10:11:12Z"),
           locale: "en-US",
@@ -41,6 +43,7 @@ describe("renderBuiltinTemplate", () => {
         "{{date:YYYY-MM-DD ddd}} · {{date:dddd}}",
         {
           date: { year: 2026, month: 10, day: 1 },
+          range: getPeriodRange({ year: 2026, month: 10, day: 1 }, "daily", "monday"),
           title: "Daily",
           now: new Date("2030-01-01T00:00:00Z"),
           locale: "zh-CN",
@@ -54,6 +57,7 @@ describe("renderBuiltinTemplate", () => {
     expect(
       renderBuiltinTemplate("{{unknown}} {{date}} {{date:yyyy-MM-dd}}", {
         date: { year: 2026, month: 5, day: 18 },
+        range: getPeriodRange({ year: 2026, month: 5, day: 18 }, "daily", "monday"),
         title: "Daily",
         now: new Date("2030-01-01T00:00:00Z"),
         locale: "en-US",

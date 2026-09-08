@@ -9,6 +9,10 @@ const yearAndWeekStyles = readFileSync(
   new URL("../../src/ui/styles/year-and-week.css", import.meta.url),
   "utf8",
 );
+const periodCellStyles = readFileSync(
+  new URL("../../src/ui/styles/period-cell.css", import.meta.url),
+  "utf8",
+);
 const calendarAppSource = readFileSync(
   new URL("../../src/ui/calendar/calendar-app.tsx", import.meta.url),
   "utf8",
@@ -40,8 +44,8 @@ describe("calendar host tooltip contract", () => {
     expect(yearAndWeekStyles).toMatch(
       /\.chrono-notes-weekly-note\s*\{[^}]*--no-tooltip:\s*true;/s,
     );
-    expect(yearAndWeekStyles).toMatch(
-      /\.chrono-notes-year-period\s*\{[^}]*--no-tooltip:\s*true;/s,
+    expect(periodCellStyles).toMatch(
+      /\.chrono-notes-period-cell\s*\{[^}]*--no-tooltip:\s*true;/s,
     );
   });
 

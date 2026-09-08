@@ -1,6 +1,7 @@
 import {
   PERIODIC_NOTE_TYPES,
   getPeriodAnchor,
+  getPeriodRange,
   type LocalDate,
   type PeriodicNoteType,
   type WeekStartDay,
@@ -220,6 +221,7 @@ export class PeriodicNoteCommands {
       const config = settings.periodicNotes[noteType];
       const context: PeriodicNoteTemplateContext = Object.freeze({
         kind: "periodic",
+        range: getPeriodRange(selectedDate, noteType, settings.weekStartDay),
         date: getPeriodAnchor(selectedDate, noteType, settings.weekStartDay),
         locale: settings.locale,
         noteType,

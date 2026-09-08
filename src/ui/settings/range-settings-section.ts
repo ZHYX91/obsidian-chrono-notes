@@ -1,3 +1,4 @@
+import { renderNoteTemplateGuide } from "./template-guide";
 import { Setting } from "obsidian";
 
 import { normalizeIntervalNoteFolder } from "../../core/note/interval-note-spec";
@@ -74,6 +75,7 @@ export function renderRangeSettingsSection(
       });
     });
   const rangeFolderCleanup = configureRangeFolderSetting(new Setting(containerEl), context);
+  renderNoteTemplateGuide(containerEl, context, "interval");
   const templateCleanup = renderTemplatePathSetting(
     containerEl,
     t("settings.templates.path"),

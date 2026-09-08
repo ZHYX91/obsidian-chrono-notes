@@ -442,7 +442,9 @@ describe("ChronoNotesPlugin lifecycle composition", () => {
     expect(mocks.state.commands.map(({ id }) => id).sort()).toEqual([
       "jump-to-date",
       "open-calendar",
+      "open-century-note",
       "open-daily-note",
+      "open-decadal-note",
       "open-mini-calendar",
       "open-monthly-note",
       "open-quarterly-note",

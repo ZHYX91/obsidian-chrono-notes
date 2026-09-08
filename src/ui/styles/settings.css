@@ -363,6 +363,7 @@
 
 .chrono-notes-template-path-example code,
 .chrono-notes-range-path-example code,
+
 .chrono-notes-settings-guide code {
   white-space: normal;
 }
@@ -423,5 +424,50 @@ body.is-mobile .chrono-notes-index-details > summary {
 @container (max-width: 420px) {
   .chrono-notes-index-metrics > div {
     grid-template-columns: minmax(0, 1fr);
+  }
+}
+.chrono-notes-settings-guide code {
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+
+.chrono-notes-template-guide-table {
+  border-collapse: collapse;
+  font-size: var(--font-ui-smaller);
+  margin-block: 8px;
+  table-layout: fixed;
+  width: 100%;
+}
+
+.chrono-notes-template-guide-table :is(th, td) {
+  border-bottom: 1px solid var(--background-modifier-border);
+  overflow-wrap: anywhere;
+  padding: 6px 4px;
+  text-align: start;
+  vertical-align: top;
+}
+
+.chrono-notes-template-guide-table th:first-child {
+  width: 44%;
+}
+
+.chrono-notes-template-guide-table code {
+  direction: ltr;
+  display: inline-block;
+  max-width: 100%;
+  unicode-bidi: isolate;
+  white-space: pre-wrap;
+}
+
+@container (max-width: 420px) {
+  .chrono-notes-template-guide-table tr {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+
+  .chrono-notes-template-guide-table :is(th, td):first-child {
+    border-bottom: 0;
+    grid-column: 1 / -1;
+    width: auto;
   }
 }

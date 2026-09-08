@@ -1,12 +1,7 @@
 import {
   useMemo,
-  useState,
-  type KeyboardEvent,
-  type MouseEvent,
-  type ReactNode,
   type RefObject,
 } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
 
 import type { LocalDate, PeriodicNoteType } from "../../core/periodic/periodic-date";
 import type { NoteOpenTarget } from "../../features/periodic/periodic-note-commands";
@@ -16,12 +11,10 @@ import { formatShortMonthLabel } from "../date-presentation";
 import {
   buildMonthPickerRows,
   formatPeriodPickerTargetLabel,
-  getYearPickerWindow,
-  resolvePeriodPickerAction,
-  resolvePeriodPickerKeyboardAction,
-  shiftYearPickerWindow,
 } from "./calendar-period-picker";
 import { formatYearQuarterLabel } from "./year-view-presentation";
+import { PeriodTargetButton } from "./period-target-button";
+import { CalendarPeriodGrid } from "./calendar-period-grid";
 import { useCalendarPickerDialog } from "./use-calendar-picker-dialog";
 
 interface CalendarPeriodPickerPopoverProps {
@@ -63,7 +56,6 @@ export function CalendarPeriodPickerPopover(
     year,
   } = props;
   const rootRef = useCalendarPickerDialog(anchorRef, onClose);
-  const [yearWindow, setYearWindow] = useState(() => getYearPickerWindow(year));
   const monthRows = useMemo(
     () => buildMonthPickerRows(
       (quarter) => formatYearQuarterLabel(quarter, quarterNameMode, translator.t),
@@ -77,57 +69,20 @@ export function CalendarPeriodPickerPopover(
       ref={rootRef}
       className="chrono-notes-period-picker"
       role="dialog"
+      dir={translator.direction}
       aria-label={translator.t(
         kind === "year" ? "calendar.yearPicker" : "calendar.monthPicker",
       )}
     >
       {kind === "year" ? (
-        <>
-          <div className="chrono-notes-period-picker-nav">
-            <button
-              type="button"
-              aria-label={translator.t("calendar.previousYearWindow")}
-              onClick={() => setYearWindow((current) => shiftYearPickerWindow(current, -1))}
-            >
-              <ChevronLeft size={15} aria-hidden="true" />
-            </button>
-            <strong>{yearWindow.start} - {yearWindow.end}</strong>
-            <button
-              type="button"
-              aria-label={translator.t("calendar.nextYearWindow")}
-              onClick={() => setYearWindow((current) => shiftYearPickerWindow(current, 1))}
-            >
-              <ChevronRight size={15} aria-hidden="true" />
-            </button>
-          </div>
-          <div className="chrono-notes-year-picker-grid">
-            {yearWindow.years.map((value) => {
-              const current = value === today.year;
-              const targetLabel = translator.t("calendar.selectYear", {
-                year: value,
-              });
-              return (
-                <PeriodTargetButton
-                  key={value}
-                  current={current}
-                  selected={value === year}
-                  ariaLabel={formatPeriodPickerTargetLabel(
-                    targetLabel,
-                    current,
-                    translator,
-                  )}
-                  date={{ year: value, month: 1, day: 1 }}
-                  noteType="yearly"
-                  onSelect={() => onSelectYear(value)}
-                  onOpen={onOpenPeriodic}
-                  onClose={onClose}
-                >
-                  {value}
-                </PeriodTargetButton>
-              );
-            })}
-          </div>
-        </>
+        <CalendarPeriodGrid
+          kind="year" year={year} currentYear={today.year} translator={translator}
+          onSelect={onSelectYear}
+          onOpen={(date, noteType, target) => {
+            onClose();
+            return onOpenPeriodic(date, noteType, target);
+          }}
+        />
       ) : (
         <div className="chrono-notes-month-picker-grid">
           {monthRows.map((row) => (
@@ -178,91 +133,5 @@ export function CalendarPeriodPickerPopover(
         </div>
       )}
     </div>
-  );
-}
-
-interface PeriodTargetButtonProps {
-  readonly ariaLabel: string;
-  readonly children: ReactNode;
-  readonly className?: string;
-  readonly current: boolean;
-  readonly date: LocalDate;
-  readonly noteType: "monthly" | "quarterly" | "yearly";
-  readonly selected: boolean;
-  readonly onSelect: () => void;
-  readonly onOpen: (
-    date: LocalDate,
-    noteType: PeriodicNoteType,
-    target: NoteOpenTarget,
-  ) => Promise<void>;
-  readonly onClose: () => void;
-}
-
-function PeriodTargetButton(props: PeriodTargetButtonProps) {
-  const {
-    ariaLabel,
-    children,
-    className = "",
-    current,
-    date,
-    noteType,
-    onClose,
-    onOpen,
-    onSelect,
-    selected,
-  } = props;
-
-  const runAction = (action: ReturnType<typeof resolvePeriodPickerAction>) => {
-    if (action === "select") {
-      onSelect();
-    } else if (action === "open-default" || action === "open-tab") {
-      onClose();
-      void onOpen(date, noteType, action === "open-tab" ? "tab" : "default");
-    }
-  };
-
-  const handleClick = (event: MouseEvent<HTMLButtonElement>) => {
-    const action = resolvePeriodPickerAction(event);
-    if (action === "open-tab") event.preventDefault();
-    runAction(action);
-  };
-  const handleAuxClick = (event: MouseEvent<HTMLButtonElement>) => {
-    const action = resolvePeriodPickerAction(event);
-    if (action !== "ignore") event.preventDefault();
-    runAction(action);
-  };
-  const handleKeyDown = (event: KeyboardEvent<HTMLButtonElement>) => {
-    const action = resolvePeriodPickerKeyboardAction(event);
-    if (action === null) return;
-    event.preventDefault();
-    onClose();
-    void onOpen(
-      date,
-      noteType,
-      action === "open-tab" ? "tab" : "default",
-    );
-  };
-
-  return (
-    <button
-      type="button"
-      className={[
-        className,
-        current ? "is-current" : "",
-        selected ? "is-selected" : "",
-      ].filter(Boolean).join(" ")}
-      data-selected={String(selected)}
-      aria-current={current ? "true" : undefined}
-      aria-label={ariaLabel}
-      aria-pressed={selected}
-      onClick={handleClick}
-      onAuxClick={handleAuxClick}
-      onMouseDown={(event) => {
-        if (event.button === 1) event.preventDefault();
-      }}
-      onKeyDown={handleKeyDown}
-    >
-      {children}
-    </button>
   );
 }

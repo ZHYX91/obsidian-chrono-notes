@@ -25,6 +25,10 @@ const templateSectionSource = readFileSync(
   new URL("../../src/ui/settings/template-settings.ts", import.meta.url),
   "utf8",
 );
+const templateGuideSource = readFileSync(
+  new URL("../../src/ui/settings/template-guide.ts", import.meta.url),
+  "utf8",
+);
 const settingsGuideSource = readFileSync(
   new URL("../../src/ui/settings/settings-guide.ts", import.meta.url),
   "utf8",
@@ -99,20 +103,15 @@ describe("periodic note settings structure", () => {
     expect(periodicSectionSource).toContain("getPeriodicNoteTemplatePathExample(noteType)");
     expect(periodicSectionSource).toContain("config.templatePath");
     expect(rangeSectionSource).toContain("settings.templatePath");
-    expect(templateSectionSource).toContain("{{date:FORMAT}}");
-    expect(templateSectionSource).toContain("{{start:FORMAT}}");
-    expect(templateSectionSource).toContain("GGGG, GG, W, WW, Q, H, HH");
-    expect(templateSectionSource).toContain("tp_calendar.targetDate");
-    expect(templateSectionSource).toContain("tp_calendar.date()");
-    expect(templateSectionSource).toContain("tp_calendar.startDate");
-    expect(templateSectionSource).toContain("tp_calendar.endDate");
-    expect(templateSectionSource).not.toContain("PERIODIC_NOTE_TYPES");
+    expect(templateSectionSource).toContain("renderTemplateSyntaxGuide(containerEl, context)");
+    expect(periodicSectionSource).toContain('renderNoteTemplateGuide(containerEl, context, "periodic")');
+    expect(rangeSectionSource).toContain('renderNoteTemplateGuide(containerEl, context, "interval")');
     expect(settingsTabSource).not.toContain('case "templates"');
   });
 
   it("uses one accessible settings-guide structure for path and template help", () => {
     expect(periodicSectionSource).toContain("createSettingsGuide");
-    expect(templateSectionSource).toContain("createSettingsGuide");
+    expect(templateGuideSource).toContain("createSettingsGuide");
     expect(rangeSectionSource).toContain("createSettingsGuide");
     expect(rangeSectionSource).toContain("settings.ranges.recognitionGuideTitle");
     expect(rangeSectionSource).toContain("chrono-notes: interval");

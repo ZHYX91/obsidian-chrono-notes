@@ -1,3 +1,5 @@
+import type { NoteStatistics } from "../../core/note/note-statistics";
+import { formatNoteTaskProgress } from "../note-task-progress-presentation";
 import type { IndexedPeriodicNoteState } from "../../features/calendar/indexed-periodic-note";
 import type { Translator } from "../../shared/i18n";
 
@@ -24,4 +26,22 @@ export function formatCalendarNoteState(
     case "not-configured":
       return t("calendar.noteState.notConfigured");
   }
+}
+
+export function formatCalendarPeriodLabel(
+  label: string,
+  state: IndexedPeriodicNoteState,
+  errorMessage: string | undefined,
+  statistics: NoteStatistics,
+  t: Translator["t"],
+): string {
+  return [
+    label,
+    formatCalendarNoteState(state, errorMessage, t),
+    ...(statistics.taskTotal === 0
+      ? []
+      : [formatNoteTaskProgress(statistics, t)]),
+  ].join(
+    t("calendar.itemSeparator"),
+  );
 }

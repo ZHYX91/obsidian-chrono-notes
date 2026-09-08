@@ -1,3 +1,4 @@
+import { DateTime } from "luxon";
 import { describe, expect, it } from "vitest";
 
 import {
@@ -8,14 +9,11 @@ import {
 
 describe("Moment format compilation", () => {
   it("compiles the documented path tokens and bracket literals", () => {
-    expect(compileMomentFormat(
-      "[diary]/GGGG/GGGG-[W]WW",
-      "date",
-    )).toBe("'diary''/'kkkk'/'kkkk'-''W'WW");
-    expect(compileMomentFormat(
-      "YYYY-MM-DD ddd dddd [Q]Q",
-      "date",
-    )).toBe("yyyy'-'MM'-'dd' 'ccc' 'cccc' ''Q'q");
+    const date = DateTime.fromISO("2026-09-07", { zone: "UTC", locale: "en" });
+    expect(date.toFormat(compileMomentFormat("[diary]/GGGG/GGGG-[W]WW", "date") ?? ""))
+      .toBe("diary/2026/2026-W37");
+    expect(date.toFormat(compileMomentFormat("YYYY-MM-DD ddd dddd [Q]Q", "date") ?? ""))
+      .toBe("2026-09-07 Mon Monday Q3");
   });
 
   it("compiles documented time placeholders", () => {
@@ -34,8 +32,8 @@ describe("Moment format compilation", () => {
     const quoted = quoteMomentLiteral(literal);
 
     expect(quoted).toBe("[People/Bob's/[Archive\\]]");
-    expect(compileMomentFormat(`${quoted}/YYYY`, "date"))
-      .toBe("'People/Bob''''s/[Archive]''/'yyyy");
+    expect(DateTime.fromISO("2026-09-07").toFormat(compileMomentFormat(`${quoted}/YYYY`, "date") ?? ""))
+      .toBe("People/Bob's/[Archive]/2026");
   });
 
   it("migrates the documented Luxon path grammar without changing valid Moment input", () => {

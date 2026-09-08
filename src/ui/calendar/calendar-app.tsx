@@ -21,6 +21,7 @@ import {
 } from "../../core/periodic/calendar-week";
 import {
   getPeriodAnchor,
+  getCenturyNumber,
   shiftPeriod,
   type LocalDate,
   type PeriodicNoteType,
@@ -35,6 +36,7 @@ import {
   type MonthCalendarQueryRequest,
   type WeekCalendarQueryRequest,
   type YearCalendarQueryRequest,
+  type CenturyCalendarQueryRequest,
 } from "../../features/calendar/calendar-query-store";
 import type { IcsEventIndex } from "../../features/calendar/ics-event-index";
 import type { NoteIndex } from "../../features/notes/note-index";
@@ -46,9 +48,11 @@ import { getCalendarFontVariables } from "./calendar-font-size";
 import { LongPressGesture } from "./long-press";
 import { CalendarPreviewTooltip } from "./calendar-preview-tooltip";
 import type { CalendarPreviewCell } from "./calendar-preview-tooltip";
-import { YearView, type CalendarSelectionKind } from "./year-view";
+import { YearView } from "./year-view";
+import { getPeriodicSelectionKind, type CalendarSelectionKind } from "./calendar-selection";
 import { WeekView } from "./week-view";
 import { CalendarPeriodPickerPopover } from "./calendar-period-picker-popover";
+import { CalendarCenturyPickerPopover } from "./calendar-century-picker-popover";
 import { CalendarWeekPickerPopover } from "./calendar-week-picker-popover";
 import {
   CalendarPickerLayer,
@@ -58,12 +62,26 @@ import { createWeekPickerLabelFormatter } from "./week-view-presentation";
 import { useLocalToday } from "../use-local-today";
 import { useCalendarPreview } from "./use-calendar-preview";
 import { MonthView } from "./month-view";
+import { CenturyView } from "./century-view";
+
 import {
   formatNarrowWeekdayLabels,
   formatShortMonthLabel,
   formatShortMonthLabels,
 } from "../date-presentation";
 import { useHostEnvironment } from "../host-environment";
+
+type CalendarViewMode = "week" | "month" | "year" | "century";
+const CALENDAR_VIEW_MODES: readonly CalendarViewMode[] = ["week", "month", "year", "century"];
+const PICKER_TITLES = {
+  year: "calendar.chooseYear",
+  month: "calendar.chooseMonth",
+  "week-year": "calendar.chooseWeekYear",
+  week: "calendar.chooseWeek",
+  century: "calendar.picker.century.choose",
+} as const;
+type CalendarPickerKind = keyof typeof PICKER_TITLES;
+
 
 export interface CalendarAppProps {
   readonly pickerModalHost?: CalendarPickerModalHost;
@@ -137,11 +155,13 @@ export function CalendarApp({
   const [selectionKind, setSelectionKind] =
     useState<CalendarSelectionKind>("day");
   const [monthSelectionRequest, setMonthSelectionRequest] = useState(0);
-  const [viewMode, setViewMode] = useState<"week" | "month" | "year">("month");
+  const [centuryRevealRequest, setCenturyRevealRequest] = useState(() => ({ year: today.year, revision: 0 }));
+  const revealCenturyYear = useCallback((year: number) => {
+    setCenturyRevealRequest((request) => ({ year, revision: request.revision + 1 }));
+  }, []);
+  const [viewMode, setViewMode] = useState<CalendarViewMode>("month");
   const [monthHeatmapEnabled, setMonthHeatmapEnabled] = useState(false);
-  const [openPeriodPicker, setOpenPeriodPicker] = useState<
-    "year" | "month" | "week-year" | "week" | null
-  >(null);
+  const [openPeriodPicker, setOpenPeriodPicker] = useState<CalendarPickerKind | null>(null);
   const longPress = useMemo(
     () =>
       new LongPressGesture({
@@ -172,11 +192,13 @@ export function CalendarApp({
     setOpenPeriodPicker(null);
     setSelected(selectionDate);
     setSelectionKind(getPeriodicSelectionKind(noteType));
+    if (noteType === "decadal" || noteType === "century") setViewMode("century");
+    revealCenturyYear(selectionDate.year);
     setVisibleMonth({
       year: selectionDate.year,
       month: selectionDate.month,
     });
-  }, [settings.weekStartDay]);
+  }, [revealCenturyYear, settings.weekStartDay]);
   const openPeriodic = useCallback((
     date: LocalDate,
     noteType: PeriodicNoteType,
@@ -310,7 +332,21 @@ export function CalendarApp({
       settings.yearViewHeatmap,
       visibleMonth.year,
     ]);
-  const queryRequest: CalendarQueryRequest = viewMode === "week"
+  const centuryQueryRequest = useMemo<CenturyCalendarQueryRequest>(() => ({
+    kind: "century",
+    year: Math.max(1, Math.min(9999, visibleMonth.year)),
+    options: {
+      locale, weekStartDay: settings.weekStartDay,
+      yearly: { ...settings.periodicNotes.yearly },
+      decadal: { ...settings.periodicNotes.decadal },
+      century: { ...settings.periodicNotes.century },
+    },
+  }), [locale, settings.weekStartDay, visibleMonth.year,
+    settings.periodicNotes.yearly.enabled, settings.periodicNotes.yearly.pattern,
+    settings.periodicNotes.decadal.enabled, settings.periodicNotes.decadal.pattern,
+    settings.periodicNotes.century.enabled, settings.periodicNotes.century.pattern]);
+  const queryRequest: CalendarQueryRequest = viewMode === "century"
+    ? centuryQueryRequest : viewMode === "week"
     ? weekQueryRequest
     : viewMode === "year"
       ? yearQueryRequest
@@ -327,6 +363,7 @@ export function CalendarApp({
   const monthQuery = querySnapshot.kind === "month" ? querySnapshot.query : null;
   const weekQuery = querySnapshot.kind === "week" ? querySnapshot.query : null;
   const yearQuery = querySnapshot.kind === "year" ? querySnapshot.query : null;
+  const centuryQuery = querySnapshot.kind === "century" ? querySnapshot.query : null;
   const selectedWeekIdentity = useMemo(
     () => getCalendarWeekIdentity(selected, settings.weekStartDay),
     [selected, settings.weekStartDay],
@@ -362,7 +399,7 @@ export function CalendarApp({
     ),
     [formatWeekPickerLabels, headerWeek],
   );
-  const activeQuery = monthQuery ?? weekQuery ?? yearQuery;
+  const activeQuery = monthQuery ?? weekQuery ?? yearQuery ?? centuryQuery;
   const weekdayLabels = useMemo(
     () => formatNarrowWeekdayLabels(locale, settings.weekStartDay),
     [locale, settings.weekStartDay],
@@ -388,7 +425,8 @@ export function CalendarApp({
   }, [longPress, viewMode]);
   useEffect(() => {
     if (navigationRequest === null) return;
-    if (navigationRequest.mode === "jump") jumpToDate(navigationRequest.date);
+    if (navigationRequest.mode === "jump" && navigationRequest.noteType !== "decadal" &&
+      navigationRequest.noteType !== "century") jumpToDate(navigationRequest.date);
     else selectPeriodicNote(navigationRequest.date, navigationRequest.noteType);
   }, [jumpToDate, navigationRequest, selectPeriodicNote]);
   useEffect(() => {
@@ -413,17 +451,17 @@ export function CalendarApp({
         setVisibleMonth({ year: next.year, month: next.month });
         return;
       }
-      setVisibleMonth((current) => {
-        const next = shiftPeriod(
-          { year: current.year, month: current.month, day: 1 },
-          viewMode === "year" ? "yearly" : "monthly",
-          amount,
-          "monday",
-        );
-        return { year: next.year, month: next.month };
-      });
+      const next = shiftPeriod(
+        { year: visibleMonth.year, month: visibleMonth.month, day: 1 },
+        viewMode === "century" ? "century" : viewMode === "year" ? "yearly" : "monthly",
+        amount,
+        "monday",
+      );
+      if (next.year < 1 || next.year > 9999) return;
+      setVisibleMonth({ year: next.year, month: next.month });
+      if (viewMode === "century") revealCenturyYear(next.year);
     },
-    [selected, settings.weekStartDay, viewMode],
+    [revealCenturyYear, selected, settings.weekStartDay, viewMode, visibleMonth],
   );
 
   const showToday = useCallback(() => {
@@ -432,12 +470,13 @@ export function CalendarApp({
     if (viewMode === "year") {
       setMonthSelectionRequest((request) => request + 1);
     }
+    if (viewMode === "century") revealCenturyYear(current.year);
     setSelected(viewMode === "year"
       ? { year: current.year, month: current.month, day: 1 }
       : current);
     setSelectionKind(viewMode === "year" ? "month" : "day");
     setVisibleMonth({ year: current.year, month: current.month });
-  }, [viewMode]);
+  }, [revealCenturyYear, viewMode]);
   const selectWeekYear = useCallback((weekYear: number) => {
     const next = moveDateToCalendarWeekYear(
       selected,
@@ -478,12 +517,12 @@ export function CalendarApp({
       : viewMode === "month"
         ? monthHeatmapEnabled
         : false;
-  const periodLabel =
-    viewMode === "year"
-      ? t("calendar.period.year")
-      : viewMode === "week"
-        ? t("calendar.period.week")
-        : t("calendar.period.month");
+  const periodLabel = t(`calendar.period.${viewMode}`);
+  const primaryPickerKind = viewMode === "week" ? "week-year"
+    : viewMode === "century" ? "century" : "year";
+  const headerPeriodSelected = selectionKind === (primaryPickerKind === "week-year" ? "year" : primaryPickerKind) && (centuryQuery !== null
+    ? selected.year >= centuryQuery.range.start.year && selected.year <= centuryQuery.range.end.year
+    : selected.year === (viewMode === "week" ? headerWeek.weekYear : visibleMonth.year));
   const heatmapPeriodLabel =
     viewMode === "year"
       ? t("calendar.heatmap.period.year")
@@ -528,6 +567,7 @@ export function CalendarApp({
           <button
             type="button"
             aria-label={t("calendar.previous", { period: periodLabel })}
+            disabled={centuryQuery !== null && centuryQuery.range.start.year <= 1}
             onClick={() => showPeriod(-1)}
           >
             <ChevronLeft size={16} aria-hidden="true" />
@@ -539,27 +579,23 @@ export function CalendarApp({
             <button
               type="button"
               className={`chrono-notes-calendar-picker-trigger${
-                selectionKind === "year" &&
-                selected.year === (viewMode === "week"
-                  ? headerWeek.weekYear
-                  : visibleMonth.year)
+                headerPeriodSelected
                   ? " is-selected"
                   : ""
               }`}
               aria-label={viewMode === "week"
                 ? `${t("calendar.chooseWeekYear")}: ${headerWeek.weekYear}`
-                : t("calendar.chooseYear")}
-              aria-expanded={openPeriodPicker === (
-                viewMode === "week" ? "week-year" : "year"
-              )}
-              aria-pressed={selectionKind === "year"}
+                : t(PICKER_TITLES[primaryPickerKind])}
+              aria-expanded={openPeriodPicker === primaryPickerKind}
+              aria-pressed={headerPeriodSelected}
               onClick={() => {
-                const kind = viewMode === "week" ? "week-year" : "year";
-                setOpenPeriodPicker((current) => current === kind ? null : kind);
+                setOpenPeriodPicker((current) => current === primaryPickerKind ? null : primaryPickerKind);
               }}
             >
               <span>
-                {viewMode === "week" ? headerWeek.weekYear : visibleMonth.year}
+                {centuryQuery !== null
+                  ? `C${getCenturyNumber(centuryQuery.range.start.year)} · ${centuryQuery.range.start.year}–${centuryQuery.range.end.year}`
+                  : viewMode === "week" ? headerWeek.weekYear : visibleMonth.year}
               </span>
               <ChevronDown size={13} aria-hidden="true" />
             </button>
@@ -619,81 +655,77 @@ export function CalendarApp({
                 <ChevronDown size={13} aria-hidden="true" />
               </button>
             ) : null}
-            {viewMode === "week" && (
-              openPeriodPicker === "week-year" || openPeriodPicker === "week"
-            ) ? (
-              <CalendarPickerLayer
-                modalHost={pickerModalHost}
-                title={t(openPeriodPicker === "week-year"
-                  ? "calendar.chooseWeekYear"
-                  : "calendar.chooseWeek")}
-                onClose={closePeriodPicker}
-              >
-                <CalendarWeekPickerPopover
-                  key={openPeriodPicker}
-                  kind={openPeriodPicker === "week-year" ? "year" : "week"}
-                  weekYear={headerWeek.weekYear}
-                  weekNumber={headerWeek.weekNumber}
-                  weekStartDay={settings.weekStartDay}
-                  today={today}
-                  anchorRef={periodPickerAnchor}
-                  translator={translator}
-                  onSelectWeekYear={selectWeekYear}
-                  onSelectWeek={selectWeek}
-                  onClose={closePeriodPicker}
-                />
-              </CalendarPickerLayer>
-            ) : viewMode !== "week" && (
-              openPeriodPicker === "year" || openPeriodPicker === "month"
-            ) ? (
-              <CalendarPickerLayer
-                modalHost={pickerModalHost}
-                title={t(openPeriodPicker === "year"
-                  ? "calendar.chooseYear"
-                  : "calendar.chooseMonth")}
-                onClose={closePeriodPicker}
-              >
-                <CalendarPeriodPickerPopover
-                  key={openPeriodPicker}
-                  kind={openPeriodPicker}
-                  year={visibleMonth.year}
-                  month={visibleMonth.month}
-                  today={today}
-                  selectedQuarter={selectedPickerQuarter}
-                  quarterNameMode={settings.quarterNameMode}
-                  anchorRef={periodPickerAnchor}
-                  translator={translator}
-                  onSelectYear={(year) => {
-                    setVisibleMonth((current) => ({ ...current, year }));
-                    setSelected((current) => ({
-                      year,
-                      month: current.month,
-                      day: 1,
-                    }));
-                    setSelectionKind("day");
-                  }}
-                  onSelectMonth={(month) => {
-                    setVisibleMonth((current) => ({ ...current, month }));
-                    setSelected({ year: visibleMonth.year, month, day: 1 });
-                    setSelectionKind("day");
-                  }}
-                  onSelectQuarter={(quarter) => {
-                    setSelected({
-                      year: visibleMonth.year,
-                      month: (quarter - 1) * 3 + 1,
-                      day: 1,
-                    });
-                    setSelectionKind("quarter");
-                  }}
-                  onOpenPeriodic={openPeriodic}
-                  onClose={closePeriodPicker}
-                />
+            {openPeriodPicker !== null ? (
+              <CalendarPickerLayer modalHost={pickerModalHost}
+                title={t(PICKER_TITLES[openPeriodPicker])} onClose={closePeriodPicker}>
+                {openPeriodPicker === "week-year" || openPeriodPicker === "week" ? (
+                  <CalendarWeekPickerPopover
+                    key={openPeriodPicker}
+                    kind={openPeriodPicker === "week-year" ? "year" : "week"}
+                    weekYear={headerWeek.weekYear}
+                    weekNumber={headerWeek.weekNumber}
+                    weekStartDay={settings.weekStartDay}
+                    today={today}
+                    anchorRef={periodPickerAnchor}
+                    translator={translator}
+                    onSelectWeekYear={selectWeekYear}
+                    onSelectWeek={selectWeek}
+                    onClose={closePeriodPicker}
+                  />
+                ) : openPeriodPicker === "century" ? (
+                  <CalendarCenturyPickerPopover
+                    year={visibleMonth.year} currentYear={today.year} translator={translator}
+                    anchorRef={periodPickerAnchor} onClose={closePeriodPicker}
+                    onSelect={(year) => {
+                      setVisibleMonth({ year, month: 1 });
+                      setSelected({ year, month: 1, day: 1 });
+                      setSelectionKind(openPeriodPicker);
+                      revealCenturyYear(year);
+                    }} />
+                ) : (
+                  <CalendarPeriodPickerPopover
+                    key={openPeriodPicker}
+                    kind={openPeriodPicker}
+                    year={visibleMonth.year}
+                    month={visibleMonth.month}
+                    today={today}
+                    selectedQuarter={selectedPickerQuarter}
+                    quarterNameMode={settings.quarterNameMode}
+                    anchorRef={periodPickerAnchor}
+                    translator={translator}
+                    onSelectYear={(year) => {
+                      setVisibleMonth((current) => ({ ...current, year }));
+                      setSelected((current) => ({
+                        year,
+                        month: current.month,
+                        day: 1,
+                      }));
+                      setSelectionKind("day");
+                    }}
+                    onSelectMonth={(month) => {
+                      setVisibleMonth((current) => ({ ...current, month }));
+                      setSelected({ year: visibleMonth.year, month, day: 1 });
+                      setSelectionKind("day");
+                    }}
+                    onSelectQuarter={(quarter) => {
+                      setSelected({
+                        year: visibleMonth.year,
+                        month: (quarter - 1) * 3 + 1,
+                        day: 1,
+                      });
+                      setSelectionKind("quarter");
+                    }}
+                    onOpenPeriodic={openPeriodic}
+                    onClose={closePeriodPicker}
+                  />
+                )}
               </CalendarPickerLayer>
             ) : null}
           </div>
           <button
             type="button"
             aria-label={t("calendar.next", { period: periodLabel })}
+            disabled={centuryQuery !== null && centuryQuery.range.end.year >= 9999}
             onClick={() => showPeriod(1)}
           >
             <ChevronRight size={16} aria-hidden="true" />
@@ -710,7 +742,8 @@ export function CalendarApp({
             : undefined}
           onClick={showToday}
         >
-          {t(viewMode === "year" ? "calendar.thisMonth" : "calendar.today")}
+          {t(viewMode === "century" ? "calendar.long.thisCentury"
+            : viewMode === "year" ? "calendar.thisMonth" : "calendar.today")}
         </button>
       </header>
       <div
@@ -724,41 +757,24 @@ export function CalendarApp({
           role="group"
           aria-label={t("calendar.view.label")}
         >
-          <button
-            type="button"
-            className={viewMode === "week" ? "is-active" : ""}
-            aria-pressed={viewMode === "week"}
-            onClick={() => {
-              setOpenPeriodPicker(null);
-              setViewMode("week");
-            }}
-          >
-            {t("calendar.view.week")}
-          </button>
-          <button
-            type="button"
-            className={viewMode === "month" ? "is-active" : ""}
-            aria-pressed={viewMode === "month"}
-            onClick={() => {
-              setOpenPeriodPicker(null);
-              setViewMode("month");
-            }}
-          >
-            {t("calendar.view.month")}
-          </button>
-          <button
-            type="button"
-            className={viewMode === "year" ? "is-active" : ""}
-            aria-pressed={viewMode === "year"}
-            onClick={() => {
-              setOpenPeriodPicker(null);
-              setViewMode("year");
-            }}
-          >
-            {t("calendar.view.year")}
-          </button>
+          {CALENDAR_VIEW_MODES.map((mode) => (
+            <button key={mode} type="button" className={viewMode === mode ? "is-active" : ""}
+              aria-pressed={viewMode === mode} onClick={() => {
+                setOpenPeriodPicker(null);
+                if (mode === "century") revealCenturyYear(selected.year);
+                if (mode === "century" || viewMode === "century") {
+                  setVisibleMonth({ year: Math.max(1, selected.year), month: selected.month });
+                  if (mode === "year" || mode === "month" || mode === "week") {
+                    setSelectionKind(mode === "year" ? "year" : "day");
+                  }
+                }
+                setViewMode(mode);
+              }}>
+              {t(`calendar.view.${mode}`)}
+            </button>
+          ))}
         </div>
-        {viewMode === "week" ? null : (
+        {viewMode !== "month" && viewMode !== "year" ? null : (
           <div
             className="chrono-notes-heatmap-tools"
             data-view-mode={viewMode}
@@ -827,7 +843,19 @@ export function CalendarApp({
           </div>
         )}
       </div>
-      {yearQuery !== null ? (
+      {centuryQuery !== null ? (
+        <CenturyView query={centuryQuery} translator={translator} today={today}
+          revealRequest={centuryRevealRequest}
+          selection={{ kind: selectionKind, date: selected }} onOpenPeriodic={onOpenPeriodic}
+          showNoteIndicators={settings.showNoteIndicators} showTaskProgress={settings.showTaskProgress}
+          weekStartDay={settings.weekStartDay} longPress={longPress}
+          activePreviewKey={activePreviewKey} previewId={previewId}
+          onSchedulePreview={schedulePreview} onDismissPreview={dismissPreview}
+          onSelect={(kind, date) => {
+            setSelectionKind(kind);
+            setSelected({ ...date, year: Math.max(1, date.year) });
+          }} />
+      ) : yearQuery !== null ? (
         <YearView
           query={yearQuery}
           translator={translator}
@@ -914,21 +942,4 @@ export function CalendarApp({
       )}
     </div>
   );
-}
-
-function getPeriodicSelectionKind(
-  noteType: PeriodicNoteType,
-): CalendarSelectionKind {
-  switch (noteType) {
-    case "daily":
-      return "day";
-    case "weekly":
-      return "week";
-    case "monthly":
-      return "month";
-    case "quarterly":
-      return "quarter";
-    case "yearly":
-      return "year";
-  }
 }

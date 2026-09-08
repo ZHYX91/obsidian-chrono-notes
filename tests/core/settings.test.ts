@@ -10,6 +10,16 @@ import {
 } from "../../src/shared/settings";
 
 describe("settings", () => {
+  it("adds disabled long-period defaults while preserving existing periodic settings", () => {
+    const daily = { enabled: true, pattern: "[Journal]/YYYY-MM-DD", templatePath: "Templates/Daily.md" };
+    const normalized = normalizeSettings({ schemaVersion: SETTINGS_SCHEMA_VERSION, periodicNotes: { daily } });
+    expect(normalized.periodicNotes.daily).toEqual(daily);
+    expect(normalized.periodicNotes.decadal).toEqual({ enabled: false, pattern: "[diary]/DEC[s]", templatePath: "" });
+    expect(normalized.periodicNotes.century).toEqual({ enabled: false, pattern: "[diary]/[C]CEN", templatePath: "" });
+    normalized.periodicNotes.decadal = { enabled: true, pattern: "[C]CEN/DEC[s]", templatePath: "Templates/Decade.md" };
+    expect(normalizeSettings(normalized)).toEqual(normalized);
+  });
+
   it("creates independent mutable arrays and periodic note records", () => {
     const first = createDefaultSettings();
     const second = createDefaultSettings();
@@ -314,6 +324,8 @@ describe("settings", () => {
       "monthly",
       "quarterly",
       "yearly",
+      "decadal",
+      "century",
     ]);
 
     normalized.periodicNotes.daily.pattern = "changed";

@@ -1,6 +1,7 @@
 import { DateTime } from "luxon";
 
-export type PeriodicNoteType = "daily" | "weekly" | "monthly" | "quarterly" | "yearly";
+export type PeriodicNoteType = typeof PERIODIC_NOTE_TYPES[number];
+export type LongPeriodNoteType = "decadal" | "century";
 export type WeekStartDay = "monday" | "sunday";
 
 export const PERIODIC_NOTE_TYPES = [
@@ -9,7 +10,9 @@ export const PERIODIC_NOTE_TYPES = [
   "monthly",
   "quarterly",
   "yearly",
-] as const satisfies readonly PeriodicNoteType[];
+  "decadal",
+  "century",
+] as const;
 
 export interface LocalDate {
   readonly year: number;
@@ -87,6 +90,10 @@ export function getPeriodAnchor(
     }
     case "yearly":
       return toLocalDate(value.startOf("year"));
+    case "decadal":
+      return Object.freeze({ year: getDecadeStart(date.year), month: 1, day: 1 });
+    case "century":
+      return Object.freeze({ year: (getCenturyNumber(date.year) - 1) * 100 + 1, month: 1, day: 1 });
   }
 }
 
@@ -110,9 +117,46 @@ export function shiftPeriod(
         return anchor.plus({ months: amount * 3 });
       case "yearly":
         return anchor.plus({ years: amount });
+      case "decadal":
+        return anchor.plus({ years: amount * 10 });
+      case "century":
+        return anchor.plus({ years: amount * 100 });
     }
   })();
   return getPeriodAnchor(toLocalDate(shifted), noteType, weekStartDay);
+}
+
+export function getDecadeStart(year: number): number {
+  return Math.floor(year / 10) * 10;
+}
+
+/** Century numbering is defined for positive CE years, with no century zero. */
+export function getCenturyNumber(year: number): number {
+  if (!Number.isInteger(year) || year < 1) {
+    throw new RangeError("Century requires a positive CE year");
+  }
+  return Math.ceil(year / 100);
+}
+
+export interface PeriodRange {
+  readonly start: LocalDate;
+  readonly end: LocalDate;
+  readonly dayCount: number;
+}
+
+export function getPeriodRange(
+  date: LocalDate,
+  noteType: PeriodicNoteType,
+  weekStartDay: WeekStartDay,
+): PeriodRange {
+  const start = getPeriodAnchor(date, noteType, weekStartDay);
+  const next = toDateTime(shiftPeriod(start, noteType, 1, weekStartDay));
+  const end = toLocalDate(next.minus({ days: 1 }));
+  return Object.freeze({
+    start,
+    end,
+    dayCount: next.diff(toDateTime(start), "days").days,
+  });
 }
 
 export function toDateTime(date: LocalDate): DateTime<true> {

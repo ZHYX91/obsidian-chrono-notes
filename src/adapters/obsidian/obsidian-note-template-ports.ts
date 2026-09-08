@@ -1,6 +1,7 @@
 import type { App, TFile, Vault } from "obsidian";
 
-import { formatLocalDateKey } from "../../core/periodic/periodic-date";
+import { buildTemplaterPeriodFormatter } from "../../core/template/templater-period-format";
+import { formatLocalDateKey, type LocalDate } from "../../core/periodic/periodic-date";
 import {
   renderBuiltinIntervalTemplate,
   renderBuiltinTemplate,
@@ -49,6 +50,7 @@ export class ObsidianBuiltinTemplatePort implements NoteTemplatePort {
       ? renderBuiltinTemplate(content, {
           ...baseContext,
           date: context.date,
+          range: context.range,
         })
       : renderBuiltinIntervalTemplate(content, {
           ...baseContext,
@@ -209,6 +211,7 @@ function buildTemplaterTemplate(
     : buildIntervalTemplaterContext(context);
   return [
     "<%*",
+    buildTemplaterPeriodFormatter(),
     "const tp_calendar = Object.freeze({",
     ...contextLines,
     "});",
@@ -226,24 +229,35 @@ function buildPeriodicTemplaterContext(
     `  noteType: ${JSON.stringify(context.noteType)},`,
     `  title: ${JSON.stringify(context.title)},`,
     `  targetDate: ${JSON.stringify(targetDate)},`,
-    `  date: (format = "YYYY-MM-DD", offset = 0) => tp.date.now(format, offset, ${JSON.stringify(targetDate)}, "YYYY-MM-DD"),`,
-    '  time: (format = "HH:mm") => tp.date.now(format),',
+    ...buildTemplaterRange(context.range.start, context.range.end, context.range.dayCount),
+    `  date: (format = "YYYY-MM-DD", offset = 0) => chronoDate(format, offset, ${JSON.stringify(targetDate)}),`,
+    '  time: (format = "HH:mm") => chronoDate(format),',
   ];
 }
 
 function buildIntervalTemplaterContext(
   context: Extract<NoteTemplateContext, { kind: "interval" }>,
 ): readonly string[] {
-  const startDate = formatLocalDateKey(context.start);
-  const endDate = formatLocalDateKey(context.end);
   return [
     '  kind: "interval",',
     `  title: ${JSON.stringify(context.title)},`,
+    ...buildTemplaterRange(context.start, context.end, context.dayCount),
+    '  time: (format = "HH:mm") => chronoDate(format),',
+  ];
+}
+
+function buildTemplaterRange(
+  start: LocalDate,
+  end: LocalDate,
+  dayCount: number,
+): readonly string[] {
+  const startDate = formatLocalDateKey(start);
+  const endDate = formatLocalDateKey(end);
+  return [
     `  startDate: ${JSON.stringify(startDate)},`,
     `  endDate: ${JSON.stringify(endDate)},`,
-    `  dayCount: ${context.dayCount},`,
-    `  start: (format = "YYYY-MM-DD") => tp.date.now(format, 0, ${JSON.stringify(startDate)}, "YYYY-MM-DD"),`,
-    `  end: (format = "YYYY-MM-DD") => tp.date.now(format, 0, ${JSON.stringify(endDate)}, "YYYY-MM-DD"),`,
-    '  time: (format = "HH:mm") => tp.date.now(format),',
+    `  dayCount: ${dayCount},`,
+    `  start: (format = "YYYY-MM-DD") => chronoDate(format, 0, ${JSON.stringify(startDate)}),`,
+    `  end: (format = "YYYY-MM-DD") => chronoDate(format, 0, ${JSON.stringify(endDate)}),`,
   ];
 }

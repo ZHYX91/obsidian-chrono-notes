@@ -39,6 +39,10 @@ export function formatPeriodicNoteName(
       return t("navbar.period.monthly");
     case "quarterly":
       return t("navbar.period.quarterly");
+    case "decadal":
+      return t("navbar.period.decadal");
+    case "century":
+      return t("navbar.period.century");
     case "yearly":
       return t("navbar.period.yearly");
   }

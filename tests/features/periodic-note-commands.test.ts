@@ -38,6 +38,8 @@ function createSettings(
       monthly: create("monthly"),
       quarterly: create("quarterly"),
       yearly: create("yearly"),
+      decadal: create("decadal"),
+      century: create("century"),
     },
   };
 }
@@ -77,6 +79,30 @@ function createPorts(existing: readonly string[] = []) {
 }
 
 describe("PeriodicNoteCommands", () => {
+  it("cascades each long period from the original year and preserves existing files", async () => {
+    const ports = createPorts(["diary/2000s.md"]);
+    const commands = new PeriodicNoteCommands(ports.files, ports.templates, ports.workspace);
+    const settings = createSettings({
+      yearly: { enabled: true, pattern: "[diary]/YYYY" },
+      decadal: { enabled: true, pattern: "[diary]/DEC[s]" },
+      century: { enabled: true, pattern: "[diary]/[C]CEN" },
+    });
+    const result = await commands.openOrCreate({
+      date: { year: 2005, month: 8, day: 1 }, noteType: "yearly", cascade: true,
+    }, settings);
+    expect(result).toMatchObject({ status: "opened", created: true, cascade: [
+      { noteType: "decadal", path: "diary/2000s.md", status: "existing" },
+      { noteType: "century", path: "diary/C21.md", status: "created" },
+    ] });
+    expect(ports.files.create).toHaveBeenCalledTimes(2);
+    expect(ports.templates.prepare).toHaveBeenLastCalledWith(expect.objectContaining({
+      noteType: "century", range: {
+        start: { year: 2001, month: 1, day: 1 },
+        end: { year: 2100, month: 12, day: 31 }, dayCount: 36524,
+      },
+    }), "");
+  });
+
   it("coordinates same-path creation while preserving each request target and cascade", async () => {
     const ports = createPorts();
     const preparation = deferred<{ initialContent: string }>();
@@ -224,6 +250,8 @@ describe("PeriodicNoteCommands", () => {
     expect(ports.templates.prepare).toHaveBeenCalledWith(
       {
         kind: "periodic",
+        range: { start: { year: 2026, month: 4, day: 1 },
+          end: { year: 2026, month: 6, day: 30 }, dayCount: 91 },
         date: { year: 2026, month: 4, day: 1 },
         locale: "en-US",
         noteType: "quarterly",

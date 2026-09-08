@@ -41,7 +41,7 @@ import {
   type MonthRangeDragPreview,
 } from "./month-range-drag";
 import { MonthWeekNumber } from "./month-week-number";
-import type { CalendarSelectionKind } from "./year-view";
+import type { CalendarSelectionKind } from "./calendar-selection";
 
 const TOUCH_PREVIEW_SUPPRESSION_MS = 750;
 

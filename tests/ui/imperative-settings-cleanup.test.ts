@@ -88,6 +88,7 @@ import type { App } from "obsidian";
 import { createTranslator } from "../../src/shared/i18n";
 import { createDefaultSettings } from "../../src/shared/settings";
 import { renderPeriodicSettingsSection } from "../../src/ui/settings/periodic-settings-section";
+import { renderTemplateSyntaxGuide } from "../../src/ui/settings/template-guide";
 import { renderRangeSettingsSection } from "../../src/ui/settings/range-settings-section";
 import { combineSettingsCleanups } from "../../src/ui/settings/settings-cleanup";
 import type {
@@ -152,6 +153,40 @@ describe("imperative settings cleanup", () => {
     expect([...mocks.periodicClose, ...mocks.markdownClose].every(
       (close) => close.mock.calls.length === 1,
     )).toBe(true);
+  });
+
+  it.each(["builtin", "templater"] as const)("keeps %s template guidance with its note type", (engine) => {
+    const context = createContext();
+    context.host.settings.templateEngine = engine;
+    const paths = document.createElement("div");
+    const templates = document.createElement("div");
+    const ranges = document.createElement("div");
+    const cleanup = renderPeriodicSettingsSection(paths, context);
+    const rangeCleanup = renderRangeSettingsSection(ranges, context);
+    renderTemplateSyntaxGuide(templates, context);
+    expect(paths.querySelectorAll(".chrono-notes-periodic-note-section")).toHaveLength(7);
+    expect(templates.querySelectorAll(".chrono-notes-settings-guide")).toHaveLength(1);
+    expect(paths.querySelectorAll(".chrono-notes-settings-guide")).toHaveLength(2);
+    expect(ranges.querySelectorAll(".chrono-notes-settings-guide")).toHaveLength(2);
+    expect(paths.textContent).toContain("2001-01-01");
+    expect(paths.textContent).toContain("2100-12-31");
+    expect(paths.textContent).toContain("based on its first year, 2000");
+    expect(ranges.textContent).toContain("chrono-notes: interval");
+    const periodicExample = engine === "builtin" ? "{{date:DEC[s]}}" : '<% tp_calendar.date("DEC[s]") %>';
+    const centuryExample = engine === "builtin" ? "{{date:[C]CEN}}" : '<% tp_calendar.date("[C]CEN") %>';
+    const date = engine === "builtin" ? "{{date}}" : "<% tp_calendar.date() %>";
+    const days = engine === "builtin" ? "{{days}}" : "<% tp_calendar.dayCount %>";
+    expect(paths.textContent).toContain(periodicExample);
+    expect(paths.textContent).toContain(centuryExample);
+    expect(paths.textContent).toContain(date);
+    expect(paths.textContent).toContain(days);
+    expect(ranges.textContent).toContain(days);
+    expect(ranges.textContent).not.toContain(date);
+    expect(templates.textContent).not.toContain(periodicExample);
+    expect(templates.textContent).toContain("HH:mm");
+    expect(templates.textContent).toContain("YYYY-MM-DD");
+    cleanup();
+    rangeCleanup();
   });
 
   it("closes range, custom scan, and template suggestions exactly once", () => {

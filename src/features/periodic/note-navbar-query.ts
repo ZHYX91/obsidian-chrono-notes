@@ -1,5 +1,6 @@
 import {
   getPeriodAnchor,
+  getCenturyNumber,
   PERIODIC_NOTE_TYPES,
   shiftPeriod,
   toDateTime,
@@ -171,6 +172,10 @@ function formatNavbarLabel(
       return chinese ? `${value.month}月` : value.toFormat("LLL");
     case "quarterly":
       return `Q${value.quarter}`;
+    case "decadal":
+      return `${String(date.year).padStart(4, "0")}s`;
+    case "century":
+      return `C${getCenturyNumber(date.year)}`;
     case "yearly":
       return chinese ? `${value.year}年` : String(value.year);
   }

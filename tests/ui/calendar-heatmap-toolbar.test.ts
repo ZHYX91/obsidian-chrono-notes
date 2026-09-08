@@ -25,7 +25,7 @@ describe("calendar heatmap toolbar", () => {
   it("shows shared statistics only for enabled month and year heatmaps", () => {
     expect(calendarApp).toContain('data-view-mode={viewMode}');
     expect(calendarApp).toMatch(
-      /\{viewMode === "week" \? null : \(\s*<div[\s\S]*?\{heatmapEnabled \? \(/,
+      /\{viewMode !== "month" && viewMode !== "year" \? null : \(\s*<div[\s\S]*?\{heatmapEnabled \? \(/,
     );
     expect(calendarApp).not.toContain(
       'viewMode === "year" && heatmapEnabled',

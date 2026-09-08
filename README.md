@@ -22,8 +22,9 @@ The same calendar workspace adapts to touch interaction and narrow screens.
 
 ## Features
 
+- A century view grouped by decade, with the same periodic-note cells, indicators and interactions as the year overview.
 - Year, month, and week calendar views with note state, tasks, holidays, local ICS events, and time-range notes.
-- Daily, weekly, monthly, quarterly, and yearly periodic notes with built-in or Templater templates.
+- Daily, weekly, monthly, quarterly, yearly, decadal, and century periodic notes with built-in or Templater templates.
 - Note Navbar navigation between adjacent notes, higher periods, selected dates, and the calendar workspace.
 - Chinese lunar and Ganzhi calendar extensions, including solar terms and traditional festivals.
 - Persian (Solar Hijri), Ethiopic, Hebrew, Indian national (Saka), Islamic civil, and Umm al-Qura calendar extensions.
@@ -58,6 +59,16 @@ Back up and preserve `Vault/.obsidian/plugins/chrono-notes/data.json` when it ex
 2. Open the calendar from the ribbon or command palette.
 3. Optionally enable calendar and holiday extensions or add local ICS sources.
 4. Select a date to open or create its periodic note.
+
+### Decadal and century notes
+
+The century view places each decade beside two rows of five years; narrow layouts move the decade above them. Years outside the century leave empty slots. Entering the view reveals the selected year’s decade; This century returns to the current decade. Navigation stays visible while the years scroll.
+
+Enable these note types in settings, then select Century in the sidebar. Use the decade cells on the left to access decadal notes; the enabled century note has its own cell. The view tabs are Week, Month, Year and Century. Period cells share the year view's note dots, task progress, selection and preview. Click to select; double-click or press Enter to open or create the note. Ctrl/Cmd-click or middle-click opens a new tab; touch supports long press. Use the view tabs to browse the selected period. Default paths are `[diary]/DEC[s]` (2020s) and `[diary]/[C]CEN` (C21).
+
+Decades span 2020–2029; century 21 spans 2001–2100. `DEC` and `CEN` are Chrono Notes extensions that output fixed digits. Prefer either century or decade folders: 2000s crosses C20/C21, and its decade note uses the first year (2000, in C20). Existing notes stay in place.
+
+Templates use the same formats: `{{date:DEC[s]}}`, `{{date:[C]CEN}}`, and `{{start:YYYY}}–{{end:YYYY}}`. All periodic templates support start/end dates and inclusive `{{days}}`; each note settings page lists its placeholders, meanings, examples, and Templater equivalents. General > Template settings explains shared syntax and default formats.
 
 ### Range-note recognition
 
