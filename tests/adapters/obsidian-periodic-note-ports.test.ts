@@ -223,6 +223,7 @@ describe("Obsidian periodic note ports", () => {
     await files.create("Calendar/Daily/external-race.md", "");
 
     expect(vault.contents.has("Calendar/Daily/external-race.md")).toBe(true);
+    expect(vault.createFolder).toHaveBeenCalledTimes(2);
   });
 
   it("processes task source files atomically through the Vault port", async () => {
