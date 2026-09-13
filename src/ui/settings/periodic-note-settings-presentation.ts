@@ -1,7 +1,8 @@
-import type {
-  LocalDate,
-  PeriodicNoteType,
-  WeekStartDay,
+import {
+  isSamePeriod,
+  type LocalDate,
+  type PeriodicNoteType,
+  type WeekStartDay,
 } from "../../core/periodic/periodic-date";
 import {
   formatPeriodicNotePath,
@@ -66,7 +67,9 @@ export function createPeriodicNotePathPreview(
 
   const rule = { noteType, pattern } as const;
   const path = formatPeriodicNotePath(date, rule, options);
-  if (path === null || parsePeriodicNotePath(path, rule, options) === null) {
+  const parsed = path === null ? null : parsePeriodicNotePath(path, rule, options);
+  if (path === null || parsed === null ||
+    !isSamePeriod(date, parsed, noteType, options.weekStartDay)) {
     return Object.freeze({
       status: "invalid",
       path: null,

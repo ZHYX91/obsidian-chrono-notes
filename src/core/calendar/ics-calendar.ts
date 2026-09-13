@@ -179,6 +179,7 @@ function parseEvent(
 ): IcsCalendarEvent | null {
   const startProperty = component.getFirstProperty("dtstart");
   if (startProperty === null) return null;
+  // Keep the source zone until nominal days/weeks have been added.
   const start = parseDateProperty(startProperty, displayZone);
   if (start === null) return null;
 
@@ -199,8 +200,16 @@ function parseEvent(
   } else {
     endExclusive = defaultEnd(start);
   }
-  if (endExclusive.timestamp <= start.timestamp) return null;
+  // RFC 5545 section 3.6.1: a DATE-TIME without DTEND/DURATION is a point.
+  // Explicit equal ends and non-positive durations remain invalid.
+  const implicitPoint = endProperty === null && durationProperty === null &&
+    start.timeMinutes !== null;
+  if (endExclusive.timestamp < start.timestamp ||
+    (!implicitPoint && endExclusive.timestamp === start.timestamp)) return null;
 
+  const displayedStart = inDisplayZone(start, displayZone);
+  const displayedEnd = inDisplayZone(endExclusive, displayZone);
+  if (displayedStart === null || displayedEnd === null) return null;
   const titleValue = component.getFirstPropertyValue("summary");
   const title = String(titleValue ?? "").trim() || "Untitled event";
   const uid = String(component.getFirstPropertyValue("uid") ?? "").trim();
@@ -210,8 +219,8 @@ function parseEvent(
     sourceLabel: getSourceLabel(source),
     title,
     isAllDay: start.timeMinutes === null,
-    start,
-    endExclusive,
+    start: displayedStart,
+    endExclusive: displayedEnd,
   });
 }
 
@@ -228,10 +237,12 @@ function getDurationEnd(
     isAllDay &&
     (duration.hours !== 0 || duration.minutes !== 0 || duration.seconds !== 0)
   ) return null;
-  return fromDateTime(
-    DateTime.fromMillis(start.timestamp, { zone: start.zone }).plus({ seconds }),
-    isAllDay,
-  );
+  // RFC 5545 section 3.3.6: nominal days/weeks first, then exact time units.
+  // P1D is not PT24H across a source-zone daylight-saving transition.
+  const end = DateTime.fromMillis(start.timestamp, { zone: start.zone })
+    .plus({ weeks: duration.weeks, days: duration.days })
+    .plus({ hours: duration.hours, minutes: duration.minutes, seconds: duration.seconds });
+  return fromDateTime(end, isAllDay);
 }
 
 function parseDateProperty(
@@ -291,7 +302,13 @@ function parseDateProperty(
     sourceValue.minute !== minute ||
     sourceValue.second !== second
   ) return null;
-  return fromDateTime(sourceValue.setZone(displayZone), false);
+  return fromDateTime(sourceValue, false);
+}
+
+function inDisplayZone(value: IcsDateValue, displayZone: string): IcsDateValue | null {
+  return value.timeMinutes === null
+    ? value
+    : fromDateTime(DateTime.fromMillis(value.timestamp, { zone: displayZone }), false);
 }
 
 function fromDateTime(value: DateTime, isAllDay: boolean): IcsDateValue | null {
@@ -305,17 +322,17 @@ function fromDateTime(value: DateTime, isAllDay: boolean): IcsDateValue | null {
 }
 
 function defaultEnd(start: IcsDateValue): IcsDateValue {
+  if (start.timeMinutes !== null) return start;
   const value = DateTime.fromMillis(start.timestamp, { zone: start.zone });
-  const end = start.timeMinutes === null
-    ? value.plus({ days: 1 })
-    : value.plus({ minutes: 1 });
-  return fromDateTime(end, start.timeMinutes === null)!;
+  return fromDateTime(value.plus({ days: 1 }), true)!;
 }
 
 function getInclusiveEndDate(event: IcsCalendarEvent): LocalDate {
   if (event.isAllDay) {
     return shiftPeriod(event.endExclusive.date, "daily", -1, "monday");
   }
+  // A point belongs to its start date, including a point exactly at midnight.
+  if (event.endExclusive.timestamp === event.start.timestamp) return event.start.date;
   const value = DateTime.fromMillis(event.endExclusive.timestamp - 1, {
     zone: event.endExclusive.zone,
   });

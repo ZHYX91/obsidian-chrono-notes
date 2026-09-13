@@ -224,7 +224,7 @@ describe("ICS calendar parsing", () => {
       },
       {
         id: "timed-default",
-        end: { date: { year: 2026, month: 5, day: 1 }, timeMinutes: 9 * 60 + 1 },
+        end: { date: { year: 2026, month: 5, day: 1 }, timeMinutes: 9 * 60 },
       },
       {
         id: "all-day-duration",
