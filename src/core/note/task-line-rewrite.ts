@@ -33,14 +33,22 @@ export function rescheduleTaskDueDateInContent(
   if (expected.dueDate === null) return Object.freeze({ status: "no-due" });
   const nextDateKey = formatLocalDateKey(nextDueDate);
   if (expected.dueDate === nextDateKey) return Object.freeze({ status: "unchanged" });
-  return rewriteTaskLine(content, expected, (line) =>
-    line.replace(/📅\s*\d{4}-\d{2}-\d{2}/u, `📅 ${nextDateKey}`));
+  return rewriteTaskLine(content, expected, (line, semanticLine) => {
+    // Locate the same marker used by the parser, not a lookalike in code or
+    // a comment. The projection retains UTF-16 offsets into the source line.
+    const match = /📅\s*(\d{4}-\d{2}-\d{2})/u.exec(semanticLine);
+    const date = match?.[1];
+    if (match === null || date === undefined) return line;
+    const start = match.index + match[0].length - date.length;
+    // Replace only the date, preserving marker spacing and all masked text.
+    return `${line.slice(0, start)}${nextDateKey}${line.slice(start + date.length)}`;
+  });
 }
 
 function rewriteTaskLine(
   content: string,
   expected: NoteTask,
-  update: (line: string) => string,
+  update: (line: string, semanticLine: string) => string,
 ): TaskLineRewriteResult {
   const range = findLineRange(content, expected.line);
   if (range === null) return Object.freeze({ status: "line-missing" });
@@ -50,10 +58,11 @@ function rewriteTaskLine(
   const current = parseNoteTasks(projection, expected.path).find(
     (task) => task.line === expected.line,
   );
-  if (current === undefined || !sameTaskIdentity(current, expected)) {
+  const projectedLine = projection.lines.find((item) => item.sourceLine === expected.line);
+  if (current === undefined || projectedLine === undefined || !sameTaskIdentity(current, expected)) {
     return Object.freeze({ status: "stale" });
   }
-  const updatedLine = update(line);
+  const updatedLine = update(line, projectedLine.semanticText);
   if (updatedLine === line) return Object.freeze({ status: "stale" });
   return Object.freeze({
     status: "updated",

@@ -22,11 +22,25 @@ Under RFC 5545 section 3.6.1, a DATE-TIME event without `DTEND` or `DURATION` is
 
 Explicit equal or reversed `DTEND`, zero or negative `DURATION`, simultaneous end fields and mismatched date types remain isolated by the existing invalid-event rules. This does not add recurring-event expansion or change existing ICS input and event-span limits.
 
-## 3. Regression verification
+## 3. Task edits
+
+Task rescheduling locates the due date in the latest Markdown projection's semantic text, using the same masking semantics as task parsing. Only the date characters are replaced; lookalike markers in preceding inline code or HTML comments, marker spacing, original line endings and unrelated text remain unchanged.
+
+A single open Markdown editor receives a minimal-range transaction instead of a full-document replacement. Closed files still use `Vault.process` for atomic validation and replacement. Multiple editors, changed editor identities and a buffer changed during rewriting still refuse the write. Event-driven task indexing and latest-task identity checks remain intact.
+
+## 4. Century keyboard navigation
+
+The century view has one Tab stop, preferring a still-visible keyboard focus, the selected period, the current year, then the first period. Tab is not intercepted and can leave the calendar.
+
+Horizontal arrows traverse periods in display order and respect RTL direction. Vertical arrows move five years among year cells, or between century/decade headings. Home/End reach the first/last period. Moving focus neither creates nor opens a note and does not change semantic selection. Enter retains selection and opening; mouse and long-press behavior remain unchanged. Note refreshes retain a visible focus stop, while changing centuries provides a valid fallback.
+
+## 5. Regression verification
 
 Path tests cover missing period fields, literal text resembling format tokens, valid-rule priority, leap days, month/year boundaries, Sunday-start cross-year weeks, and the requirement that invalid rules never call file or workspace ports. Preview tests distinguish parseability from period identity.
 
 ICS tests cover spring and autumn daylight-saving transitions, different source and display zones, `P1D`, `PT24H`, `P1W`, mixed durations, floating times, UTC sources, points at and just before midnight, and exclusive all-day ends. Existing invalid-end and cancelled/recurring-event tests remain in place.
+
+Task tests cover masked date markers, UTF-16 coordinates, line endings, minimal editor transactions, no-op updates and refused writes. Century-view tests cover one tab stop, arrows, Home/End, Enter, RTL, refresh retention and cross-century fallback.
 
 Run `npm run check` and `npm run test:timezones` to verify source contracts and deterministic date behavior. They do not replace desktop, mobile or theme acceptance in real Obsidian.
 

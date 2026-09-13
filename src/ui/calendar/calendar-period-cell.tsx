@@ -19,6 +19,8 @@ export interface CalendarPeriodCellProps {
   readonly showTaskProgress: boolean;
   readonly today: LocalDate;
   readonly selected: boolean;
+  readonly tabIndex?: number;
+  readonly onFocus?: () => void;
   readonly onSelect: () => void;
   readonly onOpenPeriodic: (date: LocalDate, noteType: PeriodicNoteType, target: NoteOpenTarget) => Promise<void>;
   readonly weekStartDay: WeekStartDay;
@@ -31,8 +33,8 @@ export interface CalendarPeriodCellProps {
 
 export function CalendarPeriodCell({
   summary, noteType, label, selectionDetail, translator, showNoteIndicators, showTaskProgress,
-  today, selected, onSelect, onOpenPeriodic, weekStartDay, activePreviewKey, previewId,
-  onSchedulePreview, onDismissPreview, longPress,
+  today, selected, tabIndex, onFocus: onCellFocus, onSelect, onOpenPeriodic, weekStartDay,
+  activePreviewKey, previewId, onSchedulePreview, onDismissPreview, longPress,
 }: CalendarPeriodCellProps) {
   const kind = getPeriodicSelectionKind(noteType);
   const current = isSamePeriod(today, summary.date, noteType, weekStartDay);
@@ -54,7 +56,7 @@ export function CalendarPeriodCell({
       data-period-kind={kind} data-period-year={summary.date.year} data-period-month={summary.date.month}
       data-note-state={summary.noteState} data-show-note-indicators={String(showNoteIndicators)}
       aria-label={accessibleLabel} aria-describedby={activePreviewKey === previewKey ? previewId : undefined}
-      aria-current={current ? "true" : undefined} aria-pressed={selected}
+      aria-current={current ? "true" : undefined} aria-pressed={selected} tabIndex={tabIndex}
       onClick={(event) => {
         if (touch.consumeClick()) {
           event.preventDefault();
@@ -81,7 +83,10 @@ export function CalendarPeriodCell({
       onTouchEnd={touch.onTouchEnd} onTouchCancel={touch.onTouchCancel}
       onMouseEnter={(event) => onSchedulePreview(previewKey, periodPreview, event.currentTarget)}
       onMouseLeave={onDismissPreview}
-      onFocus={(event) => onSchedulePreview(previewKey, periodPreview, event.currentTarget)}
+      onFocus={(event) => {
+        onCellFocus?.();
+        onSchedulePreview(previewKey, periodPreview, event.currentTarget);
+      }}
       onBlur={onDismissPreview}>
       {showNoteIndicators && summary.noteState !== "not-configured" ? (
         <span className="chrono-notes-period-cell-status">
