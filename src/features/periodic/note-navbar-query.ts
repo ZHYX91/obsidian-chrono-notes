@@ -69,6 +69,7 @@ export function selectNoteNavbarContextFromProjection(
     .map((noteType) => ({
       noteType,
       pattern: options.periodicNotes[noteType].pattern,
+      pathLocale: options.periodicNotes[noteType].pathLocale,
     }));
   const match = findPeriodicNotePathMatch(path, rules, options);
   if (match === null) return null;
@@ -140,7 +141,11 @@ function findHigherTarget(
     const config = options.periodicNotes[candidate];
     if (!config.enabled || config.pattern.trim().length === 0) continue;
     const anchor = getPeriodAnchor(date, candidate, options.weekStartDay);
-    const rule = { noteType: candidate, pattern: config.pattern } as const;
+    const rule = {
+      noteType: candidate,
+      pattern: config.pattern,
+      pathLocale: config.pathLocale,
+    } as const;
     const path = formatPeriodicNotePath(anchor, rule, options);
     if (path !== null && parsePeriodicNotePath(path, rule, options) !== null) {
       return freezeTarget(candidate, anchor);

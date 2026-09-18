@@ -76,7 +76,7 @@ export class PeriodicNoteCreationError extends Error {
     override readonly cause: unknown,
     readonly retainedCreatedNote = false,
   ) {
-    super(`Failed to create ${noteType} note at ${path}: ${toFailure(cause).message}`, {
+    super(`Failed to create ${noteType} note at ${path}: ${getErrorMessage(cause)}`, {
       cause,
     });
   }
@@ -158,6 +158,7 @@ export class PeriodicNoteCommands {
     settings: PeriodicNoteCommandSettings,
   ): Promise<CascadeResult[]> {
     const results: CascadeResult[] = [];
+    let failures = "";
     const triggerIndex = PERIODIC_NOTE_TYPES.indexOf(triggerType);
     for (const noteType of PERIODIC_NOTE_TYPES.slice(triggerIndex + 1)) {
       const path = resolvePath(date, noteType, settings);
@@ -171,16 +172,10 @@ export class PeriodicNoteCommands {
         }));
       } catch (error) {
         const cause = error instanceof PeriodicNoteCreationError ? error.cause : error;
-        results.push(
-          Object.freeze({
-            noteType,
-            path,
-            status: "failed",
-            error: toFailure(cause),
-          }),
-        );
+        failures += `${failures.length === 0 ? "" : "; "}${noteType} (${path}): ${getErrorMessage(cause)}`;
       }
     }
+    if (failures.length > 0) throw new Error(`Larger-note creation failed: ${failures}`);
     return results;
   }
 
@@ -256,7 +251,7 @@ function resolvePath(
   if (!config.enabled || config.pattern.trim().length === 0) return null;
   return formatPeriodicNotePath(
     date,
-    { noteType, pattern: config.pattern },
+    { noteType, pattern: config.pattern, pathLocale: config.pathLocale },
     { locale: settings.locale, weekStartDay: settings.weekStartDay },
   );
 }
@@ -265,9 +260,6 @@ function getNoteTitle(path: string): string {
   return path.slice(0, -3).split("/").at(-1) ?? "";
 }
 
-function toFailure(error: unknown): CascadeFailure {
-  if (error instanceof Error) {
-    return Object.freeze({ name: error.name, message: error.message });
-  }
-  return Object.freeze({ name: "Error", message: String(error) });
+function getErrorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
 }

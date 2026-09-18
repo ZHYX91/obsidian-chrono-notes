@@ -23,7 +23,7 @@ export type {
   PropertyTimeDisplayFormat,
 } from "../core/properties/property-date-display";
 
-export const SETTINGS_SCHEMA_VERSION = 18;
+export const SETTINGS_SCHEMA_VERSION = 19;
 
 export type PluginLocale =
   | "auto"
@@ -35,6 +35,7 @@ export type PluginLocale =
   | "he"
   | "am"
   | "hi";
+export type FixedPluginLocale = Exclude<PluginLocale, "auto">;
 export type CalendarExtension = CalendarExtensionId;
 export type HolidayRegion = "cn" | "sg";
 export type QuarterNameMode = "number" | "chinese";
@@ -47,6 +48,8 @@ export interface PeriodicNoteSettings {
   enabled: boolean;
   pattern: string;
   templatePath: string;
+  /** Absent means the canonical English filename locale. */
+  pathLocale?: FixedPluginLocale | undefined;
 }
 
 export interface RangeNoteSettings {
@@ -221,11 +224,24 @@ const SETTINGS_MIGRATIONS: Readonly<Record<number, SettingsMigration>> = {
     propertyDateCustomFormat: DEFAULT_SETTINGS.propertyDateCustomFormat,
     propertyTimeCustomFormat: DEFAULT_SETTINGS.propertyTimeCustomFormat,
   }),
+  18: (settings) => {
+    const migrated = addSettingsFields(settings, 19, {});
+    migrated.periodicNotes = migratePeriodicPathLocales(
+      settings.periodicNotes,
+      isFixedPluginLocale(settings.locale) ? settings.locale : "en",
+    );
+    return migrated;
+  },
 };
 
-export function migrateSettings(value: unknown): RawSettings {
+export function migrateSettings(
+  value: unknown,
+  autoPathLocale: FixedPluginLocale = "en",
+): RawSettings {
   let settings = isRecord(value) ? cloneRawSettings(value) : {};
   let schemaVersion = getSettingsSchemaVersion(settings.schemaVersion);
+  const sourceSchemaVersion = schemaVersion;
+  const sourceUsesAutomaticLocale = !isFixedPluginLocale(settings.locale);
   if (schemaVersion > SETTINGS_SCHEMA_VERSION) return settings;
 
   while (schemaVersion < SETTINGS_SCHEMA_VERSION) {
@@ -233,6 +249,16 @@ export function migrateSettings(value: unknown): RawSettings {
     if (migrate === undefined) break;
     settings = migrate(settings);
     schemaVersion += 1;
+  }
+  if (
+    sourceSchemaVersion <= 18 &&
+    sourceUsesAutomaticLocale &&
+    schemaVersion >= 19
+  ) {
+    settings.periodicNotes = overwritePeriodicPathLocales(
+      settings.periodicNotes,
+      autoPathLocale,
+    );
   }
   return settings;
 }
@@ -251,9 +277,10 @@ export function normalizeSettings(value: unknown): ChronoNotesSettings {
   const defaults = createDefaultSettings();
   if (!isRecord(value)) return defaults;
 
+  const configuredLocale = isPluginLocale(value.locale) ? value.locale : defaults.locale;
   return {
     schemaVersion: SETTINGS_SCHEMA_VERSION,
-    locale: isPluginLocale(value.locale) ? value.locale : defaults.locale,
+    locale: configuredLocale,
     weekStartDay: isWeekStartDay(value.weekStartDay)
       ? value.weekStartDay
       : defaults.weekStartDay,
@@ -354,8 +381,11 @@ export function normalizeSettings(value: unknown): ChronoNotesSettings {
 }
 
 export function isPluginLocale(value: unknown): value is PluginLocale {
-  return value === "auto" ||
-    value === "en" ||
+  return value === "auto" || isFixedPluginLocale(value);
+}
+
+export function isFixedPluginLocale(value: unknown): value is FixedPluginLocale {
+  return value === "en" ||
     value === "zh-CN" ||
     value === "zh-TW" ||
     value === "ar" ||
@@ -475,6 +505,44 @@ function migratePeriodicNotePatterns(value: unknown): unknown {
   return migrated;
 }
 
+function migratePeriodicPathLocales(
+  value: unknown,
+  fallback: FixedPluginLocale,
+): unknown {
+  if (!isRecord(value)) return cloneRawValue(value);
+  const migrated = cloneRawSettings(value);
+  for (const noteType of PERIODIC_NOTE_TYPES) {
+    const candidate = migrated[noteType];
+    if (
+      !isRecord(candidate) ||
+      "pathLocale" in candidate ||
+      !usesLocalizedPathTokens(candidate.pattern)
+    ) continue;
+    candidate.pathLocale = fallback;
+  }
+  return migrated;
+}
+
+function overwritePeriodicPathLocales(
+  value: unknown,
+  locale: FixedPluginLocale,
+): unknown {
+  if (!isRecord(value)) return cloneRawValue(value);
+  const migrated = cloneRawSettings(value);
+  for (const noteType of PERIODIC_NOTE_TYPES) {
+    const candidate = migrated[noteType];
+    if (isRecord(candidate) && usesLocalizedPathTokens(candidate.pattern)) {
+      candidate.pathLocale = locale;
+    }
+  }
+  return migrated;
+}
+
+function usesLocalizedPathTokens(pattern: unknown): boolean {
+  return typeof pattern === "string" &&
+    /MMMM|MMM|dddd|ddd/.test(pattern.replace(/\[[^\]]*\]/g, ""));
+}
+
 function normalizePeriodicNotes(
   value: unknown,
   defaults: Readonly<Record<PeriodicNoteType, PeriodicNoteSettings>>,
@@ -485,6 +553,9 @@ function normalizePeriodicNotes(
     PERIODIC_NOTE_TYPES.map((noteType) => {
       const candidate = value[noteType];
       if (!isRecord(candidate)) return [noteType, { ...defaults[noteType] }];
+      const pathLocale = isFixedPluginLocale(candidate.pathLocale)
+        ? candidate.pathLocale
+        : undefined;
       return [
         noteType,
         {
@@ -500,6 +571,7 @@ function normalizePeriodicNotes(
             typeof candidate.templatePath === "string"
               ? candidate.templatePath
               : defaults[noteType].templatePath,
+          ...(pathLocale === undefined ? {} : { pathLocale }),
         },
       ];
     }),

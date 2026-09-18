@@ -141,7 +141,10 @@ export default class ChronoNotesPlugin extends Plugin {
     const loaded: unknown = await this.loadData();
     this.settingsReadOnly = isFutureSettingsSchema(loaded);
     const migrationRequired = isSettingsMigrationRequired(loaded);
-    const migrated = migrateSettings(loaded);
+    const migrated = migrateSettings(
+      loaded,
+      createTranslator("auto", getLanguage()).locale,
+    );
     this.settings = normalizeSettings(migrated);
     this.persistedSettings = normalizeSettings(this.settings);
     if (!migrationRequired) return;
@@ -794,6 +797,7 @@ export default class ChronoNotesPlugin extends Plugin {
         .map((noteType) => ({
           noteType,
           pattern: this.settings.periodicNotes[noteType].pattern,
+          pathLocale: this.settings.periodicNotes[noteType].pathLocale,
         })),
       {
         locale: this.getTranslator().locale,

@@ -22,6 +22,7 @@ export type PeriodicNotePathPreview = Readonly<
 
 export interface PeriodicNotePathPreviewOptions {
   readonly locale: string;
+  readonly pathLocale?: string | undefined;
   readonly weekStartDay: WeekStartDay;
 }
 
@@ -65,7 +66,7 @@ export function createPeriodicNotePathPreview(
     return Object.freeze({ status: "empty", path: null });
   }
 
-  const rule = { noteType, pattern } as const;
+  const rule = { noteType, pattern, pathLocale: options.pathLocale } as const;
   const path = formatPeriodicNotePath(date, rule, options);
   const parsed = path === null ? null : parsePeriodicNotePath(path, rule, options);
   if (path === null || parsed === null ||
