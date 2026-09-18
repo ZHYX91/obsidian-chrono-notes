@@ -1,6 +1,8 @@
 import {
   buildIcsDateIndex,
+  compareOccurrences,
   parseIcsCalendar,
+  type IcsCalendarEvent,
   type IcsEventOccurrence,
 } from "../../core/calendar/ics-calendar";
 import { notifyListeners } from "../notify-listeners";
@@ -46,25 +48,19 @@ export interface IcsEventIndexOptions {
   readonly now?: () => number;
   readonly maxConcurrentReads?: number;
   readonly maxSources?: number;
+  readonly maxOccurrences?: number;
 }
 
 export const DEFAULT_ICS_MAX_CONCURRENT_READS = 4;
 export const DEFAULT_ICS_MAX_SOURCES = 32;
 
-interface CoordinatedRead {
-  readonly revision: number;
-  readonly promise: Promise<string | null>;
-}
-
 export class IcsEventIndex {
   private readonly listeners = new Set<() => void>();
-  private readonly inFlightReads = new Map<string, CoordinatedRead>();
   private readonly now: () => number;
   private readonly maxSources: number;
+  private readonly maxOccurrences: number;
   private readonly readSlots: AsyncSlotLimiter;
-  private requestRevision = 0;
-  private activeRevision: AbortController | null = null;
-  private stopped = false;
+  private activeRevision?: AbortController | null;
   private snapshot: IcsEventIndexSnapshot = createDisabledSnapshot(0);
 
   constructor(
@@ -73,6 +69,7 @@ export class IcsEventIndex {
   ) {
     this.now = options.now ?? Date.now;
     this.maxSources = normalizePositiveLimit(options.maxSources, DEFAULT_ICS_MAX_SOURCES);
+    this.maxOccurrences = options.maxOccurrences ?? 100_000;
     this.readSlots = new AsyncSlotLimiter(normalizePositiveLimit(
       options.maxConcurrentReads,
       DEFAULT_ICS_MAX_CONCURRENT_READS,
@@ -87,11 +84,9 @@ export class IcsEventIndex {
   getSnapshot = (): IcsEventIndexSnapshot => this.snapshot;
 
   async refresh(options: IcsRefreshOptions): Promise<void> {
-    if (this.stopped) return;
-    const revision = ++this.requestRevision;
+    if (this.activeRevision === null) return;
     this.activeRevision?.abort();
-    const revisionController = new AbortController();
-    this.activeRevision = revisionController;
+    const revision = this.activeRevision = new AbortController();
     const sources = normalizeSources(options.sources).slice(0, this.maxSources);
     if (!options.enabled) {
       this.publish(createDisabledSnapshot(
@@ -112,16 +107,8 @@ export class IcsEventIndex {
     const pendingResults = await Promise.all(sources.map(async (source) => {
       const sourceLabel = getSourceLabel(source);
       try {
-        const content = await this.readForRevision(
-          source,
-          revision,
-          revisionController.signal,
-        );
-        // Parsing can be materially more expensive than the read itself. A
-        // superseded request must not consume that work or expose its content.
-        if (content === null || this.stopped || revision !== this.requestRevision) {
-          return null;
-        }
+        const content = await this.startRead(source, revision.signal);
+        if (content === null || revision.signal.aborted) return null;
         const parsed = parseIcsCalendar(content, source, { displayZone: options.displayZone });
         return {
           status: Object.freeze({
@@ -135,7 +122,7 @@ export class IcsEventIndex {
           events: parsed.events,
         };
       } catch (error) {
-        if (this.stopped || revision !== this.requestRevision) return null;
+        if (revision.signal.aborted) return null;
         return {
           status: Object.freeze({
             source,
@@ -150,18 +137,20 @@ export class IcsEventIndex {
       }
     }));
 
-    if (this.stopped || revision !== this.requestRevision) return;
+    if (revision.signal.aborted) return;
     const results = pendingResults.filter((result) => result !== null);
     const events = results.flatMap((result) => result.events);
-    const dateIndex = buildIcsDateIndex(events);
-    const eventsByDate = reuseEventDateIndex(
-      this.snapshot.eventsByDate,
-      dateIndex.eventsByDate,
-    );
+    const dateIndex = await this.buildDateIndex(events, revision.signal);
+    if (dateIndex === null || revision.signal.aborted) return;
+    const eventsByDate = reuseEventDateIndex(this.snapshot.eventsByDate, dateIndex[0]);
     const sourceStatuses = Object.freeze(results.map((result) => result.status));
-    const errors = Object.freeze(sourceStatuses
+    const errors = sourceStatuses
       .filter((status) => status.error !== null)
-      .map((status) => `${status.sourceLabel}: ${status.error}`));
+      .map((status) => `${status.sourceLabel}: ${status.error}`);
+    if (dateIndex[2]) {
+      errors.push("ICS occurrence limit reached; events omitted.");
+    }
+    Object.freeze(errors);
     this.publish(Object.freeze({
       version: this.snapshot.version + 1,
       contentVersion: this.snapshot.contentVersion + (
@@ -174,7 +163,7 @@ export class IcsEventIndex {
       eventCount: events.length,
       skippedRecurring: sum(sourceStatuses, "skippedRecurring"),
       skippedInvalid: sum(sourceStatuses, "skippedInvalid"),
-      truncatedEvents: dateIndex.truncatedEvents,
+      truncatedEvents: dateIndex[1],
       refreshedAt: this.now(),
       sourceStatuses,
       errors,
@@ -183,61 +172,73 @@ export class IcsEventIndex {
   }
 
   stop(): void {
-    if (this.stopped) return;
-    this.stopped = true;
-    this.requestRevision += 1;
+    if (this.activeRevision === null) return;
     this.activeRevision?.abort();
     this.activeRevision = null;
     this.listeners.clear();
-    this.inFlightReads.clear();
     this.snapshot = createDisabledSnapshot(
       this.snapshot.version + 1,
       this.snapshot.contentVersion + (hasVisibleEvents(this.snapshot.eventsByDate) ? 1 : 0),
     );
   }
 
-  private readForRevision(
-    source: string,
-    revision: number,
+  private async buildDateIndex(
+    events: readonly IcsCalendarEvent[],
     signal: AbortSignal,
-  ): Promise<string | null> {
-    const existing = this.inFlightReads.get(source);
-    if (existing?.revision === revision) return existing.promise;
+  ): Promise<readonly [
+    Readonly<Record<string, readonly IcsEventOccurrence[]>>,
+    number,
+    boolean,
+  ] | null> {
+    const mutable: Record<string, IcsEventOccurrence[]> = {};
+    let remaining = this.maxOccurrences;
+    let truncated = 0;
 
-    // A later revision starts a genuinely fresh read immediately. Waiting for
-    // an older source promise could indefinitely block the authoritative
-    // refresh; the revision gates discard that older result instead.
-    const pending = this.startRead(source, revision, signal);
-    const coordinated = { revision, promise: pending };
-    this.inFlightReads.set(source, coordinated);
-    const cleanup = () => {
-      if (this.inFlightReads.get(source) === coordinated) {
-        this.inFlightReads.delete(source);
+    outer: for (let index = 0; index < events.length; index += 1) {
+      if (remaining === 0) {
+        remaining = -1;
+        truncated += events.length - index;
+        break;
       }
-    };
-    void pending.then(cleanup, cleanup);
-    return pending;
+      const expanded = buildIcsDateIndex([events[index]!]);
+      truncated += expanded.truncatedEvents;
+      for (const dateKey in expanded.eventsByDate) {
+        if (remaining === 0) {
+          remaining = -1;
+          if (expanded.truncatedEvents === 0) truncated += 1;
+          truncated += events.length - index - 1;
+          break outer;
+        }
+        (mutable[dateKey] ??= []).push(expanded.eventsByDate[dateKey]![0]!);
+        remaining -= 1;
+      }
+      if ((index & 63) === 63 && index + 1 < events.length) {
+        await new Promise<void>((resolve) => window.setTimeout(resolve));
+        if (signal.aborted) return null;
+      }
+    }
+
+    for (const occurrences of Object.values(mutable)) {
+      occurrences.sort(compareOccurrences);
+      Object.freeze(occurrences);
+    }
+    return [Object.freeze(mutable), truncated, remaining < 0];
   }
 
   private async startRead(
     source: string,
-    revision: number,
     signal: AbortSignal,
   ): Promise<string | null> {
-    if (this.stopped || signal.aborted || revision !== this.requestRevision) return null;
     const release = this.readSlots.acquireImmediately() ?? await this.readSlots.acquire();
     try {
-      if (this.stopped || signal.aborted || revision !== this.requestRevision) return null;
       return await readUntilAborted(this.reader, source, signal);
-    } catch (error) {
-      throw normalizeError(error);
     } finally {
       release();
     }
   }
 
   private publish(snapshot: IcsEventIndexSnapshot): void {
-    if (this.stopped) return;
+    if (this.activeRevision === null) return;
     this.snapshot = snapshot;
     notifyListeners(this.listeners);
   }

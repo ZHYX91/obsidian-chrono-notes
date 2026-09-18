@@ -356,7 +356,7 @@ function getDateKeys(
   });
 }
 
-function compareOccurrences(left: IcsEventOccurrence, right: IcsEventOccurrence): number {
+export function compareOccurrences(left: IcsEventOccurrence, right: IcsEventOccurrence): number {
   if (left.isAllDay !== right.isAllDay) return left.isAllDay ? -1 : 1;
   if (left.sortTimestamp !== right.sortTimestamp) return left.sortTimestamp - right.sortTimestamp;
   return left.title.localeCompare(right.title) || left.id.localeCompare(right.id);
