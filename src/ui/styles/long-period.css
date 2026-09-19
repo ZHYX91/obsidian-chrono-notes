@@ -2,6 +2,7 @@
   display: flex;
   flex-direction: column;
   height: 100%;
+  min-width: 0;
 }
 
 .chrono-notes-calendar:has(> [data-view-mode="century"]) > .chrono-notes-calendar-header,
@@ -41,7 +42,20 @@
 }
 
 .chrono-notes-long-period-years {
+  --chrono-notes-year-columns: 5;
   grid-auto-rows: minmax(48px, auto);
+  grid-template-columns: repeat(var(--chrono-notes-year-columns), minmax(0, 1fr));
+}
+
+/* Preserve full year labels and touch targets when five columns no longer fit. */
+@container chrono-long-period (width < calc(20ch + 104px)) {
+  .chrono-notes-long-period-years {
+    --chrono-notes-year-columns: 2;
+  }
+
+  .chrono-notes-long-period-heading {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 .chrono-notes-long-period-decade {

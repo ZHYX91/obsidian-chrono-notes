@@ -98,6 +98,17 @@ describe("century keyboard navigation", () => {
     expect(document.activeElement).toBe(cell("year", 2100));
   });
 
+  it("moves by the rendered two-column row in narrow layouts", async () => {
+    await render();
+    const group = cell("year", 2026).parentElement!;
+    group.style.setProperty("--chrono-notes-year-columns", "2");
+    await act(async () => cell("year", 2026).focus());
+    await press("ArrowDown");
+    expect(document.activeElement).toBe(cell("year", 2028));
+    await press("ArrowUp");
+    expect(document.activeElement).toBe(cell("year", 2026));
+  });
+
   it("mirrors horizontal arrows for RTL without changing chronological vertical navigation", async () => {
     await render(2026, "ar");
     await act(async () => cell("year", 2026).focus());

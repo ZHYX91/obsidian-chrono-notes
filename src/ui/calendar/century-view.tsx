@@ -49,8 +49,13 @@ export function CenturyView({ query, selection, revealRequest, onSelect, ...shar
     const candidates = vertical
       ? buttons.filter((button) => (button.dataset.periodKind === "year") === isYear)
       : buttons;
+    const configuredColumns = current.parentElement === null ? NaN : Number(
+      host.window.getComputedStyle(current.parentElement)
+        .getPropertyValue("--chrono-notes-year-columns"),
+    );
+    const columns = configuredColumns === 2 ? 2 : 5;
     const next = resolvePeriodGridNavigation(
-      event.key, candidates.indexOf(current), candidates.length, vertical && isYear ? 5 : 1,
+      event.key, candidates.indexOf(current), candidates.length, vertical && isYear ? columns : 1,
       shared.translator.direction === "rtl",
     );
     if (next === null) return;

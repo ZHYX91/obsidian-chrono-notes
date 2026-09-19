@@ -171,7 +171,9 @@ describe("imperative settings cleanup", () => {
 
   it("shows and edits each period's own filename language without changing another period", async () => {
     const context = createContext();
-    Object.assign(context.host.settings.periodicNotes.daily, { enabled: true, pathLocale: "en" });
+    Object.assign(context.host.settings.periodicNotes.daily, {
+      enabled: true, pathLocale: "en", pattern: "[Daily]/YYYY-MM-DD-dddd",
+    });
     Object.assign(context.host.settings.periodicNotes.monthly, { enabled: true, pathLocale: "fa" });
     const container = document.createElement("div");
     const cleanup = renderPeriodicSettingsSection(container, context);
@@ -183,13 +185,17 @@ describe("imperative settings cleanup", () => {
     )!;
     expect(daily.value).toBe("en");
     expect(monthly.value).toBe("fa");
+    const preview = container.querySelector("#chrono-notes-daily-path-feedback")!;
+    const originalPreview = preview.textContent;
     daily.value = "zh-CN";
     daily.dispatchEvent(new window.Event("change"));
     await Promise.resolve();
     expect(context.host.settings.periodicNotes.daily.pathLocale).toBe("zh-CN");
     expect(context.host.settings.periodicNotes.monthly.pathLocale).toBe("fa");
     expect(context.persistSettings).toHaveBeenCalledOnce();
-    expect(context.display).toHaveBeenCalledOnce();
+    expect(context.display).not.toHaveBeenCalled();
+    expect(preview.textContent).not.toBe(originalPreview);
+    expect(container.querySelector("#chrono-notes-daily-path-feedback")).toBe(preview);
     cleanup();
   });
 

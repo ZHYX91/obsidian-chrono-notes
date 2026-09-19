@@ -1,4 +1,4 @@
-import { Setting } from "obsidian";
+import { Setting, type ButtonComponent } from "obsidian";
 
 import {
   CALENDAR_EXTENSION_DEFINITIONS,
@@ -21,11 +21,12 @@ import {
 } from "./settings-presentation";
 import { preparePathInput } from "./path-input";
 import type { SettingsSectionContext } from "./settings-section-context";
+import type { SettingsCleanup } from "./settings-cleanup";
 
 export function renderExtensionsAndIntegrationsSettingsSection(
   containerEl: HTMLElement,
   context: SettingsSectionContext,
-): void {
+): SettingsCleanup {
   const { t } = context.translator;
 
   containerEl.createEl("h3", {
@@ -50,7 +51,6 @@ export function renderExtensionsAndIntegrationsSettingsSection(
   addHolidayRegionSlot(containerEl, 2, context);
 
   const settings = context.host.settings.ics;
-  const snapshot = context.host.getIcsSnapshot();
   containerEl.createEl("h3", { text: t("settings.ics.title") });
   new Setting(containerEl)
     .setName(t("settings.ics.showEvents"))
@@ -59,7 +59,6 @@ export function renderExtensionsAndIntegrationsSettingsSection(
       toggle.setValue(settings.enabled).onChange(async (enabled) => {
         settings.enabled = enabled;
         await context.persistSettings();
-        context.display();
       });
     });
   const sourcesSetting = new Setting(containerEl)
@@ -78,24 +77,29 @@ export function renderExtensionsAndIntegrationsSettingsSection(
     preparePathInput(text.inputEl);
     context.flushSettingsSaveOnBlur(text.inputEl);
   });
-  new Setting(containerEl)
+  let refreshButton: ButtonComponent;
+  const refreshSetting = new Setting(containerEl)
     .setName(t("settings.ics.refresh"))
-    .setDesc(formatIcsStatus(snapshot, t))
     .addButton((button) => {
-      button
-        .setButtonText(snapshot?.state === "refreshing"
-          ? t("settings.ics.refreshingButton")
-          : t("settings.ics.refreshNow"))
-        .setDisabled(snapshot?.state === "refreshing")
-        .onClick(async () => {
-          await context.host.refreshIcs(true);
-          context.display();
-        });
+      refreshButton = button;
+      button.onClick(async () => {
+        await context.host.refreshIcs(true);
+      });
     });
-
-  if (snapshot !== null && snapshot.sourceStatuses.length > 0) {
-    const statusList = containerEl.createDiv({ cls: "chrono-notes-ics-status" });
-    for (const status of snapshot.sourceStatuses) {
+  const statusList = containerEl.createDiv({ cls: "chrono-notes-ics-status" });
+  let closed = false;
+  const renderStatus = (): void => {
+    if (closed) return;
+    const snapshot = context.host.getIcsSnapshot();
+    refreshSetting.setDesc(formatIcsStatus(snapshot, t));
+    refreshButton
+      .setButtonText(snapshot?.state === "refreshing"
+        ? t("settings.ics.refreshingButton")
+        : t("settings.ics.refreshNow"))
+      .setDisabled(context.host.isSettingsReadOnly() || snapshot?.state === "refreshing");
+    statusList.empty();
+    statusList.hidden = snapshot === null || snapshot.sourceStatuses.length === 0;
+    for (const status of snapshot?.sourceStatuses ?? []) {
       statusList.createDiv({
         cls: status.error === null
           ? "chrono-notes-ics-source"
@@ -103,7 +107,13 @@ export function renderExtensionsAndIntegrationsSettingsSection(
         text: formatIcsSourceStatus(status, t),
       });
     }
-  }
+  };
+  const unsubscribe = context.host.subscribeIcs(renderStatus);
+  renderStatus();
+  return () => {
+    closed = true;
+    unsubscribe();
+  };
 }
 
 function addCalendarExtensionSlot(

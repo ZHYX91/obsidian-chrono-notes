@@ -17,6 +17,7 @@ export interface SettingsHost {
   saveSettings(): Promise<void>;
   openIntervalNoteList(): void;
   getIcsSnapshot(): IcsEventIndexSnapshot | null;
+  subscribeIcs(listener: () => void): () => void;
   refreshIcs(showNotice?: boolean): Promise<void>;
   openFirstUseGuide(): void;
   getNoteIndexStatus(): (NoteIndexStatus & Readonly<{ rebuildingCache: boolean }>) | null;
