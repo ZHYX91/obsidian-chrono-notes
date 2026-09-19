@@ -12,6 +12,18 @@ function reschedule(content: string) {
 
 describe("semantic task date source coordinates", () => {
   it.each([
+    "\uFEFF- [ ] Work 📅 2026-09-13",
+    "- [ ] Work 📅 2026-09-13",
+    "\uFEFFHeading\r\n- [ ] Work 📅 2026-09-13\rTail\n",
+    "\uFEFF---\r\ntitle: keep\r\n---\r\n- [ ] Work 📅 2026-09-13",
+    "\uFEFF- [ ] 😀 `📅 2000-01-01` <!-- keep --> 📅\t2026-09-13",
+  ])("preserves BOM and source offsets in %s", (content) => {
+    expect(reschedule(content)).toEqual({
+      status: "updated", content: content.replace("2026-09-13", "2026-09-15"),
+    });
+  });
+
+  it.each([
     "`📅 2000-01-01`",
     "<!-- 📅 2000-01-01 -->",
     "😀 `📅 2000-01-01` <!-- 📅 2001-01-01 -->",

@@ -62,7 +62,12 @@ function rewriteTaskLine(
   if (current === undefined || projectedLine === undefined || !sameTaskIdentity(current, expected)) {
     return Object.freeze({ status: "stale" });
   }
-  const updatedLine = update(line, projectedLine.semanticText);
+  // The document parser removes the file BOM. Restore its source coordinate
+  // before mapping semantic offsets back into the original first line.
+  const semanticLine = document.hadBom && expected.line === 0
+    ? ` ${projectedLine.semanticText}`
+    : projectedLine.semanticText;
+  const updatedLine = update(line, semanticLine);
   if (updatedLine === line) return Object.freeze({ status: "stale" });
   return Object.freeze({
     status: "updated",
