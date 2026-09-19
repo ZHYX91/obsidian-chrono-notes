@@ -1,6 +1,7 @@
 import type { MessageCatalog } from "../types";
 
 export const FA_MESSAGES = Object.freeze({
+  "ics.occurrenceLimit": "ICS به سقف {limit} رخداد روزانه رسید؛ {count} رویداد کامل نمایش داده نمی‌شوند. منابع یا طول رویدادها را کاهش دهید و دوباره تازه‌سازی کنید.",
   "settings.periodic.pathLanguage": "زبان مسیر",
   "settings.periodic.pathLanguageDesc": "زبان نام فایل این دوره را ثابت کنید. تغییر آن بر یافتن و ایجاد یادداشت‌ها اثر دارد، اما نام فایل‌های موجود را تغییر نمی‌دهد؛ ابتدا پیش‌نمایش مسیر را بررسی کنید.",
   "pluginNotice.cascadePartial": "یادداشت اصلی باز شد: {path}. ایجاد برخی یادداشت‌های دوره‌های بزرگ‌تر ناموفق بود:",

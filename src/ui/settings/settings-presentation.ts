@@ -1,4 +1,5 @@
 import type { PeriodicNoteType } from "../../core/periodic/periodic-date";
+import { formatIcsLimitNotice } from "../../features/calendar/ics-feedback";
 import type {
   IcsEventIndexSnapshot,
   IcsSourceStatus,
@@ -33,7 +34,7 @@ export function formatIcsStatus(
   if (snapshot === null || !snapshot.enabled) return t("settings.ics.status.disabled");
   if (snapshot.state === "refreshing") return t("settings.ics.status.refreshing");
   if (snapshot.totalSources === 0) return t("settings.ics.status.noSources");
-  return t("settings.ics.status.summary", {
+  const summary = t("settings.ics.status.summary", {
     loaded: snapshot.loadedSources,
     total: snapshot.totalSources,
     events: snapshot.eventCount,
@@ -41,6 +42,8 @@ export function formatIcsStatus(
     invalid: snapshot.skippedInvalid,
     errors: snapshot.errors.length,
   });
+  const limitNotice = formatIcsLimitNotice(snapshot, t);
+  return limitNotice === null ? summary : `${summary}\n${limitNotice}`;
 }
 
 export function formatIcsSourceStatus(

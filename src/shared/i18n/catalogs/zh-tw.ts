@@ -2,6 +2,7 @@ import type { MessageValue } from "../message-value";
 import type { MessageKey } from "../types";
 
 export const ZH_TW_MESSAGES = {
+  "ics.occurrenceLimit": "ICS 已達到 {limit} 筆逐日記錄的上限，{count} 個事件未完整顯示。請減少來源或縮短事件跨度後重新整理。",
   "settings.periodic.pathLanguage": "路徑語言",
   "settings.periodic.pathLanguageDesc": "固定此週期的檔案命名語言。變更會影響筆記的尋找與建立，但不會重新命名既有檔案；請先核對路徑預覽。",
   "pluginNotice.cascadePartial": "主筆記已開啟：{path}。部分較大週期筆記建立失敗：",

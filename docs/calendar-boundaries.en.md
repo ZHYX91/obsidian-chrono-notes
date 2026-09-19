@@ -26,6 +26,8 @@ Under RFC 5545 section 3.6.1, a DATE-TIME event without `DTEND` or `DURATION` is
 
 Explicit equal or reversed `DTEND`, zero or negative `DURATION`, simultaneous end fields and mismatched date types remain isolated by the existing invalid-event rules. This does not add recurring-event expansion or change existing ICS input and event-span limits.
 
+One runtime owner maintains the ICS index. All sources share a budget of 100,000 daily occurrences; expansion yields in batches and discards work superseded by a newer refresh. At the limit, the index retains bounded partial results. Both settings and refresh notifications explain the limit, the number of events not fully displayed, and the option to reduce sources or event spans before refreshing. Successful source reads do not imply complete event expansion.
+
 ## 3. Task edits
 
 Task rescheduling locates the due date in the latest Markdown projection's semantic text, using the same masking semantics as task parsing. Only the date characters are replaced; lookalike markers in preceding inline code or HTML comments, marker spacing, original line endings and unrelated text remain unchanged.
