@@ -1,6 +1,12 @@
 import type { MessageCatalog } from "../types";
 
 export const AR_MESSAGES = Object.freeze({
+  "settings.periodic.pathLanguage": "لغة المسار",
+  "settings.periodic.pathLanguageDesc": "تثبيت لغة أسماء الملفات لهذه الفترة. يؤثر تغييرها في العثور على الملاحظات وإنشائها دون إعادة تسمية الملفات الحالية؛ تحقق من معاينة المسار أولاً.",
+  "pluginNotice.cascadePartial": "تم فتح الملاحظة الرئيسية: {path}. تعذر إنشاء بعض ملاحظات الفترات الأكبر:",
+  "pluginNotice.cascade.created": "تم إنشاء {period}: {path}",
+  "pluginNotice.cascade.existing": "{period} موجودة ومحفوظة: {path}",
+  "pluginNotice.cascade.failed": "فشل {period}: {path} — {error}",
   "settings.templates.syntaxTitle": "صياغة القوالب",
   "settings.templates.contentLocation": "اكتب العناصر النائبة داخل محتوى ملف قالب Markdown. تستخدم مسارات الملاحظات رموز تنسيق التاريخ مباشرة دون {{…}}؛ ويشير مسار ملف القالب إلى ملف Markdown موجود.",
   "settings.templates.formatDefaults": "التنسيق الافتراضي لـ date/start/end هو YYYY-MM-DD ولـ time هو HH:mm. ضع النص الثابت بين أقواس مربعة، مثل [C]CEN. تعرض صفحة إعدادات كل نوع عناصره النائبة وأمثلته.",

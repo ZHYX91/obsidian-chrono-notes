@@ -2,6 +2,12 @@ import type { MessageValue } from "../message-value";
 import type { MessageKey } from "../types";
 
 export const EN_MESSAGES = {
+  "settings.periodic.pathLanguage": "Path language",
+  "settings.periodic.pathLanguageDesc": "Fix the filename language for this period. Changing it affects note lookup and creation without renaming existing files; check the path preview first.",
+  "pluginNotice.cascadePartial": "Primary note opened: {path}. Some larger-period notes could not be created:",
+  "pluginNotice.cascade.created": "{period} created: {path}",
+  "pluginNotice.cascade.existing": "{period} already exists and was preserved: {path}",
+  "pluginNotice.cascade.failed": "{period} failed: {path} — {error}",
   "settings.templates.syntaxTitle": "Template syntax",
   "settings.templates.contentLocation": "Write placeholders in the Markdown template's content. Note paths use date format tokens directly, without {{…}}; the template file path points to an existing Markdown file.",
   "settings.templates.formatDefaults": "date/start/end default to YYYY-MM-DD; time defaults to HH:mm. Enclose literal text in square brackets, for example [C]CEN. Each note settings page lists its placeholders and examples.",

@@ -588,7 +588,7 @@ describe("ChronoNotesPlugin lifecycle composition", () => {
 
     expect(mocks.state.saveData).toHaveBeenCalledOnce();
     expect(mocks.state.saveData).toHaveBeenCalledWith(expect.objectContaining({
-      schemaVersion: 18,
+      schemaVersion: 19,
       calendarExtensions: ["persian", "islamic-umalqura"],
       showTaskProgress: true,
       periodicNotes: expect.objectContaining({
@@ -618,7 +618,7 @@ describe("ChronoNotesPlugin lifecycle composition", () => {
 
     await expect(plugin.onload()).resolves.toBeUndefined();
 
-    expect(plugin.settings.schemaVersion).toBe(18);
+    expect(plugin.settings.schemaVersion).toBe(19);
     expect(plugin.settings.periodicNotes.weekly.pattern).toBe("[Weekly]/GGGG-[W]WW");
     expect(error).toHaveBeenCalledWith(
       "Chrono Notes: failed to persist migrated settings",

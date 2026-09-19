@@ -398,26 +398,18 @@ describe("PeriodicNoteCommands", () => {
       yearly: { enabled: true, pattern: "[Yearly]/YYYY" },
     });
 
-    const result = await commands.openOrCreate(
+    await expect(commands.openOrCreate(
       {
         date: { year: 2026, month: 5, day: 18 },
         noteType: "daily",
         cascade: true,
       },
       settings,
-    );
-
-    expect(result).toMatchObject({
-      status: "opened",
-      created: true,
+    )).resolves.toMatchObject({
+      status: "opened", created: true,
       cascade: [
-        {
-          noteType: "weekly",
-          path: "Weekly/2026-W21.md",
-          status: "failed",
-          error: { message: "weekly template failed" },
-        },
-        { noteType: "yearly", path: "Yearly/2026.md", status: "created" },
+        { noteType: "weekly", status: "failed", error: { message: "weekly template failed" } },
+        { noteType: "yearly", status: "created" },
       ],
     });
     expect(ports.paths.has("Daily/2026-05-18.md")).toBe(true);

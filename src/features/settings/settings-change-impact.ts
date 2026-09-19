@@ -22,7 +22,9 @@ export function getSettingsChangeImpact(
   const periodicPathsChanged = PERIODIC_NOTE_TYPES.some((noteType) => {
     const left = previous.periodicNotes[noteType];
     const right = next.periodicNotes[noteType];
-    return left.enabled !== right.enabled || left.pattern !== right.pattern;
+    return left.enabled !== right.enabled ||
+      left.pattern !== right.pattern ||
+      left.pathLocale !== right.pathLocale;
   });
   const intervalScopeChanged = !sameIntervalScope(
     previous.rangeNotes,
@@ -110,7 +112,8 @@ function samePeriodicNote(
 ): boolean {
   return left.enabled === right.enabled &&
     left.pattern === right.pattern &&
-    left.templatePath === right.templatePath;
+    left.templatePath === right.templatePath &&
+    left.pathLocale === right.pathLocale;
 }
 
 function sameRangeNotes(

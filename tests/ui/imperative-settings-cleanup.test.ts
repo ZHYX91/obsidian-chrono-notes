@@ -39,6 +39,20 @@ vi.mock("obsidian", () => ({
 
     addDropdown(configure: (dropdown: unknown) => void): this {
       const dropdown = createChainableControl();
+      const select = document.createElement("select");
+      this.controlEl.append(select);
+      dropdown.addOption = (value: string, label: string) => {
+        const option = document.createElement("option");
+        option.value = value;
+        option.textContent = label;
+        select.append(option);
+        return dropdown;
+      };
+      dropdown.setValue = (value: string) => { select.value = value; return dropdown; };
+      dropdown.onChange = (callback: (value: string) => void) => {
+        select.addEventListener("change", () => callback(select.value));
+        return dropdown;
+      };
       configure(dropdown);
       return this;
     }
@@ -153,6 +167,30 @@ describe("imperative settings cleanup", () => {
     expect([...mocks.periodicClose, ...mocks.markdownClose].every(
       (close) => close.mock.calls.length === 1,
     )).toBe(true);
+  });
+
+  it("shows and edits each period's own filename language without changing another period", async () => {
+    const context = createContext();
+    Object.assign(context.host.settings.periodicNotes.daily, { enabled: true, pathLocale: "en" });
+    Object.assign(context.host.settings.periodicNotes.monthly, { enabled: true, pathLocale: "fa" });
+    const container = document.createElement("div");
+    const cleanup = renderPeriodicSettingsSection(container, context);
+    const daily = container.querySelector<HTMLSelectElement>(
+      '[aria-labelledby="chrono-notes-daily-settings-heading"] select',
+    )!;
+    const monthly = container.querySelector<HTMLSelectElement>(
+      '[aria-labelledby="chrono-notes-monthly-settings-heading"] select',
+    )!;
+    expect(daily.value).toBe("en");
+    expect(monthly.value).toBe("fa");
+    daily.value = "zh-CN";
+    daily.dispatchEvent(new window.Event("change"));
+    await Promise.resolve();
+    expect(context.host.settings.periodicNotes.daily.pathLocale).toBe("zh-CN");
+    expect(context.host.settings.periodicNotes.monthly.pathLocale).toBe("fa");
+    expect(context.persistSettings).toHaveBeenCalledOnce();
+    expect(context.display).toHaveBeenCalledOnce();
+    cleanup();
   });
 
   it.each(["builtin", "templater"] as const)("keeps %s template guidance with its note type", (engine) => {

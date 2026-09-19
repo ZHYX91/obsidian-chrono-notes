@@ -7,6 +7,8 @@ import {
   type PeriodicNoteType,
 } from "../../core/periodic/periodic-date";
 import { getCurrentLocalDate } from "../../shared/local-date-clock";
+import { PLUGIN_LANGUAGE_OPTIONS } from "../../shared/plugin-languages";
+import { isFixedPluginLocale } from "../../shared/settings";
 import {
   createPeriodicNotePathPreview,
   getPeriodicNotePathExample,
@@ -94,6 +96,20 @@ function renderPeriodicNoteType(
 
   const pathSetting = new Setting(sectionEl);
   const pathCleanup = configurePeriodicPathSetting(pathSetting, noteType, context);
+  new Setting(sectionEl)
+    .setName(t("settings.periodic.pathLanguage"))
+    .setDesc(t("settings.periodic.pathLanguageDesc"))
+    .addDropdown((dropdown) => {
+      for (const option of PLUGIN_LANGUAGE_OPTIONS) {
+        dropdown.addOption(option.value, option.label);
+      }
+      dropdown.setValue(config.pathLocale ?? "en").onChange(async (value) => {
+        if (!isFixedPluginLocale(value)) return;
+        config.pathLocale = value;
+        await context.persistSettings();
+        context.display();
+      });
+    });
   const templateCleanup = renderTemplatePathSetting(
     sectionEl,
     t("settings.templates.path"),
@@ -131,6 +147,7 @@ export function configurePeriodicPathSetting(
   const updatePathDescription = (): void => {
     const preview = createPeriodicNotePathPreview(previewDate, noteType, config.pattern, {
       locale: context.translator.locale,
+      pathLocale: config.pathLocale,
       weekStartDay: context.host.settings.weekStartDay,
     });
     const hasError = preview.status !== "valid";

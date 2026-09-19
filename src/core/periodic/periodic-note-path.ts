@@ -12,6 +12,7 @@ import { parseMomentFormat } from "./moment-format";
 export interface PeriodicNotePathRule {
   readonly noteType: PeriodicNoteType;
   readonly pattern: string;
+  readonly pathLocale?: string | undefined;
 }
 
 export interface PeriodicNotePathOptions {
@@ -38,7 +39,12 @@ export function formatPeriodicNotePath(
       filenameDate = filenameDate.plus({ days: 1 });
     }
 
-    const formatted = formatPeriodDate(filenameDate.setLocale(options.locale), rule.pattern, "date", anchor.year);
+    const formatted = formatPeriodDate(
+      filenameDate.setLocale(resolvePathLocale(rule)),
+      rule.pattern,
+      "date",
+      anchor.year,
+    );
     return formatted === null ? null : `${formatted}.md`;
   } catch {
     return null;
@@ -53,7 +59,11 @@ export function parsePeriodicNotePath(
   if (!hasPeriodIdentity(rule) || !path.endsWith(".md")) return null;
 
   try {
-    const parsed = parsePeriodDate(path.slice(0, -3), rule.pattern, options.locale);
+    const parsed = parsePeriodDate(
+      path.slice(0, -3),
+      rule.pattern,
+      resolvePathLocale(rule),
+    );
     if (parsed === null || !parsed.isValid) return null;
 
     const anchor = getPeriodAnchor(
@@ -65,6 +75,10 @@ export function parsePeriodicNotePath(
   } catch {
     return null;
   }
+}
+
+function resolvePathLocale(rule: PeriodicNotePathRule): string {
+  return rule.pathLocale?.trim() || "en";
 }
 
 /** Every pattern must identify its note period, including patterns without DEC/CEN. */

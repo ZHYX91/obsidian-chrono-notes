@@ -1,6 +1,12 @@
 import type { MessageValue } from "../message-value";
 
 export const ZH_CN_MESSAGES = {
+  "settings.periodic.pathLanguage": "路径语言",
+  "settings.periodic.pathLanguageDesc": "固定此周期的文件命名语言。更改会影响笔记的查找与创建，但不会重命名已有文件；请先核对路径预览。",
+  "pluginNotice.cascadePartial": "主笔记已打开：{path}。部分较大周期笔记创建失败：",
+  "pluginNotice.cascade.created": "{period}已创建：{path}",
+  "pluginNotice.cascade.existing": "{period}已存在，保留原文件：{path}",
+  "pluginNotice.cascade.failed": "{period}创建失败：{path} — {error}",
   "settings.templates.syntaxTitle": "模板写法",
   "settings.templates.contentLocation": "占位符写在 Markdown 模板文件内容里。笔记路径直接使用日期格式符，不写 {{…}}；模板文件路径则填写现有 Markdown 文件的位置。",
   "settings.templates.formatDefaults": "date/start/end 默认输出 YYYY-MM-DD，time 默认输出 HH:mm。固定文本用英文方括号包裹，例如 [C]CEN。各类笔记的占位符和示例见对应设置页面。",

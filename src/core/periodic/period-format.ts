@@ -39,7 +39,11 @@ export function formatPeriodDate(
 export function parsePeriodDate(text: string, format: string, locale: string): DateTime<true> | null {
   const parts = parseMomentFormat(format, "date");
   if (parts === null) return null;
-  const options = { locale, zone: "UTC" };
+  // Luxon's parser defaults to Latin digits even when its formatter uses a
+  // locale's native digits. Resolve the same numbering system for both.
+  const numberingSystem = DateTime.fromMillis(0, { locale, zone: "UTC" })
+    .resolvedLocaleOptions().numberingSystem;
+  const options = { locale, numberingSystem, zone: "UTC" };
   if (!parts.some(isExtended)) {
     const parsed = DateTime.fromFormat(text, compileMomentParts(parts), options);
     return parsed.isValid ? parsed : null;
@@ -71,7 +75,7 @@ export function parsePeriodDate(text: string, format: string, locale: string): D
   const hasYear = parts.some((part) => ["YYYY", "YY", "GGGG", "GG"].includes(part.token ?? ""));
   const nativeFormat = compileMomentParts(nativeParts);
   const parsed = DateTime.fromFormat(
-    hasYear ? text : `${text} ${String(year).padStart(4, "0")}`,
+    hasYear ? text : `${text} ${DateTime.utc(year).setLocale(locale).toFormat("yyyy")}`,
     hasYear ? nativeFormat : `${nativeFormat} yyyy`,
     options,
   );

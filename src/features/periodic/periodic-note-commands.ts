@@ -76,7 +76,7 @@ export class PeriodicNoteCreationError extends Error {
     override readonly cause: unknown,
     readonly retainedCreatedNote = false,
   ) {
-    super(`Failed to create ${noteType} note at ${path}: ${toFailure(cause).message}`, {
+    super(`Failed to create ${noteType} note at ${path}: ${getErrorMessage(cause)}`, {
       cause,
     });
   }
@@ -171,14 +171,15 @@ export class PeriodicNoteCommands {
         }));
       } catch (error) {
         const cause = error instanceof PeriodicNoteCreationError ? error.cause : error;
-        results.push(
-          Object.freeze({
-            noteType,
-            path,
-            status: "failed",
-            error: toFailure(cause),
+        results.push(Object.freeze({
+          noteType,
+          path,
+          status: "failed",
+          error: Object.freeze({
+            name: cause instanceof Error ? cause.name : "Error",
+            message: getErrorMessage(cause),
           }),
-        );
+        }));
       }
     }
     return results;
@@ -256,7 +257,7 @@ function resolvePath(
   if (!config.enabled || config.pattern.trim().length === 0) return null;
   return formatPeriodicNotePath(
     date,
-    { noteType, pattern: config.pattern },
+    { noteType, pattern: config.pattern, pathLocale: config.pathLocale },
     { locale: settings.locale, weekStartDay: settings.weekStartDay },
   );
 }
@@ -265,9 +266,6 @@ function getNoteTitle(path: string): string {
   return path.slice(0, -3).split("/").at(-1) ?? "";
 }
 
-function toFailure(error: unknown): CascadeFailure {
-  if (error instanceof Error) {
-    return Object.freeze({ name: error.name, message: error.message });
-  }
-  return Object.freeze({ name: "Error", message: String(error) });
+function getErrorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
 }

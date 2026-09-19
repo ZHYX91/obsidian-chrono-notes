@@ -56,6 +56,7 @@ export function getIndexedPeriodicNoteExistence(
 export interface PeriodicNoteRule {
   readonly enabled: boolean;
   readonly pattern: string;
+  readonly pathLocale?: string | undefined;
 }
 
 export interface PeriodicNotePathContext {
@@ -127,7 +128,7 @@ function resolveIndexedPeriodicNotePath(
   if (!rule.enabled || rule.pattern.trim().length === 0) return null;
   return formatPeriodicNotePath(
     date,
-    { noteType, pattern: rule.pattern },
+    { noteType, pattern: rule.pattern, pathLocale: rule.pathLocale },
     context,
   );
 }

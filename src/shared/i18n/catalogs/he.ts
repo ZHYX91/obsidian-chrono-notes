@@ -1,6 +1,12 @@
 import type { MessageCatalog } from "../types";
 
 export const HE_MESSAGES = Object.freeze({
+  "settings.periodic.pathLanguage": "שפת הנתיב",
+  "settings.periodic.pathLanguageDesc": "קביעת שפת שמות הקבצים לתקופה זו. השינוי משפיע על איתור ויצירת הערות בלי לשנות שמות קבצים קיימים; יש לבדוק תחילה את תצוגת הנתיב המקדימה.",
+  "pluginNotice.cascadePartial": "ההערה הראשית נפתחה: {path}. יצירת חלק מההערות לתקופות גדולות יותר נכשלה:",
+  "pluginNotice.cascade.created": "{period} נוצרה: {path}",
+  "pluginNotice.cascade.existing": "{period} כבר קיימת ונשמרה: {path}",
+  "pluginNotice.cascade.failed": "{period} נכשלה: {path} — {error}",
   "settings.templates.syntaxTitle": "תחביר תבניות",
   "settings.templates.contentLocation": "כתבו מצייני מקום בתוכן קובץ תבנית Markdown. נתיבי פתקים משתמשים בסימני עיצוב תאריך ישירות, ללא {{…}}; נתיב התבנית מצביע על קובץ Markdown קיים.",
   "settings.templates.formatDefaults": "ברירת המחדל של date/start/end היא YYYY-MM-DD ושל time היא HH:mm. הקיפו טקסט קבוע בסוגריים מרובעים, למשל [C]CEN. בדף ההגדרות של כל סוג פתק מופיעים מצייני המקום והדוגמאות שלו.",

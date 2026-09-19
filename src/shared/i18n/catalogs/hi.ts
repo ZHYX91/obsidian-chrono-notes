@@ -1,6 +1,12 @@
 import type { MessageCatalog } from "../types";
 
 export const HI_MESSAGES = Object.freeze({
+  "settings.periodic.pathLanguage": "पथ की भाषा",
+  "settings.periodic.pathLanguageDesc": "इस अवधि के फ़ाइल नाम की भाषा स्थिर रखें। बदलाव से नोट खोजना और बनाना प्रभावित होता है, मौजूदा फ़ाइलों के नाम नहीं बदलते; पहले पथ का पूर्वावलोकन जाँचें।",
+  "pluginNotice.cascadePartial": "मुख्य नोट खोला गया: {path}। कुछ बड़ी अवधियों के नोट नहीं बन सके:",
+  "pluginNotice.cascade.created": "{period} बनाया गया: {path}",
+  "pluginNotice.cascade.existing": "{period} पहले से मौजूद है और सुरक्षित रखा गया: {path}",
+  "pluginNotice.cascade.failed": "{period} विफल: {path} — {error}",
   "settings.templates.syntaxTitle": "टेम्पलेट सिंटैक्स",
   "settings.templates.contentLocation": "प्लेसहोल्डर Markdown टेम्पलेट फ़ाइल की सामग्री में लिखें। नोट पथ में तारीख़ के फ़ॉर्मैट टोकन सीधे लिखें, {{…}} के बिना; टेम्पलेट पथ किसी मौजूदा Markdown फ़ाइल का स्थान है।",
   "settings.templates.formatDefaults": "date/start/end का डिफ़ॉल्ट YYYY-MM-DD और time का HH:mm है। स्थिर पाठ को वर्ग कोष्ठकों में रखें, जैसे [C]CEN। हर नोट के सेटिंग पृष्ठ पर उसके प्लेसहोल्डर और उदाहरण हैं।",

@@ -1,6 +1,7 @@
 import type { PeriodicNoteType } from "../core/periodic/periodic-date";
 import type { IcsEventIndexSnapshot } from "../features/calendar/ics-event-index";
 import type { TaskCommandResult } from "../features/tasks/task-commands";
+import type { OpenOrCreatePeriodicNoteResult } from "../features/periodic/periodic-note-commands";
 import type { Translator } from "../shared/i18n";
 
 export interface PluginCommandMessages {
@@ -10,6 +11,23 @@ export interface PluginCommandMessages {
   readonly openMiniCalendar: string;
   readonly jumpToDate: string;
   readonly openPeriodic: (noteType: PeriodicNoteType) => string;
+}
+
+export function formatPeriodicCascadeNotice(
+  result: OpenOrCreatePeriodicNoteResult,
+  t: Translator["t"],
+): string | null {
+  if (result.status !== "opened" || !result.cascade.some((item) => item.status === "failed")) {
+    return null;
+  }
+  return [
+    t("pluginNotice.cascadePartial", { path: result.path }),
+    ...result.cascade.map((item) => t(`pluginNotice.cascade.${item.status}`, {
+      period: formatPeriodicType(item.noteType, t),
+      path: item.path,
+      error: item.status === "failed" ? item.error.message : "",
+    })),
+  ].join("\n");
 }
 
 export function getPluginCommandMessages(t: Translator["t"]): PluginCommandMessages {

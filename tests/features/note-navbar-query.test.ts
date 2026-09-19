@@ -18,10 +18,18 @@ function snapshot(contents: Record<string, string>): NoteIndexSnapshot {
 
 function settings() {
   const value = createDefaultSettings();
-  value.periodicNotes.daily = { enabled: true, pattern: "[Daily]/YYYY-MM-DD", templatePath: "" };
-  value.periodicNotes.weekly = { enabled: true, pattern: "[Weekly]/GGGG-WW", templatePath: "" };
-  value.periodicNotes.monthly = { enabled: true, pattern: "[Monthly]/YYYY-MM", templatePath: "" };
-  value.periodicNotes.yearly = { enabled: true, pattern: "[Yearly]/YYYY", templatePath: "" };
+  value.periodicNotes.daily = {
+    enabled: true, pattern: "[Daily]/YYYY-MM-DD", templatePath: "", pathLocale: "en",
+  };
+  value.periodicNotes.weekly = {
+    enabled: true, pattern: "[Weekly]/GGGG-WW", templatePath: "", pathLocale: "en",
+  };
+  value.periodicNotes.monthly = {
+    enabled: true, pattern: "[Monthly]/YYYY-MM", templatePath: "", pathLocale: "en",
+  };
+  value.periodicNotes.yearly = {
+    enabled: true, pattern: "[Yearly]/YYYY", templatePath: "", pathLocale: "en",
+  };
   value.rangeNotes.scanScope = "entire-vault";
   return value;
 }

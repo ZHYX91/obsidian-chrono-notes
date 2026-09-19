@@ -2,6 +2,12 @@ import type { MessageValue } from "../message-value";
 import type { MessageKey } from "../types";
 
 export const ZH_TW_MESSAGES = {
+  "settings.periodic.pathLanguage": "路徑語言",
+  "settings.periodic.pathLanguageDesc": "固定此週期的檔案命名語言。變更會影響筆記的尋找與建立，但不會重新命名既有檔案；請先核對路徑預覽。",
+  "pluginNotice.cascadePartial": "主筆記已開啟：{path}。部分較大週期筆記建立失敗：",
+  "pluginNotice.cascade.created": "{period}已建立：{path}",
+  "pluginNotice.cascade.existing": "{period}已存在，保留原檔案：{path}",
+  "pluginNotice.cascade.failed": "{period}建立失敗：{path} — {error}",
   "settings.templates.syntaxTitle": "範本寫法",
   "settings.templates.contentLocation": "佔位符寫在 Markdown 範本檔案內容中。筆記路徑直接使用日期格式符，不寫 {{…}}；範本檔案路徑則填寫現有 Markdown 檔案的位置。",
   "settings.templates.formatDefaults": "date/start/end 預設輸出 YYYY-MM-DD，time 預設輸出 HH:mm。固定文字用英文方括號包住，例如 [C]CEN。各類筆記的佔位符與範例見對應設定頁面。",

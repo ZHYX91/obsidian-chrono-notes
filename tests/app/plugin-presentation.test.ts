@@ -4,6 +4,7 @@ import type { IcsEventIndexSnapshot } from "../../src/features/calendar/ics-even
 import { createTranslator } from "../../src/shared/i18n";
 import {
   formatIcsRefreshNotice,
+  formatPeriodicCascadeNotice,
   formatPeriodicNotConfiguredNotice,
   formatPluginErrorNotice,
   getPluginCommandMessages,
@@ -31,6 +32,21 @@ function snapshot(overrides: Partial<IcsEventIndexSnapshot>): IcsEventIndexSnaps
 }
 
 describe("plugin presentation", () => {
+  it("reports partial cascade success with localized statuses and failure details", () => {
+    const result = { status: "opened", created: true, path: "Daily/2026-09-19.md", cascade: [
+      { noteType: "weekly", path: "Weekly/2026-W38.md", status: "existing" },
+      { noteType: "monthly", path: "Monthly/2026-09.md", status: "failed",
+        error: { name: "Error", message: "Missing template" } },
+      { noteType: "yearly", path: "Yearly/2026.md", status: "created" },
+    ] } as const;
+    const notice = formatPeriodicCascadeNotice(result, createTranslator("zh-CN", "en").t);
+    expect(notice).toContain("主笔记已打开：Daily/2026-09-19.md");
+    expect(notice).toContain("已存在，保留原文件：Weekly/2026-W38.md");
+    expect(notice).toContain("创建失败：Monthly/2026-09.md — Missing template");
+    expect(notice).toContain("已创建：Yearly/2026.md");
+    expect(formatPeriodicCascadeNotice({ ...result, cascade: [] }, createTranslator("en", "en").t))
+      .toBeNull();
+  });
   it("translates command, ribbon, and periodic-note names", () => {
     const messages = getPluginCommandMessages(createTranslator("zh-CN", "en").t);
 

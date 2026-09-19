@@ -1,6 +1,12 @@
 import type { MessageCatalog } from "../types";
 
 export const AM_MESSAGES = Object.freeze({
+  "settings.periodic.pathLanguage": "የዱካ ቋንቋ",
+  "settings.periodic.pathLanguageDesc": "ለዚህ ጊዜ ክፍል የፋይል ስም ቋንቋን ያስቀምጡ። መቀየር ማስታወሻ ፍለጋና መፍጠርን ይነካል፣ ነባር ፋይሎችን ግን አይሰይምም፤ መጀመሪያ የዱካ ቅድመ እይታውን ያረጋግጡ።",
+  "pluginNotice.cascadePartial": "ዋናው ማስታወሻ ተከፍቷል፦ {path}። አንዳንድ ትልቅ ጊዜ ክፍል ማስታወሻዎች አልተፈጠሩም፦",
+  "pluginNotice.cascade.created": "{period} ተፈጥሯል፦ {path}",
+  "pluginNotice.cascade.existing": "{period} አስቀድሞ አለ እና ተጠብቋል፦ {path}",
+  "pluginNotice.cascade.failed": "{period} አልተሳካም፦ {path} — {error}",
   "settings.templates.syntaxTitle": "የአብነት አጻጻፍ",
   "settings.templates.contentLocation": "ቦታ ያዦችን በMarkdown አብነት ፋይል ይዘት ውስጥ ይጻፉ። የማስታወሻ መንገዶች ያለ {{…}} የቀን ቅርጽ ምልክቶችን በቀጥታ ይጠቀማሉ፤ የአብነት መንገድ ያለ የMarkdown ፋይልን ያመለክታል።",
   "settings.templates.formatDefaults": "የdate/start/end ነባሪ ቅርጽ YYYY-MM-DD ነው፤ የtime ደግሞ HH:mm ነው። ቋሚ ጽሑፍን በካሬ ቅንፎች ያስገቡ፣ ለምሳሌ [C]CEN። የእያንዳንዱ ማስታወሻ ቅንብር ገጽ ቦታ ያዦቹንና ምሳሌዎቹን ይዘረዝራል።",

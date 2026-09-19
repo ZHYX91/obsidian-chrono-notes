@@ -12,7 +12,11 @@ A path pattern must contain the identity fields required by its note period, whe
 
 For example, `[Daily]/YYYY-MM` is not a daily-note path and `[Monthly]/YYYY` is not a monthly-note path. Invalid rules are inactive in both queries and open/create commands, so they cannot open a same-named file belonging to a different period. Settings previews must also verify that the parsed result belongs to the original period, not merely that the path can be parsed. Two-digit years retain their existing parsing rules; a preview must not label a result in another century as valid. Prefer four-digit years for long-lived notes.
 
-Validation does not migrate or rename existing notes. Users with invalid rules must correct the pattern and independently confirm which dates their existing files belong to. The existing coupling between interface language and localized month names in paths is unchanged here.
+Filename/path locale is a stable identity setting for each period, separate from interface and template/display locale. Missing `pathLocale` means English. The schema-19 upgrade pins the effective previous locale for every period, including localized digits, and preserves explicitly configured path locales. Formatting and parsing use the same numbering system. Changing the interface language afterwards does not change filename identity. Each period displays its own path language; check its preview and existing filenames before changing it. A change affects lookup and creation without automatically renaming or migrating existing notes.
+
+Larger-note cascading returns a structured created, existing or failed result for each target. Failure does not undo the opened primary note or successful larger notes; later enabled periods are still attempted. The interface presents one localized partial-success notice listing created, preserved and failed targets with error details, without representing partial failure as failure to create the primary note.
+
+Configuration validation does not migrate or rename existing notes. Users with invalid rules must correct the pattern and independently confirm which dates their existing files belong to.
 
 ## 2. ICS time semantics
 
@@ -36,7 +40,7 @@ Horizontal arrows traverse periods in display order and respect RTL direction. V
 
 ## 5. Regression verification
 
-Path tests cover missing period fields, literal text resembling format tokens, valid-rule priority, leap days, month/year boundaries, Sunday-start cross-year weeks, and the requirement that invalid rules never call file or workspace ports. Preview tests distinguish parseability from period identity.
+Path tests cover missing period fields, literal text resembling format tokens, valid-rule priority, leap days, month/year boundaries, Sunday-start cross-year weeks, stable localized filename identity across interface-language changes, schema migration of only locale-sensitive patterns, and the requirement that invalid rules never call file or workspace ports. Preview tests distinguish parseability from period identity. Cascade tests prove that a failed larger period remains absent while the primary and later successful periods remain on disk and the failure is surfaced after the primary opens.
 
 ICS tests cover spring and autumn daylight-saving transitions, different source and display zones, `P1D`, `PT24H`, `P1W`, mixed durations, floating times, UTC sources, points at and just before midnight, and exclusive all-day ends. Existing invalid-end and cancelled/recurring-event tests remain in place.
 
