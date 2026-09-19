@@ -522,6 +522,10 @@ export default class ChronoNotesPlugin extends Plugin {
     return this.icsEventIndex?.getSnapshot() ?? null;
   }
 
+  subscribeIcs(listener: () => void): () => void {
+    return this.icsEventIndex?.subscribe(listener) ?? (() => undefined);
+  }
+
   getNoteIndexStatus(): (NoteIndexStatus & Readonly<{ rebuildingCache: boolean }>) | null {
     const status = this.noteIndex?.getStatus();
     return status === undefined

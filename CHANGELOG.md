@@ -17,8 +17,11 @@ Notable changes to Chrono Notes are documented in this file. The repository's nu
 - Report successful, existing, and failed cascade results together without discarding created notes.
 - Bound ICS indexing to 100,000 day occurrences, cancel superseded refreshes, and explain omitted
   events and recovery actions in refresh notices and settings.
+- Update ICS status and refresh controls in place when background refreshes finish.
 - Restore a single keyboard entry point and directional navigation in the century calendar,
   and reserve space for selection and focus outlines beside its scrollbar.
+- Reflow century years into two columns in very narrow panes or with enlarged text, keeping full
+  years, navigation controls and matching vertical keyboard movement available.
 
 ### Changed
 
