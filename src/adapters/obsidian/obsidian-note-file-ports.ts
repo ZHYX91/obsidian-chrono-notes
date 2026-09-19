@@ -114,14 +114,28 @@ export class ObsidianTaskFilePort implements TaskFilePort {
       const current = openEditor.editor.getValue();
       const next = update(current);
       if (next === null || next === current) return;
-      if (!isSameOpenTaskEditor(this.workspace, path, openEditor)) {
+      if (!isSameOpenTaskEditor(this.workspace, path, openEditor) ||
+        openEditor.editor.getValue() !== current) {
         throw new Error(`Markdown editor changed before task update: ${path}`);
+      }
+      // Keep unchanged text outside the editor transaction. Offsets and the
+      // editor API both use UTF-16 coordinates, including text before emoji.
+      let start = 0;
+      while (start < current.length && start < next.length && current[start] === next[start]) {
+        start += 1;
+      }
+      let currentEnd = current.length;
+      let nextEnd = next.length;
+      while (currentEnd > start && nextEnd > start &&
+        current[currentEnd - 1] === next[nextEnd - 1]) {
+        currentEnd -= 1;
+        nextEnd -= 1;
       }
       openEditor.editor.transaction({
         changes: [{
-          from: { line: 0, ch: 0 },
-          to: openEditor.editor.offsetToPos(current.length),
-          text: next,
+          from: openEditor.editor.offsetToPos(start),
+          to: openEditor.editor.offsetToPos(currentEnd),
+          text: next.slice(start, nextEnd),
         }],
       }, "chrono-notes-task");
       openEditor.requestSave();

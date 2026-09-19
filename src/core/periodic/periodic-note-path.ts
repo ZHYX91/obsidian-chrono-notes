@@ -67,20 +67,21 @@ export function parsePeriodicNotePath(
   }
 }
 
-/** Coarse grouping tokens cannot replace the identity of a finer note period. */
+/** Every pattern must identify its note period, including patterns without DEC/CEN. */
 function hasPeriodIdentity(rule: PeriodicNotePathRule): boolean {
   if (rule.pattern.trim().length === 0) return false;
   const parts = parseMomentFormat(rule.pattern, "date");
   if (parts === null) return false;
   const tokens = new Set(parts.map((part) => part.token));
-  if (!tokens.has("DEC") && !tokens.has("CEN")) return true;
   const year = tokens.has("YYYY") || tokens.has("YY");
   const month = ["M", "MM", "MMM", "MMMM"].some((token) => tokens.has(token));
   const day = tokens.has("D") || tokens.has("DD");
+  const week = (tokens.has("GGGG") || tokens.has("GG")) &&
+    (tokens.has("W") || tokens.has("WW"));
+  const weekday = tokens.has("ddd") || tokens.has("dddd");
   switch (rule.noteType) {
-    case "daily": return year && month && day;
-    case "weekly": return (year && month && day) ||
-      ((tokens.has("GGGG") || tokens.has("GG")) && (tokens.has("W") || tokens.has("WW")));
+    case "daily": return (year && month && day) || (week && weekday);
+    case "weekly": return (year && month && day) || week;
     case "monthly": return year && month;
     case "quarterly": return year && (month || tokens.has("Q"));
     case "yearly": return year;

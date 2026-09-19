@@ -251,8 +251,14 @@ describe("Obsidian periodic note ports", () => {
     const editor = {
       getValue: vi.fn(() => editorContent),
       offsetToPos: vi.fn((offset: number) => ({ line: 0, ch: offset })),
-      transaction: vi.fn((transaction: { changes: Array<{ text: string }> }) => {
-        editorContent = transaction.changes[0]?.text ?? editorContent;
+      transaction: vi.fn((transaction: {
+        changes: Array<{ from: { ch: number }; to: { ch: number }; text: string }>;
+      }) => {
+        const change = transaction.changes[0];
+        if (change !== undefined) {
+          editorContent = editorContent.slice(0, change.from.ch) + change.text +
+            editorContent.slice(change.to.ch);
+        }
       }),
     };
     const requestSave = vi.fn();
@@ -265,9 +271,9 @@ describe("Obsidian periodic note ports", () => {
     expect(editorContent).toBe("- [x] unsaved editor task");
     expect(editor.transaction).toHaveBeenCalledWith({
       changes: [{
-        from: { line: 0, ch: 0 },
-        to: { line: 0, ch: 25 },
-        text: "- [x] unsaved editor task",
+        from: { line: 0, ch: 3 },
+        to: { line: 0, ch: 4 },
+        text: "x",
       }],
     }, "chrono-notes-task");
     expect(requestSave).toHaveBeenCalledOnce();
