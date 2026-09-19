@@ -6,6 +6,7 @@
 @import "./period-cell.css";
 @import "./year-and-week.css";
 @import "./long-period.css";
+@import "./calendar-ux.css";
 
 :is(
   .chrono-notes-calendar,

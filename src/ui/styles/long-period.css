@@ -19,6 +19,8 @@
   margin-top: 8px;
   min-height: 0;
   overflow: auto;
+  padding-inline-end: 6px;
+  scrollbar-gutter: stable;
 }
 
 .chrono-notes-long-period-group {

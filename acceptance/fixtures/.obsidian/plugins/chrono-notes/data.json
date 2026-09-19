@@ -42,9 +42,9 @@
       "templatePath": "Templates/Periodic.md"
     },
     "monthly": {
-      "enabled": false,
-      "pattern": "",
-      "templatePath": ""
+      "enabled": true,
+      "pattern": "[Monthly]/YYYY-MMMM",
+      "templatePath": "Templates/Missing.md"
     },
     "quarterly": {
       "enabled": false,
@@ -52,8 +52,18 @@
       "templatePath": ""
     },
     "yearly": {
-      "enabled": false,
-      "pattern": "",
+      "enabled": true,
+      "pattern": "[Yearly]/YYYY",
+      "templatePath": "Templates/Periodic.md"
+    },
+    "decadal": {
+      "enabled": true,
+      "pattern": "[Decades]/DEC[s]",
+      "templatePath": ""
+    },
+    "century": {
+      "enabled": true,
+      "pattern": "[Centuries]/[C]CEN",
       "templatePath": ""
     }
   },
