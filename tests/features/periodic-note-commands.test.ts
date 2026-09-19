@@ -405,9 +405,13 @@ describe("PeriodicNoteCommands", () => {
         cascade: true,
       },
       settings,
-    )).rejects.toThrow(
-      "Larger-note creation failed: weekly (Weekly/2026-W21.md): weekly template failed",
-    );
+    )).resolves.toMatchObject({
+      status: "opened", created: true,
+      cascade: [
+        { noteType: "weekly", status: "failed", error: { message: "weekly template failed" } },
+        { noteType: "yearly", status: "created" },
+      ],
+    });
     expect(ports.paths.has("Daily/2026-05-18.md")).toBe(true);
     expect(ports.paths.has("Weekly/2026-W21.md")).toBe(false);
     expect(ports.paths.has("Yearly/2026.md")).toBe(true);

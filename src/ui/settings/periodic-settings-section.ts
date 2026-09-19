@@ -52,25 +52,6 @@ export function renderPeriodicSettingsSection(
       });
     });
   containerEl.createEl("h3", { text: t("settings.periodic.paths") });
-  const currentPathLocale = context.host.settings.periodicNotes.daily.pathLocale ?? "en";
-  new Setting(containerEl)
-    .setName(`${t("settings.periodic.paths")} · ${t("settings.general.language")}`)
-    .setDesc(t("settings.periodic.pathsDesc"))
-    .addDropdown((dropdown) => {
-      for (const option of PLUGIN_LANGUAGE_OPTIONS) {
-        dropdown.addOption(option.value, option.label);
-      }
-      dropdown
-        .setValue(currentPathLocale)
-        .onChange(async (value) => {
-          if (!isFixedPluginLocale(value)) return;
-          for (const noteType of PERIODIC_NOTE_TYPES) {
-            context.host.settings.periodicNotes[noteType].pathLocale = value;
-          }
-          await context.persistSettings();
-          context.display();
-        });
-    });
   const pathGuideEl = createSettingsGuide(containerEl, t("settings.periodic.paths"));
   pathGuideEl.createEl("p", { text: t("settings.periodic.pathsDesc") });
   renderDateFormatGuide(pathGuideEl, context.translator, false);
@@ -115,6 +96,20 @@ function renderPeriodicNoteType(
 
   const pathSetting = new Setting(sectionEl);
   const pathCleanup = configurePeriodicPathSetting(pathSetting, noteType, context);
+  new Setting(sectionEl)
+    .setName(t("settings.periodic.pathLanguage"))
+    .setDesc(t("settings.periodic.pathLanguageDesc"))
+    .addDropdown((dropdown) => {
+      for (const option of PLUGIN_LANGUAGE_OPTIONS) {
+        dropdown.addOption(option.value, option.label);
+      }
+      dropdown.setValue(config.pathLocale ?? "en").onChange(async (value) => {
+        if (!isFixedPluginLocale(value)) return;
+        config.pathLocale = value;
+        await context.persistSettings();
+        context.display();
+      });
+    });
   const templateCleanup = renderTemplatePathSetting(
     sectionEl,
     t("settings.templates.path"),

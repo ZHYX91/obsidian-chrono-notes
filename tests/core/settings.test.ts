@@ -370,7 +370,11 @@ describe("settings", () => {
     for (let schemaVersion = 1; schemaVersion <= SETTINGS_SCHEMA_VERSION; schemaVersion += 1) {
       const migrated = migrateSettings({ schemaVersion });
       expect(migrated.schemaVersion).toBe(SETTINGS_SCHEMA_VERSION);
-      expect(normalizeSettings(migrated)).toEqual(createDefaultSettings());
+      const expected = createDefaultSettings();
+      if (schemaVersion < 19) {
+        for (const config of Object.values(expected.periodicNotes)) config.pathLocale = "en";
+      }
+      expect(normalizeSettings(migrated)).toEqual(expected);
     }
   });
 

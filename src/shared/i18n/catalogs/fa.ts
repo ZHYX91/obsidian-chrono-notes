@@ -1,6 +1,12 @@
 import type { MessageCatalog } from "../types";
 
 export const FA_MESSAGES = Object.freeze({
+  "settings.periodic.pathLanguage": "زبان مسیر",
+  "settings.periodic.pathLanguageDesc": "زبان نام فایل این دوره را ثابت کنید. تغییر آن بر یافتن و ایجاد یادداشت‌ها اثر دارد، اما نام فایل‌های موجود را تغییر نمی‌دهد؛ ابتدا پیش‌نمایش مسیر را بررسی کنید.",
+  "pluginNotice.cascadePartial": "یادداشت اصلی باز شد: {path}. ایجاد برخی یادداشت‌های دوره‌های بزرگ‌تر ناموفق بود:",
+  "pluginNotice.cascade.created": "{period} ایجاد شد: {path}",
+  "pluginNotice.cascade.existing": "{period} موجود است و حفظ شد: {path}",
+  "pluginNotice.cascade.failed": "{period} ناموفق بود: {path} — {error}",
   "settings.templates.syntaxTitle": "نحو الگو",
   "settings.templates.contentLocation": "جای‌نگهدارها را در محتوای فایل الگوی Markdown بنویسید. مسیر یادداشت مستقیماً از نمادهای قالب تاریخ و بدون {{…}} استفاده می‌کند؛ مسیر فایل الگو به یک فایل Markdown موجود اشاره دارد.",
   "settings.templates.formatDefaults": "قالب پیش‌فرض date/start/end برابر YYYY-MM-DD و time برابر HH:mm است. متن ثابت را در کروشه قرار دهید، مانند [C]CEN. جای‌نگهدارها و مثال‌ها در صفحهٔ تنظیمات هر نوع یادداشت آمده‌اند.",

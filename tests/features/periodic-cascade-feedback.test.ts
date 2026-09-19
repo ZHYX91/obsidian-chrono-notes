@@ -41,9 +41,14 @@ describe("periodic cascade feedback", () => {
       date: { year: 2026, month: 9, day: 17 },
       noteType: "daily",
       cascade: true,
-    }, settings as PeriodicNoteCommandSettings)).rejects.toThrow(
-      "Larger-note creation failed: monthly (Monthly/2026-09.md): Monthly template missing",
-    );
+    }, settings as PeriodicNoteCommandSettings)).resolves.toMatchObject({
+      status: "opened", created: true, path: "Daily/2026-09-17.md",
+      cascade: [
+        { noteType: "monthly", status: "failed", path: "Monthly/2026-09.md",
+          error: { name: "Error", message: "Monthly template missing" } },
+        { noteType: "yearly", status: "created", path: "Yearly/2026.md" },
+      ],
+    });
 
     expect(workspace.open).toHaveBeenCalledWith("Daily/2026-09-17.md", "default");
     expect(contents.has("Daily/2026-09-17.md")).toBe(true);

@@ -158,7 +158,6 @@ export class PeriodicNoteCommands {
     settings: PeriodicNoteCommandSettings,
   ): Promise<CascadeResult[]> {
     const results: CascadeResult[] = [];
-    let failures = "";
     const triggerIndex = PERIODIC_NOTE_TYPES.indexOf(triggerType);
     for (const noteType of PERIODIC_NOTE_TYPES.slice(triggerIndex + 1)) {
       const path = resolvePath(date, noteType, settings);
@@ -172,10 +171,17 @@ export class PeriodicNoteCommands {
         }));
       } catch (error) {
         const cause = error instanceof PeriodicNoteCreationError ? error.cause : error;
-        failures += `${failures.length === 0 ? "" : "; "}${noteType} (${path}): ${getErrorMessage(cause)}`;
+        results.push(Object.freeze({
+          noteType,
+          path,
+          status: "failed",
+          error: Object.freeze({
+            name: cause instanceof Error ? cause.name : "Error",
+            message: getErrorMessage(cause),
+          }),
+        }));
       }
     }
-    if (failures.length > 0) throw new Error(`Larger-note creation failed: ${failures}`);
     return results;
   }
 

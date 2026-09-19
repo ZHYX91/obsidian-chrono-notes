@@ -52,6 +52,7 @@ import {
 } from "./chrono-runtime";
 import {
   formatIcsRefreshNotice,
+  formatPeriodicCascadeNotice,
   formatPeriodicNotConfiguredNotice,
   formatPluginErrorNotice,
   getInvalidRangeNotice,
@@ -375,11 +376,8 @@ export default class ChronoNotesPlugin extends Plugin {
       if (result.status === "not-configured") {
         new Notice(formatPeriodicNotConfiguredNotice(noteType, this.getTranslator().t));
       } else if (result.status === "opened") {
-        for (const item of result.cascade) {
-          if (item.status === "failed") {
-            console.error(`Chrono Notes: failed to create ${item.noteType} note`, item.error);
-          }
-        }
+        const notice = formatPeriodicCascadeNotice(result, this.getTranslator().t);
+        if (notice !== null) new Notice(notice, 12000);
       }
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);

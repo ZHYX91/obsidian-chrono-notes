@@ -7,6 +7,19 @@ import {
 } from "../../src/shared/settings";
 
 describe("periodic path locale settings", () => {
+  it("pins numeric and omitted default rules while preserving explicit per-period choices", () => {
+    const input = { schemaVersion: 18, locale: "auto", periodicNotes: {
+      daily: { enabled: true, pattern: "YYYY-MM-DD", templatePath: "" },
+      monthly: { enabled: true, pattern: "YYYY-MMMM", templatePath: "", pathLocale: "zh-CN" },
+    } };
+    const before = structuredClone(input);
+    const migrated = normalizeSettings(migrateSettings(input, "fa"));
+    expect(input).toEqual(before);
+    expect(migrated.periodicNotes.daily.pathLocale).toBe("fa");
+    expect(migrated.periodicNotes.monthly.pathLocale).toBe("zh-CN");
+    expect(migrated.periodicNotes.yearly.pathLocale).toBe("fa");
+    expect(migrateSettings(migrated, "en")).toEqual(migrated);
+  });
   it("pins an explicit legacy interface locale when migrating schema 18", () => {
     const migrated = normalizeSettings(migrateSettings({
       schemaVersion: 18,
