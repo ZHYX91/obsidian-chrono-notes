@@ -10,6 +10,7 @@ Notable changes to Chrono Notes are documented in this file. The repository's nu
   that settings previews parse back to the same period.
 - Keep each period's filename language stable when the interface language changes, preserving
   legacy localized names and digits without renaming existing files.
+- Refresh path-language previews in place without resetting the settings page's scroll position.
 - Preserve source-timezone calendar-day semantics across daylight-saving transitions in ICS
   durations, and keep events without an end time as points in time.
 - Apply minimal task edits while preserving BOM, line endings, inline code, and comments.
