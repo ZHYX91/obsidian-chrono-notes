@@ -1,5 +1,6 @@
 import type { PeriodicNoteType } from "../core/periodic/periodic-date";
 import type { IcsEventIndexSnapshot } from "../features/calendar/ics-event-index";
+import { formatIcsLimitNotice } from "../features/calendar/ics-feedback";
 import type { TaskCommandResult } from "../features/tasks/task-commands";
 import type { OpenOrCreatePeriodicNoteResult } from "../features/periodic/periodic-note-commands";
 import type { Translator } from "../shared/i18n";
@@ -90,6 +91,8 @@ export function formatIcsRefreshNotice(
 ): string {
   if (!snapshot.enabled) return t("pluginNotice.icsDisabled");
   if (snapshot.totalSources === 0) return t("pluginNotice.icsNoSources");
+  const limitNotice = formatIcsLimitNotice(snapshot, t);
+  if (limitNotice !== null) return limitNotice;
   if (snapshot.errors.length > 0) {
     return t("pluginNotice.icsPartial", {
       ratio: t("pluginNotice.sourceRatio", {

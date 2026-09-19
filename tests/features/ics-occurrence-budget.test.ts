@@ -1,6 +1,9 @@
 import { describe, expect, it, vi } from "vitest";
 
 import { IcsEventIndex } from "../../src/features/calendar/ics-event-index";
+import { formatIcsRefreshNotice } from "../../src/app/plugin-presentation";
+import { formatIcsStatus } from "../../src/ui/settings/settings-presentation";
+import { createTranslator } from "../../src/shared/i18n";
 
 function calendar(events: readonly string[]): string {
   return ["BEGIN:VCALENDAR", "VERSION:2.0", ...events, "END:VCALENDAR"].join("\n");
@@ -34,6 +37,14 @@ describe("ICS occurrence budget", () => {
 
     expect(Object.values(snapshot.eventsByDate).flat()).toHaveLength(5);
     expect(snapshot.truncatedEvents).toBe(2);
+    expect(snapshot.occurrenceLimit).toBe(5);
+    const t = createTranslator("zh-CN", "en").t;
+    for (const message of [formatIcsStatus(snapshot, t), formatIcsRefreshNotice(snapshot, t)]) {
+      expect(message).toContain("5");
+      expect(message).toContain("2 个事件");
+      expect(message).toContain("未完整显示");
+      expect(message).toContain("减少来源或缩短事件跨度");
+    }
     expect(snapshot.errors).toEqual([
       "ICS occurrence limit reached; events omitted.",
     ]);
@@ -99,6 +110,18 @@ describe("ICS occurrence budget", () => {
     const snapshot = index.getSnapshot();
     expect(Object.values(snapshot.eventsByDate).flat()).toHaveLength(3);
     expect(snapshot.truncatedEvents).toBe(0);
+    expect(snapshot.occurrenceLimit).toBeUndefined();
     expect(snapshot.errors).toEqual([]);
+  });
+
+  it("does not report truncation at an exact budget and clears earlier budget state", async () => {
+    const source = calendar(allDay("one", "20260301", "20260304"));
+    const index = new IcsEventIndex({ read: async () => source }, { maxOccurrences: 3 });
+    await index.refresh({ enabled: true, sources: ["a.ics", "b.ics"], displayZone: "UTC" });
+    expect(index.getSnapshot().occurrenceLimit).toBe(3);
+    await index.refresh({ enabled: true, sources: ["a.ics"], displayZone: "UTC" });
+    expect(index.getSnapshot().occurrenceLimit).toBeUndefined();
+    expect(index.getSnapshot().errors).toEqual([]);
+    expect(Object.values(index.getSnapshot().eventsByDate).flat()).toHaveLength(3);
   });
 });

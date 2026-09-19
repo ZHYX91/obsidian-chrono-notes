@@ -2,6 +2,7 @@ import type { MessageValue } from "../message-value";
 import type { MessageKey } from "../types";
 
 export const EN_MESSAGES = {
+  "ics.occurrenceLimit": "ICS reached the limit of {limit} daily occurrences; {count} events are not fully displayed. Reduce sources or event spans, then refresh.",
   "settings.periodic.pathLanguage": "Path language",
   "settings.periodic.pathLanguageDesc": "Fix the filename language for this period. Changing it affects note lookup and creation without renaming existing files; check the path preview first.",
   "pluginNotice.cascadePartial": "Primary note opened: {path}. Some larger-period notes could not be created:",

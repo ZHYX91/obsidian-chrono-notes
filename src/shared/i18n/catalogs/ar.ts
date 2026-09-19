@@ -1,6 +1,7 @@
 import type { MessageCatalog } from "../types";
 
 export const AR_MESSAGES = Object.freeze({
+  "ics.occurrenceLimit": "بلغ ICS الحد البالغ {limit} ظهورًا يوميًا؛ لا تظهر {count} أحداث بالكامل. قلل المصادر أو مدد الأحداث ثم حدّث.",
   "settings.periodic.pathLanguage": "لغة المسار",
   "settings.periodic.pathLanguageDesc": "تثبيت لغة أسماء الملفات لهذه الفترة. يؤثر تغييرها في العثور على الملاحظات وإنشائها دون إعادة تسمية الملفات الحالية؛ تحقق من معاينة المسار أولاً.",
   "pluginNotice.cascadePartial": "تم فتح الملاحظة الرئيسية: {path}. تعذر إنشاء بعض ملاحظات الفترات الأكبر:",

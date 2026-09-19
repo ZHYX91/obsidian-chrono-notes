@@ -38,6 +38,8 @@ export interface IcsEventIndexSnapshot {
   readonly skippedRecurring: number;
   readonly skippedInvalid: number;
   readonly truncatedEvents: number;
+  /** Present only when the global occurrence budget omitted event data. */
+  readonly occurrenceLimit?: number;
   readonly refreshedAt: number | null;
   readonly sourceStatuses: readonly IcsSourceStatus[];
   readonly errors: readonly string[];
@@ -69,7 +71,7 @@ export class IcsEventIndex {
   ) {
     this.now = options.now ?? Date.now;
     this.maxSources = normalizePositiveLimit(options.maxSources, DEFAULT_ICS_MAX_SOURCES);
-    this.maxOccurrences = options.maxOccurrences ?? 100_000;
+    this.maxOccurrences = normalizePositiveLimit(options.maxOccurrences, 100_000);
     this.readSlots = new AsyncSlotLimiter(normalizePositiveLimit(
       options.maxConcurrentReads,
       DEFAULT_ICS_MAX_CONCURRENT_READS,
@@ -164,6 +166,7 @@ export class IcsEventIndex {
       skippedRecurring: sum(sourceStatuses, "skippedRecurring"),
       skippedInvalid: sum(sourceStatuses, "skippedInvalid"),
       truncatedEvents: dateIndex[1],
+      ...(dateIndex[2] ? { occurrenceLimit: this.maxOccurrences } : {}),
       refreshedAt: this.now(),
       sourceStatuses,
       errors,

@@ -1,6 +1,7 @@
 import type { MessageCatalog } from "../types";
 
 export const HE_MESSAGES = Object.freeze({
+  "ics.occurrenceLimit": "ICS הגיע למגבלה של {limit} מופעים יומיים; {count} אירועים אינם מוצגים במלואם. יש לצמצם מקורות או משכי אירועים ולרענן.",
   "settings.periodic.pathLanguage": "שפת הנתיב",
   "settings.periodic.pathLanguageDesc": "קביעת שפת שמות הקבצים לתקופה זו. השינוי משפיע על איתור ויצירת הערות בלי לשנות שמות קבצים קיימים; יש לבדוק תחילה את תצוגת הנתיב המקדימה.",
   "pluginNotice.cascadePartial": "ההערה הראשית נפתחה: {path}. יצירת חלק מההערות לתקופות גדולות יותר נכשלה:",

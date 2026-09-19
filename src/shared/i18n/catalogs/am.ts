@@ -1,6 +1,7 @@
 import type { MessageCatalog } from "../types";
 
 export const AM_MESSAGES = Object.freeze({
+  "ics.occurrenceLimit": "ICS የ{limit} ዕለታዊ ግቤቶች ገደብ ላይ ደርሷል፤ {count} ክስተቶች ሙሉ በሙሉ አልታዩም። ምንጮችን ወይም የክስተት ቆይታን ቀንሰው ያድሱ።",
   "settings.periodic.pathLanguage": "የዱካ ቋንቋ",
   "settings.periodic.pathLanguageDesc": "ለዚህ ጊዜ ክፍል የፋይል ስም ቋንቋን ያስቀምጡ። መቀየር ማስታወሻ ፍለጋና መፍጠርን ይነካል፣ ነባር ፋይሎችን ግን አይሰይምም፤ መጀመሪያ የዱካ ቅድመ እይታውን ያረጋግጡ።",
   "pluginNotice.cascadePartial": "ዋናው ማስታወሻ ተከፍቷል፦ {path}። አንዳንድ ትልቅ ጊዜ ክፍል ማስታወሻዎች አልተፈጠሩም፦",
