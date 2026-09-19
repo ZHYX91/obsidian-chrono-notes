@@ -2,6 +2,30 @@
 
 Notable changes to Chrono Notes are documented in this file. The repository's numeric Git tags are the evidence for released versions; an entry without a corresponding local tag remains unreleased even if the manifests already contain that version.
 
+## 0.7.1
+
+### Fixed
+
+- Reject periodic paths that cannot uniquely identify their configured period, and verify
+  that settings previews parse back to the same period.
+- Keep each period's filename language stable when the interface language changes, preserving
+  legacy localized names and digits without renaming existing files.
+- Preserve source-timezone calendar-day semantics across daylight-saving transitions in ICS
+  durations, and keep events without an end time as points in time.
+- Apply minimal task edits while preserving BOM, line endings, inline code, and comments.
+- Report successful, existing, and failed cascade results together without discarding created notes.
+- Bound ICS indexing to 100,000 day occurrences, cancel superseded refreshes, and explain omitted
+  events and recovery actions in refresh notices and settings.
+- Restore a single keyboard entry point and directional navigation in the century calendar,
+  and reserve space for selection and focus outlines beside its scrollbar.
+
+### Changed
+
+- Keep Today readable in narrow calendars, increase auxiliary text floors, and show an opening
+  cue for the selected configured date or period.
+- Update the vulnerable development-only js-yaml dependency and retain reproducible build checks
+  with a practical production bundle budget.
+
 ## 0.7.0
 
 ### Added
