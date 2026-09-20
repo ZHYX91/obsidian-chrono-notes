@@ -52,6 +52,35 @@ describe("minimal task editor transactions", () => {
     expect(value.requestSave).not.toHaveBeenCalled();
   });
 
+  it("rejects a closed-file update when the note opens before the process callback", async () => {
+    let content = "- [ ] Work";
+    const file = { path: "Tasks.md", extension: "md" };
+    const editor = {
+      getValue: vi.fn(() => "- [ ] Unsaved edit"),
+      offsetToPos: vi.fn(),
+      transaction: vi.fn(),
+    };
+    const requestSave = vi.fn();
+    let leaves: Array<{ view: { file: typeof file; editor: typeof editor; requestSave: typeof requestSave } }> = [];
+    const workspace = { getLeavesOfType: vi.fn(() => leaves) };
+    const vault = {
+      getAbstractFileByPath: vi.fn(() => file),
+      process: vi.fn(async (_file: typeof file, transform: (current: string) => string) => {
+        leaves = [{ view: { file, editor, requestSave } }];
+        const next = transform(content);
+        content = next;
+        return next;
+      }),
+    };
+    const port = new ObsidianTaskFilePort(vault as never, workspace as never);
+
+    await expect(port.process("Tasks.md", (source) => source.replace("[ ]", "[x]")))
+      .rejects.toThrow("editor opened before task update");
+    expect(content).toBe("- [ ] Work");
+    expect(editor.transaction).not.toHaveBeenCalled();
+    expect(requestSave).not.toHaveBeenCalled();
+  });
+
   it("does not overwrite a buffer changed during the rewrite callback", async () => {
     const value = fixture("- [ ] Work");
     await expect(value.port.process("Tasks.md", (content) => {
