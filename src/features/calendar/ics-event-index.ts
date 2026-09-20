@@ -89,7 +89,9 @@ export class IcsEventIndex {
     if (this.activeRevision === null) return;
     this.activeRevision?.abort();
     const revision = this.activeRevision = new AbortController();
-    const sources = normalizeSources(options.sources).slice(0, this.maxSources);
+    const configuredSources = normalizeSources(options.sources);
+    const sources = configuredSources.slice(0, this.maxSources);
+    const omittedSources = configuredSources.length - sources.length;
     if (!options.enabled) {
       this.publish(createDisabledSnapshot(
         this.snapshot.version + 1,
@@ -103,7 +105,7 @@ export class IcsEventIndex {
       version: this.snapshot.version + 1,
       state: "refreshing",
       enabled: true,
-      totalSources: sources.length,
+      totalSources: configuredSources.length,
     }));
 
     const pendingResults = await Promise.all(sources.map(async (source) => {
@@ -149,6 +151,9 @@ export class IcsEventIndex {
     const errors = sourceStatuses
       .filter((status) => status.error !== null)
       .map((status) => `${status.sourceLabel}: ${status.error}`);
+    if (omittedSources > 0) {
+      errors.push(`ICS source limit reached; ${omittedSources} configured source${omittedSources === 1 ? "" : "s"} omitted.`);
+    }
     if (dateIndex[2]) {
       errors.push("ICS occurrence limit reached; events omitted.");
     }
@@ -160,7 +165,7 @@ export class IcsEventIndex {
       ),
       state: "ready",
       enabled: true,
-      totalSources: sourceStatuses.length,
+      totalSources: configuredSources.length,
       loadedSources: sourceStatuses.filter((status) => status.error === null).length,
       eventCount: events.length,
       skippedRecurring: sum(sourceStatuses, "skippedRecurring"),
