@@ -172,6 +172,7 @@ export const HE_MESSAGES = Object.freeze({
   "dateContextMenu.openOrCreateNote": "פתיחה או יצירה של פתק יומי",
   "dateContextMenu.openNewTab": "פתח בכרטיסייה חדשה",
   "dateContextMenu.createRange": "צור הערת טווח",
+  "dateContextMenu.viewCalendarEvents": "הצגת אירועי לוח שנה",
   "dateContextMenu.copyDate": "העתק את התאריך",
   "dateContextMenu.copiedDate": "תאריך העתקה: {date}",
   "dateContextMenu.copyFailed": "העתקת התאריך נכשלה",
