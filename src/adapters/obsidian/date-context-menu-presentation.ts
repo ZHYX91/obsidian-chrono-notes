@@ -14,6 +14,8 @@ export function getDateContextMenuActionLabel(
         : t("dateContextMenu.createNote");
     case "open-tab":
       return t("dateContextMenu.openNewTab");
+    case "view-events":
+      return t("dateContextMenu.viewCalendarEvents");
     case "create-range":
       return t("dateContextMenu.createRange");
     case "copy-date":
