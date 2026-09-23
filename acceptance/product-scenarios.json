@@ -13,6 +13,32 @@
   },
   "scenarios": [
     {
+      "id": "audit-feedback-and-localization",
+      "title": "ICS warnings, compact lunar dates and localized opening feedback",
+      "surfaces": [
+        "desktop",
+        "android-emulator"
+      ],
+      "requiredCapabilities": {
+        "desktop": [],
+        "android-emulator": [
+          "touch.longPress"
+        ]
+      },
+      "steps": [
+        "In English, open the month calendar and select a date. Verify compact numeric lunar text and no Enter glyph. Open its note with Enter on desktop or long press on touch; confirm note creation if requested.",
+        "Inspect Month and Century at narrow and normal widths in light and dark appearance. Inspect the complete lunar date in a desktop hover/focus preview.",
+        "In Extensions and integrations, enable the 35 seeded ICS sources and refresh. Verify three omitted sources and zero read errors. Temporarily make the first source path invalid and refresh again; verify one real error and the same three omitted sources in both the notice and persistent status. Restore the path and refresh to clear the error.",
+        "Switch the interface to Arabic. Inspect the word-count statistic label and the periodic-note enabled label; verify that both are visible. Inspect ICS feedback for complete sentences. Restore English."
+      ],
+      "expected": [
+        "Lunar cells retain distinct month/day values, the selected cell has no persistent return glyph, and the platform's opening gesture works.",
+        "Selection and calendar content remain readable in both appearances and narrow layouts; complete lunar wording remains available in the desktop preview.",
+        "Source omissions do not inflate the read-error count, real errors remain visible alongside the warning, and a successful refresh clears the error.",
+        "The repaired Arabic labels and ICS sentences are non-empty and the tabbed settings remain usable."
+      ]
+    },
+    {
       "id": "periodic-navigation-and-settings",
       "title": "Periodic-note navigation and tabbed settings",
       "surfaces": [

@@ -1,4 +1,4 @@
-import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { mkdtemp, readFile, readdir, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 
@@ -69,12 +69,40 @@ describe("release notes", () => {
     expect(await readFile(notesFile, "utf8")).toBe("### Fixed\n- Current fix\n");
   });
 
-  it("leaves non-publication commands and explicit notes untouched", async () => {
-    await expect(prepareReleaseArgs(".", ["validate"], {})).resolves.toEqual(["validate"]);
-    await expect(prepareReleaseArgs(".", [
-      "publish-github-event", "--notes-file", "custom.md",
-    ], {})).resolves.toEqual([
-      "publish-github-event", "--notes-file", "custom.md",
-    ]);
+  it("rejects ambiguous duplicate sections", () => {
+    expect(() => extractReleaseNotes("## 1.2.0\nFirst\n## 1.2.0\nSecond\n", "1.2.0"))
+      .toThrow("duplicate sections for 1.2.0");
+  });
+
+  it("rejects missing and empty notes before source validation, bundling or event preflight", async () => {
+    const root = await mkdtemp(path.join(tmpdir(), "chrono-release-preflight-"));
+    temporaryDirectories.push(root);
+    await writeFile(path.join(root, "manifest.json"), JSON.stringify({ version: "1.2.0" }));
+    const commands = ["validate", "validate-tag", "bundle",
+      "event-publication-boundary", "event-publication-preflight", "publish-github-event"];
+    for (const body of ["# Changelog\n", "## 1.2.0\n\n## 1.1.0\nOlder\n"]) {
+      await writeFile(path.join(root, "CHANGELOG.md"), body);
+      for (const command of commands) {
+        await expect(prepareReleaseArgs(root, [command], { GITHUB_REF_NAME: "1.2.0" }))
+          .rejects.toThrow(/(?:no section for 1\.2\.0|section for 1\.2\.0 is empty)/u);
+      }
+    }
+    expect((await readdir(root)).sort()).toEqual(["CHANGELOG.md", "manifest.json"]);
+  });
+
+  it("validates explicit candidate versions and keeps verification read-only", async () => {
+    const root = await mkdtemp(path.join(tmpdir(), "chrono-release-validation-"));
+    temporaryDirectories.push(root);
+    await writeFile(path.join(root, "manifest.json"), JSON.stringify({ version: "1.1.0" }));
+    await writeFile(path.join(root, "CHANGELOG.md"), "## 1.2.0\nCurrent fix\n");
+    await expect(prepareReleaseArgs(root, ["validate"], {})).rejects.toThrow("no section for 1.1.0");
+    const args = ["validate-tag", "--version", "1.2.0"];
+    await expect(prepareReleaseArgs(root, args, {})).resolves.toEqual(args);
+    const explicit = ["publish-github-event", "--notes-file", "custom.md"];
+    await expect(prepareReleaseArgs(root, explicit, { GITHUB_REF_NAME: "1.2.0" }))
+      .resolves.toEqual(explicit);
+    expect((await readdir(root)).sort()).toEqual(["CHANGELOG.md", "manifest.json"]);
+    await expect(prepareReleaseArgs(root, ["verify-transport"], {}))
+      .resolves.toEqual(["verify-transport"]);
   });
 });

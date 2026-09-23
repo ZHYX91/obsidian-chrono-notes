@@ -2,7 +2,7 @@
 
 Notable changes to Chrono Notes are documented in this file. The repository's numeric Git tags are the evidence for released versions; an entry without a corresponding local tag remains unreleased even if the manifests already contain that version.
 
-## Unreleased
+## 0.7.3
 
 ### Fixed
 
@@ -20,7 +20,8 @@ Notable changes to Chrono Notes are documented in this file. The repository's nu
 - Remove outdated README screenshots and clarify that a single click selects while double-click,
   Enter, or touch long-press opens or creates a periodic note.
 - Source future GitHub Release descriptions from the matching version section of `CHANGELOG.md`
-  instead of GitHub auto-generated notes.
+  instead of GitHub auto-generated notes; reject missing, empty or duplicate sections during
+  source/tag validation, candidate bundling and event preflight.
 
 ## 0.7.2
 
