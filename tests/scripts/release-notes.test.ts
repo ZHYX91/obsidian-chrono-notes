@@ -5,10 +5,7 @@ import path from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 
 // @ts-expect-error The release-note helper is plain ESM.
-import {
-  extractReleaseNotes,
-  prepareReleaseArgs,
-} from "../../scripts/release-notes.mjs";
+import { extractReleaseNotes, prepareReleaseArgs } from "../../scripts/release-notes.mjs";
 
 const temporaryDirectories: string[] = [];
 
