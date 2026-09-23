@@ -15,6 +15,31 @@ import { noteStatistics } from "../support/note-statistics";
 import { noteEmbeds } from "../support/note-embeds";
 
 describe("calendar day content", () => {
+  it.each(["7/19", "11/16", "L11/16"])(
+    "keeps numeric groups intact with a wrap opportunity after the slash in %s",
+    (dateText) => {
+      const markup = renderToStaticMarkup(createElement(CalendarDayCalendarDetails, {
+        day: {
+          ...emptyDay(),
+          calendarExtensions: [{
+            id: "chinese-lunar",
+            dateText,
+            events: [],
+            transition: null,
+            accessibilityText: "Complete lunar date",
+          }],
+        },
+        translator: createTranslator("en", "en"),
+      }));
+      const dateMarkup = markup.match(
+        /class="chrono-notes-calendar-extension-date">(.*?)<\/span>/u,
+      )?.[1];
+
+      expect(dateMarkup).toBe(dateText.replace("/", "/<wbr/>"));
+      expect(dateMarkup?.replace("<wbr/>", "")).toBe(dateText);
+    },
+  );
+
   it("renders no holiday or ICS rows when both collections are empty", () => {
     const translator = createTranslator("en", "en");
     const details = renderToStaticMarkup(

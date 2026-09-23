@@ -1,3 +1,5 @@
+import { Fragment } from "react";
+
 import type { IcsEventOccurrence } from "../../core/calendar/ics-calendar";
 import type { CalendarDay } from "../../features/calendar/calendar-day-query";
 import type { Translator } from "../../shared/i18n";
@@ -86,7 +88,12 @@ export function CalendarDayCalendarDetails({
               key={extension.id}
             >
               <span className="chrono-notes-calendar-extension-date">
-                {extension.dateText}
+                {extension.dateText.split("/").map((part, index) => (
+                  <Fragment key={index}>
+                    {index === 0 ? null : <>/<wbr /></>}
+                    {part}
+                  </Fragment>
+                ))}
               </span>
             </span>
           ))}
