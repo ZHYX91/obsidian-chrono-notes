@@ -74,7 +74,7 @@ Holiday extensions implement only Mainland China public holidays/workday adjustm
 
 ## 7. External calendars
 
-- ICS integration reads local files only. It does not subscribe over the network, expand recurrence, use CalDAV, or write events back. A regular-width month cell shows at most three event summaries before `+N`; narrow layouts may fold visible summaries while preserving complete accessible information.
+- ICS integration reads local files only. It does not subscribe over the network, expand recurrence, use CalDAV, or write events back. A regular-width month cell shows at most three event summaries before `+N`; narrow layouts may fold visible summaries while preserving complete accessible information. Whenever a date has ICS events, its context actions include **View calendar events**, which opens the complete read-only event list independently of hover previews.
 
 ## 8. Interaction and auxiliary entry points
 
