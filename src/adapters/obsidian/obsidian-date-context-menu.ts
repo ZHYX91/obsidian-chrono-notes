@@ -21,9 +21,11 @@ export interface ObsidianDateContextMenuOptions {
   readonly date: LocalDate;
   readonly configured: boolean;
   readonly noteExists: boolean | null;
+  readonly hasIcsEvents: boolean;
   readonly rangeConfigured: boolean;
   readonly translator: Translator;
   readonly onOpenDaily: (target: NoteOpenTarget) => Promise<void>;
+  readonly onShowIcsEvents: () => void;
   readonly onCreateRange: () => void;
 }
 
@@ -50,6 +52,9 @@ export function showObsidianDateContextMenu(options: ObsidianDateContextMenuOpti
               break;
             case "open-tab":
               void options.onOpenDaily("tab");
+              break;
+            case "view-events":
+              options.onShowIcsEvents();
               break;
             case "create-range":
               options.onCreateRange();
