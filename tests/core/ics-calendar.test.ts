@@ -106,6 +106,43 @@ describe("ICS calendar parsing", () => {
     ]);
   });
 
+  it("uses embedded VTIMEZONE definitions for custom TZIDs", () => {
+    const parsed = parseIcsCalendar([
+      "BEGIN:VCALENDAR",
+      "VERSION:2.0",
+      "BEGIN:VTIMEZONE",
+      "TZID:Custom/Plus0230",
+      "BEGIN:STANDARD",
+      "DTSTART:19700101T000000",
+      "TZOFFSETFROM:+0230",
+      "TZOFFSETTO:+0230",
+      "TZNAME:CUSTOM",
+      "END:STANDARD",
+      "END:VTIMEZONE",
+      "BEGIN:VEVENT",
+      "UID:custom-zone",
+      "DTSTART;TZID=Custom/Plus0230:20260506T090000",
+      "DTEND;TZID=Custom/Plus0230:20260506T100000",
+      "SUMMARY:Custom zone event",
+      "END:VEVENT",
+      "END:VCALENDAR",
+    ].join("\n"), "custom-zone.ics", { displayZone: "UTC" });
+
+    expect(parsed.skippedInvalid).toBe(0);
+    expect(parsed.events).toHaveLength(1);
+    expect(parsed.events[0]).toMatchObject({
+      id: "custom-zone",
+      start: {
+        date: { year: 2026, month: 5, day: 6 },
+        timeMinutes: 6 * 60 + 30,
+      },
+      endExclusive: {
+        date: { year: 2026, month: 5, day: 6 },
+        timeMinutes: 7 * 60 + 30,
+      },
+    });
+  });
+
   it("indexes exclusive all-day ends and timed events across midnight", () => {
     const parsed = parseIcsCalendar([
       "BEGIN:VCALENDAR",
@@ -146,6 +183,35 @@ describe("ICS calendar parsing", () => {
     ]);
     expect(Object.isFrozen(result.eventsByDate)).toBe(true);
     expect(Object.isFrozen(result.eventsByDate["2026-05-08"])).toBe(true);
+  });
+
+  it("sorts continued timed events from the display-zone day boundary", () => {
+    const parsed = parseIcsCalendar([
+      "BEGIN:VCALENDAR",
+      "BEGIN:VEVENT",
+      "UID:overnight",
+      "DTSTART:20260507T150000Z",
+      "DTEND:20260507T180000Z",
+      "SUMMARY:Overnight",
+      "END:VEVENT",
+      "BEGIN:VEVENT",
+      "UID:early",
+      "DTSTART:20260507T170000Z",
+      "DTEND:20260507T173000Z",
+      "SUMMARY:Early",
+      "END:VEVENT",
+      "END:VCALENDAR",
+    ].join("\n"), "ordering.ics", { displayZone: "Asia/Taipei" });
+
+    const result = buildIcsDateIndex(parsed.events);
+    expect(result.eventsByDate["2026-05-08"]?.map((event) => event.id)).toEqual([
+      "overnight",
+      "early",
+    ]);
+    expect(result.eventsByDate["2026-05-08"]?.[0]).toMatchObject({
+      startsOnDate: false,
+      continuesBefore: true,
+    });
   });
 
   it("explicitly skips recurrence rules and isolates invalid events", () => {
