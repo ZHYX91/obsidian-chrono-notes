@@ -169,6 +169,7 @@ export const FA_MESSAGES = Object.freeze({
   "dateContextMenu.openOrCreateNote": "یادداشت روزانه را باز کنید یا ایجاد کنید",
   "dateContextMenu.openNewTab": "در برگه جدید باز کنید",
   "dateContextMenu.createRange": "ایجاد یادداشت محدوده",
+  "dateContextMenu.viewCalendarEvents": "مشاهده رویدادهای تقویم",
   "dateContextMenu.copyDate": "تاریخ کپی",
   "dateContextMenu.copiedDate": "تاریخ کپی: {date}",
   "dateContextMenu.copyFailed": "تاریخ کپی نشد",
