@@ -234,11 +234,34 @@ export class IcsEventIndex {
     signal: AbortSignal,
   ): Promise<string | null> {
     const release = this.readSlots.acquireImmediately() ?? await this.readSlots.acquire();
-    try {
-      return await readUntilAborted(this.reader, source, signal);
-    } finally {
+    if (signal.aborted) {
       release();
+      return null;
     }
+
+    let pending: Promise<string>;
+    try {
+      pending = Promise.resolve(this.reader.read(source));
+    } catch (error) {
+      release();
+      throw normalizeError(error);
+    }
+
+    // Logical refresh cancellation must not release the physical read slot.
+    // A reader may not support cancellation, so keep the slot until its
+    // underlying promise actually settles. This keeps the configured limit
+    // meaningful across overlapping refresh revisions.
+    const settled = pending.then(
+      (content) => {
+        release();
+        return content;
+      },
+      (error: unknown) => {
+        release();
+        throw normalizeError(error);
+      },
+    );
+    return readUntilAborted(settled, signal);
   }
 
   private publish(snapshot: IcsEventIndexSnapshot): void {
@@ -249,17 +272,10 @@ export class IcsEventIndex {
 }
 
 function readUntilAborted(
-  reader: IcsSourceReader,
-  source: string,
+  pending: Promise<string>,
   signal: AbortSignal,
 ): Promise<string | null> {
   if (signal.aborted) return Promise.resolve(null);
-  let pending: Promise<string>;
-  try {
-    pending = reader.read(source);
-  } catch (error) {
-    return Promise.reject(normalizeError(error));
-  }
   return new Promise((resolve, reject) => {
     const onAbort = () => {
       signal.removeEventListener("abort", onAbort);
