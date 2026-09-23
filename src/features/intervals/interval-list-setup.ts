@@ -52,9 +52,8 @@ export function getIntervalListSetup(
   if (!creationConfigured) {
     return freezeSetup(false, "creation-not-configured");
   }
-  if (!isSameFolderOrNested(creationFolder, scanFolder)) {
-    return freezeSetup(false, "creation-outside-scope");
-  }
+  // New range notes carry explicit identity, so they remain discoverable even
+  // when their creation folder is outside the legacy unmarked-note scan scope.
   if (!scanFolderExists) {
     return freezeSetup(true, "scan-folder-missing");
   }
@@ -66,8 +65,4 @@ function freezeSetup(
   issue: IntervalListSetupIssue | null,
 ): IntervalListSetup {
   return Object.freeze({ canCreateVisibleItem, issue });
-}
-
-function isSameFolderOrNested(folder: string, scopeFolder: string): boolean {
-  return folder === scopeFolder || folder.startsWith(`${scopeFolder}/`);
 }
