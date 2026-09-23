@@ -1,4 +1,5 @@
 import config from "../release.config.mjs";
+import { prepareReleaseArgs } from "./release-notes.mjs";
 import { createReleaseAdapter } from "./vendor/obsidian-release-core.mjs";
 
 const adapter = createReleaseAdapter({
@@ -11,4 +12,6 @@ export const releaseConfig = adapter.releaseConfig;
 export const verifyReleaseCorePin = adapter.verifyReleaseCorePin;
 export const run = adapter.run;
 
-await adapter.runIfMain();
+await adapter.runIfMain({
+  argv: await prepareReleaseArgs(adapter.projectRoot, process.argv.slice(2), process.env),
+});

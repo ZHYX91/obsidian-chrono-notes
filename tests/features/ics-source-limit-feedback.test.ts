@@ -45,8 +45,13 @@ describe("ICS source-limit feedback", () => {
 
     const snapshot = index.getSnapshot();
     expect(snapshot).toMatchObject({ totalSources: 3, loadedSources: 1, sourceLimit: 2 });
-    expect(snapshot.errors).toHaveLength(2);
-    expect(formatIcsStatus(snapshot, createTranslator("zh-CN", "en").t)).toContain("已省略 1 个来源");
+    expect(snapshot.errors).toHaveLength(1);
+    const zh = createTranslator("zh-CN", "en").t;
+    expect(formatIcsStatus(snapshot, zh)).toContain("已省略 1 个来源");
+    const notice = formatIcsRefreshNotice(snapshot, createTranslator("en", "en").t);
+    expect(notice).toContain("ICS partially refreshed");
+    expect(notice).toContain("1 error");
+    expect(notice).toContain("first 2 sources");
   });
 
   it("shows source and occurrence limits together without hiding either recovery action", async () => {

@@ -45,9 +45,7 @@ describe("ICS occurrence budget", () => {
       expect(message).toContain("未完整显示");
       expect(message).toContain("减少来源或缩短事件跨度");
     }
-    expect(snapshot.errors).toEqual([
-      "ICS occurrence limit reached; events omitted.",
-    ]);
+    expect(snapshot.errors).toEqual([]);
     expect(snapshot.state).toBe("ready");
     expect(snapshot.refreshedAt).toBe(42);
   });

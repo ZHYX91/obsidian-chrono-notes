@@ -92,9 +92,8 @@ export function formatIcsRefreshNotice(
   if (!snapshot.enabled) return t("pluginNotice.icsDisabled");
   if (snapshot.totalSources === 0) return t("pluginNotice.icsNoSources");
   const limitNotice = formatIcsLimitNotice(snapshot, t);
-  if (limitNotice !== null) return limitNotice;
   if (snapshot.errors.length > 0) {
-    return t("pluginNotice.icsPartial", {
+    const partial = t("pluginNotice.icsPartial", {
       ratio: t("pluginNotice.sourceRatio", {
         loaded: snapshot.loadedSources,
         total: snapshot.totalSources,
@@ -102,6 +101,7 @@ export function formatIcsRefreshNotice(
       events: t("pluginNotice.events", { count: snapshot.eventCount }),
       errors: t("pluginNotice.errors", { count: snapshot.errors.length }),
     });
+    return limitNotice === null ? partial : `${partial}\n${limitNotice}`;
   }
   const base = t("pluginNotice.icsRefreshed", {
     sources: t("pluginNotice.sources", { count: snapshot.loadedSources }),
@@ -115,7 +115,8 @@ export function formatIcsRefreshNotice(
       ? []
       : [t("pluginNotice.skippedInvalid", { count: snapshot.skippedInvalid })]),
   ];
-  return skipped.length === 0 ? base : `${base} ${skipped.join(" ")}`;
+  const summary = skipped.length === 0 ? base : `${base} ${skipped.join(" ")}`;
+  return limitNotice === null ? summary : `${summary}\n${limitNotice}`;
 }
 
 function formatPeriodicType(

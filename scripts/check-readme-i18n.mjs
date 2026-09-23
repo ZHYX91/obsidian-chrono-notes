@@ -11,7 +11,6 @@ const config = {
       label: "English",
       path: "README.md",
       sections: [
-        "Screenshots",
         "Features",
         "Requirements and compatibility",
         "Installation",
@@ -29,7 +28,6 @@ const config = {
       label: "简体中文",
       path: "docs/i18n/README.zh-CN.md",
       sections: [
-        "界面截图",
         "功能特性",
         "使用要求与兼容性",
         "安装",

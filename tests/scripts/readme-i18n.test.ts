@@ -63,15 +63,15 @@ describe("README marketplace link contract", () => {
     );
   });
 
-  it("rejects a missing translated image target", async () => {
+  it("rejects a missing translated repository target", async () => {
     await replaceInReadme(
       "docs/i18n/README.zh-CN.md",
-      "../assets/chrono-notes-desktop-en.png",
-      "../assets/missing-desktop.png",
+      "../../LICENSE",
+      "../../MISSING-LICENSE",
     );
 
     expect(checkReadmeI18n(fixtureRoot)).toContain(
-      "docs/i18n/README.zh-CN.md contains a missing relative target: ../assets/missing-desktop.png",
+      "docs/i18n/README.zh-CN.md contains a missing relative target: ../../MISSING-LICENSE",
     );
   });
 });

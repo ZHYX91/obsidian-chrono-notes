@@ -56,10 +56,9 @@ describe("IcsEventIndex", () => {
       totalSources: 8,
       loadedSources: 5,
       eventCount: 5,
+      sourceLimit: 5,
+      errors: [],
     });
-    expect(index.getSnapshot().errors).toContain(
-      "ICS source limit reached; 3 configured sources omitted.",
-    );
   });
 
   it("deduplicates sources and preserves successful events beside source errors", async () => {

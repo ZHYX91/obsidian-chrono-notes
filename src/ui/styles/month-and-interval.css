@@ -955,7 +955,12 @@ body.is-mobile
   white-space: nowrap;
 }
 
-.chrono-notes-calendar-extension-date,
+.chrono-notes-calendar-extension-date {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+
 .chrono-notes-calendar-extension-event {
   max-width: 100%;
   overflow: hidden;

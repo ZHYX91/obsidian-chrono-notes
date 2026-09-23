@@ -192,6 +192,17 @@ describe("createTranslator", () => {
     })).toBe("選擇 2026 年（目前）");
   });
 
+  it("keeps every runtime message non-empty in every locale", () => {
+    for (const [locale, catalog] of Object.entries(MESSAGE_CATALOGS)) {
+      for (const [key, value] of Object.entries(catalog)) {
+        const messages = typeof value === "string" ? [value] : Object.values(value);
+        for (const message of messages) {
+          expect(message.trim(), `${locale}:${key}`).not.toBe("");
+        }
+      }
+    }
+  });
+
   it("keeps every runtime catalog key-complete with matching placeholders", () => {
     const sourceKeys = Object.keys(MESSAGE_CATALOGS["zh-CN"]) as MessageKey[];
     const expectedKeys = [...sourceKeys].sort();

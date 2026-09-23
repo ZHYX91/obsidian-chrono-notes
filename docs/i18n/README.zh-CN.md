@@ -4,22 +4,6 @@
 
 Chrono Notes 是一个面向 Obsidian 周期笔记工作流的日历插件，整合周期笔记、可选历法扩展、地区节假日、任务、统计和区间笔记。
 
-## 界面截图
-
-### 日历工作区
-
-在月历中集中查看笔记状态、任务、本地 ICS 事件、节假日和区间笔记。
-
-![Chrono Notes 桌面端区间笔记与月历](../assets/chrono-notes-desktop-en.png)
-
-### Android
-
-同一套日历工作区会适配触控操作和窄屏布局。
-
-<p align="center">
-  <img src="../assets/chrono-notes-android-en.png" alt="Chrono Notes Android 月历" width="360">
-</p>
-
 ## 功能特性
 
 - 世纪视图按年代分组，直接浏览年份、创建或打开周期笔记；
@@ -58,7 +42,7 @@ Chrono Notes 是一个面向 Obsidian 周期笔记工作流的日历插件，整
 1. 在 Chrono Notes 设置中启用需要的周期笔记类型，并确认路径格式；
 2. 从侧边栏图标或命令面板打开日历；
 3. 按需启用历法、节假日扩展或添加本地 ICS 来源；
-4. 选择日期以打开或创建对应周期笔记。
+4. 单击日期只会选择；双击或按 Enter 打开或创建对应周期笔记，触屏端使用长按。
 
 ### 年代与世纪笔记
 

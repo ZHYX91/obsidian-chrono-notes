@@ -4,22 +4,6 @@
 
 Chrono Notes is an Obsidian calendar workspace for periodic notes, optional calendar extensions, regional holidays, tasks, statistics, and time-range notes.
 
-## Screenshots
-
-### Calendar workspace
-
-See note state, tasks, local ICS events, holidays, and range notes together in the month calendar.
-
-![Chrono Notes desktop range note and month calendar](https://raw.githubusercontent.com/ZHYX91/obsidian-chrono-notes/main/docs/assets/chrono-notes-desktop-en.png)
-
-### Android
-
-The same calendar workspace adapts to touch interaction and narrow screens.
-
-<p align="center">
-  <img src="https://raw.githubusercontent.com/ZHYX91/obsidian-chrono-notes/main/docs/assets/chrono-notes-android-en.png" alt="Chrono Notes Android month calendar" width="360">
-</p>
-
 ## Features
 
 - A century view grouped by decade, with the same periodic-note cells, indicators and interactions as the year overview.
@@ -58,7 +42,7 @@ Back up and preserve `Vault/.obsidian/plugins/chrono-notes/data.json` when it ex
 1. Enable the periodic-note types you use and confirm their path patterns in Chrono Notes settings.
 2. Open the calendar from the ribbon or command palette.
 3. Optionally enable calendar and holiday extensions or add local ICS sources.
-4. Select a date to open or create its periodic note.
+4. Click a date to select it; double-click or press Enter to open or create its periodic note. On touch, long-press.
 
 ### Decadal and century notes
 

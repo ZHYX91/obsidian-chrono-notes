@@ -98,7 +98,7 @@ describe("getChineseLunarDay", () => {
       events: [{ id: "festival:中元节", text: "中元節" }],
     });
     expect(englishFallback).toMatchObject({
-      dateText: "Lunar 7/15",
+      dateText: "7/15",
       festivals: ["Zhongyuan Festival"],
       events: [{ id: "festival:中元节", text: "Zhongyuan Festival" }],
     });
@@ -162,7 +162,7 @@ describe("getChineseLunarDay", () => {
     expect(english).toMatchObject({
       lunarMonthName: "Lunar month 1",
       lunarDayName: "day 1",
-      dateText: "Lunar 1/1",
+      dateText: "1/1",
       festivals: ["Lunar New Year"],
       events: [{ id: "festival:春节", text: "Lunar New Year" }],
       accessibilityText: "Lunar month 1, day 1",
@@ -178,7 +178,7 @@ describe("getChineseLunarDay", () => {
         lunarMonthName: "Lunar month 5",
         lunarDayName: "day 23",
         solarTerm: "Minor Heat",
-        dateText: "Lunar 5/23",
+        dateText: "5/23",
         events: [{ id: "solar-term:小暑", text: "Minor Heat" }],
         accessibilityText: "Lunar month 5, day 23",
       });
@@ -186,7 +186,7 @@ describe("getChineseLunarDay", () => {
       .toMatchObject({
         isLeapMonth: true,
         lunarMonthName: "Leap lunar month 6",
-        dateText: "Lunar L6/1",
+        dateText: "L6/1",
       });
   });
 });
