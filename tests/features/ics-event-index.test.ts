@@ -175,7 +175,7 @@ describe("IcsEventIndex", () => {
     expect(index.getSnapshot().eventsByDate["2026-05-07"]?.[0]?.id).toBe("latest");
   });
 
-  it("starts the latest revision after stale reads saturate every slot", async () => {
+  it("holds physical read slots until stale I/O actually settles", async () => {
     const oldReads = [deferred<string>(), deferred<string>()];
     const latestReads = [deferred<string>(), deferred<string>()];
     const allReads = [...oldReads, ...latestReads];
@@ -194,14 +194,23 @@ describe("IcsEventIndex", () => {
     const staleRefresh = index.refresh(options);
     await vi.waitFor(() => expect(read).toHaveBeenCalledTimes(2));
     const latestRefresh = index.refresh(options);
+
+    // The stale revision is logically cancelled immediately, but its two
+    // uncancellable reader promises still occupy both physical slots.
+    await staleRefresh;
+    expect(read).toHaveBeenCalledTimes(2);
+
+    oldReads[0]?.resolve(calendar("stale-a", "20260505"));
+    oldReads[1]?.resolve(calendar("stale-b", "20260506"));
     await vi.waitFor(() => expect(read).toHaveBeenCalledTimes(4));
 
     latestReads[0]?.resolve(calendar("latest-a", "20260507"));
     latestReads[1]?.resolve(calendar("latest-b", "20260508"));
     await latestRefresh;
-    await staleRefresh;
 
     expect(index.getSnapshot()).toMatchObject({ state: "ready", eventCount: 2 });
+    expect(index.getSnapshot().eventsByDate["2026-05-05"]).toBeUndefined();
+    expect(index.getSnapshot().eventsByDate["2026-05-06"]).toBeUndefined();
     expect(index.getSnapshot().eventsByDate["2026-05-07"]?.[0]?.id).toBe("latest-a");
     expect(index.getSnapshot().eventsByDate["2026-05-08"]?.[0]?.id).toBe("latest-b");
   });
