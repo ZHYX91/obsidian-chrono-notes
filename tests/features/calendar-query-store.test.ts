@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 
 import type { IcsEventOccurrence } from "../../src/core/calendar/ics-calendar";
 import { parseNote } from "../../src/core/note/parsed-note";
+import { formatPeriodicNotePath } from "../../src/core/periodic/periodic-note-path";
 import {
   CalendarQueryStore,
   type MonthCalendarQueryRequest,
@@ -116,6 +117,49 @@ describe("CalendarQueryStore", () => {
     unsubscribe();
     expect(noteSource.listenerCount).toBe(0);
     expect(icsSource.listenerCount).toBe(0);
+  });
+
+  it("invalidates localized periodic paths using the configured path locale", () => {
+    const baseRequest = monthRequest();
+    const request: MonthCalendarQueryRequest = {
+      ...baseRequest,
+      options: {
+        ...baseRequest.options,
+        daily: {
+          enabled: true,
+          pattern: "[Daily]/YYYY-MMMM-DD",
+          pathLocale: "zh-CN",
+        },
+      },
+    };
+    const path = formatPeriodicNotePath(
+      { year: 2026, month: 7, day: 8 },
+      {
+        noteType: "daily",
+        pattern: request.options.daily.pattern,
+        pathLocale: request.options.daily.pathLocale,
+      },
+      request.options,
+    );
+    expect(path).not.toBeNull();
+    if (path === null) throw new Error("Expected localized daily-note path");
+
+    const noteSource = new MutableSnapshotSource(
+      createParsedNoteIndexSnapshot({ [path]: "before" }, 1),
+    );
+    const store = new CalendarQueryStore(
+      noteSource,
+      new MutableSnapshotSource(disabledIcs()),
+      request,
+    );
+    expect(findDay(expectMonth(store.getSnapshot()), "2026-07-08").preview).toBe("before");
+    const listener = vi.fn();
+    store.subscribe(listener);
+
+    noteSource.publish(createParsedNoteIndexSnapshot({ [path]: "after" }, 2));
+
+    expect(listener).toHaveBeenCalledOnce();
+    expect(findDay(expectMonth(store.getSnapshot()), "2026-07-08").preview).toBe("after");
   });
 
   it("recomputes unknown periodic paths when note-index readiness changes", () => {
@@ -295,6 +339,57 @@ describe("CalendarQueryStore", () => {
     expect(second.weeks[0]).toBe(first.weeks[0]);
     expect(second.weeks[0]?.days).toBe(first.weeks[0]?.days);
     expect(second.weeks.find((week) => week.intervals.totalCount > 0)).toBeDefined();
+  });
+
+  it("tracks explicit intervals outside the unmarked-note scan folder", () => {
+    const rangeNotes: RangeNoteSettings = Object.freeze({
+      ...RANGE_NOTES_ON,
+      folder: "Projects",
+      scanScope: "custom-folder",
+      customFolder: "Ranges",
+    });
+    const initial = createParsedNoteIndexSnapshot({
+      "Projects/launch.md": [
+        "---",
+        "chrono-notes: interval",
+        "start: 2026-07-08",
+        "end: 2026-07-10",
+        "---",
+        "Launch",
+      ].join("\n"),
+    }, 1);
+    const noteSource = new MutableSnapshotSource(initial);
+    const store = new CalendarQueryStore(
+      noteSource,
+      new MutableSnapshotSource(disabledIcs()),
+      monthRequest(rangeNotes),
+    );
+    const first = expectMonth(store.getSnapshot());
+    expect(
+      first.weeks.flatMap((week) => week.intervals.items)
+        .find((item) => item.path === "Projects/launch.md")?.end.dateKey,
+    ).toBe("2026-07-10");
+    const listener = vi.fn();
+    store.subscribe(listener);
+
+    noteSource.publish(createParsedNoteIndexSnapshot({
+      "Projects/launch.md": [
+        "---",
+        "chrono-notes: interval",
+        "start: 2026-07-08",
+        "end: 2026-07-12",
+        "---",
+        "Launch",
+      ].join("\n"),
+    }, 2));
+
+    expect(listener).toHaveBeenCalledOnce();
+    const second = expectMonth(store.getSnapshot());
+    expect(second).not.toBe(first);
+    expect(
+      second.weeks.flatMap((week) => week.intervals.items)
+        .find((item) => item.path === "Projects/launch.md")?.end.dateKey,
+    ).toBe("2026-07-12");
   });
 
   it("ignores interval-only updates while the month heatmap is active", () => {
