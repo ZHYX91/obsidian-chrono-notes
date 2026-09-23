@@ -2,6 +2,26 @@
 
 Notable changes to Chrono Notes are documented in this file. The repository's numeric Git tags are the evidence for released versions; an entry without a corresponding local tag remains unreleased even if the manifests already contain that version.
 
+## Unreleased
+
+### Fixed
+
+- Keep real ICS source-read failures distinct from source/occurrence limits, and show both failure
+  summaries and truncation recovery guidance when they occur together.
+- Repair empty and concatenated Arabic interface strings, with a catalog-wide non-empty-message
+  regression gate.
+- Remove the persistent Enter/return glyph from selected calendar cells while preserving all
+  keyboard, pointer, and touch opening gestures.
+
+### Changed
+
+- Use compact numeric Chinese-lunar cell text outside Chinese locales while retaining complete
+  lunar wording in accessible text and previews.
+- Remove outdated README screenshots and clarify that a single click selects while double-click,
+  Enter, or touch long-press opens or creates a periodic note.
+- Source future GitHub Release descriptions from the matching version section of `CHANGELOG.md`
+  instead of GitHub auto-generated notes.
+
 ## 0.7.2
 
 ### Fixed
