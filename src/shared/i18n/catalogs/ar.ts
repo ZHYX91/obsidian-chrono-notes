@@ -181,6 +181,7 @@ export const AR_MESSAGES = Object.freeze({
   "dateContextMenu.openOrCreateNote": "فتح ملاحظة يومية أو إنشاؤها",
   "dateContextMenu.openNewTab": "فتح في علامة تبويب جديدة",
   "dateContextMenu.createRange": "إنشاء ملاحظة نطاق",
+  "dateContextMenu.viewCalendarEvents": "عرض أحداث التقويم",
   "dateContextMenu.copyDate": "نسخ التاريخ",
   "dateContextMenu.copiedDate": "تاريخ النسخ: {date}",
   "dateContextMenu.copyFailed": "فشل في نسخ التاريخ",
