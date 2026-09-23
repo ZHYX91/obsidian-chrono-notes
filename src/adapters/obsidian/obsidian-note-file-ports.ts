@@ -150,10 +150,8 @@ export class ObsidianTaskFilePort implements TaskFilePort {
       expectedPublished = update(content) ?? content;
       return expectedPublished;
     });
-    assertTaskFileIdentity(this.vault, file, path);
-    if (getOpenTaskEditors(this.workspace, path).length > 0) {
-      throw new Error(`Markdown editor opened during task update: ${path}`);
-    }
+    // process() has committed at this point. Opening or renaming the note
+    // afterwards must not turn a successful write into a reported failure.
     if (expectedPublished === undefined || published !== expectedPublished) {
       throw new Error(`Markdown task update could not be verified: ${path}`);
     }

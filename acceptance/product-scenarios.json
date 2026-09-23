@@ -80,6 +80,30 @@
         "Budget omissions are explained to the user rather than reported only as an unspecified error.",
         "Century selection and focus outlines remain visible beside the scrollbar, controls remain readable, and normal opening gestures work."
       ]
+    },
+    {
+      "id": "task-writes-and-ics-source-limits",
+      "title": "Task write safety and visible ICS source omissions",
+      "surfaces": [
+        "desktop",
+        "android-emulator"
+      ],
+      "requiredCapabilities": {
+        "desktop": [],
+        "android-emulator": []
+      },
+      "steps": [
+        "Open the calendar at 2026-09-19 and switch to Week. Toggle Boundary task from BOM Tasks.md while its source is closed, then open the source and verify the checkbox and unchanged surrounding text.",
+        "Keep the task source open in an editor, add a sentinel line, and toggle the task from the calendar again. Verify the task changes and the sentinel survives. Timing races are covered separately by automated adapter tests.",
+        "In Extensions and integrations, enable the 35 seeded ICS sources and refresh. Verify the notification and persistent settings explain the limit of 32, three omitted sources, and how to reduce or reorder sources.",
+        "Switch the interface to Simplified Chinese, return to ICS settings and refresh. Verify the same source-limit explanation is localized.",
+        "Replace the source list with Calendars/Sources/01.ics and Calendars/Sources/02.ics, refresh, and verify both sources load with no stale omission warning."
+      ],
+      "expected": [
+        "Closed and open task updates persist the intended checkbox without changing surrounding text or reporting a false failure.",
+        "The first 32 sources load and the three omitted sources are explicitly explained in both notification and settings, in English and Simplified Chinese.",
+        "Reducing the source list clears the omission warning and loads all remaining sources."
+      ]
     }
   ]
 }

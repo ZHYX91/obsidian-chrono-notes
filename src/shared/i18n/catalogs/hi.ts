@@ -1,6 +1,7 @@
 import type { MessageCatalog } from "../types";
 
 export const HI_MESSAGES = Object.freeze({
+  "ics.sourceLimit": "ICS हर रीफ़्रेश में केवल पहले {limit} स्रोत पढ़ता है; {count} स्रोत छोड़ दिए गए। स्रोत कम करें या उनका क्रम बदलें, फिर रीफ़्रेश करें।",
   "ics.occurrenceLimit": "ICS में {limit} दैनिक प्रविष्टियों की सीमा पूरी हो गई; {count} ईवेंट पूरे नहीं दिख रहे हैं। स्रोत या ईवेंट की अवधि घटाकर फिर रीफ़्रेश करें।",
   "settings.periodic.pathLanguage": "पथ की भाषा",
   "settings.periodic.pathLanguageDesc": "इस अवधि के फ़ाइल नाम की भाषा स्थिर रखें। बदलाव से नोट खोजना और बनाना प्रभावित होता है, मौजूदा फ़ाइलों के नाम नहीं बदलते; पहले पथ का पूर्वावलोकन जाँचें।",

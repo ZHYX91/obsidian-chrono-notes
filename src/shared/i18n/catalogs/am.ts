@@ -1,6 +1,7 @@
 import type { MessageCatalog } from "../types";
 
 export const AM_MESSAGES = Object.freeze({
+  "ics.sourceLimit": "ICS በእያንዳንዱ እድሳት የመጀመሪያዎቹን {limit} ምንጮች ብቻ ያነባል፤ {count} ምንጮች ተዘልለዋል። ምንጮችን ይቀንሱ ወይም ቅደም ተከተላቸውን ይቀይሩና እንደገና ያድሱ።",
   "ics.occurrenceLimit": "ICS የ{limit} ዕለታዊ ግቤቶች ገደብ ላይ ደርሷል፤ {count} ክስተቶች ሙሉ በሙሉ አልታዩም። ምንጮችን ወይም የክስተት ቆይታን ቀንሰው ያድሱ።",
   "settings.periodic.pathLanguage": "የዱካ ቋንቋ",
   "settings.periodic.pathLanguageDesc": "ለዚህ ጊዜ ክፍል የፋይል ስም ቋንቋን ያስቀምጡ። መቀየር ማስታወሻ ፍለጋና መፍጠርን ይነካል፣ ነባር ፋይሎችን ግን አይሰይምም፤ መጀመሪያ የዱካ ቅድመ እይታውን ያረጋግጡ።",

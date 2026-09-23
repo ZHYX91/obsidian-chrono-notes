@@ -38,6 +38,8 @@ export interface IcsEventIndexSnapshot {
   readonly skippedRecurring: number;
   readonly skippedInvalid: number;
   readonly truncatedEvents: number;
+  /** Present only when configured sources were omitted from this refresh. */
+  readonly sourceLimit?: number;
   /** Present only when the global occurrence budget omitted event data. */
   readonly occurrenceLimit?: number;
   readonly refreshedAt: number | null;
@@ -171,6 +173,7 @@ export class IcsEventIndex {
       skippedRecurring: sum(sourceStatuses, "skippedRecurring"),
       skippedInvalid: sum(sourceStatuses, "skippedInvalid"),
       truncatedEvents: dateIndex[1],
+      ...(omittedSources > 0 ? { sourceLimit: this.maxSources } : {}),
       ...(dateIndex[2] ? { occurrenceLimit: this.maxOccurrences } : {}),
       refreshedAt: this.now(),
       sourceStatuses,

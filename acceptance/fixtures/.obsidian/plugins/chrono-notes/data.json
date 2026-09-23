@@ -78,6 +78,42 @@
   },
   "ics": {
     "enabled": false,
-    "sources": []
+    "sources": [
+      "Calendars/Sources/01.ics",
+      "Calendars/Sources/02.ics",
+      "Calendars/Sources/03.ics",
+      "Calendars/Sources/04.ics",
+      "Calendars/Sources/05.ics",
+      "Calendars/Sources/06.ics",
+      "Calendars/Sources/07.ics",
+      "Calendars/Sources/08.ics",
+      "Calendars/Sources/09.ics",
+      "Calendars/Sources/10.ics",
+      "Calendars/Sources/11.ics",
+      "Calendars/Sources/12.ics",
+      "Calendars/Sources/13.ics",
+      "Calendars/Sources/14.ics",
+      "Calendars/Sources/15.ics",
+      "Calendars/Sources/16.ics",
+      "Calendars/Sources/17.ics",
+      "Calendars/Sources/18.ics",
+      "Calendars/Sources/19.ics",
+      "Calendars/Sources/20.ics",
+      "Calendars/Sources/21.ics",
+      "Calendars/Sources/22.ics",
+      "Calendars/Sources/23.ics",
+      "Calendars/Sources/24.ics",
+      "Calendars/Sources/25.ics",
+      "Calendars/Sources/26.ics",
+      "Calendars/Sources/27.ics",
+      "Calendars/Sources/28.ics",
+      "Calendars/Sources/29.ics",
+      "Calendars/Sources/30.ics",
+      "Calendars/Sources/31.ics",
+      "Calendars/Sources/32.ics",
+      "Calendars/Sources/33.ics",
+      "Calendars/Sources/34.ics",
+      "Calendars/Sources/35.ics"
+    ]
   }
 }

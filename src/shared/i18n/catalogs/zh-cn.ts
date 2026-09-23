@@ -1,6 +1,7 @@
 import type { MessageValue } from "../message-value";
 
 export const ZH_CN_MESSAGES = {
+  "ics.sourceLimit": "ICS 每次刷新只读取前 {limit} 个来源，已省略 {count} 个来源。请减少来源或调整来源顺序后重新刷新。",
   "ics.occurrenceLimit": "ICS 已达到 {limit} 条逐日记录的上限，{count} 个事件未完整显示。请减少来源或缩短事件跨度后重新刷新。",
   "settings.periodic.pathLanguage": "路径语言",
   "settings.periodic.pathLanguageDesc": "固定此周期的文件命名语言。更改会影响笔记的查找与创建，但不会重命名已有文件；请先核对路径预览。",
