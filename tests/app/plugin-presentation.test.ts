@@ -99,5 +99,15 @@ describe("plugin presentation", () => {
     }), t)).toBe(
       "ICS refreshed: 1 source, 2 events. Skipped 1 recurring event. Skipped 2 invalid events.",
     );
+    const combined = formatIcsRefreshNotice(snapshot({
+      loadedSources: 1,
+      totalSources: 4,
+      eventCount: 1,
+      errors: ["bad.ics: unreadable"],
+      sourceLimit: 2,
+    }), t);
+    expect(combined).toContain("ICS partially refreshed: 1/4 sources, 1 event, 1 error.");
+    expect(combined).toContain("first 2 sources");
+    expect(combined).toContain("2 sources were omitted");
   });
 });
