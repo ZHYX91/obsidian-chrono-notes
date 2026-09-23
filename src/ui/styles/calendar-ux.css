@@ -1,38 +1,5 @@
 /* Final interaction/readability overrides. Keep these separate from structural layout rules. */
 
-:is(
-  .chrono-notes-day[aria-selected="true"],
-  .chrono-notes-week-day[aria-pressed="true"],
-  .chrono-notes-period-cell[aria-pressed="true"]
-)[data-note-state]:not([data-note-state="not-configured"]) {
-  position: relative;
-}
-
-:is(
-  .chrono-notes-day[aria-selected="true"],
-  .chrono-notes-week-day[aria-pressed="true"],
-  .chrono-notes-period-cell[aria-pressed="true"]
-)[data-note-state]:not([data-note-state="not-configured"])::after {
-  align-items: center;
-  background: color-mix(in srgb, var(--background-primary) 84%, transparent);
-  border-radius: 3px;
-  color: var(--text-muted);
-  content: "↵";
-  display: inline-flex;
-  font-family: var(--font-interface);
-  font-size: max(10px, var(--chrono-notes-font-micro));
-  font-weight: var(--font-semibold);
-  inset-block-end: 3px;
-  inset-inline-end: 3px;
-  justify-content: center;
-  line-height: 1;
-  min-height: 14px;
-  min-width: 14px;
-  pointer-events: none;
-  position: absolute;
-  z-index: 3;
-}
-
 @container (max-width: 360px) {
   .chrono-notes-calendar[data-font-size-mode="follow-widget"] {
     --chrono-notes-font-small: 10px;
@@ -62,14 +29,3 @@
   }
 }
 
-@media (pointer: coarse) {
-  :is(
-    .chrono-notes-day[aria-selected="true"],
-    .chrono-notes-week-day[aria-pressed="true"],
-    .chrono-notes-period-cell[aria-pressed="true"]
-  )[data-note-state]:not([data-note-state="not-configured"])::after {
-    font-size: 12px;
-    min-height: 18px;
-    min-width: 18px;
-  }
-}
