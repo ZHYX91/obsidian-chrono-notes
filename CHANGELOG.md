@@ -12,6 +12,8 @@ Notable changes to Chrono Notes are documented in this file. The repository's nu
   regression gate.
 - Remove the persistent Enter/return glyph from selected calendar cells while preserving all
   keyboard, pointer, and touch opening gestures.
+- Wrap calendar-extension dates in narrow cells so two-digit lunar months and days remain
+  complete instead of being replaced with an ellipsis.
 
 ### Changed
 

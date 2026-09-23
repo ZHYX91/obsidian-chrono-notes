@@ -27,7 +27,7 @@
       },
       "steps": [
         "In English, open the month calendar and select a date. Verify compact numeric lunar text and no Enter glyph. Open its note with Enter on desktop or long press on touch; confirm note creation if requested.",
-        "Inspect Month and Century at narrow and normal widths in light and dark appearance. Inspect the complete lunar date in a desktop hover/focus preview.",
+        "Inspect Month and Century at narrow and normal widths in light and dark appearance. Include January 2029, whose two-digit lunar month/day values must remain complete in narrow cells (wrapping is allowed). Inspect the complete lunar date in a desktop hover/focus preview.",
         "In Extensions and integrations, enable the 35 seeded ICS sources and refresh. Verify three omitted sources and zero read errors. Temporarily make the first source path invalid and refresh again; verify one real error and the same three omitted sources in both the notice and persistent status. Restore the path and refresh to clear the error.",
         "Switch the interface to Arabic. Inspect the word-count statistic label and the periodic-note enabled label; verify that both are visible. Inspect ICS feedback for complete sentences. Restore English."
       ],
