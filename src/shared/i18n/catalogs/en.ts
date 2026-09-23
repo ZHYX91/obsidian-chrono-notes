@@ -213,7 +213,7 @@ export const EN_MESSAGES = {
   "firstUse.intro": "These useful interactions can be easy to miss:",
   "firstUse.selectionHint": "Clicking a date or period selects it without opening a note.",
   "firstUse.openHint": "Double-click, press Enter, or long-press on touch to open; middle-click or {modifier}-click opens a new tab.",
-  "firstUse.contextMenuHint": "Right-click a date to open or create a daily note, create a range note, open a tab, or copy the date.",
+  "firstUse.contextMenuHint": "Right-click a date to open or create a daily note, view calendar events when present, create a range note, open a tab, or copy the date.",
   "firstUse.markerHint": "Shapes, numbers, and text in date cells show note, task, and calendar state.",
   "firstUse.navbarHint": "The Note Navbar above periodic notes moves to previous, next, or higher-period notes.",
   "firstUse.openSettings": "Open Settings",
