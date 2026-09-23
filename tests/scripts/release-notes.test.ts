@@ -10,7 +10,7 @@ import {
   prepareReleaseArgs,
 } from "../../scripts/release-notes.mjs";
 
-const temporaryDirectories = [];
+const temporaryDirectories: string[] = [];
 
 afterEach(async () => {
   await Promise.all(temporaryDirectories.splice(0).map((directory) =>
@@ -68,6 +68,7 @@ describe("release notes", () => {
     expect(notesIndex).toBeGreaterThan(0);
     const notesFile = args[notesIndex + 1];
     expect(notesFile).toBe(path.join(runnerTemp, "chrono-notes-1.2.0-release-notes.md"));
+    if (notesFile === undefined) throw new Error("Expected generated release notes path");
     expect(await readFile(notesFile, "utf8")).toBe("### Fixed\n- Current fix\n");
   });
 
