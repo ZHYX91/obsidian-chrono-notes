@@ -169,6 +169,7 @@ export const AM_MESSAGES = Object.freeze({
   "dateContextMenu.openOrCreateNote": "ዕለታዊ ማስታወሻ ይክፈቱ ወይም ይፍጠሩ",
   "dateContextMenu.openNewTab": "በአዲስ ትር ክፈት",
   "dateContextMenu.createRange": "የክልል ማስታወሻ ፍጠር",
+  "dateContextMenu.viewCalendarEvents": "የቀን መቁጠሪያ ክስተቶችን ይመልከቱ",
   "dateContextMenu.copyDate": "የቅጂ ቀን",
   "dateContextMenu.copiedDate": "የተቀዳበት ቀን፡ {date}",
   "dateContextMenu.copyFailed": "ቀን መቅዳት አልተሳካም።",
