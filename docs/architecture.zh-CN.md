@@ -13,6 +13,8 @@ translation_status: source
 
 仓库内 release-core 3.0 runtime 与薄适配器统一管理确定性的 Candidate Bundle 和生成的独立工作流。获授权的稳定版本 tag push 或该 tag 上的手动 publish 派发共用流水线；手动 verify 模式保持只读。CI 安装锁定依赖，执行一次 release:check，验证 Bundle 源码，并固定 artifact ID/digest。发布核对精确事件、源码、tag、传输字节和 SLSA 构建证明；先下载验证草稿，再发布 immutable Release，最后下载回验。产品验收可选且单独报告，独立克隆无需外部编排。
 
+GitHub 发布时，薄适配器把 `CHANGELOG.md` 中与版本精确匹配的 `## <version>` 段落物化为 release-notes 文件并传给 release-core；GitHub 自动生成说明不再作为权威来源，因此即使标签指向合并前的 PR commit，也不会静默漏掉该 PR 的用户可见变更。
+
 首次 attestation 前的只读 GitHub 预检与发布后核验都必须验证精确标签目标、四项附件字节与 provenance；同标签 Release 只有在 immutable 稳定状态和全部身份已经完全一致时才是零写入安全 no-op。数字稳定版本标签 ruleset 与 GitHub Release immutability 是管理员控制的外部前置，仓库 workflow 只记录和依赖这些设置，不读取或修改管理配置。
 
 ## 2. 分层
