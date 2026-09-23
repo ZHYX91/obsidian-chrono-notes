@@ -1,0 +1,37 @@
+import { mkdir, readFile, writeFile } from "node:fs/promises";
+import path from "node:path";
+
+const STABLE_VERSION = /^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$/u;
+
+export function extractReleaseNotes(changelog, version) {
+  if (!STABLE_VERSION.test(version)) {
+    throw new Error(`Release notes version is invalid: ${version}`);
+  }
+  const heading = `## ${version}`;
+  const lines = changelog.split(/\r?\n/u);
+  const start = lines.findIndex((line) => line === heading);
+  if (start < 0) {
+    throw new Error(`CHANGELOG.md has no section for ${version}`);
+  }
+  const endOffset = lines.slice(start + 1).findIndex((line) => line.startsWith("## "));
+  const end = endOffset < 0 ? lines.length : start + 1 + endOffset;
+  const body = lines.slice(start + 1, end).join("\n").trim();
+  if (body.length === 0) {
+    throw new Error(`CHANGELOG.md section for ${version} is empty`);
+  }
+  return `${body}\n`;
+}
+
+export async function prepareReleaseArgs(projectRoot, argv, env = process.env) {
+  if (argv[0] !== "publish-github-event" || argv.includes("--notes-file")) {
+    return argv;
+  }
+  const version = env.GITHUB_REF_NAME ?? "";
+  const changelog = await readFile(path.join(projectRoot, "CHANGELOG.md"), "utf8");
+  const notes = extractReleaseNotes(changelog, version);
+  const outputDirectory = env.RUNNER_TEMP ?? path.join(projectRoot, "build");
+  await mkdir(outputDirectory, { recursive: true });
+  const notesFile = path.join(outputDirectory, `chrono-notes-${version}-release-notes.md`);
+  await writeFile(notesFile, notes, "utf8");
+  return [...argv, "--notes-file", notesFile];
+}
