@@ -71,6 +71,7 @@ describe("thin release adapter", () => {
     expect(adapter.split(/\r?\n/u).length).toBeLessThan(20);
     expect([...adapter.matchAll(/from "([^"]+)"/gu)].map((match) => match[1])).toEqual([
       "../release.config.mjs",
+      "./release-notes.mjs",
       "./vendor/obsidian-release-core.mjs",
     ]);
     for (const match of runtime.matchAll(/\bfrom\s+["']([^"']+)["']/gu)) {
@@ -89,6 +90,8 @@ describe("thin release adapter", () => {
         path.join(isolatedRoot, "release.config.mjs"));
       copyFileSync(path.join(projectRoot, "scripts", "release.mjs"),
         path.join(scripts, "release.mjs"));
+      copyFileSync(path.join(projectRoot, "scripts", "release-notes.mjs"),
+        path.join(scripts, "release-notes.mjs"));
       copyFileSync(runtimePath, path.join(vendor, "obsidian-release-core.mjs"));
       copyFileSync(lockPath, path.join(vendor, "obsidian-release-core.lock.json"));
       const result = spawnSync(process.execPath, [path.join(scripts, "release.mjs")], {
