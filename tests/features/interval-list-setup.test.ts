@@ -59,7 +59,7 @@ describe("interval list setup", () => {
     });
   });
 
-  it("requires custom-scope creation to produce visible notes", () => {
+  it("allows explicit range creation outside the unmarked-note scan scope", () => {
     expect(getIntervalListSetup(rangeSettings({
       scanScope: "custom-folder",
       customFolder: "Projects",
@@ -73,8 +73,8 @@ describe("interval list setup", () => {
       customFolder: "Projects",
       folder: "Ranges",
     }), true)).toEqual({
-      canCreateVisibleItem: false,
-      issue: "creation-outside-scope",
+      canCreateVisibleItem: true,
+      issue: null,
     });
     expect(getIntervalListSetup(rangeSettings({
       scanScope: "custom-folder",
