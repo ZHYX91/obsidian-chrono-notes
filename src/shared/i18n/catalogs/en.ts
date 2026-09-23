@@ -171,6 +171,7 @@ export const EN_MESSAGES = {
   "dateContextMenu.openOrCreateNote": "Open or create daily note",
   "dateContextMenu.openNewTab": "Open in new tab",
   "dateContextMenu.createRange": "Create range note",
+  "dateContextMenu.viewCalendarEvents": "View calendar events",
   "dateContextMenu.copyDate": "Copy date",
   "dateContextMenu.copiedDate": "Copied date: {date}",
   "dateContextMenu.copyFailed": "Failed to copy date",
