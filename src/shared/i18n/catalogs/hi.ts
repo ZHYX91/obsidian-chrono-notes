@@ -169,6 +169,7 @@ export const HI_MESSAGES = Object.freeze({
   "dateContextMenu.openOrCreateNote": "दैनिक नोट खोलें या बनाएं",
   "dateContextMenu.openNewTab": "नए टैब में खोलें",
   "dateContextMenu.createRange": "रेंज नोट बनाएं",
+  "dateContextMenu.viewCalendarEvents": "कैलेंडर ईवेंट देखें",
   "dateContextMenu.copyDate": "तारीख कॉपी करें",
   "dateContextMenu.copiedDate": "कॉपी की गई तारीख: {date}",
   "dateContextMenu.copyFailed": "दिनांक कॉपी करने में विफल",
