@@ -170,6 +170,7 @@ export const ZH_TW_MESSAGES = {
   "dateContextMenu.openOrCreateNote": "開啟或建立日記",
   "dateContextMenu.openNewTab": "在新分頁中開啟",
   "dateContextMenu.createRange": "建立區間筆記",
+  "dateContextMenu.viewCalendarEvents": "查看行事曆事件",
   "dateContextMenu.copyDate": "複製日期",
   "dateContextMenu.copiedDate": "已複製日期：{date}",
   "dateContextMenu.copyFailed": "複製日期失敗",
