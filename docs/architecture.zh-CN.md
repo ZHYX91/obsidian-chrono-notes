@@ -134,7 +134,7 @@ Note Navbar 的 feature selector 只接受文件路径、`intervals` 子快照�
 
 日期选择由 pure feature 模型验证 `LocalDate`、月份移动和四种受支持的文本格式，并复用 core 的 4–6 周边界月网格。React 迷你日历只维护显示月份、焦点和提交锁；标题行把前月、固定宽度年月入口、后月和今天组成居中操作组，日期 grid 声明六个固定高度数据行轨道，但只渲染模型实际提供的边界周，因此弹窗高度稳定且不会制造完全无关的周。Obsidian Modal 将选中日期回调给主日历导航请求或周期笔记命令；主视图的全局日期跳转切换到目标月，Navbar 以同一 Modal 打开当前类型笔记。主周视图不经过该 Modal，而由纯周模型驱动互斥的周历年/周 Popover；选择只更新当前日期、月上下文和日粒度选择，不修改视图类型。命令面板的迷你日历和直接跳转使用同一链路，不解析路径或读取 Vault。
 
-日期右键菜单先由 feature 层根据配置与 NoteIndex 存在状态生成冻结 action 模型，再由 Obsidian adapter 映射为 `Menu`、剪贴板和 `Notice`。adapter 显式使用 Obsidian 的 HTML 菜单模式（`setUseNativeMenu(false)`），保证当前桌面版中菜单、分组和图标可见。React 只传递日期与快照状态；打开/创建仍调用周期笔记命令，菜单不得直接读写 Vault。
+日期右键菜单先由 feature 层根据配置、NoteIndex 存在状态以及所选日期是否含有 ICS occurrence 生成冻结 action 模型，再由 Obsidian adapter 映射为 `Menu`、剪贴板、`Notice` 和只读 ICS 事件列表弹窗。adapter 显式使用 Obsidian 的 HTML 菜单模式（`setUseNativeMenu(false)`），保证当前桌面版中菜单、分组和图标可见。React 只传递日期与快照状态；打开/创建仍调用周期笔记命令，事件详情只消费已经索引好的完整日期 bucket，菜单不得直接读写 Vault。
 
 **设置**
 
