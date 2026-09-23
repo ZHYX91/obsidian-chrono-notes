@@ -178,7 +178,7 @@ describe("getChineseLunarDay", () => {
         lunarMonthName: "Lunar month 5",
         lunarDayName: "day 23",
         solarTerm: "Minor Heat",
-        dateText: "Lunar 5/23",
+        dateText: "5/23",
         events: [{ id: "solar-term:小暑", text: "Minor Heat" }],
         accessibilityText: "Lunar month 5, day 23",
       });
