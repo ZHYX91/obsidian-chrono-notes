@@ -14,6 +14,7 @@ Notable changes to Chrono Notes are documented in this file. The repository's nu
   keyboard, pointer, and touch opening gestures.
 - Wrap calendar-extension dates in narrow cells so two-digit lunar months and days remain
   complete instead of being replaced with an ellipsis.
+- Stretch decade headers across the two year columns in narrow Century calendars.
 
 ### Changed
 

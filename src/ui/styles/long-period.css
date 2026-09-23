@@ -75,7 +75,8 @@
   }
 
   .chrono-notes-long-period-decade {
-    justify-self: start;
+    /* In the stacked layout, the decade heads the entire year grid. */
+    justify-self: stretch;
   }
 }
 
