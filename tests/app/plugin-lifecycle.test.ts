@@ -363,6 +363,10 @@ vi.mock("../../src/ui/modals/interval-note-list-modal", () => ({
   IntervalNoteListModal: mocks.MockIntervalNoteListModal,
 }));
 
+vi.mock("../../src/ui/modals/ics-event-list-modal", () => ({
+  IcsEventListModal: mocks.MockModal,
+}));
+
 vi.mock("../../src/ui/modals/first-use-guide-modal", () => ({
   FirstUseGuideModal: mocks.MockFirstUseGuideModal,
 }));
