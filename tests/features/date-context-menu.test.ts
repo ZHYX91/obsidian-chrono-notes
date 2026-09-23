@@ -7,6 +7,7 @@ describe("buildDateContextMenuActions", () => {
     const actions = buildDateContextMenuActions({
       configured: true,
       noteExists: false,
+      hasIcsEvents: false,
       rangeConfigured: true,
     });
 
@@ -24,6 +25,7 @@ describe("buildDateContextMenuActions", () => {
     expect(buildDateContextMenuActions({
       configured: true,
       noteExists: true,
+      hasIcsEvents: false,
       rangeConfigured: false,
     })[0]).toEqual({
       id: "open-default",
@@ -36,6 +38,7 @@ describe("buildDateContextMenuActions", () => {
     expect(buildDateContextMenuActions({
       configured: true,
       noteExists: null,
+      hasIcsEvents: false,
       rangeConfigured: false,
     })[0]).toEqual({
       id: "open-default",
@@ -48,8 +51,21 @@ describe("buildDateContextMenuActions", () => {
     expect(buildDateContextMenuActions({
       configured: false,
       noteExists: false,
+      hasIcsEvents: false,
       rangeConfigured: false,
     })).toEqual([
+      { id: "copy-date", group: "clipboard", icon: "copy" },
+    ]);
+  });
+
+  it("offers a calendar-event action independently from note configuration", () => {
+    expect(buildDateContextMenuActions({
+      configured: false,
+      noteExists: false,
+      hasIcsEvents: true,
+      rangeConfigured: false,
+    })).toEqual([
+      { id: "view-events", group: "calendar", icon: "calendar-clock" },
       { id: "copy-date", group: "clipboard", icon: "copy" },
     ]);
   });
@@ -58,6 +74,7 @@ describe("buildDateContextMenuActions", () => {
     expect(buildDateContextMenuActions({
       configured: false,
       noteExists: false,
+      hasIcsEvents: false,
       rangeConfigured: true,
     })).toEqual([
       { id: "create-range", group: "range", icon: "calendar-range" },
