@@ -150,16 +150,9 @@ export class IcsEventIndex {
     if (dateIndex === null || revision.signal.aborted) return;
     const eventsByDate = reuseEventDateIndex(this.snapshot.eventsByDate, dateIndex[0]);
     const sourceStatuses = Object.freeze(results.map((result) => result.status));
-    const errors = sourceStatuses
+    const errors = Object.freeze(sourceStatuses
       .filter((status) => status.error !== null)
-      .map((status) => `${status.sourceLabel}: ${status.error}`);
-    if (omittedSources > 0) {
-      errors.push(`ICS source limit reached; ${omittedSources} configured source${omittedSources === 1 ? "" : "s"} omitted.`);
-    }
-    if (dateIndex[2]) {
-      errors.push("ICS occurrence limit reached; events omitted.");
-    }
-    Object.freeze(errors);
+      .map((status) => `${status.sourceLabel}: ${status.error}`));
     this.publish(Object.freeze({
       version: this.snapshot.version + 1,
       contentVersion: this.snapshot.contentVersion + (
