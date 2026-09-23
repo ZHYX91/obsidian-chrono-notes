@@ -42,7 +42,7 @@ Back up and preserve `Vault/.obsidian/plugins/chrono-notes/data.json` when it ex
 1. Enable the periodic-note types you use and confirm their path patterns in Chrono Notes settings.
 2. Open the calendar from the ribbon or command palette.
 3. Optionally enable calendar and holiday extensions or add local ICS sources.
-4. Click a date to select it; double-click or press Enter to open or create its periodic note. On touch, long-press.
+4. Click a date to select it; double-click or press Enter to open or create its periodic note. Right-click opens date actions; when ICS events exist, **View calendar events** shows the complete event list. On touch, long-press opens the host date menu when available and otherwise falls back to opening the daily note.
 
 ### Decadal and century notes
 
