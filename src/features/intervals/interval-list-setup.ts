@@ -26,39 +26,16 @@ export function getIntervalListSetup(
   scanFolderExists: boolean,
 ): IntervalListSetup {
   const creationFolder = normalizeIntervalNoteFolder(settings.folder);
-  const creationConfigured = creationFolder.length > 0;
-
-  if (settings.scanScope === "entire-vault") {
-    return freezeSetup(
-      creationConfigured,
-      creationConfigured ? null : "creation-not-configured",
-    );
-  }
-
-  if (settings.scanScope === "range-folder") {
-    if (!creationConfigured) {
-      return freezeSetup(false, "creation-not-configured");
-    }
-    return freezeSetup(
-      true,
-      scanFolderExists ? null : "scan-folder-missing",
-    );
-  }
-
-  const scanFolder = normalizeIntervalNoteFolder(settings.customFolder);
-  if (scanFolder.length === 0) {
-    return freezeSetup(false, "scan-not-configured");
-  }
-  if (!creationConfigured) {
+  if (creationFolder.length === 0) {
     return freezeSetup(false, "creation-not-configured");
   }
-  if (!isSameFolderOrNested(creationFolder, scanFolder)) {
-    return freezeSetup(false, "creation-outside-scope");
-  }
-  if (!scanFolderExists) {
-    return freezeSetup(true, "scan-folder-missing");
-  }
-  return freezeSetup(true, null);
+
+  // Newly created notes are explicitly marked and visible outside the unmarked
+  // scan scope. Scan diagnostics must not disable this independent action.
+  const scanFolder = getIntervalNoteScanFolder(settings);
+  if (scanFolder === null) return freezeSetup(true, null);
+  if (scanFolder.length === 0) return freezeSetup(true, "scan-not-configured");
+  return freezeSetup(true, scanFolderExists ? null : "scan-folder-missing");
 }
 
 function freezeSetup(
@@ -66,8 +43,4 @@ function freezeSetup(
   issue: IntervalListSetupIssue | null,
 ): IntervalListSetup {
   return Object.freeze({ canCreateVisibleItem, issue });
-}
-
-function isSameFolderOrNested(folder: string, scopeFolder: string): boolean {
-  return folder === scopeFolder || folder.startsWith(`${scopeFolder}/`);
 }
