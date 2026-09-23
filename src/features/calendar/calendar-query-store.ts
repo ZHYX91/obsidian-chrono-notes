@@ -540,10 +540,18 @@ function getPeriodicEntry(
   date: LocalDate,
   noteType: PeriodicNoteType,
   context: Readonly<{ locale: string; weekStartDay: "monday" | "sunday" }>,
-  rule: Readonly<{ enabled: boolean; pattern: string }>,
+  rule: Readonly<{
+    enabled: boolean;
+    pattern: string;
+    pathLocale?: string | undefined;
+  }>,
 ): NoteEntryReference {
   if (!rule.enabled || rule.pattern.trim().length === 0) return undefined;
-  const path = formatPeriodicNotePath(date, { noteType, pattern: rule.pattern }, context);
+  const path = formatPeriodicNotePath(
+    date,
+    { noteType, pattern: rule.pattern, pathLocale: rule.pathLocale },
+    context,
+  );
   return path === null ? undefined : snapshot.notes[path];
 }
 
@@ -563,14 +571,17 @@ function getVisibleIntervalItems(
 ): readonly IntervalNoteRef[] {
   if (!settings.showInCalendar) return EMPTY_INTERVAL_ITEMS;
   const folder = getIntervalNoteScanFolder(settings);
-  if (folder === "") return EMPTY_INTERVAL_ITEMS;
   const startKey = formatLocalDateKey(visibleStart);
   const endKey = formatLocalDateKey(visibleEnd);
   const items: IntervalNoteRef[] = [];
   for (const item of snapshot.intervals.items) {
     if (item.start.dateKey > endKey) continue;
     if (item.end.dateKey < startKey) continue;
-    if (folder !== null && !isPathInFolder(item.path, folder)) continue;
+    if (
+      folder !== null &&
+      item.recognition !== "explicit" &&
+      (folder === "" || !isPathInFolder(item.path, folder))
+    ) continue;
     items.push(item);
   }
   return items.length === 0 ? EMPTY_INTERVAL_ITEMS : Object.freeze(items);
@@ -626,9 +637,19 @@ function calendarDayOptionsKey(
 
 function periodicOptionsKey(
   context: Readonly<{ locale: string; weekStartDay: "monday" | "sunday" }>,
-  rule: Readonly<{ enabled: boolean; pattern: string }>,
+  rule: Readonly<{
+    enabled: boolean;
+    pattern: string;
+    pathLocale?: string | undefined;
+  }>,
 ): string {
-  return keyOf(context.locale, context.weekStartDay, rule.enabled, rule.pattern);
+  return keyOf(
+    context.locale,
+    context.weekStartDay,
+    rule.enabled,
+    rule.pattern,
+    rule.pathLocale?.trim() || "en",
+  );
 }
 
 function intervalOptionsKey(
