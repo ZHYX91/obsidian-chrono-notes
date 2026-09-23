@@ -84,7 +84,7 @@ Settings cover periodic-note paths and templates, calendar and holiday extension
 
 ## Limitations
 
-- ICS sources are local read-only files; remote calendar subscriptions are not fetched directly.
+- ICS sources are local read-only files; remote calendar subscriptions are not fetched directly. One refresh reads at most 32 configured sources by default and reports any excess sources as omitted. Recurring `RRULE`/`RDATE` events are currently skipped and counted instead of being expanded.
 - Holiday availability depends on verified official data. Unpublished future schedules are shown as unavailable rather than predicted.
 - Non-Gregorian calendar extensions are backed by the runtime's Unicode calendar data. Gregorian dates remain the note-path, navigation, and indexing anchor; unavailable runtime calendars are omitted safely.
 - Some mobile interaction and layout details depend on the Obsidian app and device input stack.

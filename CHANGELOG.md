@@ -2,6 +2,20 @@
 
 Notable changes to Chrono Notes are documented in this file. The repository's numeric Git tags are the evidence for released versions; an entry without a corresponding local tag remains unreleased even if the manifests already contain that version.
 
+## 0.7.2
+
+### Fixed
+
+- Revalidate task targets immediately before closed-file writes to avoid overwriting a note
+  that was replaced, renamed, or opened in an editor while the write was pending.
+- Keep successfully committed task updates successful when the note opens or moves afterwards.
+- Explain the 32-source ICS limit, omitted source count, and recovery actions in refresh
+  notifications and settings, including when the occurrence limit is also reached.
+
+### Changed
+
+- Document the existing local ICS source limit and unsupported recurring-event expansion.
+
 ## 0.7.1
 
 ### Fixed

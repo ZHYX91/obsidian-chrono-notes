@@ -52,6 +52,96 @@ describe("minimal task editor transactions", () => {
     expect(value.requestSave).not.toHaveBeenCalled();
   });
 
+  it("rejects a closed-file update when the note opens before the process callback", async () => {
+    let content = "- [ ] Work";
+    const file = { path: "Tasks.md", extension: "md" };
+    const editor = {
+      getValue: vi.fn(() => "- [ ] Unsaved edit"),
+      offsetToPos: vi.fn(),
+      transaction: vi.fn(),
+    };
+    const requestSave = vi.fn();
+    let leaves: Array<{ view: { file: typeof file; editor: typeof editor; requestSave: typeof requestSave } }> = [];
+    const workspace = { getLeavesOfType: vi.fn(() => leaves) };
+    const vault = {
+      getAbstractFileByPath: vi.fn(() => file),
+      process: vi.fn(async (_file: typeof file, transform: (current: string) => string) => {
+        leaves = [{ view: { file, editor, requestSave } }];
+        const next = transform(content);
+        content = next;
+        return next;
+      }),
+    };
+    const port = new ObsidianTaskFilePort(vault as never, workspace as never);
+
+    await expect(port.process("Tasks.md", (source) => source.replace("[ ]", "[x]")))
+      .rejects.toThrow("editor opened before task update");
+    expect(content).toBe("- [ ] Work");
+    expect(editor.transaction).not.toHaveBeenCalled();
+    expect(requestSave).not.toHaveBeenCalled();
+  });
+
+  it.each(["open", "rename"])("accepts a committed write when the note changes afterwards: %s", async (change) => {
+    let content = "- [ ] Work";
+    const file = { path: "Tasks.md", extension: "md" };
+    const editor = { getValue: vi.fn(() => content), transaction: vi.fn() };
+    const requestSave = vi.fn();
+    const leaves: Array<{ view: { file: typeof file; editor: typeof editor; requestSave: typeof requestSave } }> = [];
+    const vault = {
+      getAbstractFileByPath: (path: string) => path === file.path ? file : null,
+      process: async (_file: typeof file, transform: (current: string) => string) => {
+        content = transform(content);
+        if (change === "open") leaves.push({ view: { file, editor, requestSave } });
+        else file.path = "Renamed.md";
+        return content;
+      },
+    };
+    const port = new ObsidianTaskFilePort(vault as never, {
+      getLeavesOfType: () => leaves,
+    } as never);
+
+    await expect(port.process("Tasks.md", (source) => source.replace("[ ]", "[x]")))
+      .resolves.toBeUndefined();
+    expect(content).toBe("- [x] Work");
+    expect(editor.transaction).not.toHaveBeenCalled();
+    expect(requestSave).not.toHaveBeenCalled();
+  });
+
+  it.each(["rename", "replace"])("rejects a changed file identity before publishing: %s", async (change) => {
+    let content = "- [ ] Work";
+    const file = { path: "Tasks.md", extension: "md" };
+    let currentFile = file;
+    const rewrite = vi.fn((source: string) => source.replace("[ ]", "[x]"));
+    const vault = {
+      getAbstractFileByPath: () => currentFile,
+      process: async (_file: typeof file, transform: (current: string) => string) => {
+        if (change === "rename") file.path = "Renamed.md";
+        else currentFile = { ...file };
+        content = transform(content);
+        return content;
+      },
+    };
+    const port = new ObsidianTaskFilePort(vault as never, { getLeavesOfType: () => [] } as never);
+
+    await expect(port.process("Tasks.md", rewrite)).rejects.toThrow("note changed during task update");
+    expect(rewrite).not.toHaveBeenCalled();
+    expect(content).toBe("- [ ] Work");
+  });
+
+  it("rejects an unverified published value", async () => {
+    const file = { path: "Tasks.md", extension: "md" };
+    const vault = {
+      getAbstractFileByPath: () => file,
+      process: async (_file: typeof file, transform: (current: string) => string) => {
+        transform("- [ ] Work");
+        return "- [ ] Work";
+      },
+    };
+    const port = new ObsidianTaskFilePort(vault as never, { getLeavesOfType: () => [] } as never);
+    await expect(port.process("Tasks.md", (source) => source.replace("[ ]", "[x]")))
+      .rejects.toThrow("could not be verified");
+  });
+
   it("does not overwrite a buffer changed during the rewrite callback", async () => {
     const value = fixture("- [ ] Work");
     await expect(value.port.process("Tasks.md", (content) => {

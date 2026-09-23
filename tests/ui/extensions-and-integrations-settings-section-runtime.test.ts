@@ -162,6 +162,12 @@ describe("extensions and integrations settings runtime", () => {
     expect(context.display).not.toHaveBeenCalled();
     expect(container.createDiv).toHaveBeenCalledOnce();
 
+    snapshot = { ...snapshot, totalSources: 4, sourceLimit: 1 };
+    listener();
+    expect(mocks.descriptions.mock.lastCall?.[0]).toContain("3 sources were omitted");
+    expect(mocks.descriptions.mock.lastCall?.[0]).toContain("100000");
+    expect(context.display).not.toHaveBeenCalled();
+
     cleanup();
     expect(unsubscribe).toHaveBeenCalledOnce();
     mocks.descriptions.mockClear();

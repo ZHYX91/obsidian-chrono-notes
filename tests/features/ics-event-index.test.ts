@@ -42,7 +42,7 @@ describe("IcsEventIndex", () => {
     });
 
     await vi.waitFor(() => expect(reader.read).toHaveBeenCalledTimes(2));
-    expect(index.getSnapshot().totalSources).toBe(5);
+    expect(index.getSnapshot().totalSources).toBe(8);
     for (let index = 0; index < pending.length; index += 1) {
       pending[index]?.resolve(calendar(String(index), `2026050${index + 1}`));
       if (index < pending.length - 2) {
@@ -52,7 +52,14 @@ describe("IcsEventIndex", () => {
     await refresh;
 
     expect(reader.read).toHaveBeenCalledTimes(5);
-    expect(index.getSnapshot()).toMatchObject({ totalSources: 5, eventCount: 5 });
+    expect(index.getSnapshot()).toMatchObject({
+      totalSources: 8,
+      loadedSources: 5,
+      eventCount: 5,
+    });
+    expect(index.getSnapshot().errors).toContain(
+      "ICS source limit reached; 3 configured sources omitted.",
+    );
   });
 
   it("deduplicates sources and preserves successful events beside source errors", async () => {
