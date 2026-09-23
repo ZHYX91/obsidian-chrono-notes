@@ -55,19 +55,22 @@ describe("showObsidianDateContextMenu", () => {
       date: { year: 2026, month: 7, day: 19 },
       configured: true,
       noteExists: false,
+      hasIcsEvents: true,
       rangeConfigured: true,
       translator: createTranslator("en", "en"),
       onOpenDaily: vi.fn(),
+      onShowIcsEvents: vi.fn(),
       onCreateRange: vi.fn(),
     });
 
     expect(obsidianMocks.forEvent).toHaveBeenCalledWith(event);
     expect(obsidianMocks.menu.setUseNativeMenu).toHaveBeenCalledWith(false);
-    expect(obsidianMocks.menu.addItem).toHaveBeenCalledTimes(4);
-    expect(obsidianMocks.menu.addSeparator).toHaveBeenCalledTimes(2);
+    expect(obsidianMocks.menu.addItem).toHaveBeenCalledTimes(5);
+    expect(obsidianMocks.menu.addSeparator).toHaveBeenCalledTimes(3);
     expect(obsidianMocks.item.setIcon.mock.calls.map(([icon]) => icon)).toEqual([
       "square-pen",
       "files",
+      "calendar-clock",
       "calendar-range",
       "copy",
     ]);
