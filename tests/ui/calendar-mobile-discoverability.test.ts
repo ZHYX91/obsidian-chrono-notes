@@ -25,9 +25,9 @@ describe("mobile calendar discoverability", () => {
     expect(styles).toMatch(/\.chrono-notes-regional-marker,[\s\S]*?font-size:\s*max\(8px,/s);
   });
 
-  it("shows an Enter cue only on selected configured note targets", () => {
-    expect(styles).toContain('[data-note-state]:not([data-note-state="not-configured"])::after');
-    expect(styles).toContain('content: "↵"');
+  it("keeps selected cells free of persistent opening glyphs", () => {
+    expect(styles).not.toContain('content: "↵"');
+    expect(styles).not.toContain('[data-note-state]:not([data-note-state="not-configured"])::after');
   });
 
   it("keeps the century selection and focus ring clear of its scrollbar", () => {
