@@ -31,7 +31,7 @@ export class IcsEventListModal extends Modal {
       item.createEl("strong", {
         text: formatCalendarIcsEventLabel(event, t),
       });
-      item.createEl("div", {
+      item.createDiv({
         text: t("calendar.ics.source", { source: event.sourceLabel }),
       });
     }
