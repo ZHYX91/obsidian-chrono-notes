@@ -72,7 +72,7 @@
         "Enable larger-period cascading, create a new daily note through its confirmation, and observe the one partial-success notice for the missing monthly template. Confirm the daily and yearly notes remain available.",
         "Enable ICS with Calendars/Budget.ics and refresh. Inspect both the refresh notice and persistent settings summary for the 100,000-occurrence limit, omitted events and recovery advice; disable ICS afterwards.",
         "Open the calendar Century view. Select a rightmost-column year and inspect its complete outline and scrollbar clearance in light and dark appearance, a narrow pane and enlarged interface text.",
-        "On desktop, navigate with Tab, arrows, Home/End and Enter. On touch, select and long-press a year. Verify that the selected cue does not cover the year or status information and that Today remains identifiable."
+        "On desktop, navigate with Tab, arrows, Home/End and Enter. On touch, select and long-press a year. Verify that selection and focus frames do not cover the year or status information, no Enter/return glyph is drawn inside the selected cell, and Today remains identifiable."
       ],
       "expected": [
         "Changing interface language does not redirect configured paths; editing one period language does not change another period.",
