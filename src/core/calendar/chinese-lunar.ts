@@ -84,7 +84,7 @@ function buildChineseLunarDay(context: LunarDateContext): ChineseLunarDay {
 
   const dateText = chinese
     ? lunarDay === 1 ? lunarMonthName : lunarDayName
-    : `Lunar ${isLeapMonth ? "L" : ""}${lunarMonth}/${lunarDay}`;
+    : `${isLeapMonth ? "L" : ""}${lunarMonth}/${lunarDay}`;
   const events = Object.freeze([
     ...festivalEntries.map(({ canonicalName, text }) => createCalendarExtensionEvent(
       `festival:${canonicalName}`,
