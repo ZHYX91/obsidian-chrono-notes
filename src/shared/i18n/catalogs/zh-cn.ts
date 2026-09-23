@@ -169,6 +169,7 @@ export const ZH_CN_MESSAGES = {
   "dateContextMenu.openOrCreateNote": "打开或创建日记",
   "dateContextMenu.openNewTab": "在新标签页中打开",
   "dateContextMenu.createRange": "创建区间笔记",
+  "dateContextMenu.viewCalendarEvents": "查看日历事件",
   "dateContextMenu.copyDate": "复制日期",
   "dateContextMenu.copiedDate": "已复制日期：{date}",
   "dateContextMenu.copyFailed": "复制日期失败",
