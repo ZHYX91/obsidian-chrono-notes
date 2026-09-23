@@ -105,6 +105,24 @@ describe("plugin presentation", () => {
       eventCount: 1,
       errors: ["bad.ics: unreadable"],
       sourceLimit: 2,
+      sourceStatuses: [
+        {
+          source: "ready.ics",
+          sourceLabel: "ready.ics",
+          eventCount: 1,
+          skippedRecurring: 0,
+          skippedInvalid: 0,
+          error: null,
+        },
+        {
+          source: "bad.ics",
+          sourceLabel: "bad.ics",
+          eventCount: 0,
+          skippedRecurring: 0,
+          skippedInvalid: 0,
+          error: "unreadable",
+        },
+      ],
     }), t);
     expect(combined).toContain("ICS partially refreshed: 1/4 sources, 1 event, 1 error.");
     expect(combined).toContain("first 2 sources");
