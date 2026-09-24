@@ -2,6 +2,28 @@
 
 Notable changes to Chrono Notes are documented in this file. The repository's numeric Git tags are the evidence for released versions; an entry without a corresponding local tag remains unreleased even if the manifests already contain that version.
 
+## 0.7.4
+
+### Added
+
+- Open a complete, read-only list of a day's ICS events and sources from the date context menu,
+  including when hover previews are disabled or the calendar cell shows `+N`.
+
+### Fixed
+
+- Keep calendar query cache invalidation aligned with localized periodic-note paths and explicitly
+  marked range notes outside the unmarked-note scan folder.
+- Allow explicit range-note creation when its folder is configured even if the unmarked-note scan
+  folder is empty or elsewhere.
+- Keep ICS read concurrency bounded across refreshes while promptly cancelling queued reads.
+- Sort cross-day ICS continuations by the displayed local day, interpret embedded time zones and
+  daylight-saving durations, and report unsupported source time zones separately from invalid events.
+- Translate the fallback title for ICS events without a SUMMARY at presentation time.
+
+### Changed
+
+- Split host acceptance into focused scenarios and add a desktop and Android event-detail case.
+
 ## 0.7.3
 
 ### Fixed
