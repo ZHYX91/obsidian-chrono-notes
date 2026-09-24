@@ -1,0 +1,9 @@
+{
+  "id": "chrono-notes-acceptance-provider",
+  "name": "Chrono Notes acceptance provider",
+  "version": "1.0.0",
+  "minAppVersion": "1.8.0",
+  "description": "Explicit calendar positioning for disposable acceptance fixtures.",
+  "author": "ZhengYX",
+  "isDesktopOnly": false
+}
