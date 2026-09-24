@@ -8,6 +8,10 @@ translation_status: synced
 
 ## Testing layers
 
+Host scenarios are divided by behavior: calendar layout, opening gestures, ICS errors, Arabic labels, periodic navigation, range identity, path language, partial creation, ICS budgets, year interactions, task writes, and localized source limits. Select the scenarios affected by the change and record untested coverage separately.
+
+The disposable fixtures include an inert `chrono-notes-acceptance-provider`. Its explicit commands position January 2029 or restore the 35 local ICS sources before a scenario. They never produce a test verdict; enabling, editing, refreshing, changing views, and inspecting results remain real product interactions. The provider is excluded from production assets.
+
 Testing is layered: pure core unit tests, port contracts, feature integrations, focused UI behavior, and manual Obsidian acceptance. Prefer durable invariants over broad snapshot coverage.
 
 ## Critical invariants
