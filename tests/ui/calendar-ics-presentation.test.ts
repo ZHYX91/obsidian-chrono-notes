@@ -69,4 +69,16 @@ describe("calendar ICS presentation", () => {
     expect(formatCalendarIcsEventLabel(event, t)).toBe("全天 假期");
     expect(formatCalendarIcsDayLabel([event], t)).toBe("日曆事件：假期，全天，來源 Team calendar");
   });
+
+  it("localizes an empty source summary only when presenting the event", () => {
+    const event = occurrence("");
+    const english = createTranslator("en", "en").t;
+    const chinese = createTranslator("zh-CN", "en").t;
+
+    expect(event.title).toBe("");
+    expect(formatCalendarIcsEventLabel(event, english)).toBe("All day Untitled event");
+    expect(formatCalendarIcsEventLabel(event, chinese)).toBe("全天 未命名事件");
+    expect(formatCalendarIcsDayLabel([event], chinese))
+      .toContain("未命名事件，全天");
+  });
 });

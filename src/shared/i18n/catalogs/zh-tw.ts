@@ -106,6 +106,8 @@ export const ZH_TW_MESSAGES = {
   "calendar.ics.eventSeparator": "；",
   "calendar.ics.source": "來源 {source}",
   "calendar.ics.timed": "定時事件",
+  "calendar.ics.untitled": "未命名事件",
+  "ics.skippedUnsupportedTimezone": "因時區不受支援而略過的事件：{count} 個。",
   "calendar.ics.continuingFromPreviousDay": "延續自前一天",
   "calendar.ics.continuingIntoNextDay": "延續至後一天",
   "calendar.ics.continuingFromPreviousAndIntoNext": "延續自前一天並持續至後一天",

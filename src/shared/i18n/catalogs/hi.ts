@@ -105,6 +105,8 @@ export const HI_MESSAGES = Object.freeze({
   "calendar.ics.eventSeparator": "; ",
   "calendar.ics.source": "स्रोत {source}",
   "calendar.ics.timed": "समयबद्ध",
+  "calendar.ics.untitled": "बिना शीर्षक का कार्यक्रम",
+  "ics.skippedUnsupportedTimezone": "असमर्थित समय क्षेत्र के कारण छोड़े गए कार्यक्रम: {count}।",
   "calendar.ics.continuingFromPreviousDay": "पिछले दिन से जारी है",
   "calendar.ics.continuingIntoNextDay": "अगले दिन तक जारी रहेगा",
   "calendar.ics.continuingFromPreviousAndIntoNext": "पिछले दिन से और अगले दिन तक जारी",

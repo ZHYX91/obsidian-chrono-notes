@@ -105,6 +105,8 @@ export const HE_MESSAGES = Object.freeze({
   "calendar.ics.eventSeparator": "; ",
   "calendar.ics.source": "מקור {source}",
   "calendar.ics.timed": "מתוזמן",
+  "calendar.ics.untitled": "אירוע ללא כותרת",
+  "ics.skippedUnsupportedTimezone": "אירועים שדולגו בגלל אזור זמן שאינו נתמך: {count}.",
   "calendar.ics.continuingFromPreviousDay": "ממשיך מהיום הקודם",
   "calendar.ics.continuingIntoNextDay": "ממשיך ליום הבא",
   "calendar.ics.continuingFromPreviousAndIntoNext": "ממשיך מהיום הקודם וליום הבא",

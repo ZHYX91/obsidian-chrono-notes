@@ -19,11 +19,17 @@ export interface IcsParseOptions {
   readonly displayZone: string;
 }
 
+type IcalTime = InstanceType<typeof ICAL.Time>;
+type IcalTimezone = InstanceType<typeof ICAL.Timezone>;
+type EmbeddedTimezoneMap = ReadonlyMap<string, IcalTimezone | null>;
+
 interface IcsDateValue {
   readonly date: LocalDate;
   readonly timeMinutes: number | null;
   readonly timestamp: number;
   readonly zone: string;
+  /** Present only while source-zone arithmetic still needs the embedded VTIMEZONE. */
+  readonly sourceTime?: IcalTime;
 }
 
 export interface IcsCalendarEvent {
@@ -40,7 +46,10 @@ export interface IcsParseResult {
   readonly events: readonly IcsCalendarEvent[];
   readonly skippedRecurring: number;
   readonly skippedInvalid: number;
+  readonly skippedUnsupportedTimezone: number;
 }
+
+class UnsupportedIcsTimezoneError extends Error {}
 
 export interface IcsEventOccurrence {
   readonly id: string;
@@ -84,12 +93,14 @@ export function parseIcsCalendar(
     throw new Error("ICS source must contain exactly one calendar component");
   }
   const root = new ICAL.Component(parsed);
+  const embeddedTimezones = collectEmbeddedTimezones(root);
   const components = root.name === "vevent"
     ? [root]
     : root.getAllSubcomponents("vevent");
   const events: IcsCalendarEvent[] = [];
   let skippedRecurring = 0;
   let skippedInvalid = 0;
+  let skippedUnsupportedTimezone = 0;
 
   for (const [index, component] of components.entries()) {
     try {
@@ -100,12 +111,19 @@ export function parseIcsCalendar(
         skippedRecurring += 1;
         continue;
       }
-      const event = parseEvent(component, source, index, options.displayZone);
+      const event = parseEvent(
+        component,
+        source,
+        index,
+        options.displayZone,
+        embeddedTimezones,
+      );
       if (event === null) skippedInvalid += 1;
       else events.push(event);
-    } catch {
-      // A malformed typed property must invalidate only its own VEVENT.
-      skippedInvalid += 1;
+    } catch (error) {
+      // An unsupported source timezone is distinct from malformed event data.
+      if (error instanceof UnsupportedIcsTimezoneError) skippedUnsupportedTimezone += 1;
+      else skippedInvalid += 1;
     }
   }
 
@@ -113,6 +131,7 @@ export function parseIcsCalendar(
     events: Object.freeze(events),
     skippedRecurring,
     skippedInvalid,
+    skippedUnsupportedTimezone,
   });
 }
 
@@ -155,7 +174,7 @@ export function buildIcsDateIndex(events: readonly IcsCalendarEvent[]): IcsDateI
           : null,
         sortTimestamp: startsOnDate
           ? event.start.timestamp
-          : toDateTime(occurrenceDate).toMillis(),
+          : startOfDisplayDay(occurrenceDate, event.start.zone),
       });
       (mutable[dateKey] ??= []).push(occurrence);
     }
@@ -171,16 +190,47 @@ export function buildIcsDateIndex(events: readonly IcsCalendarEvent[]): IcsDateI
   });
 }
 
+function collectEmbeddedTimezones(
+  root: InstanceType<typeof ICAL.Component>,
+): EmbeddedTimezoneMap {
+  const timezones = new Map<string, IcalTimezone | null>();
+  if (root.name === "vevent") return timezones;
+
+  for (const component of root.getAllSubcomponents("vtimezone")) {
+    const tzid = normalizeTzid(String(component.getFirstPropertyValue("tzid") ?? ""));
+    if (tzid === null) continue;
+    if (timezones.has(tzid)) {
+      // Duplicate definitions are ambiguous; isolate events that depend on them.
+      timezones.set(tzid, null);
+      continue;
+    }
+    try {
+      timezones.set(tzid, new ICAL.Timezone({ component, tzid }));
+    } catch {
+      timezones.set(tzid, null);
+    }
+  }
+  return timezones;
+}
+
+function startOfDisplayDay(date: LocalDate, zone: string): number {
+  return DateTime.fromObject(
+    { year: date.year, month: date.month, day: date.day },
+    { zone },
+  ).startOf("day").toMillis();
+}
+
 function parseEvent(
   component: InstanceType<typeof ICAL.Component>,
   source: string,
   index: number,
   displayZone: string,
+  embeddedTimezones: EmbeddedTimezoneMap,
 ): IcsCalendarEvent | null {
   const startProperty = component.getFirstProperty("dtstart");
   if (startProperty === null) return null;
   // Keep the source zone until nominal days/weeks have been added.
-  const start = parseDateProperty(startProperty, displayZone);
+  const start = parseDateProperty(startProperty, displayZone, embeddedTimezones);
   if (start === null) return null;
 
   const endProperty = component.getFirstProperty("dtend");
@@ -189,7 +239,7 @@ function parseEvent(
 
   let endExclusive: IcsDateValue | null;
   if (endProperty !== null) {
-    endExclusive = parseDateProperty(endProperty, displayZone);
+    endExclusive = parseDateProperty(endProperty, displayZone, embeddedTimezones);
     if (
       endExclusive === null ||
       (start.timeMinutes === null) !== (endExclusive.timeMinutes === null)
@@ -211,7 +261,7 @@ function parseEvent(
   const displayedEnd = inDisplayZone(endExclusive, displayZone);
   if (displayedStart === null || displayedEnd === null) return null;
   const titleValue = component.getFirstPropertyValue("summary");
-  const title = String(titleValue ?? "").trim() || "Untitled event";
+  const title = String(titleValue ?? "").trim();
   const uid = String(component.getFirstPropertyValue("uid") ?? "").trim();
   return Object.freeze({
     id: uid || `${source}#${index}`,
@@ -239,6 +289,24 @@ function getDurationEnd(
   ) return null;
   // RFC 5545 section 3.3.6: nominal days/weeks first, then exact time units.
   // P1D is not PT24H across a source-zone daylight-saving transition.
+  if (start.sourceTime !== undefined) {
+    const nominal = start.sourceTime.clone();
+    nominal.adjust(duration.weeks * 7 + duration.days, 0, 0, 0);
+    const exactSeconds =
+      duration.hours * 3_600 + duration.minutes * 60 + duration.seconds;
+    const timestamp = nominal.toUnixTime() * 1_000 + exactSeconds * 1_000;
+    if (!Number.isFinite(timestamp)) return null;
+    return Object.freeze({
+      date: Object.freeze({
+        year: nominal.year,
+        month: nominal.month,
+        day: nominal.day,
+      }),
+      timeMinutes: nominal.hour * 60 + nominal.minute,
+      timestamp,
+      zone: start.zone,
+    });
+  }
   const end = DateTime.fromMillis(start.timestamp, { zone: start.zone })
     .plus({ weeks: duration.weeks, days: duration.days })
     .plus({ hours: duration.hours, minutes: duration.minutes, seconds: duration.seconds });
@@ -248,6 +316,7 @@ function getDurationEnd(
 function parseDateProperty(
   property: InstanceType<typeof ICAL.Property>,
   displayZone: string,
+  embeddedTimezones: EmbeddedTimezoneMap,
 ): IcsDateValue | null {
   const value = property.getFirstValue();
   if (!(value instanceof ICAL.Time)) return null;
@@ -274,23 +343,53 @@ function parseDateProperty(
     }
   }
 
-  const tzid = property.getFirstParameter("tzid")?.trim();
-  const sourceZone = parts[7] === "Z" || value.zone?.tzid === "UTC"
-    ? "UTC"
-    : normalizeSourceZone(tzid, displayZone);
-  if (sourceZone === null) return null;
   const hour = Number(parts[4]);
   const minute = Number(parts[5]);
   const second = Number(parts[6] ?? 0);
+  const structuralValue = DateTime.fromObject(
+    { year, month, day, hour, minute, second },
+    { zone: "UTC" },
+  );
+  if (
+    !structuralValue.isValid ||
+    structuralValue.year !== year ||
+    structuralValue.month !== month ||
+    structuralValue.day !== day ||
+    structuralValue.hour !== hour ||
+    structuralValue.minute !== minute ||
+    structuralValue.second !== second
+  ) return null;
+
+  const tzid = property.getFirstParameter("tzid")?.trim();
+  if (parts[7] === "Z" || value.zone?.tzid === "UTC") {
+    return fromDateTime(structuralValue, false);
+  }
+
+  const normalizedTzid = normalizeTzid(tzid);
+  const embeddedTimezone = normalizedTzid === null
+    ? undefined
+    : embeddedTimezones.get(normalizedTzid);
+  if (embeddedTimezone !== undefined) {
+    if (embeddedTimezone === null) throw new UnsupportedIcsTimezoneError();
+    const sourceTime = new ICAL.Time(
+      { year, month, day, hour, minute, second, isDate: false },
+      embeddedTimezone,
+    );
+    const timestamp = sourceTime.toUnixTime() * 1_000;
+    if (!Number.isFinite(timestamp)) return null;
+    return Object.freeze({
+      date: Object.freeze({ year, month, day }),
+      timeMinutes: hour * 60 + minute,
+      timestamp,
+      zone: normalizedTzid!,
+      sourceTime,
+    });
+  }
+
+  const sourceZone = normalizeSourceZone(tzid, displayZone);
+  if (sourceZone === null) throw new UnsupportedIcsTimezoneError();
   const sourceValue = DateTime.fromObject(
-    {
-      year,
-      month,
-      day,
-      hour,
-      minute,
-      second,
-    },
+    { year, month, day, hour, minute, second },
     { zone: sourceZone },
   );
   if (
@@ -373,9 +472,14 @@ function validateDisplayZone(zone: string): void {
   if (!DateTime.now().setZone(zone).isValid) throw new RangeError(`Invalid display zone: ${zone}`);
 }
 
+function normalizeTzid(tzid: string | undefined): string | null {
+  const normalized = tzid?.trim().replace(/^"|"$/g, "") ?? "";
+  return normalized.length === 0 ? null : normalized;
+}
+
 function normalizeSourceZone(tzid: string | undefined, displayZone: string): string | null {
-  if (tzid === undefined || tzid.length === 0) return displayZone;
-  const normalized = tzid.replace(/^"|"$/g, "");
+  const normalized = normalizeTzid(tzid);
+  if (normalized === null) return displayZone;
   const segments = normalized.split("/").filter((segment) => segment.length > 0);
   const candidates = [normalized, ...segments.map((_, index) => segments.slice(index).join("/"))];
   return candidates.find((candidate) => DateTime.now().setZone(candidate).isValid) ?? null;

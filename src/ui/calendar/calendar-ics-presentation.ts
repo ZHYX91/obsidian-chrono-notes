@@ -11,7 +11,14 @@ export function formatCalendarIcsEventLabel(
       ? `${t("calendar.ics.allDay")} `
       : event.timeLabel === null ? "" : `${event.timeLabel} `;
   const suffix = event.continuesAfter ? " ..." : "";
-  return `${prefix}${event.title}${suffix}`;
+  return `${prefix}${formatIcsEventTitle(event, t)}${suffix}`;
+}
+
+export function formatIcsEventTitle(
+  event: IcsEventOccurrence,
+  t: Translator["t"],
+): string {
+  return event.title || t("calendar.ics.untitled");
 }
 
 export function formatCalendarIcsDayLabel(
@@ -52,7 +59,7 @@ function formatAccessibleEvent(event: IcsEventOccurrence, t: Translator["t"]): s
             })
           : event.timeLabel;
   return t("calendar.ics.accessibleEvent", {
-    title: event.title,
+    title: formatIcsEventTitle(event, t),
     timing,
     source: t("calendar.ics.source", { source: event.sourceLabel }),
   });

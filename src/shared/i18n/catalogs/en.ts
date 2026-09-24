@@ -106,6 +106,8 @@ export const EN_MESSAGES = {
   "calendar.ics.eventSeparator": "; ",
   "calendar.ics.source": "source {source}",
   "calendar.ics.timed": "timed",
+  "calendar.ics.untitled": "Untitled event",
+  "ics.skippedUnsupportedTimezone": "Events skipped because their time zone is unsupported: {count}.",
   "calendar.ics.continuingFromPreviousDay": "continuing from previous day",
   "calendar.ics.continuingIntoNextDay": "continues into next day",
   "calendar.ics.continuingFromPreviousAndIntoNext":

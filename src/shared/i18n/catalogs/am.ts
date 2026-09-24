@@ -105,6 +105,8 @@ export const AM_MESSAGES = Object.freeze({
   "calendar.ics.eventSeparator": "; ",
   "calendar.ics.source": "ምንጭ {source}",
   "calendar.ics.timed": "ጊዜ ወስዷል",
+  "calendar.ics.untitled": "ርዕስ የሌለው ክስተት",
+  "ics.skippedUnsupportedTimezone": "ባልተደገፈ የሰዓት ሰቅ ምክንያት የተዘለሉ ክስተቶች፦ {count}።",
   "calendar.ics.continuingFromPreviousDay": "ካለፈው ቀን የቀጠለ",
   "calendar.ics.continuingIntoNextDay": "በሚቀጥለው ቀን ይቀጥላል",
   "calendar.ics.continuingFromPreviousAndIntoNext": "ካለፈው ቀን ጀምሮ እስከሚቀጥለው ቀን ድረስ",

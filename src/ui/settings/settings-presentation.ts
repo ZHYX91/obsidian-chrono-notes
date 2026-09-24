@@ -43,7 +43,10 @@ export function formatIcsStatus(
     errors: snapshot.errors.length,
   });
   const limitNotice = formatIcsLimitNotice(snapshot, t);
-  return limitNotice === null ? summary : `${summary}\n${limitNotice}`;
+  const timezoneNotice = formatUnsupportedTimezoneNotice(
+    snapshot.skippedUnsupportedTimezone, t,
+  );
+  return [summary, timezoneNotice, limitNotice].filter((part) => part !== null).join("\n");
 }
 
 export function formatIcsSourceStatus(
@@ -56,12 +59,25 @@ export function formatIcsSourceStatus(
       error: status.error,
     });
   }
-  return t("settings.ics.sourceSuccess", {
+  const summary = t("settings.ics.sourceSuccess", {
     source: status.sourceLabel,
     events: status.eventCount,
     recurring: status.skippedRecurring,
     invalid: status.skippedInvalid,
   });
+  const timezoneNotice = formatUnsupportedTimezoneNotice(
+    status.skippedUnsupportedTimezone, t,
+  );
+  return timezoneNotice === null ? summary : `${summary}. ${timezoneNotice}`;
+}
+
+function formatUnsupportedTimezoneNotice(
+  count: number | undefined,
+  t: Translator["t"],
+): string | null {
+  return count === undefined || count === 0
+    ? null
+    : t("ics.skippedUnsupportedTimezone", { count });
 }
 
 export function formatNoteIndexStatus(
