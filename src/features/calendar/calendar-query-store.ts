@@ -14,9 +14,13 @@ import {
   type LocalDate,
   type PeriodicNoteType,
 } from "../../core/periodic/periodic-date";
-import { formatPeriodicNotePath } from "../../core/periodic/periodic-note-path";
+import {
+  resolveIndexedPeriodicNotePath,
+  type PeriodicNoteRule,
+} from "./indexed-periodic-note";
 import type { RangeNoteSettings } from "../../shared/settings";
 import { getIntervalNoteScanFolder } from "../intervals/interval-list-setup";
+import { isIntervalNoteInScope } from "../intervals/interval-note-query";
 import type {
   NoteIndexReadiness,
   NoteIndexSnapshot,
@@ -540,10 +544,9 @@ function getPeriodicEntry(
   date: LocalDate,
   noteType: PeriodicNoteType,
   context: Readonly<{ locale: string; weekStartDay: "monday" | "sunday" }>,
-  rule: Readonly<{ enabled: boolean; pattern: string }>,
+  rule: PeriodicNoteRule,
 ): NoteEntryReference {
-  if (!rule.enabled || rule.pattern.trim().length === 0) return undefined;
-  const path = formatPeriodicNotePath(date, { noteType, pattern: rule.pattern }, context);
+  const path = resolveIndexedPeriodicNotePath(date, noteType, context, rule);
   return path === null ? undefined : snapshot.notes[path];
 }
 
@@ -563,14 +566,13 @@ function getVisibleIntervalItems(
 ): readonly IntervalNoteRef[] {
   if (!settings.showInCalendar) return EMPTY_INTERVAL_ITEMS;
   const folder = getIntervalNoteScanFolder(settings);
-  if (folder === "") return EMPTY_INTERVAL_ITEMS;
   const startKey = formatLocalDateKey(visibleStart);
   const endKey = formatLocalDateKey(visibleEnd);
   const items: IntervalNoteRef[] = [];
   for (const item of snapshot.intervals.items) {
     if (item.start.dateKey > endKey) continue;
     if (item.end.dateKey < startKey) continue;
-    if (folder !== null && !isPathInFolder(item.path, folder)) continue;
+    if (!isIntervalNoteInScope(item, folder)) continue;
     items.push(item);
   }
   return items.length === 0 ? EMPTY_INTERVAL_ITEMS : Object.freeze(items);
@@ -603,10 +605,6 @@ function collectIntervalDependenciesByWeek(
   }));
 }
 
-function isPathInFolder(path: string, folder: string): boolean {
-  return path === folder || path.startsWith(`${folder}/`);
-}
-
 function calendarDayOptionsKey(options: MonthCalendarQueryOptions): string;
 function calendarDayOptionsKey(options: WeekCalendarQueryOptions & {
   readonly heatmap: null;
@@ -626,9 +624,11 @@ function calendarDayOptionsKey(
 
 function periodicOptionsKey(
   context: Readonly<{ locale: string; weekStartDay: "monday" | "sunday" }>,
-  rule: Readonly<{ enabled: boolean; pattern: string }>,
+  rule: PeriodicNoteRule,
 ): string {
-  return keyOf(context.locale, context.weekStartDay, rule.enabled, rule.pattern);
+  return keyOf(
+    context.locale, context.weekStartDay, rule.enabled, rule.pattern, rule.pathLocale,
+  );
 }
 
 function intervalOptionsKey(

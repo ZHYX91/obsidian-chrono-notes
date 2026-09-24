@@ -76,12 +76,20 @@ export function selectIntervalNotesFromProjection(
   const items = scopeFolder === null
     ? intervals.items
     : Object.freeze(intervals.items.filter((item) =>
-        item.recognition === "explicit" ||
-        (scopeFolder !== "" && isPathInFolder(item.path, scopeFolder))));
+        isIntervalNoteInScope(item, scopeFolder)));
   return Object.freeze({
     snapshotVersion,
     items: items.length === 0 ? EMPTY_INTERVAL_ITEMS : items,
   });
+}
+
+/** The same visibility predicate is used by queries and their cache dependencies. */
+export function isIntervalNoteInScope(
+  item: Pick<IntervalNoteRef, "path" | "recognition">,
+  scopeFolder: string | null,
+): boolean {
+  return item.recognition === "explicit" || scopeFolder === null ||
+    (scopeFolder !== "" && isPathInFolder(item.path, scopeFolder));
 }
 
 export function selectIntervalWeekData(

@@ -119,7 +119,8 @@ export function selectIndexedPeriodicNote(
   });
 }
 
-function resolveIndexedPeriodicNotePath(
+/** Shared by selectors and dependency collection, including the path locale. */
+export function resolveIndexedPeriodicNotePath(
   date: LocalDate,
   noteType: PeriodicNoteType,
   context: PeriodicNotePathContext,
