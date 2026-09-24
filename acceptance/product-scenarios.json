@@ -52,6 +52,28 @@
       ]
     },
     {
+      "id": "ics-day-details",
+      "title": "Complete ICS day details without preview",
+      "surfaces": [
+        "desktop",
+        "android-emulator"
+      ],
+      "requiredCapabilities": {
+        "desktop": [],
+        "android-emulator": [
+          "touch.longPress"
+        ]
+      },
+      "steps": [
+        "Run Chrono Notes acceptance provider: Prepare ICS source list. Enable the seeded sources through product settings and refresh; the first 32 sources have events on 2026-09-19.",
+        "Turn off calendar hover previews. Navigate to 2026-09-19 in the product calendar. On desktop open the date context menu with the keyboard and with a mouse; on Android open it by touch long press. Choose View calendar events.",
+        "Inspect the full list, scroll through its last items, verify event titles and source names, then close the modal with Escape or the native close control. Confirm focus and date navigation still work after closing. Disable ICS after the observation."
+      ],
+      "expected": [
+        "The complete 32-event list is reachable with previews off and contains the last indexed source without truncation or a nested control. The modal remains readable and closable on both surfaces."
+      ]
+    },
+    {
       "id": "ics-source-errors",
       "title": "ICS source errors and recovery",
       "surfaces": [

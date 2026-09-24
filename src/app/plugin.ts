@@ -3,6 +3,7 @@ import { getLanguage, Notice, Plugin, TFolder } from "obsidian";
 import { openObsidianPluginSettings } from "../adapters/obsidian/obsidian-plugin-settings";
 import { showObsidianDateContextMenu } from "../adapters/obsidian/obsidian-date-context-menu";
 import {
+  formatLocalDateKey,
   type LocalDate,
   type PeriodicNoteType,
   PERIODIC_NOTE_TYPES,
@@ -37,6 +38,7 @@ import { ConfirmPeriodicNoteModal } from "../ui/modals/confirm-periodic-note-mod
 import { ConfirmIntervalNoteModal } from "../ui/modals/confirm-interval-note-modal";
 import { CreateIntervalNoteModal } from "../ui/modals/create-interval-note-modal";
 import { IntervalNoteListModal } from "../ui/modals/interval-note-list-modal";
+import { IcsEventListModal } from "../ui/modals/ics-event-list-modal";
 import { JumpToDateModal } from "../ui/modals/jump-to-date-modal";
 import { FirstUseGuideModal } from "../ui/modals/first-use-guide-modal";
 import { MiniCalendarModal } from "../ui/modals/mini-calendar-modal";
@@ -285,15 +287,26 @@ export default class ChronoNotesPlugin extends Plugin {
           rescheduleTask: (task, nextDueDate) => this.rescheduleTask(task, nextDueDate),
           openTaskSource: (task, target) => this.openTaskSource(task, target),
           openDateContextMenu: (date, configured, noteExists, event) => {
+            const icsEvents = this.runtime?.icsEventIndex.getSnapshot()
+              .eventsByDate[formatLocalDateKey(date)] ?? [];
             showObsidianDateContextMenu({
               date,
               configured,
               noteExists,
+              hasIcsEvents: icsEvents.length > 0,
               rangeConfigured:
                 normalizeIntervalNoteFolder(this.settings.rangeNotes.folder).length > 0,
               translator: this.getTranslator(),
               event,
               onOpenDaily: (target) => this.openPeriodicNote(date, "daily", target),
+              onShowIcsEvents: () => {
+                new IcsEventListModal(
+                  this.app,
+                  date,
+                  icsEvents,
+                  this.getTranslator(),
+                ).open();
+              },
               onCreateRange: () => {
                 this.showCreateIntervalNote(date);
               },

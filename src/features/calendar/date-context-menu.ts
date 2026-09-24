@@ -1,9 +1,10 @@
 export type DateContextMenuActionId =
   | "open-default"
   | "open-tab"
+  | "view-events"
   | "create-range"
   | "copy-date";
-export type DateContextMenuActionGroup = "note" | "range" | "clipboard";
+export type DateContextMenuActionGroup = "note" | "calendar" | "range" | "clipboard";
 
 export interface DateContextMenuAction {
   readonly id: DateContextMenuActionId;
@@ -14,6 +15,7 @@ export interface DateContextMenuAction {
 export interface DateContextMenuOptions {
   readonly configured: boolean;
   readonly noteExists: boolean | null;
+  readonly hasIcsEvents: boolean;
   readonly rangeConfigured: boolean;
 }
 
@@ -36,6 +38,13 @@ export function buildDateContextMenuActions(
         icon: "files",
       }),
     );
+  }
+  if (options.hasIcsEvents) {
+    actions.push(Object.freeze({
+      id: "view-events",
+      group: "calendar",
+      icon: "calendar-clock",
+    }));
   }
   if (options.rangeConfigured) {
     actions.push(Object.freeze({
