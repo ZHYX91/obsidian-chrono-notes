@@ -13,8 +13,27 @@
   },
   "scenarios": [
     {
-      "id": "audit-feedback-and-localization",
-      "title": "ICS warnings, compact lunar dates and localized opening feedback",
+      "id": "calendar-lunar-layout",
+      "title": "Calendar layout and complete lunar dates",
+      "surfaces": [
+        "desktop",
+        "android-emulator"
+      ],
+      "requiredCapabilities": {
+        "desktop": [],
+        "android-emulator": []
+      },
+      "steps": [
+        "Run the fixture command Chrono Notes acceptance provider: Prepare January 2029 calendar. This only positions the calendar; inspect and switch views through the product UI.",
+        "Inspect Month and Century at narrow and normal widths in light and dark appearance. In the narrow two-column Century layout, verify each decade header spans both year columns. Include January 2029, whose two-digit lunar month/day values must remain complete in narrow cells (wrapping is allowed). Inspect the complete lunar date in a desktop hover/focus preview."
+      ],
+      "expected": [
+        "Selection and calendar content remain readable in both appearances and narrow layouts; narrow Century decade headers span both year columns, and complete lunar wording remains available in the desktop preview."
+      ]
+    },
+    {
+      "id": "calendar-opening-feedback",
+      "title": "Calendar note-opening gestures",
       "surfaces": [
         "desktop",
         "android-emulator"
@@ -26,15 +45,48 @@
         ]
       },
       "steps": [
-        "In English, open the month calendar and select a date. Verify compact numeric lunar text and no Enter glyph. Open its note with Enter on desktop or long press on touch; confirm note creation if requested.",
-        "Inspect Month and Century at narrow and normal widths in light and dark appearance. In the narrow two-column Century layout, verify each decade header spans both year columns. Include January 2029, whose two-digit lunar month/day values must remain complete in narrow cells (wrapping is allowed). Inspect the complete lunar date in a desktop hover/focus preview.",
-        "In Extensions and integrations, enable the 35 seeded ICS sources and refresh. Verify three omitted sources and zero read errors. Temporarily make the first source path invalid and refresh again; verify one real error and the same three omitted sources in both the notice and persistent status. Restore the path and refresh to clear the error.",
-        "Switch the interface to Arabic. Inspect the word-count statistic label and the periodic-note enabled label; verify that both are visible. Inspect ICS feedback for complete sentences. Restore English."
+        "In English, open the month calendar and select a date. Verify compact numeric lunar text and no Enter glyph. Open its note with Enter on desktop or long press on touch; confirm note creation if requested."
       ],
       "expected": [
-        "Lunar cells retain distinct month/day values, the selected cell has no persistent return glyph, and the platform's opening gesture works.",
-        "Selection and calendar content remain readable in both appearances and narrow layouts; narrow Century decade headers span both year columns, and complete lunar wording remains available in the desktop preview.",
-        "Source omissions do not inflate the read-error count, real errors remain visible alongside the warning, and a successful refresh clears the error.",
+        "Lunar cells retain distinct month/day values, the selected cell has no persistent return glyph, and the platform's opening gesture works."
+      ]
+    },
+    {
+      "id": "ics-source-errors",
+      "title": "ICS source errors and recovery",
+      "surfaces": [
+        "desktop",
+        "android-emulator"
+      ],
+      "requiredCapabilities": {
+        "desktop": [],
+        "android-emulator": []
+      },
+      "steps": [
+        "Run Chrono Notes acceptance provider: Prepare ICS source list to restore the 35 local fixture sources with ICS disabled. Enable and refresh them through the product UI.",
+        "In Extensions and integrations, enable the 35 seeded ICS sources and refresh. Verify three omitted sources and zero read errors. Temporarily make the first source path invalid and refresh again; verify one real error and the same three omitted sources in both the notice and persistent status. Restore the path and refresh to clear the error."
+      ],
+      "expected": [
+        "Source omissions do not inflate the read-error count, real errors remain visible alongside the warning, and a successful refresh clears the error."
+      ]
+    },
+    {
+      "id": "arabic-localization",
+      "title": "Arabic labels and complete feedback",
+      "surfaces": [
+        "desktop",
+        "android-emulator"
+      ],
+      "requiredCapabilities": {
+        "desktop": [],
+        "android-emulator": []
+      },
+      "steps": [
+        "Run Chrono Notes acceptance provider: Prepare ICS source list to restore the 35 local fixture sources with ICS disabled. Enable and refresh them through the product UI.",
+        "Switch the interface to Arabic. Inspect the word-count statistic label and the periodic-note enabled label; verify that both are visible. Inspect ICS feedback for complete sentences. Restore English.",
+        "Disable ICS after the observation."
+      ],
+      "expected": [
         "The repaired Arabic labels and ICS sentences are non-empty and the tabbed settings remain usable."
       ]
     },
@@ -83,8 +135,8 @@
       ]
     },
     {
-      "id": "calendar-boundaries-and-feedback",
-      "title": "Filename identity, partial results and calendar interactions",
+      "id": "periodic-path-language",
+      "title": "Periodic paths keep their configured language",
       "surfaces": [
         "desktop",
         "android-emulator"
@@ -94,22 +146,72 @@
         "android-emulator": []
       },
       "steps": [
-        "Open the Periodic settings and inspect the separate path-language controls. Switch the interface between English and Simplified Chinese; verify that the configured path previews keep their filename language.",
-        "Enable larger-period cascading, create a new daily note through its confirmation, and observe the one partial-success notice for the missing monthly template. Confirm the daily and yearly notes remain available.",
-        "Enable ICS with Calendars/Budget.ics and refresh. Inspect both the refresh notice and persistent settings summary for the 100,000-occurrence limit, omitted events and recovery advice; disable ICS afterwards.",
+        "Open the Periodic settings and inspect the separate path-language controls. Switch the interface between English and Simplified Chinese; verify that the configured path previews keep their filename language."
+      ],
+      "expected": [
+        "Changing interface language does not redirect configured paths; editing one period language does not change another period."
+      ]
+    },
+    {
+      "id": "periodic-partial-creation",
+      "title": "Partial periodic-note creation preserves successes",
+      "surfaces": [
+        "desktop",
+        "android-emulator"
+      ],
+      "requiredCapabilities": {
+        "desktop": [],
+        "android-emulator": []
+      },
+      "steps": [
+        "Enable larger-period cascading, create a new daily note through its confirmation, and observe the one partial-success notice for the missing monthly template. Confirm the daily and yearly notes remain available. Disable larger-period cascading after the observation."
+      ],
+      "expected": [
+        "Partial creation keeps success and failure distinguishable and preserves the successfully created files."
+      ]
+    },
+    {
+      "id": "ics-occurrence-budget",
+      "title": "ICS occurrence budget feedback",
+      "surfaces": [
+        "desktop",
+        "android-emulator"
+      ],
+      "requiredCapabilities": {
+        "desktop": [],
+        "android-emulator": []
+      },
+      "steps": [
+        "Enable ICS with Calendars/Budget.ics and refresh. Inspect both the refresh notice and persistent settings summary for the 100,000-occurrence limit, omitted events and recovery advice; disable ICS afterwards."
+      ],
+      "expected": [
+        "Budget omissions are explained to the user rather than reported only as an unspecified error."
+      ]
+    },
+    {
+      "id": "calendar-year-interactions",
+      "title": "Century selection, focus and gestures",
+      "surfaces": [
+        "desktop",
+        "android-emulator"
+      ],
+      "requiredCapabilities": {
+        "desktop": [],
+        "android-emulator": [
+          "touch.longPress"
+        ]
+      },
+      "steps": [
         "Open the calendar Century view. Select a rightmost-column year and inspect its complete outline and scrollbar clearance in light and dark appearance, a narrow pane and enlarged interface text.",
         "On desktop, navigate with Tab, arrows, Home/End and Enter. On touch, select and long-press a year. Verify that selection and focus frames do not cover the year or status information, no Enter/return glyph is drawn inside the selected cell, and Today remains identifiable."
       ],
       "expected": [
-        "Changing interface language does not redirect configured paths; editing one period language does not change another period.",
-        "Partial creation keeps success and failure distinguishable and preserves the successfully created files.",
-        "Budget omissions are explained to the user rather than reported only as an unspecified error.",
         "Century selection and focus outlines remain visible beside the scrollbar, controls remain readable, and normal opening gestures work."
       ]
     },
     {
-      "id": "task-writes-and-ics-source-limits",
-      "title": "Task write safety and visible ICS source omissions",
+      "id": "task-write-safety",
+      "title": "Task writes preserve closed and open note content",
       "surfaces": [
         "desktop",
         "android-emulator"
@@ -120,13 +222,30 @@
       },
       "steps": [
         "Open the calendar at 2026-09-19 and switch to Week. Toggle Boundary task from BOM Tasks.md while its source is closed, then open the source and verify the checkbox and unchanged surrounding text.",
-        "Keep the task source open in an editor, add a sentinel line, and toggle the task from the calendar again. Verify the task changes and the sentinel survives. Timing races are covered separately by automated adapter tests.",
+        "Keep the task source open in an editor, add a sentinel line, and toggle the task from the calendar again. Verify the task changes and the sentinel survives. Timing races are covered separately by automated adapter tests."
+      ],
+      "expected": [
+        "Closed and open task updates persist the intended checkbox without changing surrounding text or reporting a false failure."
+      ]
+    },
+    {
+      "id": "ics-source-limits-localization",
+      "title": "Localized ICS source limits and recovery",
+      "surfaces": [
+        "desktop",
+        "android-emulator"
+      ],
+      "requiredCapabilities": {
+        "desktop": [],
+        "android-emulator": []
+      },
+      "steps": [
+        "Run Chrono Notes acceptance provider: Prepare ICS source list to restore the 35 local fixture sources with ICS disabled. Enable and refresh them through the product UI.",
         "In Extensions and integrations, enable the 35 seeded ICS sources and refresh. Verify the notification and persistent settings explain the limit of 32, three omitted sources, and how to reduce or reorder sources.",
         "Switch the interface to Simplified Chinese, return to ICS settings and refresh. Verify the same source-limit explanation is localized.",
         "Replace the source list with Calendars/Sources/01.ics and Calendars/Sources/02.ics, refresh, and verify both sources load with no stale omission warning."
       ],
       "expected": [
-        "Closed and open task updates persist the intended checkbox without changing surrounding text or reporting a false failure.",
         "The first 32 sources load and the three omitted sources are explicitly explained in both notification and settings, in English and Simplified Chinese.",
         "Reducing the source list clears the omission warning and loads all remaining sources."
       ]

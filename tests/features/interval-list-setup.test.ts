@@ -18,21 +18,18 @@ describe("interval list setup", () => {
     }))).toBe("Projects/Ranges");
   });
 
-  it("requires a creation folder when scanning the entire Vault", () => {
-    expect(getIntervalListSetup(rangeSettings({
-      scanScope: "entire-vault",
-      folder: "",
-    }), true)).toEqual({
-      canCreateVisibleItem: false,
-      issue: "creation-not-configured",
-    });
-    expect(getIntervalListSetup(rangeSettings({
-      scanScope: "entire-vault",
-    }), true)).toEqual({
-      canCreateVisibleItem: true,
-      issue: null,
-    });
-  });
+  it.each(["entire-vault", "range-folder", "custom-folder"] as const)(
+    "requires a creation folder independently of the %s scan scope",
+    (scanScope) => {
+      expect(getIntervalListSetup(rangeSettings({
+        scanScope,
+        folder: "",
+      }), true)).toEqual({
+        canCreateVisibleItem: false,
+        issue: "creation-not-configured",
+      });
+    },
+  );
 
   it("allows creating the configured range folder when it does not exist yet", () => {
     expect(getIntervalListSetup(rangeSettings(), false)).toEqual({
@@ -41,49 +38,45 @@ describe("interval list setup", () => {
     });
   });
 
-  it("diagnoses missing custom scan configuration and directories", () => {
+  it("keeps creation available when the unmarked scan scope is not configured", () => {
     expect(getIntervalListSetup(rangeSettings({
       scanScope: "custom-folder",
       customFolder: "",
     }), false)).toEqual({
-      canCreateVisibleItem: false,
+      canCreateVisibleItem: true,
       issue: "scan-not-configured",
     });
+  });
+
+  it("keeps creation available when the unmarked scan folder is missing", () => {
     expect(getIntervalListSetup(rangeSettings({
       scanScope: "custom-folder",
       customFolder: "Projects",
-      folder: "Projects/Ranges",
+      folder: "Ranges",
     }), false)).toEqual({
       canCreateVisibleItem: true,
       issue: "scan-folder-missing",
     });
   });
 
-  it("requires custom-scope creation to produce visible notes", () => {
+  it.each(["Ranges", "Projects/Ranges", "Projects"])(
+    "allows explicit range creation in %s regardless of the unmarked scope",
+    (folder) => {
+      expect(getIntervalListSetup(rangeSettings({
+        scanScope: "custom-folder",
+        customFolder: "Projects",
+        folder,
+      }), true)).toEqual({
+        canCreateVisibleItem: true,
+        issue: null,
+      });
+    },
+  );
+
+  it("allows creation when scanning the entire Vault", () => {
     expect(getIntervalListSetup(rangeSettings({
-      scanScope: "custom-folder",
-      customFolder: "Projects",
-      folder: "",
-    }), true)).toEqual({
-      canCreateVisibleItem: false,
-      issue: "creation-not-configured",
-    });
-    expect(getIntervalListSetup(rangeSettings({
-      scanScope: "custom-folder",
-      customFolder: "Projects",
-      folder: "Ranges",
-    }), true)).toEqual({
-      canCreateVisibleItem: false,
-      issue: "creation-outside-scope",
-    });
-    expect(getIntervalListSetup(rangeSettings({
-      scanScope: "custom-folder",
-      customFolder: "Projects",
-      folder: "Projects/Ranges",
-    }), true)).toEqual({
-      canCreateVisibleItem: true,
-      issue: null,
-    });
+      scanScope: "entire-vault",
+    }), true)).toEqual({ canCreateVisibleItem: true, issue: null });
   });
 });
 
