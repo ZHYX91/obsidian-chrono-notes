@@ -105,6 +105,8 @@ export const FA_MESSAGES = Object.freeze({
   "calendar.ics.eventSeparator": "; ",
   "calendar.ics.source": "منبع {source}",
   "calendar.ics.timed": "زمان بندی شده",
+  "calendar.ics.untitled": "رویداد بدون عنوان",
+  "ics.skippedUnsupportedTimezone": "رویدادهای ردشده به دلیل منطقهٔ زمانی پشتیبانی‌نشده: {count}.",
   "calendar.ics.continuingFromPreviousDay": "ادامه از روز قبل",
   "calendar.ics.continuingIntoNextDay": "تا روز بعد ادامه دارد",
   "calendar.ics.continuingFromPreviousAndIntoNext": "از روز قبل و در روز بعد ادامه دارد",

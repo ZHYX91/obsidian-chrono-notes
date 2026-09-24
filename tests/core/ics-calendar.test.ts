@@ -106,6 +106,118 @@ describe("ICS calendar parsing", () => {
     ]);
   });
 
+  it("uses embedded VTIMEZONE definitions for custom TZIDs", () => {
+    const parsed = parseIcsCalendar([
+      "BEGIN:VCALENDAR",
+      "VERSION:2.0",
+      "BEGIN:VTIMEZONE",
+      "TZID:Custom/Plus0230",
+      "BEGIN:STANDARD",
+      "DTSTART:19700101T000000",
+      "TZOFFSETFROM:+0230",
+      "TZOFFSETTO:+0230",
+      "TZNAME:CUSTOM",
+      "END:STANDARD",
+      "END:VTIMEZONE",
+      "BEGIN:VEVENT",
+      "UID:custom-zone",
+      "DTSTART;TZID=Custom/Plus0230:20260506T090000",
+      "DTEND;TZID=Custom/Plus0230:20260506T100000",
+      "SUMMARY:Custom zone event",
+      "END:VEVENT",
+      "END:VCALENDAR",
+    ].join("\n"), "custom-zone.ics", { displayZone: "UTC" });
+
+    expect(parsed.skippedInvalid).toBe(0);
+    expect(parsed.events).toHaveLength(1);
+    expect(parsed.events[0]).toMatchObject({
+      id: "custom-zone",
+      start: {
+        date: { year: 2026, month: 5, day: 6 },
+        timeMinutes: 6 * 60 + 30,
+      },
+      endExclusive: {
+        date: { year: 2026, month: 5, day: 6 },
+        timeMinutes: 7 * 60 + 30,
+      },
+    });
+  });
+
+  it("keeps nominal-day duration distinct from exact hours across a custom DST transition", () => {
+    const parsed = parseIcsCalendar([
+      "BEGIN:VCALENDAR",
+      "BEGIN:VTIMEZONE",
+      "TZID:Custom/Eastern",
+      "BEGIN:DAYLIGHT",
+      "DTSTART:20250309T020000",
+      "TZOFFSETFROM:-0500",
+      "TZOFFSETTO:-0400",
+      "RRULE:FREQ=YEARLY;BYMONTH=3;BYDAY=2SU",
+      "END:DAYLIGHT",
+      "BEGIN:STANDARD",
+      "DTSTART:20251102T020000",
+      "TZOFFSETFROM:-0400",
+      "TZOFFSETTO:-0500",
+      "RRULE:FREQ=YEARLY;BYMONTH=11;BYDAY=1SU",
+      "END:STANDARD",
+      "END:VTIMEZONE",
+      "BEGIN:VEVENT",
+      "UID:nominal-day",
+      "DTSTART;TZID=Custom/Eastern:20260307T120000",
+      "DURATION:P1D",
+      "END:VEVENT",
+      "BEGIN:VEVENT",
+      "UID:exact-hours",
+      "DTSTART;TZID=Custom/Eastern:20260307T120000",
+      "DURATION:PT24H",
+      "END:VEVENT",
+      "END:VCALENDAR",
+    ].join("\n"), "dst.ics", { displayZone: "UTC" });
+
+    expect(parsed.skippedInvalid).toBe(0);
+    expect(parsed.skippedUnsupportedTimezone).toBe(0);
+    expect(parsed.events.map((event) => ({
+      id: event.id,
+      start: event.start.timestamp,
+      end: event.endExclusive.timestamp,
+    }))).toEqual([
+      {
+        id: "nominal-day",
+        start: Date.parse("2026-03-07T17:00:00Z"),
+        end: Date.parse("2026-03-08T16:00:00Z"),
+      },
+      {
+        id: "exact-hours",
+        start: Date.parse("2026-03-07T17:00:00Z"),
+        end: Date.parse("2026-03-08T17:00:00Z"),
+      },
+    ]);
+  });
+
+  it("separates unsupported source time zones from invalid dates and retains empty titles", () => {
+    const parsed = parseIcsCalendar([
+      "BEGIN:VCALENDAR",
+      "BEGIN:VEVENT",
+      "UID:unknown-zone",
+      "DTSTART;TZID=Unknown/Nowhere:20260506T090000",
+      "DTEND;TZID=Unknown/Nowhere:20260506T100000",
+      "END:VEVENT",
+      "BEGIN:VEVENT",
+      "UID:invalid-date",
+      "DTSTART:20260230T090000",
+      "END:VEVENT",
+      "BEGIN:VEVENT",
+      "UID:untitled",
+      "DTSTART;VALUE=DATE:20260507",
+      "END:VEVENT",
+      "END:VCALENDAR",
+    ].join("\n"), "mixed.ics", { displayZone: "UTC" });
+
+    expect(parsed.skippedUnsupportedTimezone).toBe(1);
+    expect(parsed.skippedInvalid).toBe(1);
+    expect(parsed.events).toMatchObject([{ id: "untitled", title: "" }]);
+  });
+
   it("indexes exclusive all-day ends and timed events across midnight", () => {
     const parsed = parseIcsCalendar([
       "BEGIN:VCALENDAR",
@@ -146,6 +258,35 @@ describe("ICS calendar parsing", () => {
     ]);
     expect(Object.isFrozen(result.eventsByDate)).toBe(true);
     expect(Object.isFrozen(result.eventsByDate["2026-05-08"])).toBe(true);
+  });
+
+  it("sorts continued timed events from the display-zone day boundary", () => {
+    const parsed = parseIcsCalendar([
+      "BEGIN:VCALENDAR",
+      "BEGIN:VEVENT",
+      "UID:overnight",
+      "DTSTART:20260507T150000Z",
+      "DTEND:20260507T180000Z",
+      "SUMMARY:Overnight",
+      "END:VEVENT",
+      "BEGIN:VEVENT",
+      "UID:early",
+      "DTSTART:20260507T170000Z",
+      "DTEND:20260507T173000Z",
+      "SUMMARY:Early",
+      "END:VEVENT",
+      "END:VCALENDAR",
+    ].join("\n"), "ordering.ics", { displayZone: "Asia/Taipei" });
+
+    const result = buildIcsDateIndex(parsed.events);
+    expect(result.eventsByDate["2026-05-08"]?.map((event) => event.id)).toEqual([
+      "overnight",
+      "early",
+    ]);
+    expect(result.eventsByDate["2026-05-08"]?.[0]).toMatchObject({
+      startsOnDate: false,
+      continuesBefore: true,
+    });
   });
 
   it("explicitly skips recurrence rules and isolates invalid events", () => {
