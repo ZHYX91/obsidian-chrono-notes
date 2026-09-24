@@ -46,7 +46,10 @@ export interface IcsParseResult {
   readonly events: readonly IcsCalendarEvent[];
   readonly skippedRecurring: number;
   readonly skippedInvalid: number;
+  readonly skippedUnsupportedTimezone: number;
 }
+
+class UnsupportedIcsTimezoneError extends Error {}
 
 export interface IcsEventOccurrence {
   readonly id: string;
@@ -97,6 +100,7 @@ export function parseIcsCalendar(
   const events: IcsCalendarEvent[] = [];
   let skippedRecurring = 0;
   let skippedInvalid = 0;
+  let skippedUnsupportedTimezone = 0;
 
   for (const [index, component] of components.entries()) {
     try {
@@ -116,9 +120,10 @@ export function parseIcsCalendar(
       );
       if (event === null) skippedInvalid += 1;
       else events.push(event);
-    } catch {
-      // A malformed typed property must invalidate only its own VEVENT.
-      skippedInvalid += 1;
+    } catch (error) {
+      // An unsupported source timezone is distinct from malformed event data.
+      if (error instanceof UnsupportedIcsTimezoneError) skippedUnsupportedTimezone += 1;
+      else skippedInvalid += 1;
     }
   }
 
@@ -126,6 +131,7 @@ export function parseIcsCalendar(
     events: Object.freeze(events),
     skippedRecurring,
     skippedInvalid,
+    skippedUnsupportedTimezone,
   });
 }
 
@@ -255,7 +261,7 @@ function parseEvent(
   const displayedEnd = inDisplayZone(endExclusive, displayZone);
   if (displayedStart === null || displayedEnd === null) return null;
   const titleValue = component.getFirstPropertyValue("summary");
-  const title = String(titleValue ?? "").trim() || "Untitled event";
+  const title = String(titleValue ?? "").trim();
   const uid = String(component.getFirstPropertyValue("uid") ?? "").trim();
   return Object.freeze({
     id: uid || `${source}#${index}`,
@@ -364,7 +370,7 @@ function parseDateProperty(
     ? undefined
     : embeddedTimezones.get(normalizedTzid);
   if (embeddedTimezone !== undefined) {
-    if (embeddedTimezone === null) return null;
+    if (embeddedTimezone === null) throw new UnsupportedIcsTimezoneError();
     const sourceTime = new ICAL.Time(
       { year, month, day, hour, minute, second, isDate: false },
       embeddedTimezone,
@@ -381,7 +387,7 @@ function parseDateProperty(
   }
 
   const sourceZone = normalizeSourceZone(tzid, displayZone);
-  if (sourceZone === null) return null;
+  if (sourceZone === null) throw new UnsupportedIcsTimezoneError();
   const sourceValue = DateTime.fromObject(
     { year, month, day, hour, minute, second },
     { zone: sourceZone },

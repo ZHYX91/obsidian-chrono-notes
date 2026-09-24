@@ -105,6 +105,8 @@ export const AR_MESSAGES = Object.freeze({
   "calendar.ics.eventSeparator": "; ",
   "calendar.ics.source": "المصدر {source}",
   "calendar.ics.timed": "محدد التوقيت",
+  "calendar.ics.untitled": "حدث بلا عنوان",
+  "ics.skippedUnsupportedTimezone": "الأحداث التي تم تخطيها بسبب منطقة زمنية غير مدعومة: {count}.",
   "calendar.ics.continuingFromPreviousDay": "مستمر من اليوم السابق",
   "calendar.ics.continuingIntoNextDay": "يستمر في اليوم التالي",
   "calendar.ics.continuingFromPreviousAndIntoNext": "مستمر من اليوم السابق وحتى اليوم التالي",

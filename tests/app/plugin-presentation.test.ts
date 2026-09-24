@@ -99,6 +99,12 @@ describe("plugin presentation", () => {
     }), t)).toBe(
       "ICS refreshed: 1 source, 2 events. Skipped 1 recurring event. Skipped 2 invalid events.",
     );
+    expect(formatIcsRefreshNotice(snapshot({
+      skippedInvalid: 1,
+      skippedUnsupportedTimezone: 2,
+    }), t)).toContain(
+      "Skipped 1 invalid event. Events skipped because their time zone is unsupported: 2.",
+    );
     const combined = formatIcsRefreshNotice(snapshot({
       loadedSources: 1,
       totalSources: 4,

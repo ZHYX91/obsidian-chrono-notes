@@ -96,6 +96,39 @@ describe("IcsEventIndex", () => {
     expect(listener).toHaveBeenCalledTimes(2);
   });
 
+  it("reports unsupported source time zones separately from malformed events", async () => {
+    const content = [
+      "BEGIN:VCALENDAR",
+      "BEGIN:VEVENT",
+      "UID:unknown-zone",
+      "DTSTART;TZID=Unknown/Nowhere:20260506T090000",
+      "END:VEVENT",
+      "BEGIN:VEVENT",
+      "UID:bad-date",
+      "DTSTART:20260230T090000",
+      "END:VEVENT",
+      "BEGIN:VEVENT",
+      "UID:valid",
+      "DTSTART;VALUE=DATE:20260507",
+      "END:VEVENT",
+      "END:VCALENDAR",
+    ].join("\n");
+    const index = new IcsEventIndex({ read: async () => content });
+
+    await index.refresh({ enabled: true, sources: ["mixed.ics"], displayZone: "UTC" });
+
+    expect(index.getSnapshot()).toMatchObject({
+      eventCount: 1,
+      skippedInvalid: 1,
+      skippedUnsupportedTimezone: 1,
+      sourceStatuses: [{
+        source: "mixed.ics",
+        skippedInvalid: 1,
+        skippedUnsupportedTimezone: 1,
+      }],
+    });
+  });
+
   it("normalizes a synchronous non-Error reader failure", async () => {
     const reader: IcsSourceReader = {
       read: () => {
@@ -213,6 +246,38 @@ describe("IcsEventIndex", () => {
     expect(index.getSnapshot().eventsByDate["2026-05-06"]).toBeUndefined();
     expect(index.getSnapshot().eventsByDate["2026-05-07"]?.[0]?.id).toBe("latest-a");
     expect(index.getSnapshot().eventsByDate["2026-05-08"]?.[0]?.id).toBe("latest-b");
+  });
+
+  it("cancels queued reads promptly without releasing an active physical slot", async () => {
+    const activeRead = deferred<string>();
+    const latestRead = deferred<string>();
+    const read = vi.fn()
+      .mockReturnValueOnce(activeRead.promise)
+      .mockReturnValueOnce(latestRead.promise);
+    const index = new IcsEventIndex({ read }, { maxConcurrentReads: 1 });
+    const options = {
+      enabled: true,
+      sources: ["active.ics", "queued.ics"],
+      displayZone: "UTC",
+    } as const;
+
+    const cancelled = index.refresh(options);
+    expect(read).toHaveBeenCalledTimes(1);
+    await index.refresh({ ...options, enabled: false });
+    await cancelled;
+    expect(index.getSnapshot().state).toBe("disabled");
+    expect(read).toHaveBeenCalledTimes(1);
+
+    const latest = index.refresh({ ...options, sources: ["latest.ics"] });
+    expect(read).toHaveBeenCalledTimes(1);
+    activeRead.resolve(calendar("stale", "20260505"));
+    await vi.waitFor(() => expect(read).toHaveBeenCalledTimes(2));
+    latestRead.resolve(calendar("latest", "20260507"));
+    await latest;
+
+    expect(index.getSnapshot().eventsByDate["2026-05-07"]?.[0]?.id).toBe("latest");
+    expect(index.getSnapshot().eventsByDate["2026-05-05"]).toBeUndefined();
+    expect(read).toHaveBeenNthCalledWith(2, "latest.ics");
   });
 
   it("does not reuse an enabled read after a disable-enable revision boundary", async () => {

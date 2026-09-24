@@ -58,6 +58,8 @@ describe("settings presentation", () => {
     expect(formatIcsStatus(snapshot(), t)).toBe(
       "1/2 sources, 3 events, 4 recurring and 5 invalid skipped, 1 errors.",
     );
+    expect(formatIcsStatus(snapshot({ skippedUnsupportedTimezone: 2 }), t))
+      .toContain("Events skipped because their time zone is unsupported: 2.");
   });
 
   it("formats per-source success and error state in the selected locale", () => {
@@ -79,6 +81,15 @@ describe("settings presentation", () => {
       skippedInvalid: 0,
       error: "無法讀取",
     }, t)).toBe("broken.ics：無法讀取");
+    expect(formatIcsSourceStatus({
+      source: "unknown.ics",
+      sourceLabel: "unknown.ics",
+      eventCount: 0,
+      skippedRecurring: 0,
+      skippedInvalid: 0,
+      skippedUnsupportedTimezone: 1,
+      error: null,
+    }, t)).toContain("因時區不受支援而略過的事件：1 個。");
   });
 
   it("formats the minimal note-index and current-Vault cache health states", () => {

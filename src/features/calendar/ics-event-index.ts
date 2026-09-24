@@ -23,6 +23,7 @@ export interface IcsSourceStatus {
   readonly eventCount: number;
   readonly skippedRecurring: number;
   readonly skippedInvalid: number;
+  readonly skippedUnsupportedTimezone?: number;
   readonly error: string | null;
 }
 
@@ -37,6 +38,7 @@ export interface IcsEventIndexSnapshot {
   readonly eventCount: number;
   readonly skippedRecurring: number;
   readonly skippedInvalid: number;
+  readonly skippedUnsupportedTimezone?: number;
   readonly truncatedEvents: number;
   /** Present only when configured sources were omitted from this refresh. */
   readonly sourceLimit?: number;
@@ -123,6 +125,7 @@ export class IcsEventIndex {
             eventCount: parsed.events.length,
             skippedRecurring: parsed.skippedRecurring,
             skippedInvalid: parsed.skippedInvalid,
+            skippedUnsupportedTimezone: parsed.skippedUnsupportedTimezone,
             error: null,
           }) satisfies IcsSourceStatus,
           events: parsed.events,
@@ -136,6 +139,7 @@ export class IcsEventIndex {
             eventCount: 0,
             skippedRecurring: 0,
             skippedInvalid: 0,
+            skippedUnsupportedTimezone: 0,
             error: getErrorMessage(error),
           }) satisfies IcsSourceStatus,
           events: [],
@@ -165,6 +169,9 @@ export class IcsEventIndex {
       eventCount: events.length,
       skippedRecurring: sum(sourceStatuses, "skippedRecurring"),
       skippedInvalid: sum(sourceStatuses, "skippedInvalid"),
+      skippedUnsupportedTimezone: sourceStatuses.reduce(
+        (total, status) => total + (status.skippedUnsupportedTimezone ?? 0), 0,
+      ),
       truncatedEvents: dateIndex[1],
       ...(omittedSources > 0 ? { sourceLimit: this.maxSources } : {}),
       ...(dateIndex[2] ? { occurrenceLimit: this.maxOccurrences } : {}),
@@ -233,7 +240,8 @@ export class IcsEventIndex {
     source: string,
     signal: AbortSignal,
   ): Promise<string | null> {
-    const release = this.readSlots.acquireImmediately() ?? await this.readSlots.acquire();
+    const release = this.readSlots.acquireImmediately() ?? await this.readSlots.acquire(signal);
+    if (release === null) return null;
     if (signal.aborted) {
       release();
       return null;
@@ -309,10 +317,26 @@ class AsyncSlotLimiter {
     return this.createRelease();
   }
 
-  acquire(): Promise<() => void> {
+  acquire(signal: AbortSignal): Promise<(() => void) | null> {
+    if (signal.aborted) return Promise.resolve(null);
     const immediate = this.acquireImmediately();
     if (immediate !== null) return Promise.resolve(immediate);
-    return new Promise((resolve) => this.queue.push(resolve));
+    return new Promise((resolve) => {
+      const onAbort = () => {
+        const index = this.queue.indexOf(grant);
+        if (index < 0) return;
+        this.queue.splice(index, 1);
+        signal.removeEventListener("abort", onAbort);
+        resolve(null);
+      };
+      const grant = (release: () => void) => {
+        signal.removeEventListener("abort", onAbort);
+        resolve(release);
+      };
+      this.queue.push(grant);
+      signal.addEventListener("abort", onAbort, { once: true });
+      if (signal.aborted) onAbort();
+    });
   }
 
   private createRelease(): () => void {
@@ -345,6 +369,7 @@ function createDisabledSnapshot(
     eventCount: 0,
     skippedRecurring: 0,
     skippedInvalid: 0,
+    skippedUnsupportedTimezone: 0,
     truncatedEvents: 0,
     refreshedAt: null,
     sourceStatuses: Object.freeze([]),

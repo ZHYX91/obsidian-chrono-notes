@@ -143,6 +143,81 @@ describe("ICS calendar parsing", () => {
     });
   });
 
+  it("keeps nominal-day duration distinct from exact hours across a custom DST transition", () => {
+    const parsed = parseIcsCalendar([
+      "BEGIN:VCALENDAR",
+      "BEGIN:VTIMEZONE",
+      "TZID:Custom/Eastern",
+      "BEGIN:DAYLIGHT",
+      "DTSTART:20250309T020000",
+      "TZOFFSETFROM:-0500",
+      "TZOFFSETTO:-0400",
+      "RRULE:FREQ=YEARLY;BYMONTH=3;BYDAY=2SU",
+      "END:DAYLIGHT",
+      "BEGIN:STANDARD",
+      "DTSTART:20251102T020000",
+      "TZOFFSETFROM:-0400",
+      "TZOFFSETTO:-0500",
+      "RRULE:FREQ=YEARLY;BYMONTH=11;BYDAY=1SU",
+      "END:STANDARD",
+      "END:VTIMEZONE",
+      "BEGIN:VEVENT",
+      "UID:nominal-day",
+      "DTSTART;TZID=Custom/Eastern:20260307T120000",
+      "DURATION:P1D",
+      "END:VEVENT",
+      "BEGIN:VEVENT",
+      "UID:exact-hours",
+      "DTSTART;TZID=Custom/Eastern:20260307T120000",
+      "DURATION:PT24H",
+      "END:VEVENT",
+      "END:VCALENDAR",
+    ].join("\n"), "dst.ics", { displayZone: "UTC" });
+
+    expect(parsed.skippedInvalid).toBe(0);
+    expect(parsed.skippedUnsupportedTimezone).toBe(0);
+    expect(parsed.events.map((event) => ({
+      id: event.id,
+      start: event.start.timestamp,
+      end: event.endExclusive.timestamp,
+    }))).toEqual([
+      {
+        id: "nominal-day",
+        start: Date.parse("2026-03-07T17:00:00Z"),
+        end: Date.parse("2026-03-08T16:00:00Z"),
+      },
+      {
+        id: "exact-hours",
+        start: Date.parse("2026-03-07T17:00:00Z"),
+        end: Date.parse("2026-03-08T17:00:00Z"),
+      },
+    ]);
+  });
+
+  it("separates unsupported source time zones from invalid dates and retains empty titles", () => {
+    const parsed = parseIcsCalendar([
+      "BEGIN:VCALENDAR",
+      "BEGIN:VEVENT",
+      "UID:unknown-zone",
+      "DTSTART;TZID=Unknown/Nowhere:20260506T090000",
+      "DTEND;TZID=Unknown/Nowhere:20260506T100000",
+      "END:VEVENT",
+      "BEGIN:VEVENT",
+      "UID:invalid-date",
+      "DTSTART:20260230T090000",
+      "END:VEVENT",
+      "BEGIN:VEVENT",
+      "UID:untitled",
+      "DTSTART;VALUE=DATE:20260507",
+      "END:VEVENT",
+      "END:VCALENDAR",
+    ].join("\n"), "mixed.ics", { displayZone: "UTC" });
+
+    expect(parsed.skippedUnsupportedTimezone).toBe(1);
+    expect(parsed.skippedInvalid).toBe(1);
+    expect(parsed.events).toMatchObject([{ id: "untitled", title: "" }]);
+  });
+
   it("indexes exclusive all-day ends and timed events across midnight", () => {
     const parsed = parseIcsCalendar([
       "BEGIN:VCALENDAR",

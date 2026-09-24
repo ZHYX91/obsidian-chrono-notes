@@ -105,6 +105,8 @@ export const ZH_CN_MESSAGES = {
   "calendar.ics.eventSeparator": "；",
   "calendar.ics.source": "来源 {source}",
   "calendar.ics.timed": "定时事件",
+  "calendar.ics.untitled": "未命名事件",
+  "ics.skippedUnsupportedTimezone": "因时区不受支持而跳过的事件：{count} 个。",
   "calendar.ics.continuingFromPreviousDay": "延续自前一天",
   "calendar.ics.continuingIntoNextDay": "延续至后一天",
   "calendar.ics.continuingFromPreviousAndIntoNext": "延续自前一天并持续至后一天",
