@@ -1,7 +1,11 @@
 import { describe, expect, it } from "vitest";
 
+import { projectMarkdownBody } from "../../src/core/document/markdown-body-projection";
 import { parseNote } from "../../src/core/note/parsed-note";
-import { toggleTaskInContent } from "../../src/core/note/task-line-rewrite";
+import {
+  rescheduleTaskDueDateInContent,
+  toggleTaskInContent,
+} from "../../src/core/note/task-line-rewrite";
 
 describe("Markdown and Unicode boundaries", () => {
   it.each([
@@ -82,5 +86,68 @@ describe("Markdown and Unicode boundaries", () => {
     expect(note.statistics.wordCount).toBe(1);
     expect(note.preview).not.toContain("sample");
     expect(note.tasks.map((task) => task.text)).toEqual(["real"]);
+  });
+
+  it.each([
+    ["- <!-- hidden --> visible [[Target]] #tag", 3],
+    ["> <!-- hidden --> visible [[Target]] #tag", 3],
+    ["1. <!-- hidden --> visible [[Target]] #tag", 4],
+    ["> - <!-- hidden --> visible [[Target]] #tag", 3],
+    ["- parent\n  - <!-- hidden --> visible [[Target]] #tag", 4],
+    ["> 1. <!-- hidden --> visible [[Target]] #tag", 4],
+    ["1. parent\n   > <!-- hidden --> visible [[Target]] #tag", 5],
+    ["- <!-- 😀 --> visible [[Target]] #tag", 3],
+    ["- 😀 <!-- hidden --> visible [[Target]] #tag", 3],
+    ["> <!-- hidden\n> still hidden --> visible [[Target]] #tag", 3],
+  ])("preserves visible comment suffixes in containers %s", (content, words) => {
+    const note = parseNote("Containers.md", content);
+    expect(note.preview).toContain("visible Target #tag");
+    expect(note.statistics).toMatchObject({ wordCount: words, linkCount: 1, tagCount: 1 });
+    expect(note.tasks).toHaveLength(0);
+    for (const line of projectMarkdownBody(content, 0).lines) {
+      expect(line.visibleText.length).toBe(line.rawText.length);
+      expect(line.semanticText.length).toBe(line.rawText.length);
+    }
+  });
+
+  it.each([
+    "- <!-- hidden -->\n      - [ ] sample",
+    "> <!-- hidden -->\n>     - [ ] sample",
+    "> - <!-- hidden -->\n>       - [ ] sample",
+  ])("preserves code after comment-only container content %s", (content) => {
+    const note = parseNote("Tasks.md", content);
+    expect(note.statistics.wordCount).toBe(0);
+    expect(note.preview ?? "").not.toContain("sample");
+    expect(note.tasks).toHaveLength(0);
+    const expected = { ...parseNote("Tasks.md", "- [ ] sample").tasks[0]!, line: 1 };
+    expect(toggleTaskInContent(content, expected)).toEqual({ status: "stale" });
+  });
+
+  it("preserves Unicode source offsets when writing tasks after container comments", () => {
+    const content = "\uFEFF- <!-- 😀 --> visible [[Target]] #tag\r\n" +
+      "- [ ] 😀 <!-- 📅 1999-01-01 --> keep `📅 1998-01-01` 📅 2026-10-01\r\n";
+    const expected = parseNote("Tasks.md", content).tasks[0]!;
+    expect(expected.dueDate).toBe("2026-10-01");
+    expect(toggleTaskInContent(content, expected)).toEqual({
+      status: "updated", content: content.replace("- [ ]", "- [x]"),
+    });
+    expect(rescheduleTaskDueDateInContent(
+      content, expected, { year: 2026, month: 10, day: 2 },
+    )).toEqual({
+      status: "updated", content: content.replace("📅 2026-10-01", "📅 2026-10-02"),
+    });
+  });
+
+  it.each([
+    "<!-- hidden --> shown\n    - [ ] sample",
+    "- <!-- hidden --> shown\n      - [ ] sample",
+    "> <!-- hidden --> shown\n>     - [ ] sample",
+    "> - <!-- hidden --> shown\n>       - [ ] sample",
+  ])("keeps original code blocks after a visible comment suffix %s", (content) => {
+    const note = parseNote("Tasks.md", content);
+    expect(note.statistics.wordCount).toBe(1);
+    expect(note.preview).toContain("shown");
+    expect(note.preview).not.toContain("sample");
+    expect(note.tasks).toHaveLength(0);
   });
 });
