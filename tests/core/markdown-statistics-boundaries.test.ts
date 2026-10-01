@@ -72,4 +72,15 @@ describe("Markdown and Unicode boundaries", () => {
     expect(note.statistics.wordCount).toBe(1);
     expect(note.preview).toContain("shown");
   });
+
+  it.each([
+    "<!-- note -->",
+    "<!-- hidden\nstill hidden -->",
+    "<!-- hidden -->   ",
+  ])("keeps comment-only lines from converting indented code to prose %s", (comment) => {
+    const note = parseNote("Tasks.md", `${comment}\n    - [ ] sample\n\n- [ ] real`);
+    expect(note.statistics.wordCount).toBe(1);
+    expect(note.preview).not.toContain("sample");
+    expect(note.tasks.map((task) => task.text)).toEqual(["real"]);
+  });
 });

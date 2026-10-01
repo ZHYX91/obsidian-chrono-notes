@@ -33,6 +33,8 @@ export function projectMarkdownBody(
   // A hidden comment prefix is not indentation. Keep a non-space sentinel
   // solely in the parser input so its visible suffix cannot become code.
   const syntax = uncommented.split("\n").map((line, index) => {
+    // Fully hidden lines remain blank so they cannot begin a phantom paragraph.
+    if (line.trim().length === 0) return line;
     const leading = /^ */u.exec(line)?.[0].length ?? 0;
     const hiddenPrefix = rawLines[index]?.slice(0, leading).search(/\S/u) ?? -1;
     return hiddenPrefix < 0 ? line :
