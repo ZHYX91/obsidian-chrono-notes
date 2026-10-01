@@ -140,7 +140,7 @@ describe("persistent NoteIndex cache", () => {
 
     await expect(index.persistCacheNow()).resolves.toBeUndefined();
     expect(cache.save).toHaveBeenCalledOnce();
-    expect(cache.value).toMatchObject({ schema: 3 });
+    expect(cache.value).toMatchObject({ schema: 4 });
 
     const saveError = new Error("save failed");
     const consoleError = vi.spyOn(console, "error").mockImplementation(() => undefined);
@@ -426,7 +426,7 @@ describe("persistent NoteIndex cache", () => {
       entries: [duplicate.entries[0], duplicate.entries[0]],
     })).toBeNull();
     expect(parsePersistedNoteIndexSnapshot({
-      schema: 3,
+      schema: 4,
       entries: [{
         ...duplicate.entries[0],
         file: { ...FILE, mtime: Number.NaN },

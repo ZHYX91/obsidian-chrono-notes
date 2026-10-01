@@ -2,6 +2,24 @@
 
 Notable changes to Chrono Notes are documented in this file. The repository's numeric Git tags are the evidence for released versions; an entry without a corresponding local tag remains unreleased even if the manifests already contain that version.
 
+## 0.7.5
+
+### Fixed
+
+- Prevent an obsolete cache-startup continuation from invalidating a newer NoteIndex rebuild.
+- Use CommonMark block and list boundaries for task parsing and safe writeback, excluding code
+  examples while retaining nested tasks and code in task labels.
+- Count Unicode words, combining characters, internal join controls, and extended Han characters
+  consistently; invalidate older derived caches after the parsing and statistics changes.
+- Resolve ambiguous and nonexistent ICS local times consistently for IANA and embedded time zones,
+  including nominal duration endpoints and non-hour transitions.
+- Enforce the ICS event-count limit after line unfolding and against parsed components.
+
+### Changed
+
+- Align bilingual cache, template-failure, first-use, and settings-migration contracts with current behavior.
+- Update YAML and development dependencies and patch vulnerable transitive development packages.
+
 ## 0.7.4
 
 ### Added

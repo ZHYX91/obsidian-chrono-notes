@@ -81,7 +81,8 @@ export function parseIcsCalendar(
   }
   let eventCount = 0;
   const eventPattern = /^BEGIN:VEVENT\s*$/gimu;
-  while (eventPattern.exec(content) !== null) {
+  const unfolded = content.replace(/\r\n[ \t]|\n[ \t]|\r[ \t]/gu, "");
+  while (eventPattern.exec(unfolded) !== null) {
     eventCount += 1;
     if (eventCount > MAX_ICS_EVENTS_PER_SOURCE) {
       throw new RangeError(`ICS source exceeds ${MAX_ICS_EVENTS_PER_SOURCE} events`);
@@ -97,6 +98,9 @@ export function parseIcsCalendar(
   const components = root.name === "vevent"
     ? [root]
     : root.getAllSubcomponents("vevent");
+  if (components.length > MAX_ICS_EVENTS_PER_SOURCE) {
+    throw new RangeError(`ICS source exceeds ${MAX_ICS_EVENTS_PER_SOURCE} events`);
+  }
   const events: IcsCalendarEvent[] = [];
   let skippedRecurring = 0;
   let skippedInvalid = 0;
@@ -294,7 +298,7 @@ function getDurationEnd(
     nominal.adjust(duration.weeks * 7 + duration.days, 0, 0, 0);
     const exactSeconds =
       duration.hours * 3_600 + duration.minutes * 60 + duration.seconds;
-    const timestamp = nominal.toUnixTime() * 1_000 + exactSeconds * 1_000;
+    const timestamp = resolveEmbeddedTime(nominal) + exactSeconds * 1_000;
     if (!Number.isFinite(timestamp)) return null;
     return Object.freeze({
       date: Object.freeze({
@@ -307,8 +311,9 @@ function getDurationEnd(
       zone: start.zone,
     });
   }
-  const end = DateTime.fromMillis(start.timestamp, { zone: start.zone })
-    .plus({ weeks: duration.weeks, days: duration.days })
+  const nominal = DateTime.fromMillis(start.timestamp, { zone: start.zone })
+    .plus({ weeks: duration.weeks, days: duration.days });
+  const end = firstOccurrence(nominal)
     .plus({ hours: duration.hours, minutes: duration.minutes, seconds: duration.seconds });
   return fromDateTime(end, isAllDay);
 }
@@ -375,11 +380,11 @@ function parseDateProperty(
       { year, month, day, hour, minute, second, isDate: false },
       embeddedTimezone,
     );
-    const timestamp = sourceTime.toUnixTime() * 1_000;
+    const timestamp = resolveEmbeddedTime(sourceTime);
     if (!Number.isFinite(timestamp)) return null;
     return Object.freeze({
-      date: Object.freeze({ year, month, day }),
-      timeMinutes: hour * 60 + minute,
+      date: Object.freeze({ year: sourceTime.year, month: sourceTime.month, day: sourceTime.day }),
+      timeMinutes: sourceTime.hour * 60 + sourceTime.minute,
       timestamp,
       zone: normalizedTzid!,
       sourceTime,
@@ -392,16 +397,62 @@ function parseDateProperty(
     { year, month, day, hour, minute, second },
     { zone: sourceZone },
   );
-  if (
-    !sourceValue.isValid ||
-    sourceValue.year !== year ||
-    sourceValue.month !== month ||
-    sourceValue.day !== day ||
-    sourceValue.hour !== hour ||
-    sourceValue.minute !== minute ||
-    sourceValue.second !== second
-  ) return null;
-  return fromDateTime(sourceValue, false);
+  if (!sourceValue.isValid) return null;
+  // Civil fields were validated in UTC above. A gap is interpreted with the
+  // offset before the transition; an overlap uses its first occurrence.
+  return fromDateTime(firstOccurrence(sourceValue), false);
+}
+
+function firstOccurrence(value: DateTime): DateTime {
+  return value.getPossibleOffsets().reduce((left, right) =>
+    left.toMillis() <= right.toMillis() ? left : right);
+}
+
+interface EmbeddedTransition {
+  readonly year: number;
+  readonly month: number;
+  readonly day: number;
+  readonly hour: number;
+  readonly minute: number;
+  readonly second: number;
+  readonly prevUtcOffset: number;
+  readonly utcOffset: number;
+}
+
+function isEmbeddedTransition(value: unknown): value is EmbeddedTransition {
+  if (typeof value !== "object" || value === null) return false;
+  const fields = value as Record<string, unknown>;
+  return ["year", "month", "day", "hour", "minute", "second", "prevUtcOffset", "utcOffset"]
+    .every((key) => typeof fields[key] === "number" && Number.isFinite(fields[key]));
+}
+
+function resolveEmbeddedTime(time: IcalTime): number {
+  const wall = DateTime.fromObject({
+    year: time.year, month: time.month, day: time.day,
+    hour: time.hour, minute: time.minute, second: time.second,
+  }, { zone: "UTC" }).toMillis();
+  const zone = time.zone;
+  let offset = zone.utcOffset(time);
+  // utcOffset expands the public transition table for this year. ical.js's
+  // default gap/overlap choice differs from RFC 5545 section 3.3.5.
+  for (const candidate of zone.changes as readonly unknown[]) {
+    if (!isEmbeddedTransition(candidate)) continue;
+    if (Math.abs(candidate.year - time.year) > 1) continue;
+    const transition = DateTime.fromObject({
+      year: candidate.year, month: candidate.month, day: candidate.day,
+      hour: candidate.hour, minute: candidate.minute, second: candidate.second,
+    }, { zone: "UTC" }).toMillis();
+    const before = transition + candidate.prevUtcOffset * 1_000;
+    const after = transition + candidate.utcOffset * 1_000;
+    if (wall >= Math.min(before, after) && wall < Math.max(before, after)) {
+      offset = candidate.prevUtcOffset;
+      // Use the actual local clock after resolving a nonexistent time, so
+      // subsequent nominal-day arithmetic agrees with the IANA path.
+      if (after > before) time.adjust(0, 0, 0, candidate.utcOffset - offset);
+      break;
+    }
+  }
+  return wall - offset * 1_000;
 }
 
 function inDisplayZone(value: IcsDateValue, displayZone: string): IcsDateValue | null {

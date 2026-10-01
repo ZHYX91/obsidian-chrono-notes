@@ -335,7 +335,8 @@ export class NoteIndex {
       );
       const cachedSnapshot = this.source.listFiles === undefined
         ? null
-        : await this.loadCacheSnapshot();
+        : await this.loadCacheSnapshot(startLifecycle);
+      if (!this.isCurrentLifecycle(startLifecycle)) return;
       const listPathsStarted = this.startDiagnosticTiming();
       let initialPaths: string[];
       let listedFiles: readonly NoteSourceFile[] | null = null;
@@ -457,7 +458,11 @@ export class NoteIndex {
     if (this.cache === null) {
       throw new Error("NoteIndex cache is not configured");
     }
+    const clearLifecycle = this.lifecycle;
     await this.cacheSaveTail;
+    if (this.active || this.lifecycle !== clearLifecycle) {
+      throw new Error("NoteIndex lifecycle changed before clearing its cache");
+    }
     await this.cache.clear();
   }
 
@@ -491,19 +496,27 @@ export class NoteIndex {
     return () => this.diagnosticsListeners.delete(listener);
   }
 
-  private async loadCacheSnapshot(): Promise<PersistedNoteIndexSnapshot | null> {
+  private isCurrentLifecycle(lifecycle: number): boolean {
+    return this.active && this.lifecycle === lifecycle;
+  }
+
+  private async loadCacheSnapshot(lifecycle: number): Promise<PersistedNoteIndexSnapshot | null> {
     if (this.cache === null) return null;
     try {
       await this.cacheSaveTail;
+      if (!this.isCurrentLifecycle(lifecycle)) return null;
       const raw = await this.cache.load();
+      if (!this.isCurrentLifecycle(lifecycle)) return null;
       if (raw === null || raw === undefined) return null;
       const parsed = await parsePersistedNoteIndexSnapshotIncrementally(raw, {
         clock: this.initialIndexClock,
         timeSliceMs: this.initialIndexTimeSliceMs,
         yieldToHost: this.yieldInitialIndex,
       });
+      if (!this.isCurrentLifecycle(lifecycle)) return null;
       if (parsed !== null) return parsed;
       await this.cache.clear();
+      if (!this.isCurrentLifecycle(lifecycle)) return null;
     } catch (error) {
       reportCacheFailure("load", error);
     }
