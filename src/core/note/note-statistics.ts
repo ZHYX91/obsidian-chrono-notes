@@ -10,7 +10,13 @@ export interface NoteStatistics {
   readonly taskCompletionRate: number;
 }
 
-const WORD_PATTERN = /[一-鿿㐀-䶿豈-﫿]|[a-zA-Z]+(?:['’-][a-zA-Z]+)*|[0-9]+(?:[,.][0-9]+)*/g;
+// Han ideographs count individually; other letters and their combining marks
+// form words, with internal apostrophes/hyphens. Numbers retain decimal groups.
+const LETTER_WORD_PATTERN = String.raw`(?!\p{Script=Han})\p{L}(?:(?!\p{Script=Han})[\p{L}\p{M}\u200c\u200d])*`;
+const WORD_PATTERN = new RegExp(
+  String.raw`\p{Script=Han}|${LETTER_WORD_PATTERN}(?:['’-]${LETTER_WORD_PATTERN})*|\p{N}+(?:[,.]\p{N}+)*`,
+  "gu",
+);
 const WIKI_LINK_PATTERN = /!?\[\[[^[\]]+\]\]/g;
 const MARKDOWN_LINK_PATTERN = /!?\[[^\]]+\]\([^)]+\)/g;
 const TAG_PATTERN = /(^|[^\p{L}\p{N}_/])#([\p{L}\p{N}_/-]+)/gu;
