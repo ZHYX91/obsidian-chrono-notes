@@ -1,4 +1,4 @@
-import { getLanguage, Notice, Plugin, TFolder } from "obsidian";
+import { getLanguage, Notice, Plugin, TFolder, type Command } from "obsidian";
 
 import { openObsidianPluginSettings } from "../adapters/obsidian/obsidian-plugin-settings";
 import { showObsidianDateContextMenu } from "../adapters/obsidian/obsidian-date-context-menu";
@@ -68,6 +68,8 @@ export default class ChronoNotesPlugin extends Plugin {
   settings: ChronoNotesSettings = createDefaultSettings();
   private runtime: ChronoRuntime | null = null;
   private settingsTab: ChronoNotesSettingTab | null = null;
+  private readonly localizedCommands: Command[] = [];
+  private ribbonElement: HTMLElement | null = null;
   private noteIndexCacheRebuild: Promise<void> | null = null;
   private readonly noteIndexStatusListeners = new Set<() => void>();
   private readonly settingsListeners = new Set<() => void>();
@@ -100,12 +102,12 @@ export default class ChronoNotesPlugin extends Plugin {
       const commandMessages = getPluginCommandMessages(this.getTranslator().t);
       this.registerCalendarView(commandMessages);
       this.registerPeriodicNoteCommands(commandMessages);
-      this.addCommand({
+      this.addLocalizedCommand({
         id: "open-range-note-list",
         name: commandMessages.openRangeList,
         callback: () => this.openIntervalNoteList(),
       });
-      this.addCommand({
+      this.addLocalizedCommand({
         id: "open-mini-calendar",
         name: commandMessages.openMiniCalendar,
         callback: () => this.showMiniCalendar(
@@ -113,7 +115,7 @@ export default class ChronoNotesPlugin extends Plugin {
           (date) => this.activateCalendarView(date),
         ),
       });
-      this.addCommand({
+      this.addLocalizedCommand({
         id: "jump-to-date",
         name: commandMessages.jumpToDate,
         callback: () => this.showJumpToDate(),
@@ -137,6 +139,8 @@ export default class ChronoNotesPlugin extends Plugin {
 
   override onunload(): void {
     this.settingsTab?.flushSettingsSaveOnUnload();
+    this.localizedCommands.length = 0;
+    this.ribbonElement = null;
     this.endRuntime();
   }
 
@@ -168,9 +172,14 @@ export default class ChronoNotesPlugin extends Plugin {
     const snapshot = normalizeSettings(this.settings);
     const save = this.settingsSaveTail.then(async () => {
       await this.saveData(snapshot);
+      const previousLocale = this.persistedSettings.locale;
       const impact = getSettingsChangeImpact(this.persistedSettings, snapshot);
       this.persistedSettings = snapshot;
       if (!this.isRuntimeCurrent(runtimeRevision) || !impact.changed) return;
+
+      if (previousLocale !== snapshot.locale) {
+        this.refreshLocalizedChrome(snapshot.locale);
+      }
 
       if (impact.propertiesDateDisplay) {
         this.runtime?.propertiesDateDisplay.setSettings(getPropertyDateDisplaySettings(
@@ -246,9 +255,40 @@ export default class ChronoNotesPlugin extends Plugin {
     };
   }
 
+  private addLocalizedCommand(command: Command): void {
+    this.localizedCommands.push(this.addCommand(command));
+  }
+
+  private refreshLocalizedChrome(locale: ChronoNotesSettings["locale"] = this.settings.locale): void {
+    const messages = getPluginCommandMessages(createTranslator(locale, getLanguage()).t);
+    const names: Record<string, string> = {
+      "open-calendar": messages.openCalendar,
+      "open-range-note-list": messages.openRangeList,
+      "open-mini-calendar": messages.openMiniCalendar,
+      "jump-to-date": messages.jumpToDate,
+    };
+    for (const noteType of PERIODIC_NOTE_TYPES) {
+      names[`open-${noteType}-note`] = messages.openPeriodic(noteType);
+    }
+
+    const idPrefix = `${this.manifest.id}:`;
+    const namePrefix = `${this.manifest.name}: `;
+    for (const command of this.localizedCommands) {
+      const localId = command.id.startsWith(idPrefix) ? command.id.slice(idPrefix.length) : command.id;
+      const localizedName = names[localId];
+      if (localizedName === undefined) continue;
+      command.name = command.name.startsWith(namePrefix)
+        ? `${namePrefix}${localizedName}`
+        : localizedName;
+    }
+
+    this.ribbonElement?.setAttribute("aria-label", messages.ribbonCalendar);
+    this.ribbonElement?.setAttribute("title", messages.ribbonCalendar);
+  }
+
   private registerPeriodicNoteCommands(messages: PluginCommandMessages): void {
     for (const noteType of PERIODIC_NOTE_TYPES) {
-      this.addCommand({
+      this.addLocalizedCommand({
         id: `open-${noteType}-note`,
         name: messages.openPeriodic(noteType),
         callback: () => {
@@ -320,10 +360,10 @@ export default class ChronoNotesPlugin extends Plugin {
         return view;
       },
     );
-    this.addRibbonIcon("calendar-days", messages.ribbonCalendar, () => {
+    this.ribbonElement = this.addRibbonIcon("calendar-days", messages.ribbonCalendar, () => {
       void this.activateCalendarView();
     });
-    this.addCommand({
+    this.addLocalizedCommand({
       id: "open-calendar",
       name: messages.openCalendar,
       callback: () => {
