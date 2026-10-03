@@ -20,9 +20,10 @@ const mocks = vi.hoisted(() => {
   };
 
   const state = {
-    commands: [] as Array<{ readonly id: string }>,
+    commands: [] as Array<{ readonly id: string; name: string }>,
     removedCommands: [] as string[],
     ribbons: [] as string[],
+    ribbonElements: [] as Array<{ readonly attributes: Map<string, string>; setAttribute(name: string, value: string): void }>,
     removedRibbons: [] as string[],
     views: [] as Array<{ readonly type: string; readonly creator: (leaf: unknown) => unknown }>,
     removedViews: [] as string[],
@@ -117,7 +118,7 @@ const mocks = vi.hoisted(() => {
       this.register(() => state.removedViews.push(type));
     }
 
-    addCommand(command: { readonly id: string }): { readonly id: string } {
+    addCommand(command: { readonly id: string; name: string }): { readonly id: string; name: string } {
       state.commands.push(command);
       this.register(() => state.removedCommands.push(command.id));
       return command;
@@ -125,8 +126,15 @@ const mocks = vi.hoisted(() => {
 
     addRibbonIcon(_icon: string, title: string): HTMLElement {
       state.ribbons.push(title);
+      const element = {
+        attributes: new Map<string, string>(),
+        setAttribute(name: string, value: string) {
+          this.attributes.set(name, value);
+        },
+      };
+      state.ribbonElements.push(element);
       this.register(() => state.removedRibbons.push(title));
-      return {} as HTMLElement;
+      return element as unknown as HTMLElement;
     }
 
     addSettingTab(tab: unknown): void {
@@ -629,6 +637,24 @@ describe("ChronoNotesPlugin lifecycle composition", () => {
       expect.any(Error),
     );
     plugin.unload();
+  });
+
+  it("refreshes command and ribbon labels when the interface language changes", async () => {
+    const plugin = createPlugin();
+    await plugin.onload();
+
+    const command = mocks.state.commands.find(({ id }) => id === "open-calendar");
+    expect(command?.name).toBe("Open calendar");
+    expect(mocks.state.ribbons).toEqual(["Open Chrono Notes"]);
+
+    plugin.settings.locale = "zh-CN";
+    await plugin.saveSettings();
+
+    expect(command?.name).toBe("打开日历");
+    expect(mocks.state.ribbonElements[0]?.attributes.get("aria-label"))
+      .toBe("打开 Chrono Notes");
+    expect(mocks.state.ribbonElements[0]?.attributes.get("title"))
+      .toBe("打开 Chrono Notes");
   });
 
   it("resolves Auto from Obsidian's configured language instead of the system locale", async () => {
@@ -1317,6 +1343,7 @@ function resetCollections(): void {
   mocks.state.commands.length = 0;
   mocks.state.removedCommands.length = 0;
   mocks.state.ribbons.length = 0;
+  mocks.state.ribbonElements.length = 0;
   mocks.state.removedRibbons.length = 0;
   mocks.state.views.length = 0;
   mocks.state.removedViews.length = 0;
