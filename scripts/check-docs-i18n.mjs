@@ -43,6 +43,49 @@ function outlineSignature(headings) {
     .map(({ level, number }) => (number === null ? `h${level}` : `n${number}`));
 }
 
+
+function technicalStructure(source) {
+  const body = source.replace(/^---\n[\s\S]*?\n---\n/u, "");
+  const fences = [];
+  const tables = [];
+  const links = [];
+  let activeFence = null;
+
+  for (const line of body.split(/\r\n|\n|\r/u)) {
+    const fence = /^\s*(`{3,}|~{3,})(.*)$/u.exec(line);
+    if (fence != null) {
+      if (activeFence == null) {
+        activeFence = fence[1];
+        fences.push((fence[2] ?? "").trim());
+      } else if (
+        fence[1][0] === activeFence[0] &&
+        fence[1].length >= activeFence.length &&
+        (fence[2] ?? "").trim().length === 0
+      ) {
+        activeFence = null;
+      }
+      continue;
+    }
+    if (activeFence != null) continue;
+
+    if (/^\s*\|.*\|\s*$/u.test(line)) {
+      tables.push(line.split("|").length - 2);
+    }
+    for (const match of line.matchAll(/!?\[[^\]]*\]\(([^)]+)\)/gu)) {
+      const rawTarget = (match[1] ?? "").trim().replace(/^<|>$/gu, "");
+      if (/^(?:[a-z][a-z0-9+.-]*:|#|\/)/iu.test(rawTarget)) continue;
+      links.push(rawTarget
+        .replace(/\.zh-CN\.md(?=$|[#?])/u, ".md")
+        .replace(/\.en\.md(?=$|[#?])/u, ".md"));
+    }
+  }
+
+  if (activeFence != null) {
+    throw new Error("Stable document has an unclosed fenced code block");
+  }
+  return { fences, links, tables };
+}
+
 function validatePair(projectRoot, sourceName, translationName, errors) {
   const sourcePath = path.join(projectRoot, "docs", sourceName);
   const translationPath = path.join(projectRoot, "docs", translationName);
@@ -87,6 +130,13 @@ function validatePair(projectRoot, sourceName, translationName, errors) {
       errors.push(
         `docs/${translationName} heading structure must match docs/${sourceName}: ` +
         `expected ${JSON.stringify(sourceOutline)} but found ${JSON.stringify(translationOutline)}`,
+      );
+    }
+    const sourceStructure = technicalStructure(source);
+    const translationStructure = technicalStructure(translation);
+    if (JSON.stringify(sourceStructure) !== JSON.stringify(translationStructure)) {
+      errors.push(
+        `docs/${translationName} technical Markdown structure must match docs/${sourceName}`,
       );
     }
   }
