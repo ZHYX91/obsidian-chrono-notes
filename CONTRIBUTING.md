@@ -14,7 +14,7 @@ Thank you for improving Chrono Notes. Keep every contribution narrowly scoped, r
 This repository is independently buildable. It requires the exact runtime versions declared by the repository:
 
 - Node.js `24.19.0`, also recorded in `.node-version` and `package.json`.
-- npm `11.9.0`, recorded in `package.json`.
+- npm `11.17.0`, recorded in `package.json`.
 
 Install dependencies with:
 
