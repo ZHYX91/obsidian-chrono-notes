@@ -21,6 +21,7 @@ const mocks = vi.hoisted(() => {
 
   const state = {
     commands: [] as Array<{ readonly id: string; name: string }>,
+    prefixCommands: false,
     removedCommands: [] as string[],
     ribbons: [] as string[],
     ribbonElements: [] as Array<{ readonly attributes: Map<string, string>; setAttribute(name: string, value: string): void }>,
@@ -119,9 +120,12 @@ const mocks = vi.hoisted(() => {
     }
 
     addCommand(command: { readonly id: string; name: string }): { readonly id: string; name: string } {
-      state.commands.push(command);
-      this.register(() => state.removedCommands.push(command.id));
-      return command;
+      const registered = state.prefixCommands
+        ? { ...command, id: `chrono-notes:${command.id}`, name: `Chrono Notes: ${command.name}` }
+        : command;
+      state.commands.push(registered);
+      this.register(() => state.removedCommands.push(registered.id));
+      return registered;
     }
 
     addRibbonIcon(_icon: string, title: string): HTMLElement {
@@ -655,6 +659,35 @@ describe("ChronoNotesPlugin lifecycle composition", () => {
       .toBe("打开 Chrono Notes");
     expect(mocks.state.ribbonElements[0]?.attributes.get("title"))
       .toBe("打开 Chrono Notes");
+  });
+
+  it("refreshes prefixed host commands in place across language round trips", async () => {
+    mocks.state.prefixCommands = true;
+    const plugin = createPlugin();
+    await plugin.onload();
+    const commands = [...mocks.state.commands];
+    const initialNames = commands.map(({ name }) => name);
+    const initialIds = commands.map(({ id }) => id);
+    expect(commands).toHaveLength(11);
+    expect(initialNames.every((name) => name.startsWith("Chrono Notes: "))).toBe(true);
+
+    plugin.settings.locale = "zh-CN";
+    await plugin.saveSettings();
+    expect(commands.every((command, index) => command.name !== initialNames[index])).toBe(true);
+    expect(commands.find(({ id }) => id === "chrono-notes:open-calendar")?.name)
+      .toBe("Chrono Notes: 打开日历");
+
+    plugin.settings.locale = "en";
+    await plugin.saveSettings();
+    expect(commands.map(({ name }) => name)).toEqual(initialNames);
+    expect(mocks.state.commands.map(({ id }) => id)).toEqual(initialIds);
+    expect(mocks.state.commands).toHaveLength(commands.length);
+    for (const [index, command] of commands.entries()) {
+      expect(mocks.state.commands[index]).toBe(command);
+    }
+    expect(mocks.state.ribbonElements[0]?.attributes.get("aria-label"))
+      .toBe("Open Chrono Notes");
+    plugin.unload();
   });
 
   it("resolves Auto from Obsidian's configured language instead of the system locale", async () => {
@@ -1289,7 +1322,7 @@ describe("ChronoNotesPlugin lifecycle composition", () => {
 function createPlugin(): ChronoNotesPlugin {
   return new ChronoNotesPlugin(
     createApp() as unknown as App,
-    { id: "chrono-notes" } as PluginManifest,
+    { id: "chrono-notes", name: "Chrono Notes" } as PluginManifest,
   );
 }
 
@@ -1340,6 +1373,7 @@ function createApp(): Record<string, unknown> {
 }
 
 function resetCollections(): void {
+  mocks.state.prefixCommands = false;
   mocks.state.commands.length = 0;
   mocks.state.removedCommands.length = 0;
   mocks.state.ribbons.length = 0;
