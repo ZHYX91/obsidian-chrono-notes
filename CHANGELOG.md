@@ -2,6 +2,11 @@
 
 Notable changes to Chrono Notes are documented in this file. The repository's numeric Git tags are the evidence for released versions; an entry without a corresponding local tag remains unreleased even if the manifests already contain that version.
 
+## 0.7.6
+
+- Refresh all command names immediately when the interface language changes, including their plugin prefix.
+- Clarify bilingual task editing, conflict and interval-note messages.
+
 ## 0.7.5
 
 ### Fixed
