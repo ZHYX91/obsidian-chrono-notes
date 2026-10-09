@@ -6,6 +6,12 @@ Chrono Notes is an Obsidian calendar workspace for periodic notes, optional cale
 
 ## Features
 
+See the calendar on [desktop](https://raw.githubusercontent.com/ZHYX91/obsidian-chrono-notes/main/docs/assets/chrono-notes-desktop-en.png) and [Android](https://raw.githubusercontent.com/ZHYX91/obsidian-chrono-notes/main/docs/assets/chrono-notes-android-en.png):
+
+![Chrono Notes desktop calendar workspace](https://raw.githubusercontent.com/ZHYX91/obsidian-chrono-notes/main/docs/assets/chrono-notes-desktop-en.png)
+
+![Chrono Notes Android calendar workspace](https://raw.githubusercontent.com/ZHYX91/obsidian-chrono-notes/main/docs/assets/chrono-notes-android-en.png)
+
 - A century view grouped by decade, with the same periodic-note cells, indicators and interactions as the year overview.
 - Year, month, and week calendar views with note state, tasks, holidays, local ICS events, and time-range notes.
 - Daily, weekly, monthly, quarterly, yearly, decadal, and century periodic notes with built-in or Templater templates.
@@ -29,6 +35,10 @@ Source notes and plugin settings stay inside the Vault. Read-only ICS sources ma
 
 ## Installation
 
+### Community Plugins (recommended)
+
+In Obsidian, open **Settings → Community plugins → Browse**, search for **Chrono Notes**, select **Install**, then **Enable**. You can also open the [Chrono Notes community listing](https://obsidian.md/plugins?id=chrono-notes). No ZIP extraction is needed for this route.
+
 ### Manual installation
 
 Download `chrono-notes-<version>.zip` from the [latest release](https://github.com/ZHYX91/obsidian-chrono-notes/releases/latest) and extract it into `Vault/.obsidian/plugins/`. The archive contains the `chrono-notes/` directory with `main.js`, `manifest.json`, and `styles.css`. Reload Obsidian, then enable Chrono Notes under Community plugins.
@@ -38,6 +48,8 @@ Download `chrono-notes-<version>.zip` from the [latest release](https://github.c
 Back up and preserve `Vault/.obsidian/plugins/chrono-notes/data.json` when it exists. Replace only `main.js`, `manifest.json`, and `styles.css`; delete `data.json` only when you explicitly want to reset all plugin preferences.
 
 ## Usage
+
+**First time:** Choose your periodic-note types and note paths under Chrono Notes settings, open the calendar from the ribbon, then click a date to select it. Double-click or press Enter only when you want to open or create its note. The calendar will not create a note merely because you select a date.
 
 1. Enable the periodic-note types you use and confirm their path patterns in Chrono Notes settings.
 2. Open the calendar from the ribbon or command palette.

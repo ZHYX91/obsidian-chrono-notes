@@ -6,6 +6,12 @@ Chrono Notes 是一个面向 Obsidian 周期笔记工作流的日历插件，整
 
 ## 功能特性
 
+先看看桌面版和 Android 版的日历界面：
+
+![Chrono Notes 桌面版日历工作区](../assets/chrono-notes-desktop-en.png)
+
+![Chrono Notes Android 日历工作区](../assets/chrono-notes-android-en.png)
+
 - 世纪视图按年代分组，直接浏览年份、创建或打开周期笔记；
 - 年、月、周三种日历视图，集中呈现笔记状态、任务、节假日、本地 ICS 事件和区间笔记；
 - 日、周、月、季度、年、年代和世纪七类周期笔记，支持内置模板或 Templater 模板；
@@ -29,6 +35,10 @@ Chrono Notes 是一个面向 Obsidian 周期笔记工作流的日历插件，整
 
 ## 安装
 
+### 社区插件（推荐）
+
+在 Obsidian 中打开**设置 → 第三方插件 → 浏览**，搜索 **Chrono Notes**，点击**安装**并**启用**。也可以先打开 [Chrono Notes 社区插件页面](https://obsidian.md/plugins?id=chrono-notes)。通过社区插件市场安装，无需自己解压 ZIP。
+
 ### 手动安装
 
 从[最新版本](https://github.com/ZHYX91/obsidian-chrono-notes/releases/latest)下载 `chrono-notes-<version>.zip`，解压到 `Vault/.obsidian/plugins/`。压缩包包含 `chrono-notes/` 目录及其中的 `main.js`、`manifest.json` 和 `styles.css`。重新加载 Obsidian 后，在第三方插件中启用 Chrono Notes。
@@ -38,6 +48,8 @@ Chrono Notes 是一个面向 Obsidian 周期笔记工作流的日历插件，整
 如果存在 `Vault/.obsidian/plugins/chrono-notes/data.json`，请先备份并保留。只替换 `main.js`、`manifest.json` 和 `styles.css`；只有在明确希望重置全部插件偏好时才删除 `data.json`。
 
 ## 使用
+
+**初次使用：** 先在 Chrono Notes 设置中选择要使用的周期笔记类型和保存路径，然后从功能区打开日历。单击日期只会选中；只有双击或按 Enter 才会打开或创建笔记，因此浏览日历不会自动新增笔记。
 
 1. 在 Chrono Notes 设置中启用需要的周期笔记类型，并确认路径格式；
 2. 从侧边栏图标或命令面板打开日历；
