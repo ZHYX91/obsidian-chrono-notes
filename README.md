@@ -6,7 +6,7 @@ Chrono Notes is an Obsidian calendar workspace for periodic notes, optional cale
 
 ## Features
 
-See the calendar on [desktop](https://raw.githubusercontent.com/ZHYX91/obsidian-chrono-notes/main/docs/assets/chrono-notes-desktop-en.png) and [Android](https://raw.githubusercontent.com/ZHYX91/obsidian-chrono-notes/main/docs/assets/chrono-notes-android-en.png):
+See the desktop and Android calendar layouts:
 
 ![Chrono Notes desktop calendar workspace](https://raw.githubusercontent.com/ZHYX91/obsidian-chrono-notes/main/docs/assets/chrono-notes-desktop-en.png)
 
