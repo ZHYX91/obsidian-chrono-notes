@@ -49,7 +49,7 @@ Back up and preserve `Vault/.obsidian/plugins/chrono-notes/data.json` when it ex
 
 ## Usage
 
-**First time:** Choose your periodic-note types and note paths under Chrono Notes settings, open the calendar from the ribbon, then click a date to select it. Double-click or press Enter only when you want to open or create its note. The calendar will not create a note merely because you select a date.
+**First time:** Choose your periodic-note types and note paths under Chrono Notes settings, open the calendar from the ribbon, then click a date to select it. To open or create its note, double-click, press Enter, or long-press on a touch screen. The calendar will not create a note merely because you select a date.
 
 1. Enable the periodic-note types you use and confirm their path patterns in Chrono Notes settings.
 2. Open the calendar from the ribbon or command palette.
