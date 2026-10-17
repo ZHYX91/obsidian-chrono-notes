@@ -55,7 +55,6 @@ export const KO_MESSAGES: MessageCatalog = Object.freeze({
   "calendar.ics.untitled": "제목 없는 일정",
   "calendarPreview.emptyNote": "빈 노트",
   "calendarPreview.missingDaily": "일간 노트가 없습니다",
-  "settings.appearance.fontSizeMode": "글꼴 크기",
   "settings.appearance.fontSizeFollowObsidian": "Obsidian 설정 따르기",
   "settings.appearance.fontSizeFollowSidebar": "사이드바에 맞추기",
   "settings.appearance.fontSizeFixed": "고정 크기",
