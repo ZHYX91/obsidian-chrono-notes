@@ -24,7 +24,7 @@ See the desktop and Android calendar layouts:
 - Local, read-only ICS calendar sources.
 - Configurable display formats for Obsidian Date and Date & time properties while preserving ISO YAML, native segmented editing, and optional daily-note opening.
 
-Source notes and plugin settings stay inside the Vault. Read-only ICS sources may be Vault files or explicitly configured local desktop paths; they are never uploaded by the plugin. Chrono Notes keeps only a derived NoteIndex cache in device-local IndexedDB; that cache is not written into the Vault or sent to a remote service. No account is required.
+Your notes and plugin settings remain in your Obsidian Vault. Chrono Notes reads local ICS files only when you choose them, and never uploads them. To make the calendar faster, it keeps a rebuildable note index in this device's IndexedDB storage; the index is not added to your Vault. No account is needed.
 
 ## Requirements and compatibility
 
