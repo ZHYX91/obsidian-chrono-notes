@@ -6,6 +6,13 @@ Chrono Notes añade a Obsidian un calendario para notas periódicas, tareas, fes
 
 ## Funciones
 
+Así se ve el calendario en escritorio y Android:
+
+![Calendario de Chrono Notes en escritorio](../assets/chrono-notes-desktop-en.png)
+
+![Calendario de Chrono Notes en Android](../assets/chrono-notes-android-en.png)
+
+
 - Vistas de semana, mes, año y siglo con indicadores de notas, tareas, estadísticas y vistas previas.
 - Notas diarias, semanales, mensuales, trimestrales, anuales, de década y de siglo, con plantillas integradas o Templater.
 - Navegación entre notas, progreso de tareas, mapas de calor y notas para un intervalo de fechas.
@@ -18,15 +25,37 @@ Requiere Obsidian 1.12.7 o posterior en escritorio o móvil. Los archivos ICS gu
 
 ## Instalación
 
-**Plugins de la comunidad:** abre **Ajustes → Plugins de la comunidad → Explorar**, busca **Chrono Notes**, pulsa **Instalar** y después **Activar**.
+### Plugins de la comunidad
 
-**Manual:** descarga `chrono-notes-<version>.zip` de la [última versión](https://github.com/ZHYX91/obsidian-chrono-notes/releases/latest) y extráelo en `Vault/.obsidian/plugins/`. La carpeta `chrono-notes/` contiene `main.js`, `manifest.json` y `styles.css`. Reinicia Obsidian y activa el plugin.
+ abre **Ajustes → Plugins de la comunidad → Explorar**, busca **Chrono Notes**, pulsa **Instalar** y después **Activar**.
 
-**Actualizar:** conserva una copia de `data.json` y reemplaza solo los archivos del plugin. Borra `data.json` únicamente si quieres restablecer la configuración.
+### Manual
+
+ descarga `chrono-notes-<version>.zip` de la [última versión](https://github.com/ZHYX91/obsidian-chrono-notes/releases/latest) y extráelo en `Vault/.obsidian/plugins/`. La carpeta `chrono-notes/` contiene `main.js`, `manifest.json` y `styles.css`. Reinicia Obsidian y activa el plugin.
+
+### Actualizar
+
+ conserva una copia de `data.json` y reemplaza solo los archivos del plugin. Borra `data.json` únicamente si quieres restablecer la configuración.
 
 ## Uso
 
 Configura los tipos de notas, sus rutas y plantillas, y abre el calendario desde la barra lateral o la paleta de comandos. **Un clic selecciona la fecha, pero no crea ninguna nota.** Haz doble clic o pulsa Intro para abrir o crear la nota; en pantallas táctiles, mantén pulsado. El clic derecho abre las acciones de fecha. Ctrl/Cmd-clic o clic central abre una pestaña nueva. Activa los calendarios, festivos y archivos ICS según los necesites.
+
+### Notas de década y de siglo
+
+La vista de siglo muestra cada década junto a dos filas de cinco años. En pantallas estrechas, la década se coloca encima; los años que no pertenezcan a ese siglo dejan una casilla vacía. Al entrar se muestra la década del año seleccionado. « Este siglo » vuelve a la década actual y la navegación se mantiene visible al desplazarte.
+
+Activa las notas de década y siglo en la configuración y selecciona Siglo en la barra lateral. Tanto la década como el siglo tienen su propia casilla. Un clic solo selecciona; el doble clic o Intro abre o crea la nota. Ctrl/Cmd-clic o clic central abre una pestaña nueva y puedes mantener pulsado en pantallas táctiles. Los indicadores, progreso de tareas y vistas previas funcionan como en la vista anual. Las rutas predeterminadas son `[diary]/DEC[s]` (2020s) para décadas y `[diary]/[C]CEN` (C21) para siglos.
+
+Una década abarca, por ejemplo, 2020–2029; el siglo XXI comprende 2001–2100. `DEC` y `CEN` generan cifras fijas, independientes del idioma. Conviene organizar las carpetas por siglo O por década: los años 2000 cruzan C20/C21, pero la nota de década pertenece a C20 por su año inicial, 2000. Las notas existentes no se mueven.
+
+Las plantillas admiten los formatos `{{date:DEC[s]}}`, `{{date:[C]CEN}}` y `{{start:YYYY}}–{{end:YYYY}}`. Todas las plantillas periódicas ofrecen las fechas inicial y final y `{{days}}`, que incluye ambos extremos. Las páginas de ajustes muestran marcadores, ejemplos y equivalentes de Templater; General → Configuración de plantillas explica la sintaxis compartida.
+
+### Reconocimiento de notas de intervalo
+
+Una nota de intervalo necesita las propiedades `start` y `end` con fechas válidas. Al crearla, Chrono Notes añade `chrono-notes: interval`, por lo que se reconocerá en todo el Vault.
+
+Si falta la propiedad `chrono-notes`, la nota solo se reconoce dentro del ámbito configurado para notas de intervalo sin marcar. Si el valor es distinto de `interval`, no se reconoce. Las notas existentes no se modifican automáticamente.
 
 ## Configuración
 

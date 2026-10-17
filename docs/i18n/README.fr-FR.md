@@ -6,6 +6,13 @@ Chrono Notes transforme Obsidian en espace de travail calendaire pour les notes 
 
 ## Fonctionnalités
 
+Aperçu du calendrier sur ordinateur et Android :
+
+![Calendrier Chrono Notes sur ordinateur](../assets/chrono-notes-desktop-en.png)
+
+![Calendrier Chrono Notes sur Android](../assets/chrono-notes-android-en.png)
+
+
 - Vues par semaine, mois, année et siècle avec état des notes, tâches, statistiques et aperçus.
 - Notes quotidiennes, hebdomadaires, mensuelles, trimestrielles, annuelles, décennales et séculaires, avec modèles intégrés ou Templater.
 - Navigation entre les notes, suivi des tâches, cartes thermiques et notes créées sur une plage de dates.
@@ -18,15 +25,37 @@ Obsidian 1.12.7 ou plus récent, sur ordinateur ou mobile. Les fichiers ICS du c
 
 ## Installation
 
-**Extensions communautaires :** dans Obsidian, ouvrez **Paramètres → Modules complémentaires → Parcourir**, cherchez **Chrono Notes**, puis choisissez **Installer** et **Activer**.
+### Extensions communautaires
 
-**Installation manuelle :** téléchargez `chrono-notes-<version>.zip` depuis la [dernière version](https://github.com/ZHYX91/obsidian-chrono-notes/releases/latest), puis extrayez-le dans `Vault/.obsidian/plugins/`. Le dossier `chrono-notes/` contient `main.js`, `manifest.json` et `styles.css`. Redémarrez Obsidian et activez le module.
+ dans Obsidian, ouvrez **Paramètres → Modules complémentaires → Parcourir**, cherchez **Chrono Notes**, puis choisissez **Installer** et **Activer**.
 
-**Mise à jour :** conservez et sauvegardez `data.json` ; remplacez uniquement les fichiers du module. Ne supprimez le fichier de réglages que pour une réinitialisation volontaire.
+### Installation manuelle
+
+ téléchargez `chrono-notes-<version>.zip` depuis la [dernière version](https://github.com/ZHYX91/obsidian-chrono-notes/releases/latest), puis extrayez-le dans `Vault/.obsidian/plugins/`. Le dossier `chrono-notes/` contient `main.js`, `manifest.json` et `styles.css`. Redémarrez Obsidian et activez le module.
+
+### Mise à jour
+
+ conservez et sauvegardez `data.json` ; remplacez uniquement les fichiers du module. Ne supprimez le fichier de réglages que pour une réinitialisation volontaire.
 
 ## Utilisation
 
 Choisissez les types de notes et leurs chemins dans les paramètres de Chrono Notes, puis ouvrez le calendrier depuis le ruban ou la palette de commandes. **Un clic sélectionne une date sans créer de note.** Double-cliquez ou appuyez sur Entrée pour ouvrir ou créer la note ; effectuez un appui long sur écran tactile. Un clic droit ouvre les actions sur la date. Ctrl/Cmd-clic ou clic central ouvre un nouvel onglet. Activez au besoin les sources ICS et les calendriers supplémentaires.
+
+### Notes décennales et séculaires
+
+La vue par siècle place chaque décennie à côté de deux rangées de cinq années. Sur un écran étroit, la décennie passe au-dessus des années ; les cases en dehors du siècle restent vides. À l’ouverture, la décennie contenant l’année choisie est affichée. « Ce siècle » revient à la décennie actuelle et la navigation reste visible pendant le défilement.
+
+Activez d’abord ces types de notes dans les paramètres, puis choisissez la vue Siècle dans le panneau latéral. Les décennies et le siècle ont chacun leurs cases. Un clic sélectionne ; un double-clic ou Entrée ouvre ou crée la note. Ctrl/Cmd-clic ou clic central ouvre un nouvel onglet et l’appui long fonctionne sur écran tactile. Les cases conservent les indicateurs de note, la progression des tâches et les aperçus de la vue annuelle. Les chemins par défaut sont `[diary]/DEC[s]` (2020s) pour les décennies et `[diary]/[C]CEN` (C21) pour les siècles.
+
+Une décennie couvre par exemple 2020–2029 ; le XXIe siècle couvre 2001–2100. `DEC` et `CEN` produisent toujours des chiffres fixes. Mieux vaut organiser les dossiers par siècle OU par décennie : les années 2000 traversent C20/C21, mais la note décennale est classée en C20, où se situe son premier jour en 2000. Les notes existantes ne sont pas déplacées.
+
+Les modèles utilisent les mêmes formats : `{{date:DEC[s]}}`, `{{date:[C]CEN}}`, `{{start:YYYY}}–{{end:YYYY}}`. Tous les modèles périodiques proposent les dates de début et de fin et `{{days}}`, qui compte les deux dates. Les pages de paramètres présentent les variables, leurs exemples et les équivalents Templater ; Général → Paramètres des modèles explique la syntaxe commune.
+
+### Reconnaissance des notes de période
+
+Une note de période doit avoir des propriétés `start` et `end` valides. Chrono Notes ajoute aussi `chrono-notes: interval` aux nouvelles notes de période, ce qui permet de les reconnaître dans tout le coffre.
+
+Si la propriété `chrono-notes` est absente, la note n’est reconnue que dans la zone de recherche des notes de période sans marqueur. Une valeur différente de `interval` exclut la note. Les notes existantes ne sont jamais modifiées automatiquement.
 
 ## Paramètres
 

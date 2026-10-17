@@ -6,6 +6,13 @@ Chrono Notes ergänzt Obsidian um einen Kalender für periodische Notizen, Aufga
 
 ## Funktionen
 
+So sieht der Kalender auf Desktop und Android aus:
+
+![Chrono Notes Kalender auf Desktop](../assets/chrono-notes-desktop-en.png)
+
+![Chrono Notes Kalender auf Android](../assets/chrono-notes-android-en.png)
+
+
 - Kalenderansichten für Woche, Monat, Jahr und Jahrhundert mit Notizstatus, Aufgaben, Vorschau und Statistiken.
 - Tages-, Wochen-, Monats-, Quartals-, Jahres-, Jahrzehnt- und Jahrhundertnotizen mit eigenen Pfaden und Vorlagen, auch mit Templater.
 - Notiznavigation, Aufgabenfortschritt, Heatmaps und Notizen für einen ausgewählten Datumsbereich.
@@ -18,15 +25,37 @@ Obsidian 1.12.7 oder neuer auf Desktop oder Mobilgeräten. ICS-Dateien innerhalb
 
 ## Installation
 
-**Über Community-Plugins:** In Obsidian **Einstellungen → Community-Plugins → Durchsuchen** öffnen, nach **Chrono Notes** suchen und **Installieren** und **Aktivieren** wählen.
+### Über Community-Plugins
 
-**Manuell:** Das Archiv `chrono-notes-<version>.zip` von [der aktuellen Version](https://github.com/ZHYX91/obsidian-chrono-notes/releases/latest) in `Vault/.obsidian/plugins/` entpacken. Darin liegt der Ordner `chrono-notes/` mit `main.js`, `manifest.json` und `styles.css`. Obsidian neu laden und das Plugin aktivieren.
+ In Obsidian **Einstellungen → Community-Plugins → Durchsuchen** öffnen, nach **Chrono Notes** suchen und **Installieren** und **Aktivieren** wählen.
 
-**Upgrade:** Eine vorhandene `data.json` sichern und behalten; nur die drei Programmdateien ersetzen. `data.json` nur löschen, wenn die Einstellungen absichtlich zurückgesetzt werden sollen.
+### Manuell
+
+ Das Archiv `chrono-notes-<version>.zip` von [der aktuellen Version](https://github.com/ZHYX91/obsidian-chrono-notes/releases/latest) in `Vault/.obsidian/plugins/` entpacken. Darin liegt der Ordner `chrono-notes/` mit `main.js`, `manifest.json` und `styles.css`. Obsidian neu laden und das Plugin aktivieren.
+
+### Upgrade
+
+ Eine vorhandene `data.json` sichern und behalten; nur die drei Programmdateien ersetzen. `data.json` nur löschen, wenn die Einstellungen absichtlich zurückgesetzt werden sollen.
 
 ## Verwendung
 
 Unter Chrono Notes die gewünschten Notizarten, Pfade und Vorlagen einstellen. Über die Seitenleiste oder Befehlspalette den Kalender öffnen. **Ein Klick wählt ein Datum aus, erstellt aber keine Notiz.** Zum Öffnen oder Erstellen doppelklicken oder Enter drücken; auf Touchgeräten lange drücken. Rechtsklick zeigt Datumsaktionen; Strg/Befehl-Klick oder Mittelklick öffnet einen neuen Tab. In den Einstellungen können ICS-Dateien, Kalendererweiterungen und Bereichsnotizen aktiviert werden.
+
+### Jahrzehnt- und Jahrhundertnotizen
+
+Die Jahrhundertansicht zeigt zu jedem Jahrzehnt zwei Reihen mit je fünf Jahren. Bei wenig Platz wandert die Jahrzehntzelle über die Jahre. Felder für Jahre außerhalb des Jahrhunderts bleiben leer. Beim Öffnen wird das Jahrzehnt des ausgewählten Jahres sichtbar; „Dieses Jahrhundert“ führt zum aktuellen Jahrzehnt. Die Navigation bleibt beim Scrollen oben sichtbar.
+
+Aktivieren Sie die entsprechenden Notiztypen in den Einstellungen und wechseln Sie in der Seitenleiste zur Jahrhundertansicht. Jahrzehnt und Jahrhundert haben eigene Zellen. Ein Klick wählt aus; Doppelklick oder Enter öffnet oder erstellt die Notiz. Strg/Befehl-Klick bzw. Mittelklick öffnet einen neuen Tab, auf Touchgeräten können Sie lange drücken. Die Zellen verwenden dieselben Statuspunkte, Aufgabenfortschritte und Vorschauen wie die Jahresansicht. Standardpfade sind `[diary]/DEC[s]` (2020s) für Jahrzehnte und `[diary]/[C]CEN` (C21) für Jahrhunderte.
+
+Ein Jahrzehnt umfasst zum Beispiel 2020–2029, das 21. Jahrhundert die Jahre 2001–2100. `DEC` und `CEN` geben sprachunabhängige Ziffern aus. Verwenden Sie am besten entweder Jahrhundert- oder Jahrzehntordner: Die 2000er Jahre reichen über C20 und C21, doch die Jahrzehntnotiz liegt aufgrund des ersten Jahres 2000 in C20. Bestehende Notizen werden nicht verschoben.
+
+Vorlagen nutzen dieselben Formate: `{{date:DEC[s]}}`, `{{date:[C]CEN}}`, `{{start:YYYY}}–{{end:YYYY}}`. Alle periodischen Vorlagen unterstützen Anfangs- und Enddatum sowie `{{days}}` inklusive beider Endtage. Die Notizeinstellungen zeigen die Platzhalter mit Beispielen und entsprechenden Templater-Ausdrücken; Allgemein → Vorlageneinstellungen erläutert die gemeinsamen Regeln.
+
+### Erkennung von Zeitraumnotizen
+
+Eine Zeitraumnotiz braucht gültige Eigenschaften `start` und `end`. Von Chrono Notes erstellte Zeitraumnotizen erhalten zusätzlich `chrono-notes: interval` und werden im gesamten Vault erkannt.
+
+Ohne die Eigenschaft `chrono-notes` wird eine Notiz nur im konfigurierten Suchbereich für unmarkierte Zeitraumnotizen erkannt. Steht in der Eigenschaft ein anderer Wert als `interval`, wird die Notiz ausgeschlossen. Bestehende Notizen werden nicht automatisch geändert.
 
 ## Einstellungen
 
