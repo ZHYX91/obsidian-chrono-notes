@@ -26,6 +26,14 @@ export function resolvePluginLocale(
   if (language === "he" || language === "iw") return "he";
   if (language === "am") return "am";
   if (language === "hi") return "hi";
+  // Use a documented regional variant even when Obsidian reports only the base language.
+  const additionalLocales: Readonly<Record<string, SupportedLocale>> = {
+    de: "de-DE", fr: "fr-FR", es: "es-ES", pt: "pt-BR",
+    ru: "ru-RU", ja: "ja-JP", ko: "ko-KR", vi: "vi-VN",
+  };
+  if (Object.prototype.hasOwnProperty.call(additionalLocales, language)) {
+    return additionalLocales[language]!;
+  }
   if (!normalized.startsWith("zh")) return "en";
   const parts = normalized.split("-");
   if (

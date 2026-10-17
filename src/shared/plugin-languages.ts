@@ -12,4 +12,12 @@ export const PLUGIN_LANGUAGE_OPTIONS: ReadonlyArray<{
   { value: "he", label: "עברית" },
   { value: "am", label: "አማርኛ" },
   { value: "hi", label: "हिन्दी" },
+  { value: "de-DE", label: "Deutsch" },
+  { value: "fr-FR", label: "Français" },
+  { value: "es-ES", label: "Español" },
+  { value: "pt-BR", label: "Português (Brasil)" },
+  { value: "ru-RU", label: "Русский" },
+  { value: "ja-JP", label: "日本語" },
+  { value: "ko-KR", label: "한국어" },
+  { value: "vi-VN", label: "Tiếng Việt" },
 ];

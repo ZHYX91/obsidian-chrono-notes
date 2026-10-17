@@ -29,8 +29,20 @@ describe("resolvePluginLocale", () => {
   });
 
   it("falls back unknown automatic locales to English", () => {
-    expect(resolvePluginLocale("auto", "fr-FR")).toBe("en");
+    expect(resolvePluginLocale("auto", "fr-FR")).toBe("fr-FR");
     expect(resolvePluginLocale("auto", "")).toBe("en");
+    expect(resolvePluginLocale("auto", "xx-XX")).toBe("en");
+  });
+
+  it("maps additional host languages and their regional variants", () => {
+    const cases = [
+      ["de-AT", "de-DE"], ["fr-CA", "fr-FR"], ["es-MX", "es-ES"],
+      ["pt-PT", "pt-BR"], ["ru-RU", "ru-RU"], ["ja-JP", "ja-JP"],
+      ["ko-KR", "ko-KR"], ["vi-VN", "vi-VN"],
+    ] as const;
+    for (const [host, expected] of cases) {
+      expect(resolvePluginLocale("auto", host)).toBe(expected);
+    }
   });
 
   it("maps the five added automatic languages, including legacy Hebrew", () => {
@@ -190,6 +202,15 @@ describe("createTranslator", () => {
     expect(traditional.t("calendar.currentPickerTarget", {
       target: "選擇 2026 年",
     })).toBe("選擇 2026 年（目前）");
+  });
+
+  it("has native-language navigation and interface controls in each added locale", () => {
+    for (const locale of ["de-DE","fr-FR","es-ES","pt-BR","ru-RU","ja-JP","ko-KR","vi-VN"] as const) {
+      expect(MESSAGE_CATALOGS[locale]["calendar.today"]).not.toBe("Today");
+      expect(MESSAGE_CATALOGS[locale]["settings.general.language"]).not.toBe("Interface language");
+      expect(MESSAGE_CATALOGS[locale]["settings.general.auto"]).toContain("Obsidian");
+      expect(createTranslator(locale,"en").direction).toBe("ltr");
+    }
   });
 
   it("keeps every runtime message non-empty in every locale", () => {

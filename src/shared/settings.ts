@@ -34,7 +34,15 @@ export type PluginLocale =
   | "fa"
   | "he"
   | "am"
-  | "hi";
+  | "hi"
+  | "de-DE"
+  | "fr-FR"
+  | "es-ES"
+  | "pt-BR"
+  | "ru-RU"
+  | "ja-JP"
+  | "ko-KR"
+  | "vi-VN";
 export type FixedPluginLocale = Exclude<PluginLocale, "auto">;
 export type CalendarExtension = CalendarExtensionId;
 export type HolidayRegion = "cn" | "sg";
@@ -383,7 +391,15 @@ export function isFixedPluginLocale(value: unknown): value is FixedPluginLocale 
     value === "fa" ||
     value === "he" ||
     value === "am" ||
-    value === "hi";
+    value === "hi" ||
+    value === "de-DE" ||
+    value === "fr-FR" ||
+    value === "es-ES" ||
+    value === "pt-BR" ||
+    value === "ru-RU" ||
+    value === "ja-JP" ||
+    value === "ko-KR" ||
+    value === "vi-VN";
 }
 
 export function isWeekStartDay(value: unknown): value is WeekStartDay {
