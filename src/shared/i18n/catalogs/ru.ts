@@ -55,7 +55,6 @@ export const RU_MESSAGES: MessageCatalog = Object.freeze({
   "calendar.ics.untitled": "Событие без названия",
   "calendarPreview.emptyNote": "Пустая заметка",
   "calendarPreview.missingDaily": "Заметка за день не существует",
-  "settings.appearance.fontSizeMode": "Размер шрифта",
   "settings.appearance.fontSizeFollowObsidian": "Как в Obsidian",
   "settings.appearance.fontSizeFollowSidebar": "По ширине боковой панели",
   "settings.appearance.fontSizeFixed": "Фиксированный размер",
