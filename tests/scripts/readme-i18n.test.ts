@@ -50,6 +50,26 @@ describe("README marketplace link contract", () => {
     }
   });
 
+  it("detects incomplete installation steps and missing screenshots", async () => {
+    await replaceInReadme(
+      "docs/i18n/README.de-DE.md",
+      "### Über Community-Plugins",
+      "**Über Community-Plugins**",
+    );
+    await replaceInReadme(
+      "docs/i18n/README.de-DE.md",
+      "../assets/chrono-notes-android-en.png",
+      "../assets/missing-android-screenshot.png",
+    );
+    const issues = checkReadmeI18n(fixtureRoot);
+    expect(issues).toContain(
+      "docs/i18n/README.de-DE.md must include 3 installation and 2 usage subsections",
+    );
+    expect(issues).toContain(
+      "docs/i18n/README.de-DE.md must link screenshot chrono-notes-android-en.png",
+    );
+  });
+
   it("rejects a missing translated README", async () => {
     await rm(path.join(fixtureRoot, "docs/i18n/README.de-DE.md"));
     expect(checkReadmeI18n(fixtureRoot)).toContain(
