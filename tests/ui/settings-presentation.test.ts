@@ -114,11 +114,11 @@ describe("settings presentation", () => {
     expect(formatNoteIndexCacheStatus({
       state: "stored",
       entryCount: 12,
-    }, t)).toBe("Derived index data for 12 notes is stored for this Vault.");
+    }, t)).toBe("A local index covering 12 notes is saved for this Vault.");
     expect(formatNoteIndexCacheStatus({ state: "unavailable" }, t))
       .toBe("Persistent cache is unavailable in this environment.");
     expect(formatNoteIndexCacheStatus({ state: "legacy" }, t))
-      .toContain("legacy cache");
+      .toContain("older index");
   });
 
   it.each([
