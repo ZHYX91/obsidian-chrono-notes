@@ -116,7 +116,7 @@ export const HI_MESSAGES = Object.freeze({
     "other": "{count} अधिक इवेंट"
   }),
   "calendar.noteState.empty": "खाली नोट",
-  "calendar.noteState.yamlOnly": "frontmatter-केवल नोट",
+  "calendar.noteState.yamlOnly": "केवल प्रॉपर्टी वाला नोट, मुख्य पाठ नहीं",
   "calendar.noteState.hasBody": "मुख्य भाग के साथ नोट करें",
   "calendar.noteState.error": "नोट पढ़ने में त्रुटि",
   "calendar.noteState.errorDetail": "नोट पढ़ने में त्रुटि: {error}",
@@ -141,7 +141,7 @@ export const HI_MESSAGES = Object.freeze({
   "calendarPreview.unableRead": "नोट पढ़ने में असमर्थ: {error}",
   "calendarPreview.unknownError": "अज्ञात त्रुटि",
   "calendarPreview.emptyNote": "खाली नोट",
-  "calendarPreview.yamlOnly": "केवल फ्रंटमैटर नोट",
+  "calendarPreview.yamlOnly": "सिर्फ़ प्रॉपर्टी हैं, मुख्य पाठ नहीं",
   "calendarPreview.missingDaily": "दैनिक नोट मौजूद नहीं है",
   "calendarPreview.notConfiguredDaily": "दैनिक नोट्स कॉन्फ़िगर नहीं किए गए हैं",
   "calendarPreview.noContent": "नोट में कोई पूर्वावलोकन योग्य सामग्री नहीं है",

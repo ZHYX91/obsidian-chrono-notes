@@ -117,7 +117,7 @@ export const HE_MESSAGES = Object.freeze({
     "other": "{count} אירועים נוספים"
   }),
   "calendar.noteState.empty": "פתק ריק",
-  "calendar.noteState.yamlOnly": "הערה frontmatter בלבד",
+  "calendar.noteState.yamlOnly": "הערה עם מאפיינים בלבד, ללא תוכן",
   "calendar.noteState.hasBody": "פתק עם גוף",
   "calendar.noteState.error": "שים לב לשגיאת קריאה",
   "calendar.noteState.errorDetail": "שים לב לשגיאת קריאה: {error}",
@@ -144,7 +144,7 @@ export const HE_MESSAGES = Object.freeze({
   "calendarPreview.unableRead": "לא ניתן לקרוא הערה: {error}",
   "calendarPreview.unknownError": "שגיאה לא ידועה",
   "calendarPreview.emptyNote": "פתק ריק",
-  "calendarPreview.yamlOnly": "הערה קדמית בלבד",
+  "calendarPreview.yamlOnly": "מאפיינים בלבד, ללא טקסט",
   "calendarPreview.missingDaily": "הערה יומית לא קיימת",
   "calendarPreview.notConfiguredDaily": "הערות יומיות אינן מוגדרות",
   "calendarPreview.noContent": "ל-Note אין תוכן הניתן לתצוגה מקדימה",

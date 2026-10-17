@@ -120,7 +120,7 @@ export const AR_MESSAGES = Object.freeze({
     "other": "{count} حدث إضافي"
   }),
   "calendar.noteState.empty": "ملاحظة فارغة",
-  "calendar.noteState.yamlOnly": "ملاحظة تحتوي على frontmatter فقط",
+  "calendar.noteState.yamlOnly": "ملاحظة تحتوي على خصائص فقط دون نص",
   "calendar.noteState.hasBody": "ملاحظة ذات محتوى",
   "calendar.noteState.error": "خطأ في قراءة الملاحظة",
   "calendar.noteState.errorDetail": "خطأ في القراءة: {error}",
@@ -153,7 +153,7 @@ export const AR_MESSAGES = Object.freeze({
   "calendarPreview.unableRead": "تعذر قراءة الملاحظة: {error}",
   "calendarPreview.unknownError": "خطأ غير معروف",
   "calendarPreview.emptyNote": "ملاحظة فارغة",
-  "calendarPreview.yamlOnly": "ملاحظة Frontmatter فقط",
+  "calendarPreview.yamlOnly": "خصائص فقط؛ لا يوجد نص للملاحظة",
   "calendarPreview.missingDaily": "الملاحظة اليومية غير موجودة",
   "calendarPreview.notConfiguredDaily": "لم يتم تكوين الملاحظات اليومية",
   "calendarPreview.noContent": "ملاحظة لا تحتوي على محتوى قابل للمعاينة",

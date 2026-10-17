@@ -116,7 +116,7 @@ export const AM_MESSAGES = Object.freeze({
     "other": "{count} ተጨማሪ ክስተቶች"
   }),
   "calendar.noteState.empty": "ባዶ ማስታወሻ",
-  "calendar.noteState.yamlOnly": "frontmatter-ብቻ ማስታወሻ",
+  "calendar.noteState.yamlOnly": "ባህሪያት ብቻ ያሉት፣ ዋና ጽሑፍ የሌለው ማስታወሻ",
   "calendar.noteState.hasBody": "ማስታወሻ ከአካል ጋር",
   "calendar.noteState.error": "ማስታወሻ ማንበብ ስህተት",
   "calendar.noteState.errorDetail": "ማስታወሻ የተነበበ ስህተት፡ {error}",
@@ -141,7 +141,7 @@ export const AM_MESSAGES = Object.freeze({
   "calendarPreview.unableRead": "ማስታወሻ ማንበብ አልተቻለም፡ {error}",
   "calendarPreview.unknownError": "ያልታወቀ ስህተት",
   "calendarPreview.emptyNote": "ባዶ ማስታወሻ",
-  "calendarPreview.yamlOnly": "የፊት ጉዳይ-ብቻ ማስታወሻ",
+  "calendarPreview.yamlOnly": "ባህሪያት ብቻ፣ ዋና ጽሑፍ የለም",
   "calendarPreview.missingDaily": "ዕለታዊ ማስታወሻ የለም።",
   "calendarPreview.notConfiguredDaily": "ዕለታዊ ማስታወሻዎች አልተዋቀሩም።",
   "calendarPreview.noContent": "ማስታወሻ አስቀድሞ ሊታይ የሚችል ይዘት የለውም",

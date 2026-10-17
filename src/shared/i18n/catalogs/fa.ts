@@ -116,7 +116,7 @@ export const FA_MESSAGES = Object.freeze({
     "other": "{count} رویدادهای بیشتر"
   }),
   "calendar.noteState.empty": "یادداشت خالی",
-  "calendar.noteState.yamlOnly": "فقط یادداشت frontmatter",
+  "calendar.noteState.yamlOnly": "یادداشت دارای ویژگی‌ها، بدون متن",
   "calendar.noteState.hasBody": "یادداشت با بدن",
   "calendar.noteState.error": "خطای خواندن یادداشت",
   "calendar.noteState.errorDetail": "خطای خواندن یادداشت: {error}",
@@ -141,7 +141,7 @@ export const FA_MESSAGES = Object.freeze({
   "calendarPreview.unableRead": "خواندن یادداشت امکان پذیر نیست: {error}",
   "calendarPreview.unknownError": "خطای ناشناخته",
   "calendarPreview.emptyNote": "یادداشت خالی",
-  "calendarPreview.yamlOnly": "یادداشت فقط Frontmatter",
+  "calendarPreview.yamlOnly": "فقط ویژگی‌ها؛ بدون متن یادداشت",
   "calendarPreview.missingDaily": "یادداشت روزانه وجود ندارد",
   "calendarPreview.notConfiguredDaily": "یادداشت های روزانه پیکربندی نشده اند",
   "calendarPreview.noContent": "یادداشت محتوای قابل پیش‌نمایش ندارد",
