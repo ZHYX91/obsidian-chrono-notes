@@ -55,7 +55,6 @@ export const JA_MESSAGES: MessageCatalog = Object.freeze({
   "calendar.ics.untitled": "無題の予定",
   "calendarPreview.emptyNote": "空のノート",
   "calendarPreview.missingDaily": "デイリーノートがありません",
-  "settings.appearance.fontSizeMode": "文字サイズ",
   "settings.appearance.fontSizeFollowObsidian": "Obsidian に合わせる",
   "settings.appearance.fontSizeFollowSidebar": "サイドバーに合わせる",
   "settings.appearance.fontSizeFixed": "固定サイズ",
