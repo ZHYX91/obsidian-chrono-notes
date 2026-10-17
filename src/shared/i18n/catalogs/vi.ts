@@ -1,10 +1,6 @@
-import { EN_MESSAGES } from "./en";
 import type { MessageCatalog } from "../types";
 
-// Initial localized navigation and common actions. Other messages retain the
-// English source text until their translations are reviewed.
 export const VI_MESSAGES: MessageCatalog = Object.freeze({
-  ...EN_MESSAGES,
   "calendar.today": "Hôm nay",
   "calendar.thisMonth": "Tháng này",
   "calendar.view.week": "Tuần",
@@ -477,4 +473,11 @@ export const VI_MESSAGES: MessageCatalog = Object.freeze({
   "settings.ics.status.summary": "Nguồn {loaded}/{total}, sự kiện {events}, đã bỏ qua {recurring} mục lặp và {invalid} mục không hợp lệ, có {errors} lỗi.",
   "settings.ics.sourceSuccess": "{source}: {events} sự kiện, bỏ qua {recurring} mục lặp và {invalid} mục không hợp lệ",
   "settings.ics.sourceError": "{source}: {error}",
+  "calendar.ariaLabel": "Chrono Notes",
+  "calendar.ics.eventSeparator": "; ",
+  "calendar.itemSeparator": ", ",
+  "calendarPreview.nameSeparator": ", ",
+  "calendarPreview.embedSeparator": " · ",
+  "monthView.nameSeparator": ", ",
+  "weekView.dateKindSeparator": " / ",
 });

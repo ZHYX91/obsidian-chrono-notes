@@ -1,10 +1,6 @@
-import { EN_MESSAGES } from "./en";
 import type { MessageCatalog } from "../types";
 
-// Initial localized navigation and common actions. Other messages retain the
-// English source text until their translations are reviewed.
 export const ES_MESSAGES: MessageCatalog = Object.freeze({
-  ...EN_MESSAGES,
   "calendar.today": "Hoy",
   "calendar.thisMonth": "Este mes",
   "calendar.view.week": "Semana",
@@ -477,4 +473,11 @@ export const ES_MESSAGES: MessageCatalog = Object.freeze({
   "settings.ics.status.summary": "{loaded}/{total} fuentes, {events} eventos, {recurring} recurrentes y {invalid} no válidos omitidos, {errors} errores.",
   "settings.ics.sourceSuccess": "{source}: {events} eventos, {recurring} recurrentes y {invalid} no válidos omitidos",
   "settings.ics.sourceError": "{source}: {error}",
+  "calendar.ariaLabel": "Chrono Notes",
+  "calendar.ics.eventSeparator": "; ",
+  "calendar.itemSeparator": ", ",
+  "calendarPreview.nameSeparator": ", ",
+  "calendarPreview.embedSeparator": " · ",
+  "monthView.nameSeparator": ", ",
+  "weekView.dateKindSeparator": " / ",
 });

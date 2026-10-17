@@ -1,10 +1,6 @@
-import { EN_MESSAGES } from "./en";
 import type { MessageCatalog } from "../types";
 
-// Initial localized navigation and common actions. Other messages retain the
-// English source text until their translations are reviewed.
 export const JA_MESSAGES: MessageCatalog = Object.freeze({
-  ...EN_MESSAGES,
   "calendar.today": "今日",
   "calendar.thisMonth": "今月",
   "calendar.view.week": "週",
@@ -477,4 +473,11 @@ export const JA_MESSAGES: MessageCatalog = Object.freeze({
   "settings.ics.status.summary": "ソース {loaded}/{total} 件、予定 {events} 件、繰り返し {recurring} 件と無効 {invalid} 件を省略、エラー {errors} 件。",
   "settings.ics.sourceSuccess": "{source}：予定 {events} 件、繰り返し {recurring} 件と無効 {invalid} 件を省略",
   "settings.ics.sourceError": "{source}：{error}",
+  "calendar.ariaLabel": "Chrono Notes",
+  "calendar.ics.eventSeparator": "; ",
+  "calendar.itemSeparator": ", ",
+  "calendarPreview.nameSeparator": ", ",
+  "calendarPreview.embedSeparator": " · ",
+  "monthView.nameSeparator": ", ",
+  "weekView.dateKindSeparator": " / ",
 });

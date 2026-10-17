@@ -1,10 +1,6 @@
-import { EN_MESSAGES } from "./en";
 import type { MessageCatalog } from "../types";
 
-// Initial localized navigation and common actions. Other messages retain the
-// English source text until their translations are reviewed.
 export const KO_MESSAGES: MessageCatalog = Object.freeze({
-  ...EN_MESSAGES,
   "calendar.today": "오늘",
   "calendar.thisMonth": "이번 달",
   "calendar.view.week": "주",
@@ -477,4 +473,11 @@ export const KO_MESSAGES: MessageCatalog = Object.freeze({
   "settings.ics.status.summary": "원본 {loaded}/{total}개, 일정 {events}개, 반복 {recurring}개 및 잘못된 항목 {invalid}개 건너뜀, 오류 {errors}개.",
   "settings.ics.sourceSuccess": "{source}: 일정 {events}개, 반복 {recurring}개 및 잘못된 항목 {invalid}개 건너뜀",
   "settings.ics.sourceError": "{source}: {error}",
+  "calendar.ariaLabel": "Chrono Notes",
+  "calendar.ics.eventSeparator": "; ",
+  "calendar.itemSeparator": ", ",
+  "calendarPreview.nameSeparator": ", ",
+  "calendarPreview.embedSeparator": " · ",
+  "monthView.nameSeparator": ", ",
+  "weekView.dateKindSeparator": " / ",
 });
