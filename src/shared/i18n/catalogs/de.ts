@@ -55,7 +55,6 @@ export const DE_MESSAGES: MessageCatalog = Object.freeze({
   "calendar.ics.untitled": "Ereignis ohne Titel",
   "calendarPreview.emptyNote": "Leere Notiz",
   "calendarPreview.missingDaily": "Tagesnotiz ist nicht vorhanden",
-  "settings.appearance.fontSizeMode": "Schriftgröße",
   "settings.appearance.fontSizeFollowObsidian": "Obsidian-Einstellung übernehmen",
   "settings.appearance.fontSizeFollowSidebar": "Seitenleiste folgen",
   "settings.appearance.fontSizeFixed": "Feste Größe",
