@@ -258,6 +258,37 @@ export function checkReadmeI18n(projectRoot = defaultProjectRoot) {
     if (JSON.stringify(actualSections) !== JSON.stringify(language.sections)) {
       errors.push(`${filePath} must use the configured H2 section order`);
     }
+    const sectionSubheadings = new Map();
+    let currentSection = null;
+    for (const match of source.matchAll(/^(##|###) (.+)$/gmu)) {
+      if (match[1] === "##") currentSection = match[2].trim();
+      else if (currentSection !== null) {
+        sectionSubheadings.set(currentSection, (sectionSubheadings.get(currentSection) ?? 0) + 1);
+      }
+    }
+    const installationHeading = language.sections[2];
+    const usageHeading = language.sections[3];
+    const totalSubheadings = [...sectionSubheadings.values()].reduce((a, b) => a + b, 0);
+    if (
+      sectionSubheadings.get(installationHeading) !== 3 ||
+      sectionSubheadings.get(usageHeading) !== 2 ||
+      totalSubheadings !== 5
+    ) {
+      errors.push(`${filePath} must include 3 installation and 2 usage subsections`);
+    }
+    const imageBase = filePath === "README.md"
+      ? `https://raw.githubusercontent.com/${config.repository}/main/docs/assets/`
+      : "../assets/";
+    for (const imageName of ["chrono-notes-desktop-en.png", "chrono-notes-android-en.png"]) {
+      if (!source.includes(`](${imageBase}${imageName})`)) {
+        errors.push(`${filePath} must link screenshot ${imageName}`);
+      }
+    }
+    for (const codeToken of ["DEC[s]", "[C]CEN", "{{days}}", "chrono-notes: interval"]) {
+      if (!source.includes(codeToken)) {
+        errors.push(`${filePath} is missing supported workflow example: ${codeToken}`);
+      }
+    }
     for (const token of config.requiredTokens) {
       if (!source.includes(token)) {
         errors.push(`${filePath} is missing required README contract token: ${token}`);
