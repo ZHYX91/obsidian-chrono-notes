@@ -39,6 +39,24 @@ describe("README marketplace link contract", () => {
     expect(checkReadmeI18n(fixtureRoot)).toEqual([]);
   });
 
+  it("keeps a complete cross-language navigation bar in every README", async () => {
+    const files = ["README.md","docs/i18n/README.zh-CN.md","docs/i18n/README.zh-TW.md","docs/i18n/README.de-DE.md","docs/i18n/README.fr-FR.md","docs/i18n/README.es-ES.md","docs/i18n/README.pt-BR.md","docs/i18n/README.ru-RU.md","docs/i18n/README.ja-JP.md","docs/i18n/README.ko-KR.md","docs/i18n/README.vi-VN.md","docs/i18n/README.ar.md","docs/i18n/README.fa.md","docs/i18n/README.he.md","docs/i18n/README.am.md","docs/i18n/README.hi.md"];
+    const names = ["English","简体中文","繁體中文","Deutsch","Français","Español","Português","Русский","日本語","한국어","Tiếng Việt","العربية","فارسی","עברית","አማርኛ","हिन्दी"];
+    for (const name of files) {
+      const content = await readFile(path.join(fixtureRoot, name), "utf8");
+      const nav = content.split(/\r?\n/u)[2];
+      for (const label of names) expect(nav).toContain(`[${label}](`);
+      expect(content).not.toContain("__NAV__");
+    }
+  });
+
+  it("rejects a missing translated README", async () => {
+    await rm(path.join(fixtureRoot, "docs/i18n/README.de-DE.md"));
+    expect(checkReadmeI18n(fixtureRoot)).toContain(
+      "Missing README file: docs/i18n/README.de-DE.md",
+    );
+  });
+
   it("rejects a repository-relative target in the English marketplace README", async () => {
     await replaceInReadme(
       "README.md",
