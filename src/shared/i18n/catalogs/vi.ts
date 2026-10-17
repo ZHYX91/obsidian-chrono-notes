@@ -55,7 +55,6 @@ export const VI_MESSAGES: MessageCatalog = Object.freeze({
   "calendar.ics.untitled": "Sự kiện chưa có tiêu đề",
   "calendarPreview.emptyNote": "Ghi chú trống",
   "calendarPreview.missingDaily": "Chưa có ghi chú ngày",
-  "settings.appearance.fontSizeMode": "Cỡ chữ",
   "settings.appearance.fontSizeFollowObsidian": "Theo Obsidian",
   "settings.appearance.fontSizeFollowSidebar": "Theo thanh bên",
   "settings.appearance.fontSizeFixed": "Cỡ cố định",
