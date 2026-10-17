@@ -6,6 +6,13 @@ Chrono Notes bổ sung cho Obsidian một không gian lịch để quản lý gh
 
 ## Tính năng
 
+Giao diện lịch trên máy tính và Android:
+
+![Lịch Chrono Notes trên máy tính](../assets/chrono-notes-desktop-en.png)
+
+![Lịch Chrono Notes trên Android](../assets/chrono-notes-android-en.png)
+
+
 - Xem lịch theo tuần, tháng, năm và thế kỷ, kèm trạng thái ghi chú, công việc, thống kê và xem trước.
 - Ghi chú ngày, tuần, tháng, quý, năm, thập kỷ và thế kỷ với mẫu tích hợp hoặc Templater.
 - Điều hướng giữa các ghi chú, theo dõi tiến độ công việc, bản đồ nhiệt và ghi chú cho khoảng ngày đã chọn.
@@ -18,15 +25,37 @@ Yêu cầu Obsidian 1.12.7 trở lên trên máy tính hoặc thiết bị di đ
 
 ## Cài đặt
 
-**Plugin cộng đồng:** mở **Cài đặt → Plugin cộng đồng → Duyệt**, tìm **Chrono Notes**, chọn **Cài đặt** rồi **Bật**.
+### Plugin cộng đồng
 
-**Cài thủ công:** tải `chrono-notes-<version>.zip` từ [bản phát hành mới nhất](https://github.com/ZHYX91/obsidian-chrono-notes/releases/latest), giải nén vào `Vault/.obsidian/plugins/`. Thư mục `chrono-notes/` chứa `main.js`, `manifest.json` và `styles.css`. Tải lại Obsidian rồi bật plugin.
+ mở **Cài đặt → Plugin cộng đồng → Duyệt**, tìm **Chrono Notes**, chọn **Cài đặt** rồi **Bật**.
 
-**Nâng cấp:** sao lưu và giữ lại `data.json`; chỉ thay các tệp của plugin. Chỉ xóa `data.json` khi thật sự muốn đặt lại tùy chọn.
+### Cài thủ công
+
+ tải `chrono-notes-<version>.zip` từ [bản phát hành mới nhất](https://github.com/ZHYX91/obsidian-chrono-notes/releases/latest), giải nén vào `Vault/.obsidian/plugins/`. Thư mục `chrono-notes/` chứa `main.js`, `manifest.json` và `styles.css`. Tải lại Obsidian rồi bật plugin.
+
+### Nâng cấp
+
+ sao lưu và giữ lại `data.json`; chỉ thay các tệp của plugin. Chỉ xóa `data.json` khi thật sự muốn đặt lại tùy chọn.
 
 ## Cách sử dụng
 
 Chọn loại ghi chú, đường dẫn và mẫu trong phần cài đặt Chrono Notes, rồi mở lịch bằng biểu tượng bên hoặc bảng lệnh. **Nhấp một lần chỉ chọn ngày, không tự tạo ghi chú.** Nhấp đúp hoặc nhấn Enter để mở hay tạo ghi chú; trên màn hình cảm ứng thì nhấn giữ. Nhấp phải để mở các thao tác ngày. Ctrl/Cmd+nhấp hoặc nhấp nút giữa sẽ mở trong thẻ mới. Bật thêm lịch và nguồn ICS khi cần.
+
+### Ghi chú thập kỷ và thế kỷ
+
+Trong chế độ xem thế kỷ, mỗi thập kỷ nằm cạnh hai hàng, mỗi hàng có năm năm. Trên màn hình hẹp, ô thập kỷ chuyển lên trên; các năm ngoài thế kỷ để trống. Khi mở chế độ xem, ứng dụng đưa thập kỷ của năm đã chọn vào vùng nhìn thấy. Nút 'Thế kỷ này' đưa bạn về thập kỷ hiện tại, thanh điều hướng vẫn hiển thị khi cuộn.
+
+Bật loại ghi chú thập kỷ và thế kỷ trong cài đặt rồi chọn Thế kỷ trên thanh bên. Thập kỷ và thế kỷ có ô riêng. Nhấp một lần chỉ để chọn; nhấp đúp hoặc nhấn Enter để mở hay tạo ghi chú. Ctrl/Cmd+nhấp hoặc nhấp chuột giữa để mở thẻ mới; trên màn hình cảm ứng có thể nhấn giữ. Dấu trạng thái, tiến độ công việc và xem trước giống chế độ xem năm. Đường dẫn mặc định là `[diary]/DEC[s]` (2020s) cho thập kỷ và `[diary]/[C]CEN` (C21) cho thế kỷ.
+
+Một thập kỷ có thể gồm 2020–2029; thế kỷ 21 gồm 2001–2100. `DEC` và `CEN` luôn xuất chữ số cố định, bất kể ngôn ngữ giao diện. Nên chọn thư mục theo thế kỷ HOẶC thập kỷ thay vì lồng cả hai. Những năm 2000 trải qua C20/C21 nhưng ghi chú thập kỷ thuộc C20 do bắt đầu năm 2000. Ghi chú hiện có không bị di chuyển tự động.
+
+Các mẫu hỗ trợ `{{date:DEC[s]}}`, `{{date:[C]CEN}}` và `{{start:YYYY}}–{{end:YYYY}}`. Mọi mẫu ghi chú định kỳ đều có ngày đầu, ngày cuối và số ngày `{{days}}` tính cả hai đầu. Từng trang cài đặt nêu các chỗ giữ nội dung, ví dụ và biểu thức Templater tương ứng; quy tắc chung nằm tại Chung → Cài đặt mẫu.
+
+### Cách nhận diện ghi chú khoảng thời gian
+
+Ghi chú khoảng thời gian cần có hai thuộc tính `start` và `end` với ngày hợp lệ. Ghi chú do Chrono Notes tạo còn có `chrono-notes: interval`, vì thế được nhận diện ở bất kỳ đâu trong Vault.
+
+Nếu thiếu thuộc tính `chrono-notes`, ghi chú chỉ được nhận diện trong phạm vi tìm ghi chú chưa đánh dấu đã cài đặt. Nếu thuộc tính có giá trị khác `interval`, ghi chú không được nhận diện. Plugin không tự sửa các ghi chú hiện có.
 
 ## Thiết lập
 
