@@ -55,7 +55,6 @@ export const ES_MESSAGES: MessageCatalog = Object.freeze({
   "calendar.ics.untitled": "Evento sin título",
   "calendarPreview.emptyNote": "Nota vacía",
   "calendarPreview.missingDaily": "La nota diaria no existe",
-  "settings.appearance.fontSizeMode": "Tamaño de letra",
   "settings.appearance.fontSizeFollowObsidian": "Seguir Obsidian",
   "settings.appearance.fontSizeFollowSidebar": "Adaptar a la barra lateral",
   "settings.appearance.fontSizeFixed": "Tamaño fijo",
