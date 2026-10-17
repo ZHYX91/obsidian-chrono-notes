@@ -18,7 +18,7 @@ describe("calendar note presentation", () => {
     const traditional = createTranslator("zh-TW", "en").t;
 
     expect(formatCalendarNoteState("yaml-only", undefined, simplified)).toBe(
-      "仅含 frontmatter 的笔记",
+      "只有属性、没有正文的笔记",
     );
     expect(formatCalendarNoteState("error", "permission denied", traditional)).toBe(
       "筆記讀取錯誤：permission denied",
