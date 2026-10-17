@@ -1,6 +1,6 @@
 # Chrono Notes
 
-__NAV__
+[English](../../README.md) · [简体中文](README.zh-CN.md) · [繁體中文](README.zh-TW.md) · [Deutsch](README.de-DE.md) · [Français](README.fr-FR.md) · [Español](README.es-ES.md) · [Português](README.pt-BR.md) · [Русский](README.ru-RU.md) · [日本語](README.ja-JP.md) · [한국어](README.ko-KR.md) · [Tiếng Việt](README.vi-VN.md) · [العربية](README.ar.md) · [فارسی](README.fa.md) · [עברית](README.he.md) · [አማርኛ](README.am.md) · [हिन्दी](README.hi.md)
 
 Chrono Notes는 Obsidian에서 주기 노트, 작업, 지역 공휴일, 로컬 일정, 기간 노트를 함께 관리할 수 있는 달력 플러그인입니다.
 

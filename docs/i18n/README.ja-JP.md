@@ -1,6 +1,6 @@
 # Chrono Notes
 
-__NAV__
+[English](../../README.md) · [简体中文](README.zh-CN.md) · [繁體中文](README.zh-TW.md) · [Deutsch](README.de-DE.md) · [Français](README.fr-FR.md) · [Español](README.es-ES.md) · [Português](README.pt-BR.md) · [Русский](README.ru-RU.md) · [日本語](README.ja-JP.md) · [한국어](README.ko-KR.md) · [Tiếng Việt](README.vi-VN.md) · [العربية](README.ar.md) · [فارسی](README.fa.md) · [עברית](README.he.md) · [አማርኛ](README.am.md) · [हिन्दी](README.hi.md)
 
 Chrono Notes は Obsidian に、定期ノート、タスク、祝日、ローカル予定、期間ノートをまとめて扱うカレンダーを追加するプラグインです。
 
