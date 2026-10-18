@@ -17,22 +17,20 @@ const WORD_PATTERN = new RegExp(
   String.raw`\p{Script=Han}|${LETTER_WORD_PATTERN}(?:['’-]${LETTER_WORD_PATTERN})*|\p{N}+(?:[,.]\p{N}+)*`,
   "gu",
 );
-const WIKI_LINK_PATTERN = /!?\[\[[^[\]]+\]\]/g;
-const MARKDOWN_LINK_PATTERN = /!?\[[^\]]+\]\([^)]+\)/g;
-const TAG_PATTERN = /(^|[^\p{L}\p{N}_/])#([\p{L}\p{N}_/-]+)/gu;
+const TAG_PATTERN = /(^|[^\p{L}\p{M}\p{N}_/])#([\p{L}\p{M}\p{N}_/-]+)/gu;
 
 export function calculateNoteStatistics(
   projection: MarkdownBodyProjection,
   tasks: readonly NoteTask[],
 ): NoteStatistics {
   const body = projection.lines.map((line) => line.semanticText).join("\n");
+  const tags = projection.lines.map((line) => line.tagText).join("\n");
   const taskCompleted = tasks.filter((task) => task.completed).length;
   return Object.freeze({
     wordCount: body.match(WORD_PATTERN)?.length ?? 0,
-    linkCount:
-      (body.match(WIKI_LINK_PATTERN)?.length ?? 0) +
-      (body.match(MARKDOWN_LINK_PATTERN)?.length ?? 0),
-    tagCount: Array.from(body.matchAll(TAG_PATTERN)).length,
+    linkCount: projection.linkCount,
+    tagCount: Array.from(tags.matchAll(TAG_PATTERN))
+      .filter((match) => /[^\p{N}]/u.test(match[2] ?? "")).length,
     taskTotal: tasks.length,
     taskCompleted,
     taskCompletionRate:

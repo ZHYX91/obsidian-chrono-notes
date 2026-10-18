@@ -16,8 +16,6 @@ const DUE_PATTERN = /📅\s*(\d{4}-\d{2}-\d{2})/u;
 const SCHEDULED_PATTERN = /[⏳⌛]\s*(\d{4}-\d{2}-\d{2})/u;
 const START_PATTERN = /🛫\s*(\d{4}-\d{2}-\d{2})/u;
 const DONE_PATTERN = /✅\s*(\d{4}-\d{2}-\d{2})/u;
-const TASK_LINE_PATTERN = /^(\s*)[-*]\s+\[([ xX])\]\s+(.+)$/;
-const TASK_MARKER_PATTERN = /^\s*[-*]\s+\[([ xX])\]\s+/u;
 const DISPLAY_DATE_MARKER_PATTERN = /(📅|⏳|⌛|🛫|✅)\s*\d{4}-\d{2}-\d{2}/gu;
 
 export function parseNoteTasks(
@@ -26,13 +24,9 @@ export function parseNoteTasks(
 ): readonly NoteTask[] {
   const tasks: NoteTask[] = [];
   for (const line of projection.lines) {
-    if (!line.taskMarkerEligible) continue;
-    const match = TASK_LINE_PATTERN.exec(line.visibleText);
-    if (match === null) continue;
-    const contentStart = match[0].length - (match[3]?.length ?? 0);
-    // Labels may contain visible code, but the writable checkbox itself must
-    // be outside code and hidden syntax in the shared semantic projection.
-    if (TASK_MARKER_PATTERN.exec(line.semanticText)?.[0].length !== contentStart) continue;
+    const marker = line.taskMarker;
+    if (marker === null) continue;
+    const contentStart = marker.contentOffset;
     // RegExp indices are UTF-16 code-unit offsets, so keep the writable copy
     // in the same coordinate system even when emoji markers use surrogate pairs.
     const visibleWithoutDates = line.visibleText.split("");
@@ -45,7 +39,7 @@ export function parseNoteTasks(
     const text = visibleWithoutDates.join("").slice(contentStart).replace(/\s+/g, " ").trim();
     tasks.push(Object.freeze({
       text: text || rawText,
-      completed: match[2] !== " ",
+      completed: line.semanticText[marker.checkboxOffset] !== " ",
       dueDate: parseTaskDate(DUE_PATTERN, line.semanticText),
       scheduledDate: parseTaskDate(SCHEDULED_PATTERN, line.semanticText),
       startDate: parseTaskDate(START_PATTERN, line.semanticText),

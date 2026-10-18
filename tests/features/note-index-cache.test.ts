@@ -140,7 +140,7 @@ describe("persistent NoteIndex cache", () => {
 
     await expect(index.persistCacheNow()).resolves.toBeUndefined();
     expect(cache.save).toHaveBeenCalledOnce();
-    expect(cache.value).toMatchObject({ schema: 4 });
+    expect(cache.value).toMatchObject({ schema: 5 });
 
     const saveError = new Error("save failed");
     const consoleError = vi.spyOn(console, "error").mockImplementation(() => undefined);
@@ -158,7 +158,10 @@ describe("persistent NoteIndex cache", () => {
     const source = new MetadataNoteSource();
     source.files = [FILE];
     source.read.mockRejectedValue(new Error("matching cache entries must not be reread"));
-    const cache = new MemoryNoteIndexCache(cached("old"));
+    const cache = new MemoryNoteIndexCache(cached(
+      "%% hidden task: - [ ] obsolete %%\n> + [ ] Keep 📅 2026-10-17 #123 #tag\n" +
+      "[reference][ref]\n\n[ref]: #section",
+    ));
     const index = new NoteIndex(source, { cache });
 
     await index.start();
@@ -166,7 +169,10 @@ describe("persistent NoteIndex cache", () => {
     expect(index.getSnapshot().readiness).toBe("ready");
     expect(index.get(FILE.path)).toMatchObject({
       kind: "parsed",
-      note: { preview: "old" },
+      note: {
+        tasks: [{ text: "Keep #123 #tag", dueDate: "2026-10-17" }],
+        statistics: { taskTotal: 1, linkCount: 1, tagCount: 1 },
+      },
     });
     expect(source.read).not.toHaveBeenCalled();
     expect(index.getStatus().noteCount).toBe(1);
@@ -232,11 +238,11 @@ describe("persistent NoteIndex cache", () => {
     index.stop();
   });
 
-  it("clears an old parser-semantic snapshot and falls back to a complete scan", async () => {
+  it.each([2, 3, 4])("clears parser-semantic schema %i and falls back to a complete scan", async (schema) => {
     const source = new MetadataNoteSource();
     source.files = [FILE];
     source.read.mockResolvedValue("fresh");
-    const cache = new MemoryNoteIndexCache({ ...cached("old"), schema: 2 });
+    const cache = new MemoryNoteIndexCache({ ...cached("old"), schema });
     const index = new NoteIndex(source, { cache });
 
     await index.start();
@@ -426,7 +432,7 @@ describe("persistent NoteIndex cache", () => {
       entries: [duplicate.entries[0], duplicate.entries[0]],
     })).toBeNull();
     expect(parsePersistedNoteIndexSnapshot({
-      schema: 4,
+      schema: 5,
       entries: [{
         ...duplicate.entries[0],
         file: { ...FILE, mtime: Number.NaN },

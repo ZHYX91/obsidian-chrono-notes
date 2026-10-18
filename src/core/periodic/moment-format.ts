@@ -130,6 +130,20 @@ export function parseMomentFormat(
       }
     }
   }
+  // Adjacent native fields with the same output letter would become a
+  // different Luxon token (DDD -> ddd, YYYYYYYY -> yyyyyyyy). Empty bracket
+  // literals cannot separate them either. Reject these unsupported runs
+  // instead of silently formatting a constant or a different date field.
+  let previousNative: string | null = null;
+  for (const part of parts) {
+    if (part.token === null && part.value.length === 0) continue;
+    if (part.token === null || part.token === "DEC" || part.token === "CEN") {
+      previousNative = null;
+      continue;
+    }
+    if (previousNative?.at(-1) === part.value[0]) return null;
+    previousNative = part.value;
+  }
   return parts;
 }
 

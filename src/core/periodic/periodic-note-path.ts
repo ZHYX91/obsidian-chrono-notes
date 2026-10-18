@@ -45,7 +45,15 @@ export function formatPeriodicNotePath(
       "date",
       anchor.year,
     );
-    return formatted === null ? null : `${formatted}.md`;
+    if (formatted === null) return null;
+    const parsedAnchor = parsePathAnchor(formatted, rule, options);
+    // Formatting is also used by queries and commands. A path that parses to
+    // another period must never become an actionable existing or new note.
+    return parsedAnchor !== null &&
+      parsedAnchor.year === anchor.year && parsedAnchor.month === anchor.month &&
+      parsedAnchor.day === anchor.day
+      ? `${formatted}.md`
+      : null;
   } catch {
     return null;
   }
@@ -59,22 +67,23 @@ export function parsePeriodicNotePath(
   if (!hasPeriodIdentity(rule) || !path.endsWith(".md")) return null;
 
   try {
-    const parsed = parsePeriodDate(
-      path.slice(0, -3),
-      rule.pattern,
-      resolvePathLocale(rule),
-    );
-    if (parsed === null || !parsed.isValid) return null;
-
-    const anchor = getPeriodAnchor(
-      toLocalDate(parsed),
-      rule.noteType,
-      options.weekStartDay,
-    );
+    const anchor = parsePathAnchor(path.slice(0, -3), rule, options);
+    if (anchor === null) return null;
     return formatPeriodicNotePath(anchor, rule, options) === path ? anchor : null;
   } catch {
     return null;
   }
+}
+
+function parsePathAnchor(
+  text: string,
+  rule: PeriodicNotePathRule,
+  options: PeriodicNotePathOptions,
+): LocalDate | null {
+  const parsed = parsePeriodDate(text, rule.pattern, resolvePathLocale(rule));
+  return parsed === null ? null : getPeriodAnchor(
+    toLocalDate(parsed), rule.noteType, options.weekStartDay,
+  );
 }
 
 function resolvePathLocale(rule: PeriodicNotePathRule): string {

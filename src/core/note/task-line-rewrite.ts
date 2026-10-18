@@ -17,11 +17,9 @@ export function toggleTaskInContent(
   content: string,
   expected: NoteTask,
 ): TaskLineRewriteResult {
-  return rewriteTaskLine(content, expected, (line) =>
-    line.replace(
-      /^(\s*[-*]\s+\[)[ xX](\])/u,
-      `$1${expected.completed ? " " : "x"}$2`,
-    ));
+  return rewriteTaskLine(content, expected, (line, _semanticLine, checkboxOffset) =>
+    `${line.slice(0, checkboxOffset)}${expected.completed ? " " : "x"}` +
+    line.slice(checkboxOffset + 1));
 }
 
 export function rescheduleTaskDueDateInContent(
@@ -48,7 +46,7 @@ export function rescheduleTaskDueDateInContent(
 function rewriteTaskLine(
   content: string,
   expected: NoteTask,
-  update: (line: string, semanticLine: string) => string,
+  update: (line: string, semanticLine: string, checkboxOffset: number) => string,
 ): TaskLineRewriteResult {
   const range = findLineRange(content, expected.line);
   if (range === null) return Object.freeze({ status: "line-missing" });
@@ -59,15 +57,17 @@ function rewriteTaskLine(
     (task) => task.line === expected.line,
   );
   const projectedLine = projection.lines.find((item) => item.sourceLine === expected.line);
-  if (current === undefined || projectedLine === undefined || !sameTaskIdentity(current, expected)) {
+  if (current === undefined || projectedLine?.taskMarker == null ||
+    !sameTaskIdentity(current, expected)) {
     return Object.freeze({ status: "stale" });
   }
   // The document parser removes the file BOM. Restore its source coordinate
   // before mapping semantic offsets back into the original first line.
-  const semanticLine = document.hadBom && expected.line === 0
+  const bomOffset = document.hadBom && expected.line === 0 ? 1 : 0;
+  const semanticLine = bomOffset === 1
     ? ` ${projectedLine.semanticText}`
     : projectedLine.semanticText;
-  const updatedLine = update(line, semanticLine);
+  const updatedLine = update(line, semanticLine, projectedLine.taskMarker.checkboxOffset + bomOffset);
   if (updatedLine === line) return Object.freeze({ status: "stale" });
   return Object.freeze({
     status: "updated",

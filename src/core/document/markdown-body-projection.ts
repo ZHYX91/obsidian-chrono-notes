@@ -1,16 +1,25 @@
 import { parser } from "@lezer/markdown";
 
+export interface MarkdownTaskMarker {
+  /** UTF-16 offsets within the source line, excluding a file BOM. */
+  readonly checkboxOffset: number;
+  readonly contentOffset: number;
+}
+
 export interface MarkdownBodyLineProjection {
   readonly sourceLine: number;
   readonly rawText: string;
   readonly visibleText: string;
   /** Visible body text with inline code spans masked for syntax consumers. */
   readonly semanticText: string;
-  readonly taskMarkerEligible: boolean;
+  /** Semantic text with escaped syntax and link metadata masked for tags. */
+  readonly tagText: string;
+  readonly taskMarker: MarkdownTaskMarker | null;
 }
 
 export interface MarkdownBodyProjection {
   readonly lines: readonly MarkdownBodyLineProjection[];
+  readonly linkCount: number;
 }
 
 interface MaskRange {
@@ -20,6 +29,11 @@ interface MaskRange {
 
 interface ContainerMark extends MaskRange {
   readonly containerFrom: number;
+}
+
+interface MarkdownLink extends MaskRange {
+  readonly reference: string | null;
+  readonly label: MaskRange | null;
 }
 
 /**
@@ -37,7 +51,10 @@ export function projectMarkdownBody(
   const syntax = createSyntaxInput(body, uncommented, rawLines, comments, containerMarks);
   const blocks: MaskRange[] = [];
   const inline: MaskRange[] = [];
-  const markers = new Set<number>();
+  const markers: MaskRange[] = [];
+  const tagMasks: MaskRange[] = [];
+  const references: { label: string; from: number }[] = [];
+  const links: MarkdownLink[] = [];
   parser.parse(syntax).iterate({
     enter(node) {
       if (node.name === "FencedCode" || node.name === "CodeBlock") {
@@ -48,7 +65,36 @@ export function projectMarkdownBody(
         inline.push({ from: node.from, to: node.to });
         return false;
       }
-      if (node.name === "ListMark") markers.add(node.from);
+      if (node.name === "ListMark") markers.push({ from: node.from, to: node.to });
+      if (node.name === "URL" || node.name === "LinkTitle" || node.name === "Escape") {
+        tagMasks.push({ from: node.from, to: node.to });
+      }
+      if (node.name === "LinkReference") {
+        const label = node.node.getChild("LinkLabel");
+        if (label !== null) {
+          references.push({
+            label: normalizeReference(syntax.slice(label.from + 1, label.to - 1)),
+            from: node.from,
+          });
+        }
+        tagMasks.push({ from: node.from, to: node.to });
+      }
+      if (node.name === "Link" || node.name === "Image") {
+        const marks = node.node.getChildren("LinkMark");
+        const opening = marks[0];
+        const closing = marks[1];
+        if (opening === undefined || closing === undefined) return;
+        const label = node.node.getChild("LinkLabel");
+        const explicitLabel = label === null ? "" : syntax.slice(label.from + 1, label.to - 1);
+        const isInline = marks.some((mark) => syntax.slice(mark.from, mark.to) === "(");
+        links.push({
+          from: node.from, to: node.to,
+          reference: isInline ? null : normalizeReference(
+            explicitLabel || syntax.slice(opening.to, closing.from),
+          ),
+          label: label === null ? null : { from: label.from, to: label.to },
+        });
+      }
     },
   });
   // Comment suffixes can become paragraphs in the syntax input. Genuine code
@@ -56,20 +102,54 @@ export function projectMarkdownBody(
   const codeBlocks = [...originalBlocks, ...blocks].sort((left, right) => left.from - right.from);
   const visible = maskRanges(uncommented, codeBlocks);
   const visibleLines = visible.split("\n");
-  const semanticLines = maskRanges(visible, inline).split("\n");
+  const semantic = maskRanges(visible, inline);
+  const semanticLines = semantic.split("\n");
+  const referenceLabels = new Set(references
+    .filter((reference) => semantic[reference.from] === "[")
+    .map((reference) => reference.label));
+  const wikiLinks = Array.from(semantic.matchAll(/!?\[\[[^[\]\n]+\]\]/gu))
+    .filter((match) => !isEscaped(semantic, match.index))
+    .map((match) => ({ from: match.index, to: match.index + match[0].length }));
+  const resolvedLinks = links.filter((link) =>
+    (semantic[link.from] === "[" || semantic[link.from] === "!") &&
+    !containsOffset(wikiLinks, link.from) &&
+    (link.reference === null || referenceLabels.has(link.reference)));
+  const linkLabels = resolvedLinks.flatMap((link) => link.label === null ? [] : [link.label]);
+  const tagLines = maskRanges(semantic, [...tagMasks, ...wikiLinks, ...linkLabels]
+    .sort((left, right) => left.from - right.from)).split("\n");
   let offset = 0;
+  let markerCursor = 0;
+  const taskCheckboxes = new Set<number>();
   const lines = rawLines.map((rawText, index) => {
     const visibleText = visibleLines[index] ?? "";
     const semanticText = semanticLines[index] ?? "";
-    const marker = /^\s*[-*]/u.exec(visibleText);
-    const taskMarkerEligible = marker !== null && markers.has(offset + marker[0].length - 1);
+    let taskMarker: MarkdownTaskMarker | null = null;
+    while (markerCursor < markers.length && markers[markerCursor]!.from < offset + rawText.length) {
+      const marker = markers[markerCursor++]!;
+      const from = marker.from - offset;
+      const to = marker.to - offset;
+      if (from < 0 || semanticText.slice(from, to).trim().length === 0) continue;
+      const prefix = /^([\t ]+)\[([ xX])\][\t ]+/u.exec(visibleText.slice(to));
+      if (prefix === null) continue;
+      const contentOffset = to + prefix[0].length;
+      if (semanticText.slice(from, contentOffset) !== visibleText.slice(from, contentOffset)) continue;
+      if (visibleText.slice(contentOffset).length === 0) continue;
+      taskMarker = Object.freeze({
+        checkboxOffset: to + prefix[1]!.length + 1,
+        contentOffset,
+      });
+      taskCheckboxes.add(offset + taskMarker.checkboxOffset - 1);
+    }
     offset += rawText.length + 1;
     return Object.freeze({
       sourceLine: bodyStartLine + index,
-      rawText, visibleText, semanticText, taskMarkerEligible,
+      rawText, visibleText, semanticText, tagText: tagLines[index] ?? "", taskMarker,
     });
   });
-  return Object.freeze({ lines: Object.freeze(lines) });
+  return Object.freeze({
+    lines: Object.freeze(lines),
+    linkCount: wikiLinks.length + resolvedLinks.filter((link) => !taskCheckboxes.has(link.from)).length,
+  });
 }
 
 function collectSyntaxContext(body: string): Readonly<{
@@ -104,8 +184,15 @@ function collectSyntaxContext(body: string): Readonly<{
   let codeCursor = 0;
   let discardCursor = 0;
   while (cursor < body.length) {
-    const from = body.indexOf("<!--", cursor);
-    if (from === -1) break;
+    const html = body.indexOf("<!--", cursor);
+    const obsidian = body.indexOf("%%", cursor);
+    if (html === -1 && obsidian === -1) break;
+    const isHtml = html !== -1 && (obsidian === -1 || html < obsidian);
+    const from = isHtml ? html : obsidian;
+    if (isEscaped(body, from)) {
+      cursor = from + (isHtml ? 4 : 2);
+      continue;
+    }
     while (codeCursor < codes.length && (codes[codeCursor]?.to ?? 0) <= from) codeCursor += 1;
     const code = codes[codeCursor];
     if (code !== undefined && code.from <= from && !discardedCodes.has(code)) {
@@ -115,8 +202,9 @@ function collectSyntaxContext(body: string): Readonly<{
     // An actual comment owns everything through its raw closing delimiter.
     // A fence inside an unclosed inline comment must not hide that delimiter
     // or keep hiding later body text after the comment has ended.
-    const closing = body.indexOf("-->", from + 4);
-    const to = closing === -1 ? body.length : closing + 3;
+    const delimiter = isHtml ? "-->" : "%%";
+    const closing = body.indexOf(delimiter, from + (isHtml ? 4 : 2));
+    const to = closing === -1 ? body.length : closing + delimiter.length;
     comments.push({ from, to });
     while (discardCursor < codes.length && (codes[discardCursor]?.from ?? body.length) < to) {
       const candidate = codes[discardCursor];
@@ -132,6 +220,16 @@ function collectSyntaxContext(body: string): Readonly<{
     comments, containerMarks,
     originalBlocks: originalBlocks.filter((block) => !discardedCodes.has(block)),
   };
+}
+
+function normalizeReference(label: string): string {
+  return label.trim().replace(/\s+/gu, " ").toUpperCase().toLowerCase();
+}
+
+function isEscaped(text: string, offset: number): boolean {
+  let backslashes = 0;
+  for (let index = offset - 1; text[index] === "\\"; index -= 1) backslashes += 1;
+  return backslashes % 2 === 1;
 }
 
 function createSyntaxInput(
