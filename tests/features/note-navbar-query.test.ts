@@ -99,7 +99,6 @@ describe("selectNoteNavbarContext", () => {
       snapshotVersion: 31,
       noteType: "weekly",
       date: { year: 2025, month: 12, day: 29 },
-      label: "Week 1",
       previous: { noteType: "weekly", date: { year: 2025, month: 12, day: 22 } },
       next: { noteType: "weekly", date: { year: 2026, month: 1, day: 5 } },
       higher: { noteType: "monthly", date: { year: 2025, month: 12, day: 1 } },

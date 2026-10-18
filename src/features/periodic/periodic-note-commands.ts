@@ -7,6 +7,10 @@ import {
   type WeekStartDay,
 } from "../../core/periodic/periodic-date";
 import { formatPeriodicNotePath } from "../../core/periodic/periodic-note-path";
+import {
+  getOperationErrorDetails,
+  type OperationErrorDetails,
+} from "../../shared/operation-error";
 import type { PeriodicNoteSettings, TemplateEngine } from "../../shared/settings";
 import type {
   NoteTemplatePort,
@@ -46,6 +50,7 @@ interface PeriodicNoteCreateConfirmation {
 interface CascadeFailure {
   readonly name: string;
   readonly message: string;
+  readonly details?: OperationErrorDetails;
 }
 
 export type CascadeResult =
@@ -171,6 +176,7 @@ export class PeriodicNoteCommands {
         }));
       } catch (error) {
         const cause = error instanceof PeriodicNoteCreationError ? error.cause : error;
+        const details = getOperationErrorDetails(error);
         results.push(Object.freeze({
           noteType,
           path,
@@ -178,6 +184,7 @@ export class PeriodicNoteCommands {
           error: Object.freeze({
             name: cause instanceof Error ? cause.name : "Error",
             message: getErrorMessage(cause),
+            ...(details === undefined ? {} : { details }),
           }),
         }));
       }

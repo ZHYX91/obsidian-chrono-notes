@@ -6,6 +6,7 @@ import {
   type IcsEventOccurrence,
 } from "../../core/calendar/ics-calendar";
 import { notifyListeners } from "../notify-listeners";
+import { getOperationErrorDetails, type OperationErrorDetails } from "../../shared/operation-error";
 
 export interface IcsSourceReader {
   read(source: string): Promise<string>;
@@ -25,6 +26,7 @@ export interface IcsSourceStatus {
   readonly skippedInvalid: number;
   readonly skippedUnsupportedTimezone?: number;
   readonly error: string | null;
+  readonly errorDetails?: OperationErrorDetails;
 }
 
 export interface IcsEventIndexSnapshot {
@@ -132,6 +134,7 @@ export class IcsEventIndex {
         };
       } catch (error) {
         if (revision.signal.aborted) return null;
+        const errorDetails = getOperationErrorDetails(error);
         return {
           status: Object.freeze({
             source,
@@ -141,6 +144,7 @@ export class IcsEventIndex {
             skippedInvalid: 0,
             skippedUnsupportedTimezone: 0,
             error: getErrorMessage(error),
+            ...(errorDetails === undefined ? {} : { errorDetails }),
           }) satisfies IcsSourceStatus,
           events: [],
         };

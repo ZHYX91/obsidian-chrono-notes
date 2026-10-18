@@ -161,6 +161,7 @@ export function CalendarWeekPickerPopover(
       currentIndex,
       itemCount: weekItems.length,
       columns,
+      direction: translator.direction,
     });
     if (targetIndex === null) return;
     event.preventDefault();

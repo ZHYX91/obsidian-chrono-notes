@@ -74,6 +74,20 @@ describe("calendar week picker", () => {
     expect(resolveWeekPickerTypeahead("", "x", 53)).toBeNull();
   });
 
+  it.each([2, 3] as const)("follows the visual grid in RTL with %i columns", (columns) => {
+    const navigate = (key: string, currentIndex = 20) => resolveWeekPickerNavigation({
+      key, currentIndex, itemCount: 53, columns, direction: "rtl",
+    });
+    expect(navigate("ArrowRight")).toBe(19);
+    expect(navigate("ArrowLeft")).toBe(21);
+    expect(navigate("ArrowUp")).toBe(20 - columns);
+    expect(navigate("ArrowDown")).toBe(20 + columns);
+    expect(navigate("ArrowRight", 0)).toBe(0);
+    expect(navigate("ArrowLeft", 52)).toBe(52);
+    expect(navigate("Home")).toBe(0);
+    expect(navigate("End")).toBe(52);
+  });
+
   it("renders all 53 weeks as single focus targets with independent current and selected states", () => {
     const markup = renderWithTestHost(createElement(CalendarWeekPickerPopover, {
       kind: "week",

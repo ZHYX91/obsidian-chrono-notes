@@ -192,13 +192,13 @@ export function MonthView({
         void onOpenPeriodic(date, "daily", "default");
         return;
       }
-      const next = moveCalendarSelection(date, event.key);
+      const next = moveCalendarSelection(date, event.key, translator.direction);
       if (next === date) return;
       event.preventDefault();
       focusAfterMove.current = true;
       onMoveSelection(next);
     },
-    [onMoveSelection, onOpenPeriodic, rangeDrag],
+    [onMoveSelection, onOpenPeriodic, rangeDrag, translator.direction],
   );
 
   const handleClick = useCallback(

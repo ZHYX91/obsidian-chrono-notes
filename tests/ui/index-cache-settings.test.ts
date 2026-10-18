@@ -82,8 +82,22 @@ describe("index and cache settings", () => {
     await harness.clickButton();
 
     expect(harness.setDesc).toHaveBeenLastCalledWith(
-      "The cache could not be cleared or the note index could not be rebuilt.",
+      "The note index could not be rebuilt. Choose Clear cache and rebuild to try again.\nTechnical details: save failed",
     );
+    expect(harness.setDisabled).toHaveBeenLastCalledWith(false);
+  });
+
+  it("preserves cache-inspection errors and keeps rebuilding available", async () => {
+    const harness = createHarness();
+    harness.getCacheStatus.mockRejectedValueOnce(new Error("read denied"));
+    configureNoteIndexCacheSetting(harness.setting, harness.context);
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(harness.setDesc).toHaveBeenLastCalledWith(
+      "The saved note index could not be checked. Reopen settings to try again.\nTechnical details: read denied",
+    );
+    expect(harness.setDisabled).toHaveBeenLastCalledWith(false);
   });
 
   it("keeps cache maintenance disabled while future settings are read-only", async () => {

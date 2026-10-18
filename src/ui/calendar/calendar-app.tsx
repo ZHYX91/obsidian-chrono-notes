@@ -227,6 +227,8 @@ export function CalendarApp({
     [getTranslator, settings.locale],
   );
   const { locale, t } = translator;
+  const PreviousIcon = translator.direction === "rtl" ? ChevronRight : ChevronLeft;
+  const NextIcon = translator.direction === "rtl" ? ChevronLeft : ChevronRight;
   const monthQueryRequest = useMemo<MonthCalendarQueryRequest>(() =>
     Object.freeze({
       kind: "month",
@@ -256,8 +258,10 @@ export function CalendarApp({
       holidayRegionKey,
       settings.periodicNotes.daily.enabled,
       settings.periodicNotes.daily.pattern,
+      settings.periodicNotes.daily.pathLocale,
       settings.periodicNotes.weekly.enabled,
       settings.periodicNotes.weekly.pattern,
+      settings.periodicNotes.weekly.pathLocale,
       settings.rangeNotes.customFolder,
       settings.rangeNotes.folder,
       settings.rangeNotes.monthViewLimit,
@@ -293,8 +297,10 @@ export function CalendarApp({
       selected,
       settings.periodicNotes.daily.enabled,
       settings.periodicNotes.daily.pattern,
+      settings.periodicNotes.daily.pathLocale,
       settings.periodicNotes.weekly.enabled,
       settings.periodicNotes.weekly.pattern,
+      settings.periodicNotes.weekly.pathLocale,
       settings.rangeNotes.customFolder,
       settings.rangeNotes.folder,
       settings.rangeNotes.monthViewLimit,
@@ -322,10 +328,13 @@ export function CalendarApp({
       locale,
       settings.periodicNotes.daily.enabled,
       settings.periodicNotes.daily.pattern,
+      settings.periodicNotes.daily.pathLocale,
       settings.periodicNotes.monthly.enabled,
       settings.periodicNotes.monthly.pattern,
+      settings.periodicNotes.monthly.pathLocale,
       settings.periodicNotes.quarterly.enabled,
       settings.periodicNotes.quarterly.pattern,
+      settings.periodicNotes.quarterly.pathLocale,
       settings.statisticDisplayDimension,
       settings.statisticValueStep,
       settings.weekStartDay,
@@ -343,8 +352,11 @@ export function CalendarApp({
     },
   }), [locale, settings.weekStartDay, visibleMonth.year,
     settings.periodicNotes.yearly.enabled, settings.periodicNotes.yearly.pattern,
+    settings.periodicNotes.yearly.pathLocale,
     settings.periodicNotes.decadal.enabled, settings.periodicNotes.decadal.pattern,
-    settings.periodicNotes.century.enabled, settings.periodicNotes.century.pattern]);
+    settings.periodicNotes.decadal.pathLocale,
+    settings.periodicNotes.century.enabled, settings.periodicNotes.century.pattern,
+    settings.periodicNotes.century.pathLocale]);
   const queryRequest: CalendarQueryRequest = viewMode === "century"
     ? centuryQueryRequest : viewMode === "week"
     ? weekQueryRequest
@@ -570,7 +582,7 @@ export function CalendarApp({
             disabled={centuryQuery !== null && centuryQuery.range.start.year <= 1}
             onClick={() => showPeriod(-1)}
           >
-            <ChevronLeft size={16} aria-hidden="true" />
+            <PreviousIcon size={16} aria-hidden="true" />
           </button>
           <div
             ref={periodPickerAnchor}
@@ -728,7 +740,7 @@ export function CalendarApp({
             disabled={centuryQuery !== null && centuryQuery.range.end.year >= 9999}
             onClick={() => showPeriod(1)}
           >
-            <ChevronRight size={16} aria-hidden="true" />
+            <NextIcon size={16} aria-hidden="true" />
           </button>
         </div>
         <button

@@ -129,9 +129,9 @@ describe("createTranslator", () => {
 
   it("selects Hebrew dual messages and keeps locale-specific zero semantics", () => {
     const hebrew = createTranslator("he", "he-IL");
-    expect(hebrew.t("pluginNotice.events", { count: 1 })).toBe("אירוע 1");
+    expect(hebrew.t("pluginNotice.events", { count: 1 })).toBe("1 אירוע");
     expect(hebrew.t("pluginNotice.events", { count: 2 })).toBe("2 אירועים");
-    expect(hebrew.t("pluginNotice.events", { count: 3 })).toBe("אירועי 3");
+    expect(hebrew.t("pluginNotice.events", { count: 3 })).toBe("3 אירועים");
 
     for (const locale of ["fa", "am", "hi"] as const) {
       const translator = createTranslator(locale, locale);

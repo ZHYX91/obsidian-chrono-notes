@@ -1,6 +1,7 @@
 import { TFile, type Vault } from "obsidian";
 
 import type { IcsSourceReader } from "../../features/calendar/ics-event-index";
+import { OperationError } from "../../shared/operation-error";
 
 export interface ObsidianIcsSourceReaderOptions {
   readonly readLocal?: (source: string) => Promise<string>;
@@ -27,7 +28,7 @@ export class ObsidianIcsSourceReader implements IcsSourceReader {
 
   async read(source: string): Promise<string> {
     const trimmed = source.trim();
-    if (trimmed.length === 0) throw new Error("ICS source is empty");
+    if (trimmed.length === 0) throw new OperationError("icsEmptySource", "ICS source is empty");
 
     const vaultEntry = this.vault.getAbstractFileByPath(trimmed);
     if (vaultEntry instanceof TFile) return this.vault.cachedRead(vaultEntry);
@@ -42,7 +43,9 @@ export class ObsidianIcsSourceReader implements IcsSourceReader {
       return adapter.read(trimmed);
     }
     if (typeof adapter.getBasePath !== "function") {
-      throw new Error("Relative local ICS paths require a filesystem vault");
+      throw new OperationError(
+        "icsVaultFileRequired", "Relative local ICS paths require a filesystem vault",
+      );
     }
     return this.readLocal(await this.resolveLocal(adapter.getBasePath(), trimmed));
   }
@@ -69,7 +72,9 @@ async function resolveLocalPath(basePath: string, source: string): Promise<strin
 function getDesktopRequire(): (moduleId: string) => unknown {
   const runtimeRequire = (window as Window & { require?: unknown }).require;
   if (typeof runtimeRequire !== "function") {
-    throw new Error("Local ICS files require desktop filesystem access");
+    throw new OperationError(
+      "icsVaultFileRequired", "Local ICS files require desktop filesystem access",
+    );
   }
   return runtimeRequire as (moduleId: string) => unknown;
 }

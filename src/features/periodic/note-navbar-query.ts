@@ -1,6 +1,5 @@
 import {
   getPeriodAnchor,
-  getCenturyNumber,
   PERIODIC_NOTE_TYPES,
   shiftPeriod,
   toDateTime,
@@ -38,7 +37,6 @@ export interface NoteNavbarContext {
   readonly snapshotVersion: number;
   readonly noteType: PeriodicNoteType;
   readonly date: LocalDate;
-  readonly label: string;
   readonly previous: NoteNavbarTarget;
   readonly next: NoteNavbarTarget;
   readonly higher: NoteNavbarTarget | null;
@@ -79,7 +77,6 @@ export function selectNoteNavbarContextFromProjection(
     snapshotVersion,
     noteType: match.noteType,
     date: match.date,
-    label: formatNavbarLabel(match.date, match.noteType, options.locale, options.weekStartDay),
     previous: freezeTarget(
       match.noteType,
       shiftPeriod(match.date, match.noteType, -1, options.weekStartDay),
@@ -156,32 +153,4 @@ function findHigherTarget(
 
 function freezeTarget(noteType: PeriodicNoteType, date: LocalDate): NoteNavbarTarget {
   return Object.freeze({ noteType, date });
-}
-
-function formatNavbarLabel(
-  date: LocalDate,
-  noteType: PeriodicNoteType,
-  locale: string,
-  weekStartDay: WeekStartDay,
-): string {
-  const value = toDateTime(date).setLocale(locale);
-  const chinese = locale === "zh-CN" || locale === "zh-TW";
-  switch (noteType) {
-    case "daily":
-      return value.toFormat("yyyy-MM-dd");
-    case "weekly": {
-      const reference = weekStartDay === "sunday" ? value.plus({ days: 1 }) : value;
-      return chinese ? `第${reference.weekNumber}周` : `Week ${reference.weekNumber}`;
-    }
-    case "monthly":
-      return chinese ? `${value.month}月` : value.toFormat("LLL");
-    case "quarterly":
-      return `Q${value.quarter}`;
-    case "decadal":
-      return `${String(date.year).padStart(4, "0")}s`;
-    case "century":
-      return `C${getCenturyNumber(date.year)}`;
-    case "yearly":
-      return chinese ? `${value.year}年` : String(value.year);
-  }
 }

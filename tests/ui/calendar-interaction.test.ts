@@ -18,4 +18,14 @@ describe("moveCalendarSelection", () => {
     const date = { year: 2024, month: 9, day: 1 };
     expect(moveCalendarSelection(date, "Escape")).toBe(date);
   });
+
+  it.each([
+    ["ArrowLeft", { year: 2024, month: 9, day: 2 }],
+    ["ArrowRight", { year: 2024, month: 8, day: 31 }],
+    ["ArrowUp", { year: 2024, month: 8, day: 25 }],
+    ["ArrowDown", { year: 2024, month: 9, day: 8 }],
+  ] as const)("keeps %s aligned with an RTL grid", (key, expected) => {
+    expect(moveCalendarSelection({ year: 2024, month: 9, day: 1 }, key, "rtl"))
+      .toEqual(expected);
+  });
 });

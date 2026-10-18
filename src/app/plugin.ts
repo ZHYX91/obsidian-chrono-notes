@@ -433,8 +433,7 @@ export default class ChronoNotesPlugin extends Plugin {
         if (notice !== null) new Notice(notice, 12000);
       }
     } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      new Notice(formatPluginErrorNotice(message, this.getTranslator().t));
+      new Notice(formatPluginErrorNotice(error, this.getTranslator().t));
     }
   }
 
@@ -475,8 +474,7 @@ export default class ChronoNotesPlugin extends Plugin {
         new Notice(getInvalidRangeNotice(this.getTranslator().t));
       }
     } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      new Notice(formatPluginErrorNotice(message, this.getTranslator().t));
+      new Notice(formatPluginErrorNotice(error, this.getTranslator().t));
     }
   }
 
@@ -486,8 +484,7 @@ export default class ChronoNotesPlugin extends Plugin {
     try {
       await runtime.noteWorkspace.open(path, target);
     } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      new Notice(formatPluginErrorNotice(message, this.getTranslator().t));
+      new Notice(formatPluginErrorNotice(error, this.getTranslator().t));
     }
   }
 
@@ -527,8 +524,7 @@ export default class ChronoNotesPlugin extends Plugin {
   }
 
   private showTaskCommandError(error: unknown): void {
-    const message = error instanceof Error ? error.message : String(error);
-    new Notice(formatPluginErrorNotice(message, this.getTranslator().t));
+    new Notice(formatPluginErrorNotice(error, this.getTranslator().t));
   }
 
   openIntervalNoteList(): void {
@@ -668,9 +664,8 @@ export default class ChronoNotesPlugin extends Plugin {
       if (showNotice) new Notice(formatIcsRefreshNotice(index.getSnapshot(), this.getTranslator().t));
     } catch (error) {
       if (!this.isRuntimeCurrent(runtimeRevision) || this.icsEventIndex !== index) return;
-      const message = error instanceof Error ? error.message : String(error);
       console.error("Chrono Notes: ICS refresh failed", error);
-      if (showNotice) new Notice(formatPluginErrorNotice(message, this.getTranslator().t));
+      if (showNotice) new Notice(formatPluginErrorNotice(error, this.getTranslator().t));
     }
   }
 
@@ -701,9 +696,8 @@ export default class ChronoNotesPlugin extends Plugin {
       ]);
     } catch (error) {
       if (!this.isRuntimeCurrent(runtimeRevision) || this.noteIndex !== noteIndex) return;
-      const message = error instanceof Error ? error.message : String(error);
       console.error("Chrono Notes: deferred indexing failed", error);
-      new Notice(formatPluginErrorNotice(message, this.getTranslator().t));
+      new Notice(formatPluginErrorNotice(error, this.getTranslator().t));
     }
   }
 

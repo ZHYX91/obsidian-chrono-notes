@@ -5,9 +5,20 @@ import {
   type PeriodicNoteCommandSettings,
 } from "../../src/features/periodic/periodic-note-commands";
 import { createDefaultSettings } from "../../src/shared/settings";
+import { OperationError } from "../../src/shared/operation-error";
 
 describe("periodic cascade feedback", () => {
-  it("keeps successful notes and reports larger-note failures after opening the primary note", async () => {
+  it.each([
+    [new Error("Monthly template missing"), {
+      name: "Error", message: "Monthly template missing",
+    }],
+    [new Error("Template preparation failed", { cause: new OperationError(
+      "templateMissing", "Template file missing", { path: "Templates/Monthly.md" },
+    ) }), {
+      name: "Error", message: "Template preparation failed",
+      details: { code: "templateMissing", path: "Templates/Monthly.md" },
+    }],
+  ])("retains successful notes and the original failure context for %s", async (failure, expected) => {
     const contents = new Map<string, string>();
     const files = {
       exists: vi.fn((path: string) => contents.has(path)),
@@ -19,7 +30,7 @@ describe("periodic cascade feedback", () => {
     };
     const templates = {
       prepare: vi.fn(async (context: { noteType?: string }) => {
-        if (context.noteType === "monthly") throw new Error("Monthly template missing");
+        if (context.noteType === "monthly") throw failure;
         return Object.freeze({ initialContent: `# ${context.noteType}` });
       }),
     };
@@ -45,7 +56,7 @@ describe("periodic cascade feedback", () => {
       status: "opened", created: true, path: "Daily/2026-09-17.md",
       cascade: [
         { noteType: "monthly", status: "failed", path: "Monthly/2026-09.md",
-          error: { name: "Error", message: "Monthly template missing" } },
+          error: expected },
         { noteType: "yearly", status: "created", path: "Yearly/2026.md" },
       ],
     });

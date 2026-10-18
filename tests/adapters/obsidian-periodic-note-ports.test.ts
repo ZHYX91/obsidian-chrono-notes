@@ -406,6 +406,52 @@ describe("Obsidian periodic note ports", () => {
     expect(vault.modify).not.toHaveBeenCalled();
   });
 
+  it("distinguishes an enabled incompatible Templater from an absent plugin", async () => {
+    const vault = new FakeVault();
+    const templates = new ObsidianNoteTemplatePort(
+      { plugins: { getPlugin: () => ({ templater: {} }) } } as never,
+      vault as never,
+    );
+    await expect(templates.prepare({
+      kind: "periodic",
+      date: { year: 2026, month: 5, day: 18 },
+      range: getPeriodRange({ year: 2026, month: 5, day: 18 }, "daily", "monday"),
+      locale: "en", noteType: "daily", path: "Daily/today.md",
+      templatePath: "Templates/Daily.md", templateEngine: "templater", title: "today",
+    }, "")).rejects.toMatchObject({
+      message: "Templater rendering API is unavailable.",
+      details: { code: "templaterIncompatible" },
+    });
+  });
+
+  it("exposes CreateNewFromTemplate to templates that inspect tp.config.run_mode", async () => {
+    // Templater 2.25.1 declares CreateNewFromTemplate = 0, AppendActiveFile = 1.
+    const vault = new FakeVault();
+    const template = { path: "Templates/Daily.md", extension: "md" };
+    const target = { path: "Daily/2026-10-17.md", extension: "md" };
+    vault.files.set(template.path, template);
+    vault.files.set(target.path, target);
+    vault.contents.set(template.path, "<% tp.config.run_mode %>");
+    const templates = new ObsidianNoteTemplatePort({
+      plugins: { getPlugin: () => ({ templater: {
+        create_running_config: (templateFile: unknown, targetFile: unknown, runMode: number) => ({
+          template_file: templateFile, target_file: targetFile, run_mode: runMode,
+        }),
+        parse_template: async (config: { run_mode: number }) => {
+          const tp = { config };
+          return tp.config.run_mode === 0 ? "# New note initialized" : "Append only";
+        },
+      } }) },
+    } as never, vault as never);
+    const prepared = await templates.prepare({
+      kind: "periodic", date: { year: 2026, month: 10, day: 17 },
+      range: getPeriodRange({ year: 2026, month: 10, day: 17 }, "daily", "monday"),
+      locale: "en", noteType: "daily", path: target.path,
+      templatePath: template.path, templateEngine: "templater", title: "2026-10-17",
+    }, "");
+    await expect(prepared.renderAfterCreate?.(target.path)).resolves.toBe("# New note initialized");
+  });
+
   it("injects target-period context and accepts Templater tuple results", async () => {
     const vault = new FakeVault();
     const template = { path: "Templates/Quarterly.md", extension: "md" };
@@ -449,7 +495,7 @@ describe("Obsidian periodic note ports", () => {
     vault.contents.set(target.path, "");
     const rendered = await prepared.renderAfterCreate?.(target.path);
 
-    expect(createRunningConfig).toHaveBeenCalledWith(template, target, 1);
+    expect(createRunningConfig).toHaveBeenCalledWith(template, target, 0);
     expect(parseTemplate).toHaveBeenCalledOnce();
     expect(parseTemplate.mock.calls[0]?.[0]).toBe(config);
     const injected = parseTemplate.mock.calls[0]?.[1] ?? "";

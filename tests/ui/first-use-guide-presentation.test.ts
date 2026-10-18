@@ -11,13 +11,13 @@ describe("first-use guide presentation", () => {
     );
 
     expect(messages.title).toBe("快速上手 Chrono Notes");
-    expect(messages.intro).toBe("这些常用操作可能不太显眼：");
+    expect(messages.intro).toBe("先了解这几个常用操作：");
     expect(messages.hints).toEqual([
       "单击日期或周期只会选中，不会打开笔记。",
-      "双击或按 Enter 打开笔记；中键、Ctrl+单击可在新标签页打开，触摸端可长按。",
-      "右键日期可打开或创建日记、查看当天日历事件（如有）、创建区间笔记、在新标签页中打开或复制日期。",
-      "日期格的形状、数字和文字表示笔记、任务与日历状态。",
-      "周期笔记顶部的 Note Navbar 可切换前后周期或打开上级周期笔记。",
+      "双击或按 Enter 打开笔记；中键或 Ctrl+单击在新标签页打开。触屏长按周、月等周期入口可直接打开笔记。",
+      "右键或长按日期可打开菜单，进行日记、日历事件、区间笔记和复制日期等操作。长按未弹出菜单时，松手后会打开或创建日记。",
+      "日期格里的标记和数字表示笔记状态、任务进度和日历事件。",
+      "周期笔记上方的导航栏可以切换前后周期，或打开更大周期的笔记。",
     ]);
     expect(messages.openSettings).toBe("打开设置");
     expect(messages.dismiss).toBe("知道了");
