@@ -4,6 +4,11 @@ Notable changes to Chrono Notes are documented in this file. The repository's nu
 
 ## Unreleased
 
+### Added
+
+- German, French, Spanish, Brazilian Portuguese, Russian, Japanese, Korean, and Vietnamese
+  interfaces and README translations, bringing the supported interface languages and setup guides to 16.
+
 ### Fixed
 
 - Bound embedded ICS time-zone expansion, reject incomplete definitions, and retain every RDATE
@@ -23,6 +28,8 @@ Notable changes to Chrono Notes are documented in this file. The repository's nu
 - Clarify first-use gestures, settings, task-date examples, and range-note setup; synchronize the
   bilingual navigation, layout, parsing, and cache contracts.
 - Update the vulnerable source-map-js development dependency to its patched version.
+- Set the production JavaScript budget to 1.9 MB for the complete 16-language catalogs, while
+  retaining the size limit and byte-for-byte independent rebuild check.
 
 ## 0.7.6
 
