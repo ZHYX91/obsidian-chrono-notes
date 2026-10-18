@@ -38,6 +38,21 @@ function expectUnsupported(result: IcsParseResult, count = 1): void {
 }
 
 describe("ICS embedded timezone validation", () => {
+  it.each([false, true])("isolates an unnamed timezone regardless of order (first=%s)", (first) => {
+    const unnamed = ["BEGIN:VTIMEZONE", ...fixedObservance, "END:VTIMEZONE"];
+    const valid = zone("Custom/Valid", fixedObservance);
+    const result = parse(first ? [...unnamed, ...valid] : [...valid, ...unnamed], [
+      ...event("custom", ";TZID=Custom/Valid:20260701T090000"),
+      ...event("iana", ";TZID=Asia/Shanghai:20260701T090000"),
+    ]);
+    expect(result.skippedInvalid).toBe(0);
+    expect(result.skippedUnsupportedTimezone).toBe(0);
+    expect(result.events.map((entry) => entry.id)).toEqual(["custom", "iana", "utc-neighbor"]);
+    expect(start(result, "custom")).toBe("2026-07-01T01:00:00.000Z");
+    expect(start(result, "iana")).toBe("2026-07-01T01:00:00.000Z");
+    expect(start(result, "utc-neighbor")).toBe("2026-07-01T09:00:00.000Z");
+  });
+
   it.each([
     ["no observance", []],
     ["missing DTSTART", fixedObservance.filter((line) => !line.startsWith("DTSTART"))],

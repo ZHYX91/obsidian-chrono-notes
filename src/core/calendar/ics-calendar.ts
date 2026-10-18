@@ -377,17 +377,21 @@ function parseDateProperty(
   displayZone: string,
   embeddedTimezones: EmbeddedTimezoneMap,
 ): IcsDateValue | null {
-  const value = property.getFirstValue();
-  if (!(value instanceof ICAL.Time)) return null;
+  // Hydrating ICAL.Time consults every embedded timezone in the calendar.
+  // Validate raw civil fields so an unrelated malformed zone cannot abort
+  // this event before our source-local timezone isolation takes effect.
+  if ((property.type !== "date" && property.type !== "date-time") ||
+    property.jCal.length !== 4) return null;
+  const isDate = property.type === "date";
   const raw = typeof property.jCal[3] === "string" ? property.jCal[3] : "";
   const parts = raw.match(
     /^(\d{4})-(\d{2})-(\d{2})(?:T(\d{2}):(\d{2})(?::(\d{2}))?(Z)?)?$/,
   );
-  if (parts === null) return null;
+  if (parts === null || isDate !== (parts[4] === undefined)) return null;
   const year = Number(parts[1]);
   const month = Number(parts[2]);
   const day = Number(parts[3]);
-  if (value.isDate) {
+  if (isDate) {
     const date = { year, month, day };
     try {
       const dateTime = toDateTime(date);
