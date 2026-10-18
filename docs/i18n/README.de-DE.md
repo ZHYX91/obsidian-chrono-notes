@@ -12,7 +12,6 @@ So sieht der Kalender auf Desktop und Android aus:
 
 ![Chrono Notes Kalender auf Android](../assets/chrono-notes-android-en.png)
 
-
 - Kalenderansichten für Woche, Monat, Jahr und Jahrhundert mit Notizstatus, Aufgaben, Vorschau und Statistiken.
 - Tages-, Wochen-, Monats-, Quartals-, Jahres-, Jahrzehnt- und Jahrhundertnotizen mit eigenen Pfaden und Vorlagen, auch mit Templater.
 - Notiznavigation, Aufgabenfortschritt, Heatmaps und Notizen für einen ausgewählten Datumsbereich.
@@ -27,23 +26,39 @@ Obsidian 1.12.7 oder neuer auf Desktop oder Mobilgeräten. ICS-Dateien innerhalb
 
 ### Über Community-Plugins
 
- In Obsidian **Einstellungen → Community-Plugins → Durchsuchen** öffnen, nach **Chrono Notes** suchen und **Installieren** und **Aktivieren** wählen.
+In Obsidian **Einstellungen → Community-Plugins → Durchsuchen** öffnen, nach **Chrono Notes** suchen und **Installieren** und **Aktivieren** wählen.
 
 ### Manuell
 
- Das Archiv `chrono-notes-<version>.zip` von [der aktuellen Version](https://github.com/ZHYX91/obsidian-chrono-notes/releases/latest) in `Vault/.obsidian/plugins/` entpacken. Darin liegt der Ordner `chrono-notes/` mit `main.js`, `manifest.json` und `styles.css`. Obsidian neu laden und das Plugin aktivieren.
+Das Archiv `chrono-notes-<version>.zip` von [der aktuellen Version](https://github.com/ZHYX91/obsidian-chrono-notes/releases/latest) in `Vault/.obsidian/plugins/` entpacken. Darin liegt der Ordner `chrono-notes/` mit `main.js`, `manifest.json` und `styles.css`. Obsidian neu laden und das Plugin aktivieren.
 
 ### Upgrade
 
- Eine vorhandene `data.json` sichern und behalten; nur die drei Programmdateien ersetzen. `data.json` nur löschen, wenn die Einstellungen absichtlich zurückgesetzt werden sollen.
+Eine vorhandene `data.json` sichern und behalten; nur die drei Programmdateien ersetzen. `data.json` nur löschen, wenn die Einstellungen absichtlich zurückgesetzt werden sollen.
 
 ## Verwendung
 
-Unter Chrono Notes die gewünschten Notizarten, Pfade und Vorlagen einstellen. Über die Seitenleiste oder Befehlspalette den Kalender öffnen. **Ein Klick wählt ein Datum aus, erstellt aber keine Notiz.** Zum Öffnen oder Erstellen doppelklicken oder Enter drücken; auf Touchgeräten lange drücken. Rechtsklick zeigt Datumsaktionen; Strg/Befehl-Klick oder Mittelklick öffnet einen neuen Tab. In den Einstellungen können ICS-Dateien, Kalendererweiterungen und Bereichsnotizen aktiviert werden.
+Stellen Sie in Chrono Notes die gewünschten Notizarten, Pfade und Vorlagen ein und öffnen Sie den Kalender über die Seitenleiste oder Befehlspalette. **Ein Klick wählt ein Datum aus, erstellt aber keine Notiz.** Mit einem Doppelklick oder Enter öffnen oder erstellen Sie die Notiz. Ein Rechtsklick öffnet das Datumsmenü. Sind ICS-Termine vorhanden, können Sie dort die vollständige Terminliste öffnen. Strg/Befehl-Klick oder Mittelklick öffnet die Notiz in einem neuen Tab. Kalendererweiterungen und ICS-Quellen lassen sich bei Bedarf in den Einstellungen aktivieren.
+
+Auf einem Touchscreen öffnet langes Drücken auf ein Datum dessen Menü. Wählen Sie dort die Aktion zum Öffnen oder Erstellen der Tagesnotiz. Erscheint kein Menü, wird die Tagesnotiz beim Loslassen geöffnet oder erstellt. Langes Drücken auf einen Wochen-, Monats- oder anderen Periodeneintrag öffnet die zugehörige Notiz direkt.
+
+### Aufgaben im Kalender
+
+Ergänzen Sie eine Aufgabe in einer Notiz um ein Datumszeichen:
+
+```markdown
+- [ ] Wochenbericht abgeben 📅 2026-10-20
+- [ ] Unterlagen vorbereiten 🛫 2026-10-18 ⏳ 2026-10-19 📅 2026-10-20
+- [ ] Bericht prüfen ⏳ 2026-10-20 📅 2026-10-20
+```
+
+`🛫` steht für das Startdatum, `⏳` für das geplante Datum und `📅` für das Fälligkeitsdatum. Verwenden Sie das Format `YYYY-MM-DD`. Die Wochenansicht zeigt Aufgaben, deren Start-, Plan- oder Fälligkeitsdatum in die angezeigte Woche fällt. Eine Aufgabe erscheint an jedem ihrer unterschiedlichen Termine; mehrere Datumszeichen für denselben Tag ergeben nur einen Eintrag. Die letzte Beispielaufgabe erscheint also am 20. Oktober nur einmal. Aufgaben ohne Datum zählen weiterhin zum Aufgabenfortschritt ihrer Notiz.
+
+Über die Auswahl des Fälligkeitsdatums in der Wochenansicht können Sie eine Frist auf einen anderen Tag derselben Woche verschieben. Auf dem Desktop können Sie eine Aufgabe mit Fälligkeitsdatum auch auf einen Tag ziehen. Beide Aktionen ändern das bereits vorhandene Fälligkeitsdatum in der ursprünglichen Notiz.
 
 ### Jahrzehnt- und Jahrhundertnotizen
 
-Die Jahrhundertansicht zeigt zu jedem Jahrzehnt zwei Reihen mit je fünf Jahren. Bei wenig Platz wandert die Jahrzehntzelle über die Jahre. Felder für Jahre außerhalb des Jahrhunderts bleiben leer. Beim Öffnen wird das Jahrzehnt des ausgewählten Jahres sichtbar; „Dieses Jahrhundert“ führt zum aktuellen Jahrzehnt. Die Navigation bleibt beim Scrollen oben sichtbar.
+Die Jahrhundertansicht zeigt zu jedem Jahrzehnt zwei Reihen mit je fünf Jahren. Bei wenig Platz wandert die Jahrzehntzelle über die Jahre. In sehr schmalen Bereichen oder bei großer Schrift werden die Jahre in zwei Spalten angezeigt. Felder für Jahre außerhalb des Jahrhunderts bleiben leer. Beim Öffnen wird das Jahrzehnt des ausgewählten Jahres sichtbar; „Dieses Jahrhundert“ führt zum aktuellen Jahrzehnt. Die Navigation bleibt beim Scrollen oben sichtbar.
 
 Aktivieren Sie die entsprechenden Notiztypen in den Einstellungen und wechseln Sie in der Seitenleiste zur Jahrhundertansicht. Jahrzehnt und Jahrhundert haben eigene Zellen. Ein Klick wählt aus; Doppelklick oder Enter öffnet oder erstellt die Notiz. Strg/Befehl-Klick bzw. Mittelklick öffnet einen neuen Tab, auf Touchgeräten können Sie lange drücken. Die Zellen verwenden dieselben Statuspunkte, Aufgabenfortschritte und Vorschauen wie die Jahresansicht. Standardpfade sind `[diary]/DEC[s]` (2020s) für Jahrzehnte und `[diary]/[C]CEN` (C21) für Jahrhunderte.
 
@@ -51,7 +66,21 @@ Ein Jahrzehnt umfasst zum Beispiel 2020–2029, das 21. Jahrhundert die Jahre 20
 
 Vorlagen nutzen dieselben Formate: `{{date:DEC[s]}}`, `{{date:[C]CEN}}`, `{{start:YYYY}}–{{end:YYYY}}`. Alle periodischen Vorlagen unterstützen Anfangs- und Enddatum sowie `{{days}}` inklusive beider Endtage. Die Notizeinstellungen zeigen die Platzhalter mit Beispielen und entsprechenden Templater-Ausdrücken; Allgemein → Vorlageneinstellungen erläutert die gemeinsamen Regeln.
 
-### Erkennung von Zeitraumnotizen
+### Zeitraumnotizen
+
+Wählen Sie zuerst unter **Einstellungen → Chrono Notes → Zeitraumnotizen** einen Zielordner. Auf dem Desktop können Sie im Monatskalender vom Anfangsdatum zu einem anderen Enddatum ziehen, um eine Zeitraumnotiz zu erstellen. Alternativ wählen Sie die Aktion zum Erstellen einer Zeitraumnotiz im Datumsmenü oder in der Befehlspalette und geben die Daten ein. Eine neue Zeitraumnotiz muss mindestens zwei Kalendertage umfassen. Vertauschte Anfangs- und Enddaten werden automatisch in die richtige Reihenfolge gebracht.
+
+Damit eine vorhandene Notiz im Kalender als Zeitraum erscheint, fügen Sie am Anfang der Markdown-Datei diese Eigenschaften ein:
+
+```yaml
+---
+chrono-notes: interval
+start: 2026-10-18
+end: 2026-10-20
+---
+```
+
+Verwenden Sie vollständige Daten im Format `YYYY-MM-DD`; das Anfangsdatum darf nicht nach dem Enddatum liegen. Die Anzeige schließt beide Tage ein. Vorhandene Notizen können auch vollständige ISO-Datumswerte mit Uhrzeit verwenden, mindestens mit Stunden und Minuten, oder einen Zeitraum innerhalb eines Tages beschreiben.
 
 Eine Zeitraumnotiz braucht gültige Eigenschaften `start` und `end`. Von Chrono Notes erstellte Zeitraumnotizen erhalten zusätzlich `chrono-notes: interval` und werden im gesamten Vault erkannt.
 
@@ -63,7 +92,9 @@ Unter Allgemein Sprache, Wochenbeginn, Datumsanzeige und Vorlagen wählen. Unter
 
 ## Einschränkungen
 
-ICS-Dateien sind schreibgeschützt; Online-Abonnements werden nicht direkt abgerufen. Pro Aktualisierung werden standardmäßig höchstens 32 Quellen gelesen; wiederkehrende Ereignisse mit `RRULE` oder `RDATE` werden gezählt, aber nicht aufgelöst. Noch nicht offiziell veröffentlichte Feiertage werden nicht vorhergesagt. Zusätzliche Kalender sind nur verfügbar, wenn die Laufzeitumgebung die nötigen Daten bereitstellt.
+- ICS-Dateien werden nur lokal gelesen; Online-Abonnements werden nicht direkt abgerufen. Pro Aktualisierung werden standardmäßig höchstens 32 Quellen gelesen. Weitere Quellen werden als ausgelassen gemeldet. Wiederkehrende Ereignisse mit `RRULE` oder `RDATE` werden ausgelassen und gezählt.
+- Eingebettete Zeitzonen unterstützen ausdrücklich aufgeführte Umstellungstermine und eine begrenzte Auswahl jährlicher Regeln (`FREQ=YEARLY`). Ungültige, nicht unterstützte oder zu aufwendige Zeitzonendefinitionen führen dazu, dass die davon abhängigen Termine ausgelassen und gemeldet werden. Die unterstützten Regeln und Grenzen sind in der [Dokumentation zu Kalender- und Zeitgrenzen](../calendar-boundaries.en.md) auf Englisch beschrieben.
+- Noch nicht offiziell veröffentlichte Feiertage werden nicht vorhergesagt. Zusätzliche Kalender ändern nur die Anzeige; Notiznamen, Datumsnavigation und Aufgabendaten verwenden weiterhin den gregorianischen Kalender. Erweiterungen ohne die nötigen Daten der Laufzeitumgebung werden ausgeblendet.
 
 ## Datenschutz und Sicherheit
 

@@ -63,7 +63,7 @@ describe("README marketplace link contract", () => {
     );
     const issues = checkReadmeI18n(fixtureRoot);
     expect(issues).toContain(
-      "docs/i18n/README.de-DE.md must include 3 installation and 2 usage subsections",
+      "docs/i18n/README.de-DE.md must include 3 installation and 3 usage subsections",
     );
     expect(issues).toContain(
       "docs/i18n/README.de-DE.md must link screenshot chrono-notes-android-en.png",

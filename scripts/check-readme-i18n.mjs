@@ -271,10 +271,10 @@ export function checkReadmeI18n(projectRoot = defaultProjectRoot) {
     const totalSubheadings = [...sectionSubheadings.values()].reduce((a, b) => a + b, 0);
     if (
       sectionSubheadings.get(installationHeading) !== 3 ||
-      sectionSubheadings.get(usageHeading) !== 2 ||
-      totalSubheadings !== 5
+      sectionSubheadings.get(usageHeading) !== 3 ||
+      totalSubheadings !== 6
     ) {
-      errors.push(`${filePath} must include 3 installation and 2 usage subsections`);
+      errors.push(`${filePath} must include 3 installation and 3 usage subsections`);
     }
     const imageBase = filePath === "README.md"
       ? `https://raw.githubusercontent.com/${config.repository}/main/docs/assets/`
