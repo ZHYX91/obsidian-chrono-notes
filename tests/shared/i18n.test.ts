@@ -11,14 +11,10 @@ import {
 
 describe("resolvePluginLocale", () => {
   it("honors an explicit plugin locale", () => {
-    expect(resolvePluginLocale("en", "zh-CN")).toBe("en");
-    expect(resolvePluginLocale("zh-CN", "en-US")).toBe("zh-CN");
-    expect(resolvePluginLocale("zh-TW", "en-US")).toBe("zh-TW");
-    expect(resolvePluginLocale("ar", "en-US")).toBe("ar");
-    expect(resolvePluginLocale("fa", "en-US")).toBe("fa");
-    expect(resolvePluginLocale("he", "en-US")).toBe("he");
-    expect(resolvePluginLocale("am", "en-US")).toBe("am");
-    expect(resolvePluginLocale("hi", "en-US")).toBe("hi");
+    for (const locale of Object.keys(MESSAGE_CATALOGS) as (keyof MessageCatalogs)[]) {
+      expect(resolvePluginLocale(locale, locale === "en" ? "zh-CN" : "en-US"))
+        .toBe(locale);
+    }
   });
 
   it("maps automatic Chinese scripts and regions without conflating them", () => {
@@ -29,7 +25,6 @@ describe("resolvePluginLocale", () => {
   });
 
   it("falls back unknown automatic locales to English", () => {
-    expect(resolvePluginLocale("auto", "fr-FR")).toBe("fr-FR");
     expect(resolvePluginLocale("auto", "")).toBe("en");
     expect(resolvePluginLocale("auto", "xx-XX")).toBe("en");
   });
@@ -39,13 +34,14 @@ describe("resolvePluginLocale", () => {
       ["de-AT", "de-DE"], ["fr-CA", "fr-FR"], ["es-MX", "es-ES"],
       ["pt-PT", "pt-BR"], ["ru-RU", "ru-RU"], ["ja-JP", "ja-JP"],
       ["ko-KR", "ko-KR"], ["vi-VN", "vi-VN"],
+      [" FR_fr ", "fr-FR"], ["pt", "pt-BR"],
     ] as const;
     for (const [host, expected] of cases) {
       expect(resolvePluginLocale("auto", host)).toBe(expected);
     }
   });
 
-  it("maps the five added automatic languages, including legacy Hebrew", () => {
+  it("maps Arabic, Persian, Hebrew, Amharic, and Hindi host languages", () => {
     expect(resolvePluginLocale("auto", "ar-SA")).toBe("ar");
     expect(resolvePluginLocale("auto", "fa-IR")).toBe("fa");
     expect(resolvePluginLocale("auto", "he-IL")).toBe("he");
@@ -69,7 +65,7 @@ describe("createTranslator", () => {
     expect(MESSAGE_CATALOGS.ar["settings.general.languageEnglish"]).toBe("الإنجليزية");
   });
 
-  it("translates and interpolates the three complete runtime catalogs", () => {
+  it("interpolates English and both Chinese variants independently", () => {
     expect(createTranslator("en", "zh-CN").t("calendar.previous", {
       period: "month",
     })).toBe("Previous month");
@@ -138,6 +134,33 @@ describe("createTranslator", () => {
       const value = translator.t("pluginNotice.events", { count: 0 });
       expect(value).toContain("0");
       expect(value).not.toBe("");
+    }
+  });
+
+  it("keeps zero in the French and Brazilian Portuguese task-entry counts", () => {
+    for (const locale of ["fr-FR", "pt-BR"] as const) {
+      const message = createTranslator(locale, "en").t("weekView.datedTaskCount", {
+        count: 0,
+      });
+      expect(message).toMatch(/^0 /);
+      expect(message).not.toContain("{count}");
+    }
+  });
+
+  it("uses Russian singular, few, many, and fractional task-entry forms", () => {
+    const translator = createTranslator("ru-RU", "en");
+    const cases = [
+      [1, "1 запись задачи."],
+      [2, "2 записи задач."],
+      [5, "5 записей задач."],
+      [21, "21 запись задачи."],
+      [1.5, "1.5 записи задачи."],
+    ] as const;
+
+    for (const [count, expected] of cases) {
+      expect(translator.t("weekView.datedTaskCount", { count })).toEqual(
+        expect.stringContaining(expected),
+      );
     }
   });
 
@@ -216,6 +239,9 @@ describe("createTranslator", () => {
   it("keeps every runtime message non-empty in every locale", () => {
     for (const [locale, catalog] of Object.entries(MESSAGE_CATALOGS)) {
       for (const [key, value] of Object.entries(catalog)) {
+        if (typeof value !== "string") {
+          expect(value.other, `${locale}:${key}:other`).toBeTypeOf("string");
+        }
         const messages = typeof value === "string" ? [value] : Object.values(value);
         for (const message of messages) {
           expect(message.trim(), `${locale}:${key}`).not.toBe("");

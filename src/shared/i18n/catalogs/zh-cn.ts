@@ -265,7 +265,7 @@ export const ZH_CN_MESSAGES = {
   "settings.tabsLabel": "Chrono Notes 设置分类",
   "settings.save.scheduled": "更改还没有保存。",
   "settings.save.saving": "正在保存设置……",
-  "settings.save.failed": "设置保存失败，但本次打开期间仍保留着改动。可以重试。",
+  "settings.save.failed": "设置保存失败，当前改动已暂时保留。请重试。",
   "settings.save.retry": "重试",
   "settings.readOnly.futureSchema": "这些设置由较新版本的 Chrono Notes 创建。本版本只能读取；请更新插件后再编辑。",
   "settings.general.title": "常规",
