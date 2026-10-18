@@ -180,15 +180,18 @@ function collectSyntaxContext(body: string): Readonly<{
   });
   const comments: MaskRange[] = [];
   const discardedCodes = new Set<MaskRange>();
+  const commentOpening = /<!--|%%/gu;
   let cursor = 0;
   let codeCursor = 0;
   let discardCursor = 0;
   while (cursor < body.length) {
-    const html = body.indexOf("<!--", cursor);
-    const obsidian = body.indexOf("%%", cursor);
-    if (html === -1 && obsidian === -1) break;
-    const isHtml = html !== -1 && (obsidian === -1 || html < obsidian);
-    const from = isHtml ? html : obsidian;
+    // Search both forms together instead of rescanning the remaining body
+    // for an absent delimiter after every comment of the other form.
+    commentOpening.lastIndex = cursor;
+    const opening = commentOpening.exec(body);
+    if (opening === null) break;
+    const isHtml = opening[0] === "<!--";
+    const from = opening.index;
     if (isEscaped(body, from)) {
       cursor = from + (isHtml ? 4 : 2);
       continue;
