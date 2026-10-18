@@ -10,7 +10,7 @@ translation_status: synced
 
 A path pattern must contain the identity fields required by its note period, whether or not it uses `DEC` or `CEN`. Daily notes need a year, month and day, or a complete ISO week-year, week number and weekday; weekly notes need a complete date or an ISO week-year and week number; monthly notes need a year and month; quarterly notes need a year and quarter or month; yearly notes need a year. Decadal and century notes use `DEC`, `CEN` respectively, or a year.
 
-For example, `[Daily]/YYYY-MM` is not a daily-note path and `[Monthly]/YYYY` is not a monthly-note path. Invalid rules are inactive in both queries and open/create commands, so they cannot open a same-named file belonging to a different period. Settings previews must also verify that the parsed result belongs to the original period, not merely that the path can be parsed. Two-digit years retain their existing parsing rules; a preview must not label a result in another century as valid. Prefer four-digit years for long-lived notes.
+For example, `[Daily]/YYYY-MM` is not a daily-note path and `[Monthly]/YYYY` is not a monthly-note path. Invalid rules are inactive in both queries and open/create commands, so they cannot open a same-named file belonging to a different period. Path generation must parse its output and verify that the result belongs to the original period, not merely that it is parseable. Previews, queries, and creation share this rule. Two-digit years retain their existing parsing rules; a preview must not label a result in another century as valid. Prefer four-digit years for long-lived notes.
 
 Filename/path locale is a stable identity setting for each period, separate from interface and template/display locale. Missing `pathLocale` means English. The schema-19 upgrade pins the effective previous locale for every period, including localized digits, and preserves explicitly configured path locales. Formatting and parsing use the same numbering system. Changing the interface language afterwards does not change filename identity. Each period displays its own path language; check its preview and existing filenames before changing it. A change affects lookup and creation without automatically renaming or migrating existing notes.
 
@@ -19,6 +19,12 @@ Larger-note cascading returns a structured created, existing or failed result fo
 Configuration validation does not migrate or rename existing notes. Users with invalid rules must correct the pattern and independently confirm which dates their existing files belong to.
 
 ## 2. ICS time semantics
+
+Embedded `VTIMEZONE` accepts only a unique `TZID` and complete, valid `STANDARD`/`DAYLIGHT` observances. `DTSTART` and every `RDATE` value must be valid local `DATE-TIME` values without `Z` or `TZID`; `TZOFFSETFROM`/`TZOFFSETTO` support valid second-precision offsets. A found embedded definition that is duplicate, invalid, contains any invalid transition rule, or exceeds its budget must not fall back to IANA or UTC. Only events depending on that zone are skipped and counted in `skippedUnsupportedTimezone`; other events continue.
+
+Time-zone transition `RRULE` supports only `FREQ=YEARLY`, with a positive `INTERVAL`, mutually exclusive `COUNT` or UTC `UNTIL`, and `BYMONTH`, `BYMONTHDAY`, `BYYEARDAY`, `BYDAY`, `BYHOUR`, `BYMINUTE`, `BYSECOND`, and `BYSETPOS`. A valid `WKST` is accepted; `BYWEEKNO`, non-yearly frequencies, and unknown or duplicate rule parts are unsupported. `DTSTART`, every comma-separated `RDATE` value, and generated yearly transitions are merged and deduplicated; cross-year `RDATE` values must not be dropped. The compiled year range follows event starts, ends, and nominal-duration endpoints using that `TZID`, plus the following year, within `0000–9999`. Conflicting transitions or overlapping local transition windows do not guess an offset.
+
+Before iteration, time-zone compilation estimates and reserves an upper-bound budget per ICS source: 100,000 candidate work units (year/month/day checks and expanded candidates), and 10,000 transition candidates before deduplication. These conservative acceptance limits do not promise support for every valid time-zone definition. Compilation never invokes implicit `ical.js` expansion or registers global time zones. This budget is separate from daily event expansion and adds no recurring `VEVENT` expansion.
 
 Under RFC 5545 section 3.3.6, duration weeks and days are added as calendar units in the event's source zone, followed by hours, minutes and seconds. `P1D` and `PT24H` can differ across daylight-saving transitions. Start and end values are converted to the display zone only after this calculation. UTC sources retain UTC arithmetic; floating times are interpreted in the display zone; all-day dates retain zone-free date semantics.
 
@@ -30,7 +36,7 @@ One runtime owner maintains the ICS index. All sources share a budget of 100,000
 
 ## 3. Task edits
 
-Task rescheduling locates the due date in the latest Markdown projection's semantic text, using the same masking semantics as task parsing. Only the date characters are replaced; lookalike markers in preceding inline code or HTML comments, marker spacing, original line endings and unrelated text remain unchanged.
+Task rescheduling locates the due date in the latest Markdown projection's semantic text, using the same masking semantics as task parsing. Only the date characters are replaced; lookalike markers in preceding inline code, HTML comments, or Obsidian `%%` comments, marker spacing, original line endings and unrelated text remain unchanged.
 
 A single open Markdown editor receives a minimal-range transaction instead of a full-document replacement. Closed files still use `Vault.process` for atomic validation and replacement. Multiple editors, changed editor identities and a buffer changed during rewriting still refuse the write. Event-driven task indexing and latest-task identity checks remain intact.
 
@@ -38,15 +44,15 @@ A single open Markdown editor receives a minimal-range transaction instead of a 
 
 The century view has one Tab stop, preferring a still-visible keyboard focus, the selected period, the current year, then the first period. Tab is not intercepted and can leave the calendar.
 
-Horizontal arrows traverse periods in display order and respect RTL direction. Vertical arrows move five years among year cells, or between century/decade headings. Home/End reach the first/last period. Moving focus neither creates nor opens a note and does not change semantic selection. Enter retains selection and opening; mouse and long-press behavior remain unchanged. Note refreshes retain a visible focus stop, while changing centuries provides a valid fallback.
+Horizontal arrows traverse periods in display order and respect RTL direction. Vertical arrows follow the rendered year-column count, moving five years in the regular layout or two in the narrow two-column layout; on century/decade headings they move between headings. Home/End reach the first/last period. Moving focus neither creates nor opens a note and does not change semantic selection. Enter retains selection and opening; mouse and long-press behavior remain unchanged. Note refreshes retain a visible focus stop, while changing centuries provides a valid fallback.
 
 ## 5. Regression verification
 
-Path tests cover missing period fields, literal text resembling format tokens, valid-rule priority, leap days, month/year boundaries, Sunday-start cross-year weeks, stable localized filename identity across interface-language changes, schema migration of only locale-sensitive patterns, and the requirement that invalid rules never call file or workspace ports. Preview tests distinguish parseability from period identity. Cascade tests prove that a failed larger period remains absent while the primary and later successful periods remain on disk and the failure is surfaced after the primary opens.
+Path tests cover missing period fields, literal text resembling format tokens, valid-rule priority, leap days, month/year boundaries, Sunday-start cross-year weeks, stable localized filename identity across interface-language changes, migration of each period's path language while preserving explicit values, and the requirement that invalid rules never call file or workspace ports. Preview tests distinguish parseability from period identity. Cascade tests prove that a failed larger period remains absent while the primary and later successful periods remain on disk and the failure is surfaced after the primary opens.
 
 ICS tests cover spring and autumn daylight-saving transitions, different source and display zones, `P1D`, `PT24H`, `P1W`, mixed durations, floating times, UTC sources, points at and just before midnight, and exclusive all-day ends. Existing invalid-end and cancelled/recurring-event tests remain in place.
 
-Task tests cover masked date markers, UTF-16 coordinates, line endings, minimal editor transactions, no-op updates and refused writes. Century-view tests cover one tab stop, arrows, Home/End, Enter, RTL, refresh retention and cross-century fallback.
+Task tests cover masked date markers, UTF-16 coordinates, line endings, minimal editor transactions, no-op updates and refused writes. Century-view tests cover one tab stop, arrow navigation with five or two columns, Home/End, Enter, RTL, refresh retention and cross-century fallback.
 
 Run `npm run check` and `npm run test:timezones` to verify source contracts and deterministic date behavior. They do not replace desktop, mobile or theme acceptance in real Obsidian.
 

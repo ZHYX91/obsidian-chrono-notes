@@ -2,6 +2,28 @@
 
 Notable changes to Chrono Notes are documented in this file. The repository's numeric Git tags are the evidence for released versions; an entry without a corresponding local tag remains unreleased even if the manifests already contain that version.
 
+## Unreleased
+
+### Fixed
+
+- Bound embedded ICS time-zone expansion, reject incomplete definitions, and retain every RDATE
+  value so malformed calendars cannot block the interface or silently shift event times.
+- Reject ambiguous periodic-note path formats and refresh open calendars when the path language changes.
+- Exclude Obsidian comments from task indexing and writeback, recognize tasks in all supported
+  Markdown list forms, and count tags and reference links from their actual Markdown context.
+- Rebuild older derived note caches after the parsing and statistics changes.
+- Pass Templater's create-note mode to new-note templates and distinguish unavailable plugins from
+  incompatible rendering APIs.
+- Align calendar keyboard movement and navigation arrows with right-to-left layouts, and translate
+  weekly-note navigation labels with the selected interface language.
+
+### Changed
+
+- Show actionable, localized template and ICS errors while preserving the original technical details.
+- Clarify first-use gestures, settings, task-date examples, and range-note setup; synchronize the
+  bilingual navigation, layout, parsing, and cache contracts.
+- Update the vulnerable source-map-js development dependency to its patched version.
+
 ## 0.7.6
 
 - Refresh all command names immediately when the interface language changes, including their plugin prefix.

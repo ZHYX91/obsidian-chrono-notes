@@ -8,7 +8,7 @@ translation_status: source
 
 ## 1. 唯一规则
 
-周期笔记查询和依赖收集使用同一个 `resolveIndexedPeriodicNotePath()`，传递完整的 `PeriodicNoteRule`，包括 `pathLocale`。界面语言不是文件路径语言的替代值。相关依赖键包含路径语言；缓存只允许复用与当前查询相同路径的数据。
+周期笔记查询和依赖收集使用同一个 `resolveIndexedPeriodicNotePath()`，传递完整的 `PeriodicNoteRule`，包括 `pathLocale`。界面语言不是文件路径语言的替代值。相关依赖键包含路径语言；缓存只允许复用与当前查询相同路径的数据。React 构建月、周、年和世纪请求时，memo 依赖也必须包含每种周期的 `pathLocale`、启用状态和格式；修改路径语言后，当前打开的视图立即更新，不依赖翻页或索引事件。
 
 区间列表、日历查询和日历缓存依赖共用 `isIntervalNoteInScope()`。有效的显式 `chrono-notes: interval` 笔记在整个 Vault 内可见；扫描目录只限制未标记的兼容笔记。空扫描目录不排除显式区间。其他显式标记在解析时已经排除，不应重新作为未标记区间纳入。
 
@@ -22,6 +22,6 @@ NoteIndex 是唯一的派生笔记索引。查询缓存仅持有不可变索引�
 
 ## 4. 回归验证
 
-`calendar-query-consistency.test.ts` 将缓存查询的业务值与直接调用选择器的结果比较。版本来源字段不参与业务值比较，其余内容必须一致。测试覆盖非英文路径的各周期类型、持续处于 ready 的修改和删除，以及月／周视图中目录外显式区间的边界修改、移动、删除和标记变化。`interval-list-setup.test.ts` 独立验证创建资格不被未标记扫描范围阻止。
+`calendar-query-consistency.test.ts` 将缓存查询的业务值与直接调用选择器的结果比较。版本来源字段不参与业务值比较，其余内容必须一致。测试覆盖非英文路径的各周期类型、持续处于 ready 的修改和删除，以及月／周视图中目录外显式区间的边界修改、移动、删除和标记变化。React 回归保持视图打开并仅修改路径语言，确认月、周、年和世纪视图的笔记状态立即更新。`interval-list-setup.test.ts` 独立验证创建资格不被未标记扫描范围阻止。
 
 完整验证仍需运行 `npm run check`，并在真实 Obsidian 中保持日历打开进行修改、移动和删除，观察预览、统计和甘特条更新。源码测试不替代宿主交互验证。
