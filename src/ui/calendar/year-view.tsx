@@ -243,9 +243,9 @@ export function YearView({
     (event: KeyboardEvent<HTMLButtonElement>, date: LocalDate) => {
       const amount =
         event.key === "ArrowLeft"
-          ? -7
+          ? (translator.direction === "rtl" ? 7 : -7)
           : event.key === "ArrowRight"
-            ? 7
+            ? (translator.direction === "rtl" ? -7 : 7)
             : event.key === "ArrowUp"
               ? -1
               : event.key === "ArrowDown"
@@ -262,7 +262,7 @@ export function YearView({
         dayButtons.current.get(formatLocalDateKey(next))?.focus(),
       );
     },
-    [dismissPreview, host.window, onSelect, query.year, revealQuarter],
+    [dismissPreview, host.window, onSelect, query.year, revealQuarter, translator.direction],
   );
 
   return (

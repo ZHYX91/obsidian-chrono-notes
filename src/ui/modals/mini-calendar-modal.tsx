@@ -100,6 +100,8 @@ function MiniCalendar({
 }: MiniCalendarProps) {
   const host = useHostEnvironment();
   const { locale, t } = translator;
+  const PreviousIcon = translator.direction === "rtl" ? ChevronRight : ChevronLeft;
+  const NextIcon = translator.direction === "rtl" ? ChevronLeft : ChevronRight;
   const messages = getDateModalMessages(t);
   const [displayMonth, setDisplayMonth] = useState<CalendarMonth>(() => ({
     year: initialDate.year,
@@ -170,13 +172,13 @@ function MiniCalendar({
   );
 
   const moveFocus = useCallback((date: LocalDate, key: string) => {
-    const next = moveCalendarSelection(date, key);
+    const next = moveCalendarSelection(date, key, translator.direction);
     if (next === date) return false;
     focusAfterMove.current = true;
     setFocusedDate(next);
     setDisplayMonth({ year: next.year, month: next.month });
     return true;
-  }, []);
+  }, [translator.direction]);
 
   const showMonth = useCallback(
     (month: CalendarMonth, focusDay = false) => {
@@ -199,6 +201,7 @@ function MiniCalendar({
   return (
     <div
       className="chrono-notes-mini-calendar"
+      dir={translator.direction}
       onKeyDown={(event) => {
         if (event.key !== "Escape" || !periodPickerOpen) return;
         event.preventDefault();
@@ -217,7 +220,7 @@ function MiniCalendar({
               showMonth(shiftPickerMonth(displayMonth, -1));
             }}
           >
-            <ChevronLeft size={16} aria-hidden="true" />
+            <PreviousIcon size={16} aria-hidden="true" />
           </button>
           <button
             ref={periodTrigger}
@@ -245,7 +248,7 @@ function MiniCalendar({
               showMonth(shiftPickerMonth(displayMonth, 1));
             }}
           >
-            <ChevronRight size={16} aria-hidden="true" />
+            <NextIcon size={16} aria-hidden="true" />
           </button>
         </div>
         <button
@@ -276,7 +279,7 @@ function MiniCalendar({
                 title={messages.previousYear}
                 onClick={() => showMonth(shiftPickerYear(displayMonth, -1))}
               >
-                <ChevronLeft size={16} aria-hidden="true" />
+                <PreviousIcon size={16} aria-hidden="true" />
               </button>
               <strong aria-live="polite" aria-atomic="true">
                 {displayMonth.year}
@@ -287,7 +290,7 @@ function MiniCalendar({
                 title={messages.nextYear}
                 onClick={() => showMonth(shiftPickerYear(displayMonth, 1))}
               >
-                <ChevronRight size={16} aria-hidden="true" />
+                <NextIcon size={16} aria-hidden="true" />
               </button>
             </div>
             <div className="chrono-notes-mini-calendar-month-grid">

@@ -19,8 +19,8 @@ describe("holiday coverage release diagnostics", () => {
           coverage: "available",
           publication: {
             status: "published",
-            verifiedOn: "2026-07-20",
-            sourceUrl: "https://www.gov.cn/zhengce/zhengceku/202511/content_7047091.htm",
+            verifiedOn: "2026-10-18",
+            sourceUrl: "https://www.beijing.gov.cn/fuwu/bmfw/sy/jrts/202511/t20251104_4258838.html",
           },
           disposition: "available",
         },
@@ -30,7 +30,7 @@ describe("holiday coverage release diagnostics", () => {
           coverage: "available",
           publication: {
             status: "published",
-            verifiedOn: "2026-07-20",
+            verifiedOn: "2026-10-18",
             sourceUrl: "https://www.mom.gov.sg/newsroom/press-releases/2025/0616-public-holidays-for-2026",
           },
           disposition: "available",
@@ -41,8 +41,8 @@ describe("holiday coverage release diagnostics", () => {
           coverage: "unavailable",
           publication: {
             status: "not-published",
-            verifiedOn: "2026-07-20",
-            sourceUrl: "https://www.gov.cn/zhengce/zhengceku/202511/content_7047091.htm",
+            verifiedOn: "2026-10-18",
+            sourceUrl: "https://www.beijing.gov.cn/fuwu/bmfw/sy/jrts/202511/t20251104_4258838.html",
           },
           disposition: "warning",
         },
@@ -52,7 +52,7 @@ describe("holiday coverage release diagnostics", () => {
           coverage: "available",
           publication: {
             status: "published",
-            verifiedOn: "2026-07-20",
+            verifiedOn: "2026-10-18",
             sourceUrl: "https://www.mom.gov.sg/newsroom/press-releases/2026/0618-public-holidays-for-2027",
           },
           disposition: "available",

@@ -45,7 +45,7 @@ Run commands from this repository root. `npm run check` is the required handoff 
 
 ## Documentation and translations
 
-Simplified Chinese is the source language for stable product and design documents. Update both `docs/<name>.zh-CN.md` and `docs/<name>.en.md` in the same change with matching heading structure, and keep the English document at `translation_status: synced`. An incomplete translation pair is not ready for handoff. Keep the root README in English and its translation under `docs/i18n/`.
+Simplified Chinese is the source language for stable product and design documents. Update both `docs/<name>.zh-CN.md` and `docs/<name>.en.md` in the same change with matching heading structure, and keep the English document at `translation_status: synced`. An incomplete translation pair is not ready for handoff. Keep the root README in English and every localized README under `docs/i18n/`. Each translation must preserve working language links, installation instructions, supported workflow examples, screenshots, and privacy limitations.
 
 Record notable user-visible changes under `Unreleased` in `CHANGELOG.md`. Do not add release dates or claim publication without repository evidence.
 

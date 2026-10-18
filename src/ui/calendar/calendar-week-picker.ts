@@ -5,6 +5,7 @@ export interface WeekPickerNavigationInput {
   readonly currentIndex: number;
   readonly itemCount: number;
   readonly columns: WeekPickerColumnCount;
+  readonly direction?: "ltr" | "rtl";
 }
 
 export interface WeekPickerTypeaheadResult {
@@ -40,9 +41,9 @@ export function resolveWeekPickerNavigation(
   const nextIndex = (() => {
     switch (input.key) {
       case "ArrowLeft":
-        return input.currentIndex - 1;
+        return input.currentIndex + (input.direction === "rtl" ? 1 : -1);
       case "ArrowRight":
-        return input.currentIndex + 1;
+        return input.currentIndex + (input.direction === "rtl" ? -1 : 1);
       case "ArrowUp":
         return input.currentIndex - input.columns;
       case "ArrowDown":

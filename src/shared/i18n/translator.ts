@@ -20,12 +20,19 @@ export function resolvePluginLocale(
 ): SupportedLocale {
   if (configuredLocale !== "auto") return configuredLocale;
   const normalized = hostLocale.trim().replaceAll("_", "-").toLowerCase();
-  const language = normalized.split("-")[0];
+  const language = normalized.split("-")[0] ?? "";
   if (language === "ar") return "ar";
   if (language === "fa") return "fa";
   if (language === "he" || language === "iw") return "he";
   if (language === "am") return "am";
   if (language === "hi") return "hi";
+  // Use a documented regional variant even when Obsidian reports only the base language.
+  const additionalLocales: Readonly<Record<string, SupportedLocale>> = {
+    de: "de-DE", fr: "fr-FR", es: "es-ES", pt: "pt-BR",
+    ru: "ru-RU", ja: "ja-JP", ko: "ko-KR", vi: "vi-VN",
+  };
+  const matchedLocale = additionalLocales[language];
+  if (matchedLocale !== undefined) return matchedLocale;
   if (!normalized.startsWith("zh")) return "en";
   const parts = normalized.split("-");
   if (

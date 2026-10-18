@@ -2,6 +2,14 @@ import ICAL from "ical.js";
 import { DateTime } from "luxon";
 
 import {
+  createIcsEmbeddedTimezone,
+  IcsTimezoneBudget,
+  preserveIcsTimezoneRules,
+  resolveIcsEmbeddedTime,
+  type IcsEmbeddedTime,
+  type IcsEmbeddedTimezone,
+} from "./ics-timezone";
+import {
   compareLocalDate,
   formatLocalDateKey,
   parseLocalDateKey,
@@ -19,9 +27,7 @@ export interface IcsParseOptions {
   readonly displayZone: string;
 }
 
-type IcalTime = InstanceType<typeof ICAL.Time>;
-type IcalTimezone = InstanceType<typeof ICAL.Timezone>;
-type EmbeddedTimezoneMap = ReadonlyMap<string, IcalTimezone | null>;
+type EmbeddedTimezoneMap = ReadonlyMap<string, IcsEmbeddedTimezone | null>;
 
 interface IcsDateValue {
   readonly date: LocalDate;
@@ -29,7 +35,7 @@ interface IcsDateValue {
   readonly timestamp: number;
   readonly zone: string;
   /** Present only while source-zone arithmetic still needs the embedded VTIMEZONE. */
-  readonly sourceTime?: IcalTime;
+  readonly sourceTime?: IcsEmbeddedTime;
 }
 
 export interface IcsCalendarEvent {
@@ -88,19 +94,19 @@ export function parseIcsCalendar(
       throw new RangeError(`ICS source exceeds ${MAX_ICS_EVENTS_PER_SOURCE} events`);
     }
   }
-  const normalized = content.startsWith("\uFEFF") ? content.slice(1) : content;
-  const parsed: unknown = ICAL.parse(normalized);
+  const normalized = unfolded.startsWith("\uFEFF") ? unfolded.slice(1) : unfolded;
+  const parsed: unknown = ICAL.parse(preserveIcsTimezoneRules(normalized));
   if (!isJCalComponent(parsed)) {
     throw new Error("ICS source must contain exactly one calendar component");
   }
   const root = new ICAL.Component(parsed);
-  const embeddedTimezones = collectEmbeddedTimezones(root);
   const components = root.name === "vevent"
     ? [root]
     : root.getAllSubcomponents("vevent");
   if (components.length > MAX_ICS_EVENTS_PER_SOURCE) {
     throw new RangeError(`ICS source exceeds ${MAX_ICS_EVENTS_PER_SOURCE} events`);
   }
+  const embeddedTimezones = collectEmbeddedTimezones(root, components);
   const events: IcsCalendarEvent[] = [];
   let skippedRecurring = 0;
   let skippedInvalid = 0;
@@ -196,25 +202,70 @@ export function buildIcsDateIndex(events: readonly IcsCalendarEvent[]): IcsDateI
 
 function collectEmbeddedTimezones(
   root: InstanceType<typeof ICAL.Component>,
+  events: readonly InstanceType<typeof ICAL.Component>[],
 ): EmbeddedTimezoneMap {
-  const timezones = new Map<string, IcalTimezone | null>();
+  const timezones = new Map<string, IcsEmbeddedTimezone | null>();
   if (root.name === "vevent") return timezones;
-
+  const definitions = new Map<string, InstanceType<typeof ICAL.Component> | null>();
   for (const component of root.getAllSubcomponents("vtimezone")) {
-    const tzid = normalizeTzid(String(component.getFirstPropertyValue("tzid") ?? ""));
-    if (tzid === null) continue;
-    if (timezones.has(tzid)) {
-      // Duplicate definitions are ambiguous; isolate events that depend on them.
-      timezones.set(tzid, null);
-      continue;
-    }
-    try {
-      timezones.set(tzid, new ICAL.Timezone({ component, tzid }));
-    } catch {
-      timezones.set(tzid, null);
+    const properties = component.getAllProperties("tzid");
+    const ids = properties.map((property) => normalizeTzid(
+      typeof property.jCal[3] === "string" ? property.jCal[3] : undefined,
+    )).filter((id): id is string => id !== null);
+    const valid = properties.length === 1 && ids.length === 1 &&
+      properties[0]!.type === "text" && properties[0]!.jCal.length === 4;
+    for (const tzid of ids) {
+      // Preserve every ambiguous identifier, including IANA names, so none of
+      // its dependent events can silently fall back to another definition.
+      definitions.set(tzid, !valid || definitions.has(tzid) ? null : component);
     }
   }
+  const throughYears = embeddedTimezoneCoverage(events);
+  const budget = new IcsTimezoneBudget();
+  for (const [tzid, component] of definitions) {
+    const throughYear = throughYears.get(tzid);
+    timezones.set(tzid, component === null || throughYear === undefined
+      ? null
+      : createIcsEmbeddedTimezone(component, throughYear, budget));
+  }
   return timezones;
+}
+
+function embeddedTimezoneCoverage(
+  events: readonly InstanceType<typeof ICAL.Component>[],
+): ReadonlyMap<string, number> {
+  const years = new Map<string, number>();
+  const include = (tzid: string, wall: DateTime): void => {
+    if (!wall.isValid) return;
+    // A transition or gap can cross New Year. Cover the following year, and
+    // include nominal duration ends before any dependent event is resolved.
+    years.set(tzid, Math.min(9_999, Math.max(years.get(tzid) ?? 0, wall.year + 1)));
+  };
+  for (const event of events) {
+    try {
+      if (String(event.getFirstPropertyValue("status") ?? "").toUpperCase() === "CANCELLED" ||
+        event.hasProperty("rrule") || event.hasProperty("rdate")) continue;
+      for (const name of ["dtstart", "dtend"]) {
+        const property = event.getFirstProperty(name);
+        if (property === null || property.type !== "date-time") continue;
+        const raw: unknown = property.jCal[3];
+        const tzid = normalizeTzid(property.getFirstParameter("tzid"));
+        if (tzid === null || typeof raw !== "string" || raw.endsWith("Z")) continue;
+        const wall = DateTime.fromISO(raw, { zone: "UTC" });
+        include(tzid, wall);
+        if (name === "dtstart" && !event.hasProperty("dtend")) {
+          const duration = event.getFirstProperty("duration")?.getFirstValue();
+          if (duration instanceof ICAL.Duration && !duration.isNegative &&
+            Number.isFinite(duration.toSeconds()) && duration.toSeconds() > 0) {
+            include(tzid, wall.plus({ weeks: duration.weeks, days: duration.days }));
+          }
+        }
+      }
+    } catch {
+      // Event validation owns malformed event fields and their invalid count.
+    }
+  }
+  return years;
 }
 
 function startOfDisplayDay(date: LocalDate, zone: string): number {
@@ -294,19 +345,22 @@ function getDurationEnd(
   // RFC 5545 section 3.3.6: nominal days/weeks first, then exact time units.
   // P1D is not PT24H across a source-zone daylight-saving transition.
   if (start.sourceTime !== undefined) {
-    const nominal = start.sourceTime.clone();
-    nominal.adjust(duration.weeks * 7 + duration.days, 0, 0, 0);
+    const nominal = resolveIcsEmbeddedTime({
+      wall: start.sourceTime.wall.plus({ weeks: duration.weeks, days: duration.days }),
+      timezone: start.sourceTime.timezone,
+    });
+    if (nominal === null) return null;
     const exactSeconds =
       duration.hours * 3_600 + duration.minutes * 60 + duration.seconds;
-    const timestamp = resolveEmbeddedTime(nominal) + exactSeconds * 1_000;
+    const timestamp = nominal.timestamp + exactSeconds * 1_000;
     if (!Number.isFinite(timestamp)) return null;
     return Object.freeze({
       date: Object.freeze({
-        year: nominal.year,
-        month: nominal.month,
-        day: nominal.day,
+        year: nominal.wall.year,
+        month: nominal.wall.month,
+        day: nominal.wall.day,
       }),
-      timeMinutes: nominal.hour * 60 + nominal.minute,
+      timeMinutes: nominal.wall.hour * 60 + nominal.wall.minute,
       timestamp,
       zone: start.zone,
     });
@@ -323,17 +377,21 @@ function parseDateProperty(
   displayZone: string,
   embeddedTimezones: EmbeddedTimezoneMap,
 ): IcsDateValue | null {
-  const value = property.getFirstValue();
-  if (!(value instanceof ICAL.Time)) return null;
+  // Hydrating ICAL.Time consults every embedded timezone in the calendar.
+  // Validate raw civil fields so an unrelated malformed zone cannot abort
+  // this event before our source-local timezone isolation takes effect.
+  if ((property.type !== "date" && property.type !== "date-time") ||
+    property.jCal.length !== 4) return null;
+  const isDate = property.type === "date";
   const raw = typeof property.jCal[3] === "string" ? property.jCal[3] : "";
   const parts = raw.match(
     /^(\d{4})-(\d{2})-(\d{2})(?:T(\d{2}):(\d{2})(?::(\d{2}))?(Z)?)?$/,
   );
-  if (parts === null) return null;
+  if (parts === null || isDate !== (parts[4] === undefined)) return null;
   const year = Number(parts[1]);
   const month = Number(parts[2]);
   const day = Number(parts[3]);
-  if (value.isDate) {
+  if (isDate) {
     const date = { year, month, day };
     try {
       const dateTime = toDateTime(date);
@@ -366,7 +424,7 @@ function parseDateProperty(
   ) return null;
 
   const tzid = property.getFirstParameter("tzid")?.trim();
-  if (parts[7] === "Z" || value.zone?.tzid === "UTC") {
+  if (parts[7] === "Z") {
     return fromDateTime(structuralValue, false);
   }
 
@@ -376,18 +434,14 @@ function parseDateProperty(
     : embeddedTimezones.get(normalizedTzid);
   if (embeddedTimezone !== undefined) {
     if (embeddedTimezone === null) throw new UnsupportedIcsTimezoneError();
-    const sourceTime = new ICAL.Time(
-      { year, month, day, hour, minute, second, isDate: false },
-      embeddedTimezone,
-    );
-    const timestamp = resolveEmbeddedTime(sourceTime);
-    if (!Number.isFinite(timestamp)) return null;
+    const resolved = resolveIcsEmbeddedTime({ wall: structuralValue, timezone: embeddedTimezone });
+    if (resolved === null) return null;
     return Object.freeze({
-      date: Object.freeze({ year: sourceTime.year, month: sourceTime.month, day: sourceTime.day }),
-      timeMinutes: sourceTime.hour * 60 + sourceTime.minute,
-      timestamp,
+      date: Object.freeze(toLocalDate(resolved.wall as DateTime<true>)),
+      timeMinutes: resolved.wall.hour * 60 + resolved.wall.minute,
+      timestamp: resolved.timestamp,
       zone: normalizedTzid!,
-      sourceTime,
+      sourceTime: { wall: resolved.wall, timezone: embeddedTimezone },
     });
   }
 
@@ -406,53 +460,6 @@ function parseDateProperty(
 function firstOccurrence(value: DateTime): DateTime {
   return value.getPossibleOffsets().reduce((left, right) =>
     left.toMillis() <= right.toMillis() ? left : right);
-}
-
-interface EmbeddedTransition {
-  readonly year: number;
-  readonly month: number;
-  readonly day: number;
-  readonly hour: number;
-  readonly minute: number;
-  readonly second: number;
-  readonly prevUtcOffset: number;
-  readonly utcOffset: number;
-}
-
-function isEmbeddedTransition(value: unknown): value is EmbeddedTransition {
-  if (typeof value !== "object" || value === null) return false;
-  const fields = value as Record<string, unknown>;
-  return ["year", "month", "day", "hour", "minute", "second", "prevUtcOffset", "utcOffset"]
-    .every((key) => typeof fields[key] === "number" && Number.isFinite(fields[key]));
-}
-
-function resolveEmbeddedTime(time: IcalTime): number {
-  const wall = DateTime.fromObject({
-    year: time.year, month: time.month, day: time.day,
-    hour: time.hour, minute: time.minute, second: time.second,
-  }, { zone: "UTC" }).toMillis();
-  const zone = time.zone;
-  let offset = zone.utcOffset(time);
-  // utcOffset expands the public transition table for this year. ical.js's
-  // default gap/overlap choice differs from RFC 5545 section 3.3.5.
-  for (const candidate of zone.changes as readonly unknown[]) {
-    if (!isEmbeddedTransition(candidate)) continue;
-    if (Math.abs(candidate.year - time.year) > 1) continue;
-    const transition = DateTime.fromObject({
-      year: candidate.year, month: candidate.month, day: candidate.day,
-      hour: candidate.hour, minute: candidate.minute, second: candidate.second,
-    }, { zone: "UTC" }).toMillis();
-    const before = transition + candidate.prevUtcOffset * 1_000;
-    const after = transition + candidate.utcOffset * 1_000;
-    if (wall >= Math.min(before, after) && wall < Math.max(before, after)) {
-      offset = candidate.prevUtcOffset;
-      // Use the actual local clock after resolving a nonexistent time, so
-      // subsequent nominal-day arithmetic agrees with the IANA path.
-      if (after > before) time.adjust(0, 0, 0, candidate.utcOffset - offset);
-      break;
-    }
-  }
-  return wall - offset * 1_000;
 }
 
 function inDisplayZone(value: IcsDateValue, displayZone: string): IcsDateValue | null {

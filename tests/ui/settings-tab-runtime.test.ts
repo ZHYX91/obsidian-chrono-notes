@@ -351,7 +351,7 @@ describe("ChronoNotesSettingTab save orchestration", () => {
     );
     expect(statusEl).toMatchObject({ hidden: false });
     expect(statusEl?.getAttribute("role")).toBe("alert");
-    expect(statusEl?.textContent).toContain("设置未能保存");
+    expect(statusEl?.textContent).toContain("设置保存失败");
     expect(retryButtonEl?.textContent).toBe("重试");
     expect(retryButtonEl?.disabled).toBe(false);
     expect(host.settings.showNoteNavbar).toBe(false);

@@ -40,11 +40,11 @@ const HOLIDAY_PUBLICATION_RECORDS: Readonly<
   cn: Object.freeze({
     2026: publicationVerification(
       "published",
-      "https://www.gov.cn/zhengce/zhengceku/202511/content_7047091.htm",
+      "https://www.beijing.gov.cn/fuwu/bmfw/sy/jrts/202511/t20251104_4258838.html",
     ),
     2027: publicationVerification(
       "not-published",
-      "https://www.gov.cn/zhengce/zhengceku/202511/content_7047091.htm",
+      "https://www.beijing.gov.cn/fuwu/bmfw/sy/jrts/202511/t20251104_4258838.html",
     ),
   }),
   sg: Object.freeze({
@@ -134,7 +134,7 @@ function publicationVerification(
 ): HolidayPublicationVerification {
   return Object.freeze({
     status,
-    verifiedOn: "2026-07-20",
+    verifiedOn: "2026-10-18",
     sourceUrl,
   });
 }

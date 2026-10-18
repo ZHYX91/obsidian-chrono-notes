@@ -12,11 +12,12 @@ import type {
   PreparedNoteTemplate,
 } from "../../features/templates/note-template-port";
 import { isMarkdownFile } from "./obsidian-markdown-files";
+import { OperationError } from "../../shared/operation-error";
 
 // Templater exposes no stable public render-only API. Keep the current
 // internal create-note mode isolated and serialize access to its mutable
 // running configuration so concurrent note creation cannot cross contexts.
-const TEMPLATER_CREATE_NEW_NOTE_RUN_MODE = 1;
+const TEMPLATER_CREATE_NEW_NOTE_RUN_MODE = 0;
 const templaterRenderTails = new WeakMap<object, Promise<void>>();
 
 export class ObsidianBuiltinTemplatePort implements NoteTemplatePort {
@@ -36,7 +37,9 @@ export class ObsidianBuiltinTemplatePort implements NoteTemplatePort {
     const templatePath = withMarkdownExtension(configuredPath);
     const template = this.vault.getAbstractFileByPath(templatePath);
     if (!isMarkdownFile(template)) {
-      throw new Error(`Template note not found: ${templatePath}`);
+      throw new OperationError("templateMissing", `Template note not found: ${templatePath}`, {
+        path: templatePath,
+      });
     }
 
     const content = await this.vault.cachedRead(template);
@@ -99,7 +102,11 @@ class ObsidianTemplaterTemplatePort implements NoteTemplatePort {
     const configuredPath = context.templatePath.trim();
     if (configuredPath.length === 0) return preparedContent(defaultContent);
 
-    const templater = getTemplaterPlugin(this.app)?.templater;
+    const plugin = getTemplaterPlugin(this.app);
+    if (plugin === null) {
+      throw new OperationError("templaterUnavailable", "Templater is not installed or enabled.");
+    }
+    const templater = plugin.templater;
     const createRunningConfig = templater?.create_running_config;
     const parseTemplate = templater?.parse_template;
     if (
@@ -107,13 +114,15 @@ class ObsidianTemplaterTemplatePort implements NoteTemplatePort {
       typeof createRunningConfig !== "function" ||
       typeof parseTemplate !== "function"
     ) {
-      throw new Error("Templater is not installed or enabled.");
+      throw new OperationError("templaterIncompatible", "Templater rendering API is unavailable.");
     }
 
     const templatePath = withMarkdownExtension(configuredPath);
     const template = this.vault.getAbstractFileByPath(templatePath);
     if (!isMarkdownFile(template)) {
-      throw new Error(`Template note not found: ${templatePath}`);
+      throw new OperationError("templateMissing", `Template note not found: ${templatePath}`, {
+        path: templatePath,
+      });
     }
 
     const rawTemplate = await this.vault.cachedRead(template);
@@ -122,7 +131,7 @@ class ObsidianTemplaterTemplatePort implements NoteTemplatePort {
       renderAfterCreate: async (path: string) => {
         const target = this.vault.getAbstractFileByPath(path);
         if (!isMarkdownFile(target)) {
-          throw new Error(`Target note not found: ${path}`);
+          throw new OperationError("targetMissing", `Target note not found: ${path}`, { path });
         }
         return runTemplaterExclusive(templater, async () => {
           const config = createRunningConfig.call(
@@ -140,7 +149,9 @@ class ObsidianTemplaterTemplatePort implements NoteTemplatePort {
             );
           } catch (error) {
             const message = error instanceof Error ? error.message : String(error);
-            throw new Error(`Templater rendering failed: ${message}`, { cause: error });
+            throw new OperationError("templaterFailed", `Templater rendering failed: ${message}`, {
+              cause: error,
+            });
           }
           return Array.isArray(rendered) ? String(rendered[0]) : String(rendered);
         });

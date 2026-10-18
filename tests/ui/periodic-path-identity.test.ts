@@ -29,4 +29,14 @@ describe("periodic path preview identity", () => {
       { year: 2026, month: 9, day: 14 }, "quarterly", "[Quarterly]/YYYY-[Q]Q", options,
     )).toEqual({ status: "valid", path: "Quarterly/2026-Q3.md" });
   });
+
+  it.each(["[Daily]/YYYY-MM-DDD", "[Daily]/YYYYYYYY-MM-DD", "[Daily]/YYYY[]YYYY-MM-DD"])(
+    "rejects %s even when a sample happens to match the parser's default fields", (pattern) => {
+      for (const day of [1, 17, 18]) {
+        expect(createPeriodicNotePathPreview(
+          { year: 2026, month: 10, day }, "daily", pattern, options,
+        )).toEqual({ status: "invalid", path: null, reason: "unrecognized" });
+      }
+    },
+  );
 });

@@ -1,8 +1,8 @@
 # Chrono Notes
 
-[English](https://github.com/ZHYX91/obsidian-chrono-notes/blob/main/README.md) · [简体中文](https://github.com/ZHYX91/obsidian-chrono-notes/blob/main/docs/i18n/README.zh-CN.md)
+[English](https://github.com/ZHYX91/obsidian-chrono-notes/blob/main/README.md) · [简体中文](https://github.com/ZHYX91/obsidian-chrono-notes/blob/main/docs/i18n/README.zh-CN.md) · [繁體中文](https://github.com/ZHYX91/obsidian-chrono-notes/blob/main/docs/i18n/README.zh-TW.md) · [Deutsch](https://github.com/ZHYX91/obsidian-chrono-notes/blob/main/docs/i18n/README.de-DE.md) · [Français](https://github.com/ZHYX91/obsidian-chrono-notes/blob/main/docs/i18n/README.fr-FR.md) · [Español](https://github.com/ZHYX91/obsidian-chrono-notes/blob/main/docs/i18n/README.es-ES.md) · [Português](https://github.com/ZHYX91/obsidian-chrono-notes/blob/main/docs/i18n/README.pt-BR.md) · [Русский](https://github.com/ZHYX91/obsidian-chrono-notes/blob/main/docs/i18n/README.ru-RU.md) · [日本語](https://github.com/ZHYX91/obsidian-chrono-notes/blob/main/docs/i18n/README.ja-JP.md) · [한국어](https://github.com/ZHYX91/obsidian-chrono-notes/blob/main/docs/i18n/README.ko-KR.md) · [Tiếng Việt](https://github.com/ZHYX91/obsidian-chrono-notes/blob/main/docs/i18n/README.vi-VN.md) · [العربية](https://github.com/ZHYX91/obsidian-chrono-notes/blob/main/docs/i18n/README.ar.md) · [فارسی](https://github.com/ZHYX91/obsidian-chrono-notes/blob/main/docs/i18n/README.fa.md) · [עברית](https://github.com/ZHYX91/obsidian-chrono-notes/blob/main/docs/i18n/README.he.md) · [አማርኛ](https://github.com/ZHYX91/obsidian-chrono-notes/blob/main/docs/i18n/README.am.md) · [हिन्दी](https://github.com/ZHYX91/obsidian-chrono-notes/blob/main/docs/i18n/README.hi.md)
 
-Chrono Notes is an Obsidian calendar workspace for periodic notes, optional calendar extensions, regional holidays, tasks, statistics, and time-range notes.
+Chrono Notes adds a calendar to Obsidian for daily, weekly, and other periodic notes. View tasks, holidays, statistics, and notes that span multiple days alongside your calendar.
 
 ## Features
 
@@ -15,17 +15,17 @@ See the desktop and Android calendar layouts:
 - A century view grouped by decade, with the same periodic-note cells, indicators and interactions as the year overview.
 - Year, month, and week calendar views with note state, tasks, holidays, local ICS events, and time-range notes.
 - Daily, weekly, monthly, quarterly, yearly, decadal, and century periodic notes with built-in or Templater templates.
-- Note Navbar navigation between adjacent notes, higher periods, selected dates, and the calendar workspace.
+- A navigation bar above periodic notes to open adjacent notes, larger periods, selected dates, and the calendar.
 - Chinese lunar and Ganzhi calendar extensions, including solar terms and traditional festivals.
 - Persian (Solar Hijri), Ethiopic, Hebrew, Indian national (Saka), Islamic civil, and Umm al-Qura calendar extensions.
 - Mainland China and Singapore holiday extensions.
 - Tasks, statistics, month and year heatmaps, note previews, task completion, and due-date adjustments.
 - Time-range note creation by date-range dragging, cross-week layouts, templates, and a searchable range-note list.
 - Local, read-only ICS calendar sources.
-- Configurable display formats for Obsidian Date and Date & time properties while preserving ISO YAML, native segmented editing, and optional daily-note opening.
-- English, Simplified Chinese, Traditional Chinese, Arabic, Persian, Hebrew, Amharic, and Hindi UI, including right-to-left layout where applicable.
+- Choose how Obsidian Date and Date & time properties look without changing their saved values or Obsidian's editing controls. Optionally open the daily note from a date property.
+- Interface and setup guides in 16 languages, with right-to-left layouts for Arabic, Persian, and Hebrew.
 
-Source notes and plugin settings stay inside the Vault. Read-only ICS sources may be Vault files or explicitly configured local desktop paths; they are never uploaded by the plugin. Chrono Notes keeps only a derived NoteIndex cache in device-local IndexedDB; that cache is not written into the Vault or sent to a remote service. No account is required.
+Your notes and plugin settings remain in your Obsidian Vault. Chrono Notes reads local ICS files only when you choose them, and never uploads them. To make the calendar faster, it keeps a rebuildable note index in this device's IndexedDB storage; the index is not added to your Vault. No account is needed.
 
 ## Requirements and compatibility
 
@@ -49,16 +49,29 @@ Back up and preserve `Vault/.obsidian/plugins/chrono-notes/data.json` when it ex
 
 ## Usage
 
-**First time:** Choose your periodic-note types and note paths under Chrono Notes settings, open the calendar from the ribbon, then click a date to select it. To open or create its note, double-click, press Enter, or long-press on a touch screen. The calendar will not create a note merely because you select a date.
+**First time:** Choose your periodic-note types and note paths under Chrono Notes settings, then open the calendar from the ribbon. Click a date to select it; double-click or press Enter to open or create its note. On a touch screen, long-press a date and choose the note action from its menu. Selecting a date alone never creates a note.
 
 1. Enable the periodic-note types you use and confirm their path patterns in Chrono Notes settings.
 2. Open the calendar from the ribbon or command palette.
 3. Optionally enable calendar and holiday extensions or add local ICS sources.
-4. Click a date to select it; double-click or press Enter to open or create its periodic note. Right-click opens date actions; when ICS events exist, **View calendar events** shows the complete event list. On touch, long-press opens the host date menu when available and otherwise falls back to opening the daily note.
+4. Click a date to select it; double-click or press Enter to open or create its periodic note. Right-click opens date actions; when ICS events exist, **View calendar events** shows the complete event list. On a touch screen, long-press a date to open its menu. If no menu appears, releasing your finger opens or creates the daily note. Long-pressing a week, month, or other period entry opens its note directly.
+
+### Tasks on the calendar
+
+Add a checkbox task to a note and include a date marker:
+
+```markdown
+- [ ] Submit the weekly report 📅 2026-10-20
+- [ ] Prepare the materials 🛫 2026-10-18 ⏳ 2026-10-19 📅 2026-10-20
+```
+
+`🛫` marks the start date, `⏳` the scheduled date, and `📅` the due date. Use `YYYY-MM-DD` dates. Week view lists tasks whose start, scheduled, or due date falls in the displayed week. A task appears on each distinct date; multiple markers for the same day share one entry. Tasks without dates still count toward their note's task progress.
+
+Use the due-date dropdown in Week view to move a deadline to another day of the displayed week. On desktop, you can also drag a due-date task onto a day. These actions change the task's existing due date in its source note.
 
 ### Decadal and century notes
 
-The century view places each decade beside two rows of five years; narrow layouts move the decade above them. Years outside the century leave empty slots. Entering the view reveals the selected year’s decade; This century returns to the current decade. Navigation stays visible while the years scroll.
+The century view places each decade beside two rows of five years. Narrow layouts move the decade above its years; very narrow panes or large text use two year columns. Years outside the century leave empty slots. Entering the view reveals the selected year’s decade; This century returns to the current decade. Navigation stays visible while the years scroll.
 
 Enable these note types in settings, then select Century in the sidebar. Use the decade cells on the left to access decadal notes; the enabled century note has its own cell. The view tabs are Week, Month, Year and Century. Period cells share the year view's note dots, task progress, selection and preview. Click to select; double-click or press Enter to open or create the note. Ctrl/Cmd-click or middle-click opens a new tab; touch supports long press. Use the view tabs to browse the selected period. Default paths are `[diary]/DEC[s]` (2020s) and `[diary]/[C]CEN` (C21).
 
@@ -66,7 +79,21 @@ Decades span 2020–2029; century 21 spans 2001–2100. `DEC` and `CEN` are Chro
 
 Templates use the same formats: `{{date:DEC[s]}}`, `{{date:[C]CEN}}`, and `{{start:YYYY}}–{{end:YYYY}}`. All periodic templates support start/end dates and inclusive `{{days}}`; each note settings page lists its placeholders, meanings, examples, and Templater equivalents. General > Template settings explains shared syntax and default formats.
 
-### Range-note recognition
+### Range notes
+
+First choose a destination folder under **Settings → Chrono Notes → Range notes**. On desktop, drag from a start date to a different end date in the month calendar to create a range note. You can also choose **Create range note** from a date menu or the command palette, then enter the dates. Creation requires at least two calendar days; reversed dates are put in chronological order.
+
+To make an existing note appear as a range, add these properties at the top of its Markdown file:
+
+```yaml
+---
+chrono-notes: interval
+start: 2026-10-18
+end: 2026-10-20
+---
+```
+
+Use complete `YYYY-MM-DD` dates, with the start no later than the end. The displayed range includes both dates. Existing notes may also use complete ISO date-time values with at least hours and minutes, or a range within one day.
 
 A range note must contain valid `start` and `end` properties. New range notes created by Chrono
 Notes also write `chrono-notes: interval` and are recognized anywhere in the Vault. A note without
@@ -76,18 +103,18 @@ not modified automatically.
 
 ## Settings
 
-Settings cover periodic-note paths and templates, calendar and holiday extensions, task and statistics display, local ICS sources, time-range notes, and Obsidian Date and Date & time property display. Defaults are stored in the plugin's `data.json`; note content and frontmatter remain in the Vault.
+Settings cover periodic-note paths and templates, calendar and holiday extensions, task and statistics display, local ICS sources, time-range notes, and Obsidian Date and Date & time property display. Plugin settings are stored in `data.json`; note content and properties remain in the Vault.
 
 ## Limitations
 
-- ICS sources are local read-only files; remote calendar subscriptions are not fetched directly. One refresh reads at most 32 configured sources by default and reports any excess sources as omitted. Recurring `RRULE`/`RDATE` events are currently skipped and counted instead of being expanded.
+- ICS sources are local read-only files; remote calendar subscriptions are not fetched directly. One refresh reads at most 32 configured sources by default and reports any excess sources as omitted. Recurring `RRULE`/`RDATE` events are currently skipped and counted instead of being expanded. Events with invalid or unsupported time-zone definitions are also skipped and reported.
 - Holiday availability depends on verified official data. Unpublished future schedules are shown as unavailable rather than predicted.
-- Non-Gregorian calendar extensions are backed by the runtime's Unicode calendar data. Gregorian dates remain the note-path, navigation, and indexing anchor; unavailable runtime calendars are omitted safely.
-- Some mobile interaction and layout details depend on the Obsidian app and device input stack.
+- Calendar extensions change the display only. Note names, date navigation, and task dates still use the Gregorian calendar. Extensions that Obsidian's runtime cannot provide are hidden.
+- Mobile interactions and layouts can vary with the Obsidian app, device, and input method.
 
 ## Privacy and security
 
-Chrono Notes enumerates Markdown files and reads relevant Vault notes to build its note, calendar, task, statistics, and path-suggestion indexes. It also reads user-selected local ICS files through the local filesystem boundary. It does not upload notes, tasks, calendars, or ICS data and does not require an account. Its derived NoteIndex cache stays in device-local IndexedDB and can be rebuilt from the source notes. The plugin writes a formatted date to the system clipboard only after the user chooses **Copy date**; it never reads the clipboard.
+Chrono Notes lists Markdown files and reads relevant notes in your Vault to show note status, calendars, tasks, statistics, and path suggestions. It also reads the local ICS files you select. It does not upload notes, tasks, calendars, or ICS data and does not require an account. The saved note index stays on your device in IndexedDB, can be rebuilt from your notes, and is not included in Vault sync. The plugin writes a formatted date to the system clipboard only after you choose **Copy date**; it never reads the clipboard.
 
 ## Development
 

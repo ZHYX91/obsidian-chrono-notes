@@ -40,7 +40,7 @@ describe("calendar preview presentation", () => {
   it("translates note states and preserves indexed errors", () => {
     const t = createTranslator("zh-TW", "en").t;
 
-    expect(getCalendarPreviewStateText("yaml-only", t)).toBe("僅含 frontmatter 的筆記");
+    expect(getCalendarPreviewStateText("yaml-only", t)).toBe("只有屬性，沒有內文");
     expect(getCalendarPreviewStateText("not-configured", t)).toBe("未設定日記");
     expect(formatCalendarPreviewError("permission denied", t)).toBe(
       "無法讀取筆記：permission denied",

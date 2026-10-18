@@ -27,6 +27,20 @@ describe("Moment format compilation", () => {
     expect(compileMomentFormat("YYYY-MM-DD HH", "date")).toBeNull();
   });
 
+  it.each(["DDD", "DDDD", "YYYYYYYY", "MMMMM", "GGGGGG", "ddd[]ddd", "YYYY[]YYYY"])(
+    "rejects unsupported token runs instead of compiling %s as a constant", (format) => {
+      expect(compileMomentFormat(format, "date")).toBeNull();
+      expect(compileMomentFormat(format, "date-time")).toBeNull();
+    },
+  );
+
+  it("preserves adjacent different fields, repeated separated years and escaped literal text", () => {
+    const date = DateTime.utc(2026, 10, 17);
+    const format = "[YYYYYYYY]/YYYY/YYYY[]MMDD/[DDD]\\D";
+    expect(date.toFormat(compileMomentFormat(format, "date") ?? ""))
+      .toBe("YYYYYYYY/2026/20261017/DDDD");
+  });
+
   it("quotes arbitrary suggested folder text without changing it", () => {
     const literal = "People/Bob's/[Archive]";
     const quoted = quoteMomentLiteral(literal);

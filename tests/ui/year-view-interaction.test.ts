@@ -127,6 +127,23 @@ describe("YearView interactions", () => {
     expect(document.activeElement).toBe(getDay("2026-01-08"));
   });
 
+  it.each(["ar", "fa", "he"] as const)("mirrors horizontal heatmap movement for %s", async (locale) => {
+    const onSelect = vi.fn<YearViewProps["onSelect"]>();
+    await renderYear(getQuery(2026), {
+      translator: createTranslator(locale, "en"),
+      selection: { kind: "day", date: { year: 2026, month: 1, day: 8 } },
+      onSelect,
+    });
+    const january8 = getDay("2026-01-08");
+    await dispatchKey(january8, "ArrowRight");
+    expect(onSelect).toHaveBeenLastCalledWith("day", JANUARY_1);
+    expect(document.activeElement).toBe(getDay("2026-01-01"));
+    await dispatchKey(january8, "ArrowLeft");
+    expect(onSelect).toHaveBeenLastCalledWith("day", { year: 2026, month: 1, day: 15 });
+    await dispatchKey(january8, "ArrowDown");
+    expect(onSelect).toHaveBeenLastCalledWith("day", { year: 2026, month: 1, day: 9 });
+  });
+
   it("cancels pending and active previews when disabled, hidden, or changing year", async () => {
     await renderYear(getQuery(2026));
     await hoverAndWait(getDay("2026-01-01"), 249);

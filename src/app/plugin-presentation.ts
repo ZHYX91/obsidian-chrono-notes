@@ -4,6 +4,7 @@ import { formatIcsLimitNotice } from "../features/calendar/ics-feedback";
 import type { TaskCommandResult } from "../features/tasks/task-commands";
 import type { OpenOrCreatePeriodicNoteResult } from "../features/periodic/periodic-note-commands";
 import type { Translator } from "../shared/i18n";
+import { formatOperationError } from "../shared/operation-error";
 
 export interface PluginCommandMessages {
   readonly ribbonCalendar: string;
@@ -26,7 +27,9 @@ export function formatPeriodicCascadeNotice(
     ...result.cascade.map((item) => t(`pluginNotice.cascade.${item.status}`, {
       period: formatPeriodicType(item.noteType, t),
       path: item.path,
-      error: item.status === "failed" ? item.error.message : "",
+      error: item.status === "failed"
+        ? formatOperationError(item.error.message, t, item.error.details)
+        : "",
     })),
   ].join("\n");
 }
@@ -62,10 +65,10 @@ export function getInvalidRangeNotice(t: Translator["t"]): string {
 }
 
 export function formatPluginErrorNotice(
-  message: string,
+  error: unknown,
   t: Translator["t"],
 ): string {
-  return t("pluginNotice.error", { message });
+  return t("pluginNotice.error", { message: formatOperationError(error, t) });
 }
 
 export function getTaskCommandNotice(

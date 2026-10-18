@@ -20,7 +20,7 @@ describe("index and cache settings", () => {
     const harness = createHarness();
     const cleanup = configureNoteIndexStatusSetting(harness.setting, harness.context);
 
-    expect(harness.setName).toHaveBeenCalledWith("Current note index");
+    expect(harness.setName).toHaveBeenCalledWith("Notes found in this Vault");
     expect(harness.setDesc).toHaveBeenLastCalledWith(
       "Ready. 3 notes indexed; 0 read errors.",
     );
@@ -52,10 +52,10 @@ describe("index and cache settings", () => {
     await Promise.resolve();
 
     expect(harness.setDesc).toHaveBeenLastCalledWith(
-      "Derived index data for 3 notes is stored for this Vault.",
+      "A local index covering 3 notes is saved for this Vault.",
     );
     expect(harness.hints).toContain(
-      "Clears only derived Chrono Notes index data for the current Vault, then rereads its Markdown files. Notes, settings, and other Vault caches are unchanged.",
+      "Deletes only Chrono Notes' saved note index for this Vault, then scans the Markdown files again. Your notes, settings, and other caches will not change.",
     );
     expect(harness.setButtonText).toHaveBeenLastCalledWith("Clear cache and rebuild");
     expect(harness.setDisabled).toHaveBeenLastCalledWith(false);
@@ -64,10 +64,10 @@ describe("index and cache settings", () => {
 
     expect(harness.rebuild).toHaveBeenCalledOnce();
     expect(harness.setDesc).toHaveBeenCalledWith(
-      "Clearing this Vault's cache and rebuilding the note index…",
+      "Removing the saved index and scanning this Vault again…",
     );
     expect(harness.setDesc).toHaveBeenLastCalledWith(
-      "Derived index data for 3 notes is stored for this Vault.",
+      "A local index covering 3 notes is saved for this Vault.",
     );
     cleanup();
     expect(harness.listenerCount()).toBe(0);
@@ -82,8 +82,22 @@ describe("index and cache settings", () => {
     await harness.clickButton();
 
     expect(harness.setDesc).toHaveBeenLastCalledWith(
-      "The cache could not be cleared or the note index could not be rebuilt.",
+      "The note index could not be rebuilt. Choose Clear cache and rebuild to try again.\nTechnical details: save failed",
     );
+    expect(harness.setDisabled).toHaveBeenLastCalledWith(false);
+  });
+
+  it("preserves cache-inspection errors and keeps rebuilding available", async () => {
+    const harness = createHarness();
+    harness.getCacheStatus.mockRejectedValueOnce(new Error("read denied"));
+    configureNoteIndexCacheSetting(harness.setting, harness.context);
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(harness.setDesc).toHaveBeenLastCalledWith(
+      "The saved note index could not be checked. Reopen settings to try again.\nTechnical details: read denied",
+    );
+    expect(harness.setDisabled).toHaveBeenLastCalledWith(false);
   });
 
   it("keeps cache maintenance disabled while future settings are read-only", async () => {

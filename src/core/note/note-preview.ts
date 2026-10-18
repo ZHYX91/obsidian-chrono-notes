@@ -65,7 +65,9 @@ export function deriveNotePreview(projection: MarkdownBodyProjection): NotePrevi
   let previewComplete = false;
 
   for (const line of projection.lines) {
-    const semanticLine = line.semanticText;
+    const semanticLine = line.taskMarker === null
+      ? line.semanticText
+      : line.semanticText.slice(line.taskMarker.contentOffset);
     if (previewComplete) {
       stripAndCountEmbeds(semanticLine, counts);
       continue;

@@ -164,4 +164,42 @@ describe("periodic note paths", () => {
       ),
     ).toBeNull();
   });
+
+  it.each([
+    ["[Daily]/YYYY-MM-DDD", "Daily/2026-10-ddd.md"],
+    ["[Daily]/YYYYYYYY-MM-DD", "Daily/yyyyyyyy-10-17.md"],
+    ["[Daily]/YYYY[]YYYY-MM-DD", "Daily/yyyyyyyy-10-17.md"],
+  ])("rejects colliding paths produced by unsupported runs in %s", (pattern, oldPath) => {
+    const rule = { noteType: "daily", pattern } as const;
+    const options = { locale: "en", weekStartDay: "monday" as const };
+    for (const year of [2026, 2027]) for (const day of [1, 17, 18]) {
+      expect(formatPeriodicNotePath({ year, month: 10, day }, rule, options)).toBeNull();
+    }
+    expect(parsePeriodicNotePath(oldPath, rule, options)).toBeNull();
+  });
+
+  it.each([
+    ["YY-MM-DD", { year: 1905, month: 10, day: 17 }, { year: 2005, month: 10, day: 17 }, "05-10-17.md"],
+    ["YYYYMD", { year: 2026, month: 1, day: 11 }, { year: 2026, month: 11, day: 1 }, "2026111.md"],
+  ])("does not format a different period's canonical path with %s", (pattern, unsafe, canonical, path) => {
+    const rule = { noteType: "daily", pattern } as const;
+    const options = { locale: "en", weekStartDay: "monday" as const };
+    expect(formatPeriodicNotePath(unsafe, rule, options)).toBeNull();
+    expect(formatPeriodicNotePath(canonical, rule, options)).toBe(path);
+    expect(parsePeriodicNotePath(path, rule, options)).toEqual(canonical);
+  });
+
+  it("keeps compact date paths and literal unsupported-looking tokens reversible", () => {
+    const rule = { noteType: "daily", pattern: "[YYYYYYYY/DDD]/YYYY/YYYY[]MMDD" } as const;
+    const options = { locale: "en", weekStartDay: "monday" as const };
+    const paths: string[] = [];
+    for (const year of [2026, 2027]) for (const day of [1, 17, 18]) {
+      const date = { year, month: 10, day };
+      const path = formatPeriodicNotePath(date, rule, options);
+      expect(path).not.toBeNull();
+      expect(parsePeriodicNotePath(path ?? "", rule, options)).toEqual(date);
+      paths.push(path ?? "");
+    }
+    expect(new Set(paths).size).toBe(6);
+  });
 });

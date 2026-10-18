@@ -28,6 +28,7 @@ import {
 } from "../note-task-progress-presentation";
 import {
   formatHigherNoteLabel,
+  formatNoteNavbarLabel,
   formatPeriodicNoteName,
   getNoteNavbarMessages,
 } from "./note-navbar-presentation";
@@ -151,6 +152,8 @@ function NoteNavbar({ path, host }: Readonly<{ path: string; host: NoteNavbarHos
   const translator = host.getTranslator();
   const { t } = translator;
   const messages = getNoteNavbarMessages(t);
+  const PreviousIcon = translator.direction === "rtl" ? ChevronRight : ChevronLeft;
+  const NextIcon = translator.direction === "rtl" ? ChevronLeft : ChevronRight;
   const context = selectNoteNavbarContextFromProjection(path, intervals, {
     locale: translator.locale,
     weekStartDay: settings.weekStartDay,
@@ -163,7 +166,7 @@ function NoteNavbar({ path, host }: Readonly<{ path: string; host: NoteNavbarHos
   const hiddenCount = Math.max(0, context.relatedIntervals.length - visible.length);
 
   return (
-    <div className="chrono-notes-navbar">
+    <div className="chrono-notes-navbar" dir={translator.direction}>
       <div className="chrono-notes-navbar-controls">
         <div className="chrono-notes-navbar-navigation">
           <div className="chrono-notes-navbar-primary">
@@ -177,7 +180,7 @@ function NoteNavbar({ path, host }: Readonly<{ path: string; host: NoteNavbarHos
                 "default",
               )}
             >
-              <ChevronLeft size={15} aria-hidden="true" />
+              <PreviousIcon size={15} aria-hidden="true" />
             </button>
             <button
               type="button"
@@ -188,7 +191,9 @@ function NoteNavbar({ path, host }: Readonly<{ path: string; host: NoteNavbarHos
                 host.openPeriodic(date, context.noteType, "default"))}
             >
               <Calendar size={15} aria-hidden="true" />
-              <span>{context.label}</span>
+              <span>{formatNoteNavbarLabel(
+                context.date, context.noteType, translator, settings.weekStartDay,
+              )}</span>
             </button>
             <button
               type="button"
@@ -200,7 +205,7 @@ function NoteNavbar({ path, host }: Readonly<{ path: string; host: NoteNavbarHos
                 "default",
               )}
             >
-              <ChevronRight size={15} aria-hidden="true" />
+              <NextIcon size={15} aria-hidden="true" />
             </button>
           </div>
           {context.higher === null ? null : (

@@ -114,7 +114,7 @@ describe("week view presentation", () => {
       weeklyNote: "周记",
       rangeNotes: "区间笔记",
       createRange: "为本周创建区间笔记",
-      datedTasks: "日期任务",
+      datedTasks: "本周任务",
       emptyDatedTasks: "本周没有带日期的任务",
       datedTaskScope: "这里只统计开始、计划或截止日期落在本周的任务。",
     });
@@ -123,10 +123,10 @@ describe("week view presentation", () => {
   it("explains that the task count represents distinct dated occurrences", () => {
     const t = createTranslator("en", "en").t;
     expect(formatDatedTaskCount(1, t)).toBe(
-      "1 dated item; start, scheduled, and due dates for the same task are shown separately.",
+      "1 task entry. A task appears on each distinct date; multiple date markers on the same day share one entry.",
     );
     expect(formatDatedTaskCount(3, t)).toBe(
-      "3 dated items; start, scheduled, and due dates for the same task are shown separately.",
+      "3 task entries. A task appears on each distinct date; multiple date markers on the same day share one entry.",
     );
   });
 });

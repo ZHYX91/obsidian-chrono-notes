@@ -109,8 +109,11 @@ export function configureNoteIndexCacheSetting(
         if (disposed) return;
         const status = await context.host.getNoteIndexCacheStatus();
         if (!disposed) setDescription(formatNoteIndexCacheStatus(status, t));
-      } catch {
-        if (!disposed) setDescription(t("settings.index.rebuildFailed"));
+      } catch (error) {
+        if (!disposed) setDescription([
+          t("settings.index.rebuildFailed"),
+          t("operationError.details", { message: error instanceof Error ? error.message : String(error) }),
+        ].join("\n"));
       } finally {
         rebuilding = false;
         if (!disposed) refreshButton();
@@ -123,8 +126,11 @@ export function configureNoteIndexCacheSetting(
     if (!disposed && !rebuilding) {
       setDescription(formatNoteIndexCacheStatus(status, t));
     }
-  }).catch(() => {
-    if (!disposed && !rebuilding) setDescription(t("settings.index.cacheError"));
+  }).catch((error: unknown) => {
+    if (!disposed && !rebuilding) setDescription([
+      t("settings.index.cacheError"),
+      t("operationError.details", { message: error instanceof Error ? error.message : String(error) }),
+    ].join("\n"));
   });
   return () => {
     disposed = true;

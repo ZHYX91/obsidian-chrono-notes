@@ -256,7 +256,7 @@ describe("imperative settings cleanup", () => {
 
     const guide = container.querySelector<HTMLElement>(".chrono-notes-settings-guide");
     expect(guide?.getAttribute("role")).toBe("note");
-    expect(guide?.textContent).toContain("Range-note recognition rules");
+    expect(guide?.textContent).toContain("How range notes are found");
     expect(guide?.textContent).toContain("chrono-notes: interval");
     expect(guide?.textContent).toContain("does not modify existing notes automatically");
     expect(container.firstElementChild).toBe(guide);

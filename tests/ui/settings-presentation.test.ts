@@ -56,7 +56,7 @@ describe("settings presentation", () => {
     expect(formatIcsStatus(snapshot({ totalSources: 0 }), t))
       .toBe("No ICS sources configured.");
     expect(formatIcsStatus(snapshot(), t)).toBe(
-      "1/2 sources, 3 events, 4 recurring and 5 invalid skipped, 1 errors.",
+      "1/2 sources loaded, 3 events; 4 recurring events and 5 invalid events skipped; 1 errors.",
     );
     expect(formatIcsStatus(snapshot({ skippedUnsupportedTimezone: 2 }), t))
       .toContain("Events skipped because their time zone is unsupported: 2.");
@@ -72,7 +72,7 @@ describe("settings presentation", () => {
       skippedRecurring: 2,
       skippedInvalid: 1,
       error: null,
-    }, t)).toBe("team.ics：3 個事件，已略過 2 個重複規則和 1 個無效事件");
+    }, t)).toBe("team.ics：3 個事件，已略過 2 個重複事件和 1 個無效事件");
     expect(formatIcsSourceStatus({
       source: "broken.ics",
       sourceLabel: "broken.ics",
@@ -114,11 +114,11 @@ describe("settings presentation", () => {
     expect(formatNoteIndexCacheStatus({
       state: "stored",
       entryCount: 12,
-    }, t)).toBe("Derived index data for 12 notes is stored for this Vault.");
+    }, t)).toBe("A local index covering 12 notes is saved for this Vault.");
     expect(formatNoteIndexCacheStatus({ state: "unavailable" }, t))
       .toBe("Persistent cache is unavailable in this environment.");
     expect(formatNoteIndexCacheStatus({ state: "legacy" }, t))
-      .toContain("legacy cache");
+      .toContain("An older index is saved");
   });
 
   it.each([

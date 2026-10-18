@@ -7,6 +7,7 @@ import type {
 import type { NoteIndexStatus } from "../../features/notes/note-index";
 import type { NoteIndexCacheStorageStatus } from "../../features/notes/note-index-cache";
 import type { Translator } from "../../shared/i18n";
+import { formatOperationError } from "../../shared/operation-error";
 import type { SettingsTabId } from "./settings-tab-navigation";
 
 export interface SettingsTabLabel {
@@ -56,7 +57,7 @@ export function formatIcsSourceStatus(
   if (status.error !== null) {
     return t("settings.ics.sourceError", {
       source: status.sourceLabel,
-      error: status.error,
+      error: formatOperationError(status.error, t, status.errorDetails),
     });
   }
   const summary = t("settings.ics.sourceSuccess", {
