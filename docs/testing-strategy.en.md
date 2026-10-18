@@ -8,6 +8,8 @@ translation_status: synced
 
 ## Testing layers
 
+The product scenario contract additionally covers real Templater create-note mode, complex task containers and hidden dates, RTL keyboard navigation, and path-language refresh in Month, Week, Year and Century. Templater acceptance requires the actual released companion plugin and records its version; an unavailable companion is unverified. Fixtures provide only inputs, never pass results.
+
 Host scenarios are divided by behavior: calendar layout, opening gestures, ICS errors, Arabic labels, periodic navigation, range identity, path language, partial creation, ICS budgets, year interactions, task writes, and localized source limits. Select the scenarios affected by the change and record untested coverage separately.
 
 The disposable fixtures include an inert `chrono-notes-acceptance-provider`. Its explicit commands position January 2029 or restore the 35 local ICS sources before a scenario. They never produce a test verdict; enabling, editing, refreshing, changing views, and inspecting results remain real product interactions. The provider is excluded from production assets.

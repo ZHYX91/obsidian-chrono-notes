@@ -2,7 +2,7 @@
 
 Notable changes to Chrono Notes are documented in this file. The repository's numeric Git tags are the evidence for released versions; an entry without a corresponding local tag remains unreleased even if the manifests already contain that version.
 
-## Unreleased
+## 0.7.7
 
 ### Added
 

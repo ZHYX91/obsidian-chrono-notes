@@ -168,10 +168,14 @@
         "android-emulator": []
       },
       "steps": [
-        "Open the Periodic settings and inspect the separate path-language controls. Switch the interface between English and Simplified Chinese; verify that the configured path previews keep their filename language."
+        "Open the Periodic settings and inspect the separate path-language controls. Switch the interface between English and Simplified Chinese; verify that the configured path previews keep their filename language.",
+        "Configure daily [Daily]/YYYY-MMMM-DD, monthly [Monthly]/YYYY-MMMM and yearly [Yearly]/YYYY-MMMM with English path language and empty templates. Create a note for 2026-10-17, October 2026 and year 2026 through the product UI. Record their actual paths.",
+        "With the calendar still open, change only the relevant path language to Simplified Chinese. Inspect Month and Week for the daily note, Year for the monthly note, and Century for the yearly note: the English-path note becomes missing immediately. Switch back to English and verify the existing state returns without reopening the calendar.",
+        "Open the existing English-path notes from all four views, then change the interface language only and repeat. Confirm paths and file counts remain unchanged. Restore the original path rules."
       ],
       "expected": [
-        "Changing interface language does not redirect configured paths; editing one period language does not change another period."
+        "Changing interface language does not redirect configured paths; editing one period language does not change another period.",
+        "All four views refresh on pathLocale changes, open the correct existing note, and do not create duplicate files when only the interface language changes."
       ]
     },
     {
@@ -270,6 +274,67 @@
       "expected": [
         "The first 32 sources load and the three omitted sources are explicitly explained in both notification and settings, in English and Simplified Chinese.",
         "Reducing the source list clears the omission warning and loads all remaining sources."
+      ]
+    },
+    {
+      "id": "templater-create-mode",
+      "title": "Real Templater periodic and range creation",
+      "surfaces": [
+        "desktop",
+        "android-emulator"
+      ],
+      "requiredCapabilities": {
+        "desktop": [],
+        "android-emulator": []
+      },
+      "steps": [
+        "Install and enable a released Templater plugin in the isolated test Vault, record its version, and disable automatic folder templates to prevent double rendering. If Templater is unavailable, record unverified, not passed.",
+        "Select Templater as the Chrono Notes template engine and Templates/Templater Context.md. Create a daily note for 2026-10-17 through the calendar confirmation. Inspect the result: kind=periodic, title matching the destination, target=2026-10-17 and no remaining template delimiters.",
+        "Use the same template for a range note from 2026-10-17 to 2026-10-19. Verify kind=interval, start/end dates, dayCount=3, destination title and canonical interval identity.",
+        "Select Templates/Templater Failure.md and create another note. Verify an actionable localized rendering error and preservation of the created target. Then configure a missing template, retry with a different destination, and verify no target was created.",
+        "Restore the working template, enable larger-period cascading with a missing monthly template, create a fresh daily note, and verify one partial-success notice plus preserved daily/yearly successes. Restore settings."
+      ],
+      "expected": [
+        "Real Templater renders in create-note mode against the actual target file; selected dates and range boundaries are correct. Failures and partial success remain distinct and never erase successful files."
+      ]
+    },
+    {
+      "id": "task-container-write-safety",
+      "title": "Complex Markdown task writeback",
+      "surfaces": [
+        "desktop",
+        "android-emulator"
+      ],
+      "requiredCapabilities": {
+        "desktop": [],
+        "android-emulator": []
+      },
+      "steps": [
+        "Open Week at 2026-10-17 with Complex Tasks.md closed. Verify Ordered task and Callout task are listed; Comment-only task and Code-only task are absent.",
+        "Toggle Ordered task, then reschedule it to 2026-10-18 through the calendar. Inspect the file: only its checkbox and visible due date change; the hidden 2000-01-01 date, ordered marker and surrounding lines remain byte-equivalent.",
+        "Keep Complex Tasks.md open, append a sentinel using the editor and immediately toggle Callout task from the calendar. Verify the sentinel survives along with the callout prefix, inline code and comments. Reschedule the callout and verify only its visible date changes.",
+        "Undo the intended edits through normal controls and confirm no duplicate tasks or hidden-date ghosts appear. Record original and resulting file bytes; timing races remain separately covered by automated adapter tests."
+      ],
+      "expected": [
+        "Task indexing excludes comments/code; writes preserve Markdown containers, hidden dates and unrelated live edits."
+      ]
+    },
+    {
+      "id": "rtl-keyboard-navigation",
+      "title": "RTL calendar keyboard and focus",
+      "surfaces": [
+        "desktop"
+      ],
+      "requiredCapabilities": {
+        "desktop": []
+      },
+      "steps": [
+        "Switch the interface to Arabic, then repeat in Persian and Hebrew. Focus a middle Month date with adjacent cells on both sides. ArrowRight moves to the visually right neighbor (previous date); ArrowLeft returns. Home/End and Enter preserve visible focus and normal opening behavior.",
+        "Open the week picker and test ArrowRight/ArrowLeft between adjacent weeks. Inspect Year heatmap and Century navigation, and the date picker modal: keyboard movement follows visual direction, focus stays visible and closing restores usable calendar navigation.",
+        "Inspect all five settings tabs at narrow and normal widths. Restore English and confirm LTR keyboard movement returns."
+      ],
+      "expected": [
+        "RTL direction, keyboard movement and focus are consistent across calendar surfaces, popovers and modal controls; settings remain usable."
       ]
     }
   ]
