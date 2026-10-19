@@ -1,6 +1,6 @@
 # Chrono Notes
 
-[English](../../README.md) · [简体中文](README.zh-CN.md) · [繁體中文](README.zh-TW.md) · [Deutsch](README.de-DE.md) · [Français](README.fr-FR.md) · [Español](README.es-ES.md) · [Português](README.pt-BR.md) · [Русский](README.ru-RU.md) · [日本語](README.ja-JP.md) · [한국어](README.ko-KR.md) · [Tiếng Việt](README.vi-VN.md) · [العربية](README.ar.md) · [فارسی](README.fa.md) · [עברית](README.he.md) · [አማርኛ](README.am.md) · [हिन्दी](README.hi.md)
+[English](../../README.md) · [简体中文](README.zh-CN.md) · [繁體中文](README.zh-TW.md) · [日本語](README.ja-JP.md) · [한국어](README.ko-KR.md) · [Deutsch](README.de-DE.md) · [Français](README.fr-FR.md) · [Español](README.es-ES.md) · [Português (Brasil)](README.pt-BR.md) · [Русский](README.ru-RU.md) · [Tiếng Việt](README.vi-VN.md) · [العربية](README.ar.md) · [فارسی](README.fa.md) · [עברית](README.he.md) · [አማርኛ](README.am.md) · [हिन्दी](README.hi.md)
 
 Chrono Notes は Obsidian に、定期ノート、タスク、祝日、ローカル予定、期間ノートをまとめて扱うカレンダーを追加するプラグインです。
 
@@ -37,6 +37,8 @@ Obsidian の **設定 → コミュニティプラグイン → 閲覧** から 
 既存の `data.json` はバックアップして保持してください。設定を初期化したい場合を除き、削除しないでください。
 
 ## 使い方
+
+メインカレンダー、月の選択、日付ダイアログは常にグレゴリオ暦を使います。言語を変えると月名や数字の表示が変わりますが、暦は変わりません。別の暦の情報はカレンダー拡張で追加できます。
 
 設定で使用するノートの種類、保存先、テンプレートを選び、リボンまたはコマンドパレットからカレンダーを開きます。**日付を1回クリックしても選択されるだけで、ノートは作成されません。** ダブルクリックか Enter でノートを開く・作成する操作が実行されます。右クリックで日付メニューを開けます。ICS の予定がある日は、このメニューから予定の全一覧を確認できます。Ctrl/Cmd＋クリックか中クリックで新しいタブに開けます。必要に応じて追加の暦や ICS の参照元を設定してください。
 
@@ -87,6 +89,8 @@ end: 2026-10-20
 `chrono-notes` プロパティがないノートは、設定した「印のない期間ノートの検索範囲」内にある場合だけ認識されます。このプロパティの値が `interval` 以外なら対象外です。既存ノートは自動で書き換えられません。
 
 ## 設定
+
+一般設定から使い方ガイドと問題の報告を開けます。カレンダーや祝日の拡張を変更しても、現在の設定タブが見える状態を保ち、キーボードのフォーカスは操作した項目に残ります。
 
 言語、週の開始曜日、日付の表示形式、ノートのパスとテンプレートを設定できます。ファイル名に使う言語を変更しても既存ファイルは自動的に改名されないため、パスのプレビューを確認してください。表示、タスク、統計、期間ノート、拡張機能にも設定があります。
 

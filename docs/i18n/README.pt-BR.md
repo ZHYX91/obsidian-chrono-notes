@@ -1,6 +1,6 @@
 # Chrono Notes
 
-[English](../../README.md) · [简体中文](README.zh-CN.md) · [繁體中文](README.zh-TW.md) · [Deutsch](README.de-DE.md) · [Français](README.fr-FR.md) · [Español](README.es-ES.md) · [Português](README.pt-BR.md) · [Русский](README.ru-RU.md) · [日本語](README.ja-JP.md) · [한국어](README.ko-KR.md) · [Tiếng Việt](README.vi-VN.md) · [العربية](README.ar.md) · [فارسی](README.fa.md) · [עברית](README.he.md) · [አማርኛ](README.am.md) · [हिन्दी](README.hi.md)
+[English](../../README.md) · [简体中文](README.zh-CN.md) · [繁體中文](README.zh-TW.md) · [日本語](README.ja-JP.md) · [한국어](README.ko-KR.md) · [Deutsch](README.de-DE.md) · [Français](README.fr-FR.md) · [Español](README.es-ES.md) · [Português (Brasil)](README.pt-BR.md) · [Русский](README.ru-RU.md) · [Tiếng Việt](README.vi-VN.md) · [العربية](README.ar.md) · [فارسی](README.fa.md) · [עברית](README.he.md) · [አማርኛ](README.am.md) · [हिन्दी](README.hi.md)
 
 O Chrono Notes adiciona ao Obsidian um calendário para notas periódicas, tarefas, feriados regionais, eventos locais e notas sobre intervalos de datas.
 
@@ -37,6 +37,8 @@ Baixe `chrono-notes-<version>.zip` na [versão mais recente](https://github.com/
 Faça backup de `data.json` e preserve o arquivo. Substitua apenas os arquivos do plugin; exclua `data.json` somente para redefinir as preferências.
 
 ## Como usar
+
+O calendário principal, os seletores de mês e as janelas de data sempre usam o calendário gregoriano. Mudar o idioma traduz os meses e os dígitos, sem trocar o calendário. Use as extensões para adicionar informações de outros calendários.
 
 Configure os tipos de notas, os caminhos e os modelos; depois abra o calendário pelo ícone lateral ou pela paleta de comandos. **Um clique seleciona a data, mas não cria uma nota.** Clique duas vezes ou pressione Enter para abrir ou criar a nota. O botão direito abre o menu da data; se houver eventos ICS, esse menu permite consultar a lista completa. Ctrl/Cmd+clique ou o botão do meio abre a nota em uma nova aba. Ative as extensões e fontes ICS conforme necessário.
 
@@ -87,6 +89,8 @@ Uma nota de intervalo precisa das propriedades `start` e `end` com datas válida
 Quando `chrono-notes` não existe, a nota só é reconhecida no escopo configurado para notas de intervalo sem marcador. Se a propriedade tiver outro valor que não `interval`, a nota é excluída. Notas existentes não são alteradas automaticamente.
 
 ## Configurações
+
+Em Geral estão o guia de uso e a opção de relatar um problema. Ao mudar uma extensão de calendário ou feriados, a aba atual continua visível e o foco do teclado permanece no controle usado.
 
 Escolha idioma, início da semana, formatos de data, caminhos e modelos. Alterar o idioma dos nomes de arquivos não renomeia notas existentes: confira a prévia do caminho. Há configurações separadas para aparência, tarefas, estatísticas e notas de intervalo.
 

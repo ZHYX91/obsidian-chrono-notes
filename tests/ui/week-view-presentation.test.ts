@@ -14,6 +14,16 @@ import {
 } from "../../src/ui/calendar/week-view-presentation";
 
 describe("week view presentation", () => {
+  it("keeps Persian accessible week dates aligned with the Gregorian selection", () => {
+    const labels = formatWeekPickerLabels(
+      { year: 2025, month: 12, day: 29 }, { year: 2026, month: 1, day: 4 },
+      1, 2026, createTranslator("fa", "en"),
+    );
+    expect(labels.range).toBe("12/29–1/4");
+    expect(labels.accessible).toContain("۲۹ دسامبر ۲۰۲۵–۴ ژانویهٔ ۲۰۲۶");
+    expect(labels.selectAccessible).toContain("۲۹ دسامبر ۲۰۲۵–۴ ژانویهٔ ۲۰۲۶");
+  });
+
   it("builds localized date-kind and overdue checkbox labels", () => {
     const t = createTranslator("zh-TW", "en").t;
 

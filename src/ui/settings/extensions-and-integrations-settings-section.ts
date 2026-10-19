@@ -143,6 +143,7 @@ function addCalendarExtensionSlot(
       }));
   }
   setting.addDropdown((dropdown) => {
+    dropdown.selectEl.dataset.chronoSettingsControl = `calendar-extension-${slot}`;
     dropdown.addOption("", t("settings.extensions.calendarExtensionNone"));
     for (const extension of CALENDAR_EXTENSION_DEFINITIONS) {
       if (
@@ -182,6 +183,7 @@ function addHolidayRegionSlot(
   ] as const;
 
   new Setting(containerEl).setName(t(slotKeys[slot])).addDropdown((dropdown) => {
+    dropdown.selectEl.dataset.chronoSettingsControl = `holiday-region-${slot}`;
     dropdown.addOption("", t("settings.extensions.holidayRegionNone"));
     for (const definition of HOLIDAY_REGION_DEFINITIONS) {
       if (!usedByOtherSlots.has(definition.id)) {

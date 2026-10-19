@@ -1,5 +1,4 @@
 import {
-  getSettingsTabScrollLeft,
   moveSettingsTab,
   type SettingsTabId,
 } from "./settings-tab-navigation";
@@ -76,13 +75,13 @@ export function createSettingsTabLayout(
 
   const tabListRect = tabListEl.getBoundingClientRect();
   const activeTabRect = activeTabEl.getBoundingClientRect();
-  tabListEl.scrollLeft = getSettingsTabScrollLeft({
-    clientWidth: tabListEl.clientWidth,
-    scrollWidth: tabListEl.scrollWidth,
-    scrollLeft: tabListEl.scrollLeft,
-    tabOffsetLeft: activeTabRect.left - tabListRect.left + tabListEl.scrollLeft,
-    tabOffsetWidth: activeTabRect.width,
-  });
+  // Browser-measured physical edges work with negative RTL scrollLeft too.
+  // Scroll only this strip, without scrolling the surrounding settings page.
+  if (activeTabRect.left < tabListRect.left) {
+    tabListEl.scrollLeft += activeTabRect.left - tabListRect.left;
+  } else if (activeTabRect.right > tabListRect.right) {
+    tabListEl.scrollLeft += activeTabRect.right - tabListRect.right;
+  }
 
   return Object.freeze({ activeTabEl, panelEl });
 }

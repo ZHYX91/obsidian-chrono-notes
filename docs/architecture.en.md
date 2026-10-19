@@ -79,6 +79,10 @@ The shared Markdown body projection handles code, HTML comments, and Obsidian `%
 
 ## 5. Commands, queries, and UI
 
+Primary-calendar labels use the shared `createGregorianDateFormatter()` with explicit `calendar: "gregory"` and `timeZone: "UTC"`. Month buttons, the mini-calendar month/year label and complete week-picker accessible ranges therefore describe the same Gregorian `LocalDate` they select. Locale still controls language and digits; calendar-extension providers retain their own explicit calendar semantics.
+
+Settings rerenders retain only an owned, stable `data-chrono-settings-control` focus identity. Calendar slots, holiday slots and the language selector restore that control after the current save and surface revision complete; focus outside the surface is never claimed. The tab strip uses measured physical edges and preserves the browser’s RTL scroll coordinate, scrolling only its own horizontal position.
+
 Canonical range metadata always includes `chrono-notes: interval` plus canonical `start` and `end`, and is enforced only for new range notes and their creation-time template finalization; the plugin does not scan, migrate, or rewrite existing notes. Folder-scope filtering below applies only to unmarked valid ranges, while explicit valid ranges always bypass it.
 
 The app composition root obtains Obsidian's configured interface language through the public `getLanguage()` API and injects one translator contract into settings, calendar, Navbar, commands, and modals. In `auto`, the host language is authoritative; browser and operating-system locales are not consulted.

@@ -136,6 +136,10 @@ export class ChronoNotesSettingTab extends PluginSettingTab {
     if (!this.surfaceVisible) return;
     const surfaceRevision = ++this.surfaceRevision;
     const { containerEl } = this;
+    const focused = containerEl.ownerDocument.activeElement;
+    const focusedControl = focusTab === null && focused !== null && containerEl.contains(focused)
+      ? focused.getAttribute("data-chrono-settings-control")
+      : null;
     this.translator = this.host.getTranslator();
     this.cleanupImperativeSection();
     containerEl.empty();
@@ -180,6 +184,14 @@ export class ChronoNotesSettingTab extends PluginSettingTab {
 
     if (focusTab !== null) {
       activeTabEl.focus();
+    } else if (focusedControl !== null) {
+      const controls = containerEl.querySelectorAll<HTMLElement>("[data-chrono-settings-control]");
+      for (const control of controls) {
+        if (control.dataset.chronoSettingsControl === focusedControl) {
+          control.focus({ preventScroll: true });
+          break;
+        }
+      }
     }
   }
 

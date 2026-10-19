@@ -8,6 +8,10 @@ translation_status: synced
 
 ## Testing layers
 
+Keep core, NoteIndex, task-write, event-ordering and cross-time-zone suites as the main regression layer. Locale checks cover actual date meaning as well as translation keys: a Persian January button must select and open Gregorian January, and accessible week dates must use the same calendar.
+
+`npm run test:browser` adds a small Chromium settings contract. Install the pinned runner with `npm ci` and its browser with `npm exec playwright -- install chromium`; `CHROMIUM_EXECUTABLE_PATH` may select an existing Chromium executable. The fixture bundles this repository’s real settings class, extension section, save coordinator, translations and CSS, with only Obsidian primitives, unused sections and the intentionally inactive declarative surface stubbed. Four language cases run actual calendar and holiday dropdown changes through saving and rerendering, then assert visible active-tab bounds, selected values, save count and retained focus. JSON results, geometry attachments and failure traces are stored in `test-results/` and uploaded by CI. This is browser layout evidence, not Obsidian host acceptance. Pure navigation and lightweight DOM tests remain outside the browser suite.
+
 The product scenario contract additionally covers real Templater create-note mode, complex task containers and hidden dates, RTL keyboard navigation, and path-language refresh in Month, Week, Year and Century. Templater acceptance requires the actual released companion plugin and records its version; an unavailable companion is unverified. Fixtures provide only inputs, never pass results.
 
 Host scenarios are divided by behavior: calendar layout, opening gestures, ICS errors, Arabic labels, periodic navigation, range identity, path language, partial creation, ICS budgets, year interactions, task writes, and localized source limits. Select the scenarios affected by the change and record untested coverage separately.
