@@ -49,7 +49,7 @@ readiness 回归还必须固定：初始完成前为 `indexing`，原子启动�
 
 缓存维护契约必须把 IndexedDB 不可用、当前 Vault 无记录、有效已存储记录、条目数未知的旧版记录、无效 sidecar 和读取错误分开，不能把“空”误报为“不可用”。删除范围以当前 Vault 的名称与存储 identity 组成的精确键为边界，测试证明其他 Vault 和其他 IndexedDB 键保持不变。生命周期回归必须覆盖重复重建、并发请求合并、清除失败后仍恢复索引与源订阅、即时保存完成后才刷新 stored 状态、保存失败可见、首次重启失败后单次恢复重试、连续重启失败的可见错误，以及卸载或运行时替换发生在清除期间时旧实例不得复活；按钮订阅也必须在设置 section 清理时释放。
 
-实际 `ObsidianNoteSource` 与可控 fake Vault 的组合回归让 `cachedRead()` 乱序完成，分别覆盖 initial→modify、pending modify→rename 和 pending modify→delete，证明较新结果发布或旧路径失效后，旧读取不能覆盖或复活。该测试只固定 adapter 事件映射与 NoteIndex revision 屏障，不能证明真实 Obsidian 内部缓存对外部同步的失效时序；桌面和移动端快速修改/同步仍是可选宿主回归。`refresh()` 遇到 queued missing 时先提交删除屏障，再以新 revision 执行显式重读；测试固定 listener 先看到 missing，再看到该重读的 parsed 或 error 终态。
+实际 `ObsidianNoteSource` 与可控 fake Vault 的组合回归让 `cachedRead()` 乱序完成，分别覆盖 initial→modify、pending modify→rename 和 pending modify→delete，证明较新结果发布或旧路径失效后，旧读取不能覆盖或复活。该测试只固定 adapter 事件映射与 NoteIndex revision 屏障，不能证明真实 Obsidian 内部缓存对外部同步的失效时序；改动影响这些集成边界时，桌面和移动端快速修改/同步须进行代表性宿主回归。`refresh()` 遇到 queued missing 时先提交删除屏障，再以新 revision 执行显式重读；测试固定 listener 先看到 missing，再看到该重读的 parsed 或 error 终态。
 
 设置契约逐项覆盖 Chrono Notes schema v1–v19 的顺序迁移、无版本与非法版本按 v1 处理、未来版本不降级、已有合法值保留、未知字段最终剔除、重复迁移幂等，以及输入、默认数组和嵌套对象不共享可变引用。schema v15 必须证明共享确认字段被删除、不映射旧值，周期与区间两个严格布尔开关独立归一化；schema v16 必须证明旧待办标注的 `none` 映射为关闭、`color` 与 `hole` 映射为开启，删除旧字段，并严格归一化新的布尔值；schema v17 使用真实已发布 schema v15 形态的夹具，证明有序 `calendarOverlays` 迁移为 `calendarExtensions`，五类文档化 Luxon 周期路径转换为 Moment，模板及无关的节假日/ICS 值保持不变，合法 Moment 与无法识别的自定义格式不被改写，两个旧字段被删除，并让五种 Note Navbar 重新识别既有路径；schema v18 证明旧配置新增日期/时间 `system` 选择与合法的自定义默认 pattern，且已有合法四字段不被替换；schema v19 固定各周期路径的语言，UI 语言变化不得改变已有路径身份。真实 Obsidian 验收向隔离 Vault 注入代表性旧版本与非法数据，完整重载后检查五个设置 tab 的保留/回退，再保存为当前 schema 并证明数组配置互不串改。
 
@@ -142,7 +142,7 @@ ICS core 契约覆盖 UTF-8 BOM、CRLF/LF、折叠行、转义文本、多 `VEVE
 - 生产产物门禁固定 browser/CJS、production define、UTF-8、JS/CSS 压缩、external 白名单、无 React development/process/buffer 残留、桌面 ICS CommonJS 分支、manifest/package/versions 一致、默认插件导出可由 mocked Obsidian 加载，以及 `main.js ≤ 1,900,000 B`。这是项目维护预算，不是 Obsidian 平台限制。预算容纳完整的 16 种语言目录和边界修复，并保留合理余量；依赖增长仍需按构建元数据审查。`npm run size` 输出产物大小、参考增量、预算余量、依赖包占比和主要输入。
 - 生产构建完成后，artifact check 使用与主构建共享的受控 esbuild JavaScript 配置进行第二次内存构建，不覆盖 `dist/main.js`，并要求两次 `main.js` 逐字节完全相同；单元测试固定 `write: false` 配置并证明一字节漂移会阻断。此可再生门与 1,900,000 B 预算同时生效。
 - CI 与 release workflow 精确使用 `.node-version` / `package.json#engines.node` 固定的 Node 24.19.0，以及 `packageManager` 固定的 npm 11.17.0；两者在 frozen install 前验证运行时。普通 `npm run check` 执行 lint、格式、文档、类型、完整测试、bundle、产物与非 tag-aware release 校验；`npm run release:check` 再执行双时区、快速/10,000 篇更新基准、年度节假日门和 absent-or-exact 标签门。构建分析写入 `build/`，`dist/` 恰含三个公开 loose assets。
-- 仓库内 release-core 3.0 runtime 与薄适配器统一管理确定性的 Candidate Bundle 和生成的独立工作流。获授权的稳定版本 tag push 或该 tag 上的手动 publish 派发共用流水线；手动 verify 模式保持只读。CI 安装锁定依赖，执行一次 release:check，验证 Bundle 源码，并固定 artifact ID/digest。发布核对精确事件、源码、tag、传输字节和 SLSA 构建证明；先下载验证草稿，再发布 immutable Release，最后下载回验。产品验收可选且单独报告，独立克隆无需外部编排。
+- 仓库内 release-core 3.0 runtime 与薄适配器统一管理确定性的 Candidate Bundle 和生成的独立工作流。获授权的稳定版本 tag push 或该 tag 上的手动 publish 派发共用流水线；手动 verify 模式保持只读。CI 安装锁定依赖，执行一次 release:check，验证 Bundle 源码，并固定 artifact ID/digest。发布核对精确事件、源码、tag、传输字节和 SLSA 构建证明；先下载验证草稿，再发布 immutable Release，最后下载回验。产品验收按改动选择代表性场景并单独报告；影响本次发布的已确认严重产品缺陷应阻塞对应发布；宿主或工具缺项保留未验范围，按风险判断是否延后，不自动阻塞所有发布，也不增加一律再次确认的步骤。只有实际观察通过的范围可声称已验收。完整宿主矩阵不要求每版重跑，CI 不自动检查宿主覆盖，独立克隆无需外部编排。
 - 发布后重新读取 immutable 稳定 Release，核对四附件名称、metadata digest、下载字节、ZIP 内外一致性、远端标签和逐项 provenance；同标签只有全部一致时才是 no-op。标签 ruleset 与 immutable Releases 是管理员外部前置，workflow 不修改。候选、ZIP、发布边界与 post-verify 均调用同一锁定 core，不再在 YAML 中复制 Python 发布实现；workflow 合同测试另行固定 inputs、权限、action pins 和 publish-only 写边界。
 - `npm run bench:quick` 与 `npm run bench:large` 分别生成 1,000/10,000 篇确定性内存数据，记录 opt-in 的 list/read/document-parse/note-derivation/initial/live-commit/materialize/notify 阶段计时，以及 month/week/interval/year/heatmap、农历双扩展与 `Intl` 双扩展的冷/热月装饰、事件风暴、多订阅者和 ICS 状态/内容变化；计时报告 p50/p95/max。8/16/32 初扫矩阵使用受控释放并硬性比较峰值并发、逻辑完成轮次、在途内容量、单路径读取、初始发布次数，并深比较排序后的完整 note entry、task date bucket 与 interval 投影语义，不以聚合数量或墙钟代替正确性。单文件更新 guardrail 在两种规模下反复修改同一篇普通笔记：每次已结算更新固定 1 次读取、1 次物化、1 次发布与 1 次通知，计时统计只包含这些更新样本；p95 更新延迟预算为 1,000 篇 100ms、10,000 篇 250ms，snapshot 物化预算为 10/50ms，通知预算为 25ms；`--expose-gc` 可用时 GC 后 retained heap 增量上限为 64/128 MiB。CI 和发布门禁除快速基准外，还通过 `npm run bench:single-file:large` 单独执行 10,000 篇场景；这些阈值只用于稳定环境捕获数量级退化，不是精确剖析承诺。process `heapUsed` 只是可选 GC 下的 best-effort 同机线索，不能冒充真实宿主 heap snapshot；读取次数、发布次数、最终路径每批最多一次 read、访问 bucket 数和产物大小才适合硬门禁。
 - `npm run holiday:check` 检查当前年与下一年，要求每个 release verdict 都有一手来源核验记录；当年缺失、下一年已发布但未补齐、未核验或状态矛盾以非零状态退出，下一年官方尚未发布则保留 unavailable、输出警告并返回成功。`npm run release:check` 串联自动代码门禁、双时区、快速基准、10,000 篇单文件更新门禁和该节假日门禁；它不代替真实 Obsidian、真实移动端、React Profiler、长任务或 heap snapshot。发布说明必须如实区分自动证据、针对性真实宿主回归和未取得的设备或性能证据。
@@ -155,18 +155,18 @@ ICS core 契约覆盖 UTF-8 BOM、CRLF/LF、折叠行、转义文本、多 `VEVE
 
 分别记录候选与夹具身份、宿主观察。准备夹具不证明产品行为。用户 Vault、私有 ICS 来源和个人设置不得进入夹具或仓库产物。
 
-## 可选宿主回归
+## 按改动选择代表性宿主回归
 
-仓库自动门禁通过不等于真实宿主行为已经验证。选择宿主回归时，记录执行日期、Obsidian 版本、操作系统、主题、窗口或侧栏宽度、三个安装文件的哈希、结果和缺陷链接，并使用同一候选产物验证选定场景。未执行、未完成或失败的宿主检查如实记录，不阻止明确获授权的发布。
+仓库自动门禁通过不等于真实宿主行为已经验证。选择宿主回归时，记录执行日期、Obsidian 版本、操作系统、主题、窗口或侧栏宽度、三个安装文件的哈希、结果和缺陷链接，并使用同一候选产物验证选定场景。按改动影响选择精确候选的代表性验收；桌面交互、设置或生命周期变化覆盖相关真实宿主场景，移动交互或影响移动端的共享运行行为变化覆盖相关 Android 模拟器场景。纯文档或无宿主影响的逻辑改动可记录理由后免宿主。影响本次发布的已确认严重产品缺陷应阻塞对应发布；宿主或工具缺项保留未验范围，按风险判断是否延后，不自动阻塞所有发布，也不增加一律再次确认的步骤。只有实际观察通过的范围可声称已验收。完整宿主矩阵不是每次发布的前提，CI 不自动检查宿主覆盖。未执行、未完成或失败仍按原结果记录。
 
 以下完整矩阵按风险触发：
 
 - `minAppVersion`、Obsidian API/DOM adapter、生命周期、设置页或主要视图交互变化时，在最低支持的 Obsidian 1.12.7 与执行时最新稳定桌面版中重跑相关完整停用/启用、重载和卸载矩阵；次版本发布可选择完整桌面回归。
 - 主题变量、响应式布局、键盘/ARIA、焦点或弹层变化时，在默认浅色、默认深色和至少一个第三方主题下覆盖主区域与约 300–360 px 窄侧栏；未改动的视觉表面不要求补丁版本机械复验。
-- 安全区、周期 Note Navbar、触摸、粗指针、横竖屏或软键盘变化时，在当前 Android 模拟器上记录对应矩阵。模拟器结果属于可选质量记录，不阻止已获授权的发布。Android 真机和 iOS 不在验收范围内。
+- 安全区、周期 Note Navbar、触摸、粗指针、横竖屏或软键盘变化时，在当前 Android 模拟器上记录对应矩阵。影响本次发布的已确认严重产品缺陷应阻塞对应发布；宿主或工具缺项保留未验范围，按风险判断是否延后，不自动阻塞所有发布，也不增加一律再次确认的步骤。未验移动范围保留后续责任。Android 真机和 iOS 不在验收范围内。
 - NoteIndex、查询、缓存、解析、依赖或 bundle 预算发生性能相关变化时，在可再生的 1,000/10,000 篇真实宿主 Vault 上记录安全入口可用、元数据安全的暖恢复 ready、匹配缓存文件重读数量、最长主线程任务、read/parse/publish、React render/commit、缓存体积、heap 起点/峰值/稳定值和 stop 后回收量。冷启动与暖启动必须在同机比较，不设置跨机器绝对毫秒阈值；没有 Profiler 证据不引入 `React.memo`。
 
-未触发或未取得的证据限制对应兼容性或性能结论，不构成额外的发布门禁；文档和发布说明不得把缺失证据写成已经验证。
+未触发的场景记录省略理由；已触发但未取得的证据按上述缺口处理，限制对应兼容性或性能结论；文档和发布说明不得把缺失证据写成已经验证。
 
 ## 节假日年度维护
 
