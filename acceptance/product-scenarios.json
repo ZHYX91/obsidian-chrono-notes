@@ -336,6 +336,28 @@
       "expected": [
         "RTL direction, keyboard movement and focus are consistent across calendar surfaces, popovers and modal controls; settings remain usable."
       ]
+    },
+    {
+      "id": "gregorian-labels-and-settings-focus",
+      "title": "Gregorian localized month identity and settings focus after saving",
+      "surfaces": [
+        "desktop",
+        "android-emulator"
+      ],
+      "requiredCapabilities": {
+        "desktop": [],
+        "android-emulator": []
+      },
+      "steps": [
+        "Select Persian, inspect a known Gregorian month in the calendar and open one date; verify label and selected note refer to the same Gregorian date.",
+        "Open the final settings tab, change a calendar or holiday control twice, and verify saved values and active-tab visibility after each rebuild. On desktop verify keyboard focus returns to the replacement control.",
+        "Repeat a representative setting change in English, check the guide and problem-report entries and inspect narrow RTL layout."
+      ],
+      "expected": [
+        "Localized language and digits retain Gregorian date identity.",
+        "Saving preserves values and keeps the active settings tab visible.",
+        "Desktop focus and mobile narrow controls remain usable."
+      ]
     }
   ]
 }

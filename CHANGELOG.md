@@ -4,6 +4,8 @@ Notable changes to Chrono Notes are documented in this file. The repository's nu
 
 ## Unreleased
 
+## 0.7.8 - 2026-10-21
+
 - Keep localized month labels, date dialogs and accessible week ranges on the primary Gregorian calendar.
 - Preserve active settings-tab visibility and dropdown focus after saving calendar or holiday extension changes, including RTL interfaces.
 - Add focused Chromium settings regressions and Gregorian label-to-selection contracts while retaining the existing unit and time-zone suites.
