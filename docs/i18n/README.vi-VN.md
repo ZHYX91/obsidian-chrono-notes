@@ -1,6 +1,6 @@
 # Chrono Notes
 
-[English](../../README.md) · [简体中文](README.zh-CN.md) · [繁體中文](README.zh-TW.md) · [Deutsch](README.de-DE.md) · [Français](README.fr-FR.md) · [Español](README.es-ES.md) · [Português](README.pt-BR.md) · [Русский](README.ru-RU.md) · [日本語](README.ja-JP.md) · [한국어](README.ko-KR.md) · [Tiếng Việt](README.vi-VN.md) · [العربية](README.ar.md) · [فارسی](README.fa.md) · [עברית](README.he.md) · [አማርኛ](README.am.md) · [हिन्दी](README.hi.md)
+[English](../../README.md) · [简体中文](README.zh-CN.md) · [繁體中文](README.zh-TW.md) · [日本語](README.ja-JP.md) · [한국어](README.ko-KR.md) · [Deutsch](README.de-DE.md) · [Français](README.fr-FR.md) · [Español](README.es-ES.md) · [Português (Brasil)](README.pt-BR.md) · [Русский](README.ru-RU.md) · [Tiếng Việt](README.vi-VN.md) · [العربية](README.ar.md) · [فارسی](README.fa.md) · [עברית](README.he.md) · [አማርኛ](README.am.md) · [हिन्दी](README.hi.md)
 
 Chrono Notes bổ sung cho Obsidian một không gian lịch để quản lý ghi chú định kỳ, công việc, ngày lễ khu vực, sự kiện trên máy và ghi chú theo khoảng ngày.
 
@@ -37,6 +37,8 @@ Tải `chrono-notes-<version>.zip` từ [bản phát hành mới nhất](https:/
 Sao lưu và giữ lại `data.json`; chỉ thay các tệp của plugin. Chỉ xóa `data.json` khi thật sự muốn đặt lại tùy chọn.
 
 ## Cách sử dụng
+
+Lịch chính, bộ chọn tháng và hộp thoại ngày luôn dùng lịch Gregory. Đổi ngôn ngữ sẽ đổi tên tháng và cách hiển thị chữ số, không đổi hệ lịch. Hãy chọn tiện ích lịch riêng nếu cần hiển thị thêm thông tin từ lịch khác.
 
 Chọn loại ghi chú, đường dẫn và mẫu trong phần cài đặt Chrono Notes, rồi mở lịch bằng biểu tượng bên hoặc bảng lệnh. **Nhấp một lần chỉ chọn ngày, không tự tạo ghi chú.** Nhấp đúp hoặc nhấn Enter để mở hay tạo ghi chú. Nhấp phải để mở menu của ngày; nếu có sự kiện ICS, bạn có thể xem toàn bộ danh sách sự kiện từ menu này. Ctrl/Cmd+nhấp hoặc nhấp nút giữa sẽ mở ghi chú trong thẻ mới. Bật thêm lịch và nguồn ICS khi cần.
 
@@ -87,6 +89,8 @@ Ghi chú khoảng thời gian cần có hai thuộc tính `start` và `end` vớ
 Nếu thiếu thuộc tính `chrono-notes`, ghi chú chỉ được nhận diện trong phạm vi tìm ghi chú chưa đánh dấu đã cài đặt. Nếu thuộc tính có giá trị khác `interval`, ghi chú không được nhận diện. Plugin không tự sửa các ghi chú hiện có.
 
 ## Thiết lập
+
+Phần cài đặt chung có hướng dẫn sử dụng và mục báo lỗi. Khi đổi tiện ích lịch hoặc ngày lễ, thẻ cài đặt hiện tại vẫn nhìn thấy và tiêu điểm bàn phím vẫn ở điều khiển vừa dùng.
 
 Bạn có thể chọn ngôn ngữ, ngày bắt đầu tuần, kiểu hiển thị ngày, đường dẫn và mẫu. Đổi ngôn ngữ dùng trong tên tệp không đổi tên ghi chú đã có; hãy kiểm tra bản xem trước đường dẫn. Có các mục riêng cho giao diện, công việc, thống kê, ghi chú khoảng thời gian và phần mở rộng.
 

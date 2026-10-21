@@ -99,6 +99,27 @@ describe("ChronoNotesSettingTab save orchestration", () => {
     vi.unstubAllGlobals();
   });
 
+  it("restores a refreshed control only while focus belongs to that settings surface", () => {
+    mocks.renderGeneral.mockImplementation((container: HTMLElement) => {
+      const select = container.createEl("select");
+      select.dataset.chronoSettingsControl = "language";
+    });
+    const { tab } = createTab();
+    tab.display();
+    const original = tab.containerEl.querySelector<HTMLSelectElement>("select");
+    original?.focus();
+    tab.display();
+    const replacement = tab.containerEl.querySelector<HTMLSelectElement>("select");
+    expect(replacement).not.toBe(original);
+    expect(document.activeElement).toBe(replacement);
+
+    const external = document.createElement("button");
+    document.body.appendChild(external);
+    external.focus();
+    tab.display();
+    expect(document.activeElement).toBe(external);
+  });
+
   it("routes the initial panel and a tab switch to the matching section renderer", () => {
     const { tab, host } = createTab();
 

@@ -25,6 +25,7 @@ vi.mock("obsidian", () => ({
 
     addDropdown(configure: (dropdown: unknown) => void): this {
       const dropdown = {
+        selectEl: { dataset: {} },
         addOption: vi.fn(() => dropdown),
         setValue: vi.fn(() => dropdown),
         onChange: vi.fn(() => dropdown),

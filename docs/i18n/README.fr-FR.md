@@ -1,6 +1,6 @@
 # Chrono Notes
 
-[English](../../README.md) · [简体中文](README.zh-CN.md) · [繁體中文](README.zh-TW.md) · [Deutsch](README.de-DE.md) · [Français](README.fr-FR.md) · [Español](README.es-ES.md) · [Português](README.pt-BR.md) · [Русский](README.ru-RU.md) · [日本語](README.ja-JP.md) · [한국어](README.ko-KR.md) · [Tiếng Việt](README.vi-VN.md) · [العربية](README.ar.md) · [فارسی](README.fa.md) · [עברית](README.he.md) · [አማርኛ](README.am.md) · [हिन्दी](README.hi.md)
+[English](../../README.md) · [简体中文](README.zh-CN.md) · [繁體中文](README.zh-TW.md) · [日本語](README.ja-JP.md) · [한국어](README.ko-KR.md) · [Deutsch](README.de-DE.md) · [Français](README.fr-FR.md) · [Español](README.es-ES.md) · [Português (Brasil)](README.pt-BR.md) · [Русский](README.ru-RU.md) · [Tiếng Việt](README.vi-VN.md) · [العربية](README.ar.md) · [فارسی](README.fa.md) · [עברית](README.he.md) · [አማርኛ](README.am.md) · [हिन्दी](README.hi.md)
 
 Chrono Notes transforme Obsidian en espace de travail calendaire pour les notes périodiques, les tâches, les jours fériés et les notes couvrant une période.
 
@@ -37,6 +37,8 @@ Téléchargez `chrono-notes-<version>.zip` depuis la [dernière version](https:/
 Conservez et sauvegardez `data.json` ; remplacez uniquement les fichiers du module. Ne supprimez le fichier de réglages que pour une réinitialisation volontaire.
 
 ## Utilisation
+
+Le calendrier principal, les sélecteurs de mois et les boîtes de dialogue de date utilisent toujours le calendrier grégorien. La langue change les noms des mois et les chiffres, pas le calendrier. Les extensions ajoutent séparément les informations d’autres calendriers.
 
 Choisissez les types de notes, leurs chemins et leurs modèles dans les paramètres de Chrono Notes, puis ouvrez le calendrier depuis le ruban ou la palette de commandes. **Un clic sélectionne une date sans créer de note.** Double-cliquez ou appuyez sur Entrée pour ouvrir ou créer la note. Un clic droit ouvre le menu de la date ; si des événements ICS sont présents, ce menu permet d’en consulter la liste complète. Ctrl/Cmd-clic ou clic central ouvre la note dans un nouvel onglet. Activez au besoin les sources ICS et les calendriers supplémentaires.
 
@@ -87,6 +89,8 @@ Une note de période doit avoir des propriétés `start` et `end` valides. Chron
 Si la propriété `chrono-notes` est absente, la note n’est reconnue que dans la zone de recherche des notes de période sans marqueur. Une valeur différente de `interval` exclut la note. Les notes existantes ne sont jamais modifiées automatiquement.
 
 ## Paramètres
+
+La section Général propose le guide d’utilisation et le signalement d’un problème. Après le changement d’une extension de calendrier ou de jours fériés, l’onglet actif reste visible et le focus clavier reste sur la commande utilisée.
 
 Réglez la langue, le premier jour de la semaine, les formats de date, les modèles et les chemins des notes. Un changement de langue pour les noms de fichiers ne renomme pas les notes existantes : vérifiez l'aperçu du chemin. Les vues, tâches, statistiques et notes de période disposent de réglages dédiés.
 

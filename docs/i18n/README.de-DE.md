@@ -1,6 +1,6 @@
 # Chrono Notes
 
-[English](../../README.md) · [简体中文](README.zh-CN.md) · [繁體中文](README.zh-TW.md) · [Deutsch](README.de-DE.md) · [Français](README.fr-FR.md) · [Español](README.es-ES.md) · [Português](README.pt-BR.md) · [Русский](README.ru-RU.md) · [日本語](README.ja-JP.md) · [한국어](README.ko-KR.md) · [Tiếng Việt](README.vi-VN.md) · [العربية](README.ar.md) · [فارسی](README.fa.md) · [עברית](README.he.md) · [አማርኛ](README.am.md) · [हिन्दी](README.hi.md)
+[English](../../README.md) · [简体中文](README.zh-CN.md) · [繁體中文](README.zh-TW.md) · [日本語](README.ja-JP.md) · [한국어](README.ko-KR.md) · [Deutsch](README.de-DE.md) · [Français](README.fr-FR.md) · [Español](README.es-ES.md) · [Português (Brasil)](README.pt-BR.md) · [Русский](README.ru-RU.md) · [Tiếng Việt](README.vi-VN.md) · [العربية](README.ar.md) · [فارسی](README.fa.md) · [עברית](README.he.md) · [አማርኛ](README.am.md) · [हिन्दी](README.hi.md)
 
 Chrono Notes ergänzt Obsidian um einen Kalender für periodische Notizen, Aufgaben, regionale Feiertage, lokale Kalendertermine und Notizen zu frei gewählten Zeiträumen.
 
@@ -37,6 +37,8 @@ Das Archiv `chrono-notes-<version>.zip` von [der aktuellen Version](https://gith
 Eine vorhandene `data.json` sichern und behalten; nur die drei Programmdateien ersetzen. `data.json` nur löschen, wenn die Einstellungen absichtlich zurückgesetzt werden sollen.
 
 ## Verwendung
+
+Hauptkalender, Monatsauswahl und Datumsdialoge verwenden immer den gregorianischen Kalender. Die Oberflächensprache ändert Monatsnamen und Ziffern, nicht das Kalendersystem. Zusätzliche Datumsinformationen wählst du über Kalendererweiterungen.
 
 Stellen Sie in Chrono Notes die gewünschten Notizarten, Pfade und Vorlagen ein und öffnen Sie den Kalender über die Seitenleiste oder Befehlspalette. **Ein Klick wählt ein Datum aus, erstellt aber keine Notiz.** Mit einem Doppelklick oder Enter öffnen oder erstellen Sie die Notiz. Ein Rechtsklick öffnet das Datumsmenü. Sind ICS-Termine vorhanden, können Sie dort die vollständige Terminliste öffnen. Strg/Befehl-Klick oder Mittelklick öffnet die Notiz in einem neuen Tab. Kalendererweiterungen und ICS-Quellen lassen sich bei Bedarf in den Einstellungen aktivieren.
 
@@ -87,6 +89,8 @@ Eine Zeitraumnotiz braucht gültige Eigenschaften `start` und `end`. Von Chrono 
 Ohne die Eigenschaft `chrono-notes` wird eine Notiz nur im konfigurierten Suchbereich für unmarkierte Zeitraumnotizen erkannt. Steht in der Eigenschaft ein anderer Wert als `interval`, wird die Notiz ausgeschlossen. Bestehende Notizen werden nicht automatisch geändert.
 
 ## Einstellungen
+
+Unter Allgemein findest du Anleitung und Problem melden. Beim Ändern einer Kalender- oder Feiertagserweiterung bleibt der aktuelle Reiter sichtbar und der Tastaturfokus beim gerade verwendeten Steuerelement.
 
 Unter Allgemein Sprache, Wochenbeginn, Datumsanzeige und Vorlagen wählen. Unter Periodische Notizen die Dateipfade prüfen, bevor vorhandene Namen durch eine andere Pfadsprache nicht mehr gefunden werden. Darstellung, Aufgaben, Statistiken, Erweiterungen und Zeitraumnotizen haben eigene Einstellungsbereiche.
 

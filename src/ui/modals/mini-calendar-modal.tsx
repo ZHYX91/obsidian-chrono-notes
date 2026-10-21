@@ -33,6 +33,7 @@ import {
   type CalendarPickerModalHost,
 } from "../calendar/calendar-picker-layer";
 import {
+  formatMonthLabel,
   formatNarrowWeekdayLabels,
   formatShortMonthLabels,
 } from "../date-presentation";
@@ -391,15 +392,4 @@ function MiniCalendar({
 
 function firstDateOfMonth(month: CalendarMonth): LocalDate {
   return Object.freeze({ year: month.year, month: month.month, day: 1 });
-}
-
-function formatMonthLabel(month: CalendarMonth, locale: string): string {
-  const value = new Date(0);
-  value.setUTCFullYear(month.year, month.month - 1, 1);
-  value.setUTCHours(0, 0, 0, 0);
-  return new Intl.DateTimeFormat(locale, {
-    month: "long",
-    year: "numeric",
-    timeZone: "UTC",
-  }).format(value);
 }

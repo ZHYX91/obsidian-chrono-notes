@@ -34,6 +34,7 @@ export function renderGeneralSettingsSection(
     .setName(t("settings.general.language"))
     .setDesc(t("settings.general.languageDesc"))
     .addDropdown((dropdown) => {
+      dropdown.selectEl.dataset.chronoSettingsControl = "language";
       dropdown.addOption("auto", t("settings.general.auto"));
       for (const option of PLUGIN_LANGUAGE_OPTIONS) {
         dropdown.addOption(option.value, option.label);
@@ -72,7 +73,7 @@ export function renderGeneralSettingsSection(
       });
     });
 
-  new Setting(containerEl)
+  const guideSetting = new Setting(containerEl)
     .setName(t("settings.general.firstUseGuide"))
     .setDesc(t("settings.general.firstUseGuideDesc"))
     .addButton((button) => {
@@ -80,6 +81,10 @@ export function renderGeneralSettingsSection(
         .setButtonText(t("settings.general.showFirstUseGuide"))
         .onClick(() => context.host.openFirstUseGuide());
     });
+  guideSetting.controlEl.createEl("a", {
+    text: t("settings.general.reportIssue"),
+    attr: { href: "https://github.com/ZHYX91/obsidian-chrono-notes/issues/new/choose" },
+  });
 
   containerEl.createEl("h3", { text: t("settings.general.obsidianProperties") });
   const dateFormatSetting = new Setting(containerEl);

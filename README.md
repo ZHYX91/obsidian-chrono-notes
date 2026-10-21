@@ -1,6 +1,6 @@
 # Chrono Notes
 
-[English](https://github.com/ZHYX91/obsidian-chrono-notes/blob/main/README.md) · [简体中文](https://github.com/ZHYX91/obsidian-chrono-notes/blob/main/docs/i18n/README.zh-CN.md) · [繁體中文](https://github.com/ZHYX91/obsidian-chrono-notes/blob/main/docs/i18n/README.zh-TW.md) · [Deutsch](https://github.com/ZHYX91/obsidian-chrono-notes/blob/main/docs/i18n/README.de-DE.md) · [Français](https://github.com/ZHYX91/obsidian-chrono-notes/blob/main/docs/i18n/README.fr-FR.md) · [Español](https://github.com/ZHYX91/obsidian-chrono-notes/blob/main/docs/i18n/README.es-ES.md) · [Português](https://github.com/ZHYX91/obsidian-chrono-notes/blob/main/docs/i18n/README.pt-BR.md) · [Русский](https://github.com/ZHYX91/obsidian-chrono-notes/blob/main/docs/i18n/README.ru-RU.md) · [日本語](https://github.com/ZHYX91/obsidian-chrono-notes/blob/main/docs/i18n/README.ja-JP.md) · [한국어](https://github.com/ZHYX91/obsidian-chrono-notes/blob/main/docs/i18n/README.ko-KR.md) · [Tiếng Việt](https://github.com/ZHYX91/obsidian-chrono-notes/blob/main/docs/i18n/README.vi-VN.md) · [العربية](https://github.com/ZHYX91/obsidian-chrono-notes/blob/main/docs/i18n/README.ar.md) · [فارسی](https://github.com/ZHYX91/obsidian-chrono-notes/blob/main/docs/i18n/README.fa.md) · [עברית](https://github.com/ZHYX91/obsidian-chrono-notes/blob/main/docs/i18n/README.he.md) · [አማርኛ](https://github.com/ZHYX91/obsidian-chrono-notes/blob/main/docs/i18n/README.am.md) · [हिन्दी](https://github.com/ZHYX91/obsidian-chrono-notes/blob/main/docs/i18n/README.hi.md)
+[English](https://github.com/ZHYX91/obsidian-chrono-notes/blob/main/README.md) · [简体中文](https://github.com/ZHYX91/obsidian-chrono-notes/blob/main/docs/i18n/README.zh-CN.md) · [繁體中文](https://github.com/ZHYX91/obsidian-chrono-notes/blob/main/docs/i18n/README.zh-TW.md) · [日本語](https://github.com/ZHYX91/obsidian-chrono-notes/blob/main/docs/i18n/README.ja-JP.md) · [한국어](https://github.com/ZHYX91/obsidian-chrono-notes/blob/main/docs/i18n/README.ko-KR.md) · [Deutsch](https://github.com/ZHYX91/obsidian-chrono-notes/blob/main/docs/i18n/README.de-DE.md) · [Français](https://github.com/ZHYX91/obsidian-chrono-notes/blob/main/docs/i18n/README.fr-FR.md) · [Español](https://github.com/ZHYX91/obsidian-chrono-notes/blob/main/docs/i18n/README.es-ES.md) · [Português (Brasil)](https://github.com/ZHYX91/obsidian-chrono-notes/blob/main/docs/i18n/README.pt-BR.md) · [Русский](https://github.com/ZHYX91/obsidian-chrono-notes/blob/main/docs/i18n/README.ru-RU.md) · [Tiếng Việt](https://github.com/ZHYX91/obsidian-chrono-notes/blob/main/docs/i18n/README.vi-VN.md) · [العربية](https://github.com/ZHYX91/obsidian-chrono-notes/blob/main/docs/i18n/README.ar.md) · [فارسی](https://github.com/ZHYX91/obsidian-chrono-notes/blob/main/docs/i18n/README.fa.md) · [עברית](https://github.com/ZHYX91/obsidian-chrono-notes/blob/main/docs/i18n/README.he.md) · [አማርኛ](https://github.com/ZHYX91/obsidian-chrono-notes/blob/main/docs/i18n/README.am.md) · [हिन्दी](https://github.com/ZHYX91/obsidian-chrono-notes/blob/main/docs/i18n/README.hi.md)
 
 Chrono Notes adds a calendar to Obsidian for daily, weekly, and other periodic notes. View tasks, holidays, statistics, and notes that span multiple days alongside your calendar.
 
@@ -48,6 +48,8 @@ Download `chrono-notes-<version>.zip` from the [latest release](https://github.c
 Back up and preserve `Vault/.obsidian/plugins/chrono-notes/data.json` when it exists. Replace only `main.js`, `manifest.json`, and `styles.css`; delete `data.json` only when you explicitly want to reset all plugin preferences.
 
 ## Usage
+
+The main calendar, month selectors, and date dialogs always use the Gregorian calendar. Changing the interface language translates month names and digits; it does not select a different calendar. Choose calendar extensions separately to show additional date information.
 
 **First time:** Choose your periodic-note types and note paths under Chrono Notes settings, then open the calendar from the ribbon. Click a date to select it; double-click or press Enter to open or create its note. On a touch screen, long-press a date and choose the note action from its menu. Selecting a date alone never creates a note.
 
@@ -103,6 +105,8 @@ not modified automatically.
 
 ## Settings
 
+General settings includes the User guide and Report an issue. Changing a calendar or holiday extension keeps the current settings tab visible and keyboard focus on the control you just used.
+
 Settings cover periodic-note paths and templates, calendar and holiday extensions, task and statistics display, local ICS sources, time-range notes, and Obsidian Date and Date & time property display. Plugin settings are stored in `data.json`; note content and properties remain in the Vault.
 
 ## Limitations
@@ -123,6 +127,8 @@ Development requires exactly Node.js 24.19.0 and npm 11.17.0.
 ```bash
 npm ci
 npm run check
+npm exec playwright -- install chromium
+npm run test:browser
 ```
 
 Developer references:

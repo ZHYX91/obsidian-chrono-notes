@@ -90,6 +90,10 @@ The guide only describes real, easy-to-miss interactions: click selects a date o
 
 ## 6. Settings
 
+General offers a User guide and Report an issue. Changing a calendar or holiday selector keeps the active tab visible in both text directions and restores focus to the same selector after saving. A refresh does not take focus from another part of Obsidian.
+
+Month names and complete date labels always name the primary Gregorian date, including in Persian. The interface language changes the translation and number glyphs; other calendar expressions appear only in their configured extension slots.
+
 Auto language follows Obsidian's configured interface language, not the browser or operating-system locale.
 
 Holiday extensions in Extensions & integrations use three ordered First/Second/Third region dropdown slots. They list only implemented providers, omit choices already used by another slot, and compact after an earlier slot is cleared.

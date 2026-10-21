@@ -1,6 +1,6 @@
 # Chrono Notes
 
-[English](../../README.md) · [简体中文](README.zh-CN.md) · [繁體中文](README.zh-TW.md) · [Deutsch](README.de-DE.md) · [Français](README.fr-FR.md) · [Español](README.es-ES.md) · [Português](README.pt-BR.md) · [Русский](README.ru-RU.md) · [日本語](README.ja-JP.md) · [한국어](README.ko-KR.md) · [Tiếng Việt](README.vi-VN.md) · [العربية](README.ar.md) · [فارسی](README.fa.md) · [עברית](README.he.md) · [አማርኛ](README.am.md) · [हिन्दी](README.hi.md)
+[English](../../README.md) · [简体中文](README.zh-CN.md) · [繁體中文](README.zh-TW.md) · [日本語](README.ja-JP.md) · [한국어](README.ko-KR.md) · [Deutsch](README.de-DE.md) · [Français](README.fr-FR.md) · [Español](README.es-ES.md) · [Português (Brasil)](README.pt-BR.md) · [Русский](README.ru-RU.md) · [Tiếng Việt](README.vi-VN.md) · [العربية](README.ar.md) · [فارسی](README.fa.md) · [עברית](README.he.md) · [አማርኛ](README.am.md) · [हिन्दी](README.hi.md)
 
 Chrono Notes 是一个 Obsidian 日历插件，帮你按日期整理日记、周记等周期笔记，并在同一处查看任务、节假日、统计和跨多天的笔记。
 
@@ -48,6 +48,8 @@ Chrono Notes 是一个 Obsidian 日历插件，帮你按日期整理日记、周
 如果存在 `Vault/.obsidian/plugins/chrono-notes/data.json`，请先备份并保留。只替换 `main.js`、`manifest.json` 和 `styles.css`；只有在明确希望重置全部插件偏好时才删除 `data.json`。
 
 ## 使用
+
+主日历、月份选择器和日期弹窗始终使用公历。切换界面语言会改变月份名称和数字的显示方式，不会切换历法；需要其他历法信息时，请单独选择历法扩展。
 
 **初次使用：** 先在 Chrono Notes 设置中选择要使用的周期笔记类型和保存路径，再从侧边栏图标打开日历。单击日期只会选中，双击或按 Enter 打开或创建笔记。手机上长按日期，打开菜单后选择打开或创建日记。仅选中日期不会自动新增笔记。
 
@@ -101,6 +103,8 @@ end: 2026-10-20
 
 ## 设置
 
+常规设置提供使用指南和报告问题入口。修改历法或节假日扩展后，当前设置页签仍保持可见，键盘焦点留在刚操作的控件上。
+
 设置覆盖周期笔记路径和模板、历法与节假日扩展、任务与统计显示、本地 ICS 来源、区间笔记，以及 Obsidian 日期与日期时间属性的显示方式。插件设置保存在 `data.json` 中；笔记内容和属性仍保留在笔记库内。
 
 ## 限制
@@ -121,6 +125,8 @@ Chrono Notes 会获取 Markdown 文件列表并读取相关笔记，用于显示
 ```bash
 npm ci
 npm run check
+npm exec playwright -- install chromium
+npm run test:browser
 ```
 
 开发者参考文档：

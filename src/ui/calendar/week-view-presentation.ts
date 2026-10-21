@@ -7,6 +7,7 @@ import {
   type LocalDate,
 } from "../../core/periodic/periodic-date";
 import type { Translator } from "../../shared/i18n";
+import { createGregorianDateFormatter } from "../date-presentation";
 
 export interface WeekViewMessages {
   readonly overview: string;
@@ -56,11 +57,10 @@ export function formatWeekPickerLabels(
 export function createWeekPickerLabelFormatter(
   translator: Translator,
 ): WeekPickerLabelFormatter {
-  const dateFormatter = new Intl.DateTimeFormat(translator.locale, {
+  const dateFormatter = createGregorianDateFormatter(translator.locale, {
     year: "numeric",
     month: "long",
     day: "numeric",
-    timeZone: "UTC",
   });
   return (start, end, weekNumber, weekYear) => {
     const paddedWeek = String(weekNumber).padStart(2, "0");

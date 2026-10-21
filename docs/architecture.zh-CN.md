@@ -11,7 +11,7 @@ translation_status: source
 
 插件 ID 为 `chrono-notes`，标准生产产物为 `dist/main.js`、`dist/manifest.json` 与 `dist/styles.css`，构建分析文件写入非发布目录 `build/chrono-notes.meta.json`。产品范围以[产品需求](product-requirements.zh-CN.md)为准。
 
-仓库内 release-core 3.0 runtime 与薄适配器统一管理确定性的 Candidate Bundle 和生成的独立工作流。获授权的稳定版本 tag push 或该 tag 上的手动 publish 派发共用流水线；手动 verify 模式保持只读。CI 安装锁定依赖，执行一次 release:check，验证 Bundle 源码，并固定 artifact ID/digest。发布核对精确事件、源码、tag、传输字节和 SLSA 构建证明；先下载验证草稿，再发布 immutable Release，最后下载回验。产品验收可选且单独报告，独立克隆无需外部编排。
+仓库内 release-core 3.0 runtime 与薄适配器统一管理确定性的 Candidate Bundle 和生成的独立工作流。获授权的稳定版本 tag push 或该 tag 上的手动 publish 派发共用流水线；手动 verify 模式保持只读。CI 安装锁定依赖，执行一次 release:check，验证 Bundle 源码，并固定 artifact ID/digest。发布核对精确事件、源码、tag、传输字节和 SLSA 构建证明；先下载验证草稿，再发布 immutable Release，最后下载回验。产品验收按改动选择代表性场景并单独报告；影响本次发布的已确认严重产品缺陷应阻塞对应发布；宿主或工具缺项保留未验范围，按风险判断是否延后，不自动阻塞所有发布，也不增加一律再次确认的步骤。只有实际观察通过的范围可声称已验收。完整宿主矩阵不要求每版重跑，CI 不自动检查宿主覆盖，独立克隆无需外部编排。
 
 源码校验、标签校验、Bundle 构建和事件预检要求 `CHANGELOG.md` 存在唯一、非空且与版本精确匹配的 `## <version>` 段落；这些检查保持只读，在发布前拒绝缺失、空白或重复的版本段。GitHub 发布时，薄适配器把该段落物化为 release-notes 文件并传给 release-core，GitHub 自动生成说明不再作为权威来源。Immutable Release 锁定标签与附件，标题和发布说明仍可编辑。
 
@@ -77,6 +77,10 @@ Markdown 正文投影统一处理代码、HTML 注释和 Obsidian `%%` 注释；
 - `NoteIndexSnapshot.taskDates` 与 `NoteIndexSnapshot.intervals` 是 NoteIndex 独占维护的增量、不可变子快照；initial 与 live publication 都把该批最终逐路径贡献一次交给 `replaceBatch()`，任务投影只复制并排序受影响 bucket 一次，区间投影只在整批贡献替换完成后统一排序一次，避免逐文件反复复制。只有对应领域贡献真实变化时才更换自身 revision/identity；无变化批次保留既有 bucket、数组和子快照身份。它们不是独立 Manager，也不拥有第二份 Vault 事实。
 
 ## 5. 命令、查询与 UI
+
+主日历标签统一使用 `createGregorianDateFormatter()`，显式指定 `calendar: "gregory"` 与 `timeZone: "UTC"`。月份按钮、迷你日历的年月标签，以及周选择器完整无障碍日期范围均描述实际选择的同一公历 `LocalDate`。界面语言继续控制文字与数字；历法扩展提供方保留各自显式定义的历法语义。
+
+设置重建只保留当前界面内具有稳定 `data-chrono-settings-control` 标识的焦点。历法槽位、节日槽位和语言选择器在当前保存与界面修订完成后恢复对应控件，界面外的焦点不被抢占。页签条使用实测物理边界并保留浏览器的 RTL 滚动坐标，只调整自身的横向位置。
 
 规范区间元数据固定包含 `chrono-notes: interval` 与规范 `start`/`end`，只在新建区间笔记及其创建期模板最终写入中强制合并；插件不扫描、迁移或改写既有笔记。下文的目录范围过滤只适用于未标记有效区间，明确标记的有效区间始终绕过目录范围。
 

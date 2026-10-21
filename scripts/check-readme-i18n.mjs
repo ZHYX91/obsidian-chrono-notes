@@ -23,6 +23,16 @@ const config = {
       sections: ["功能特色","需求與相容性","安裝","使用方式","設定","限制","隱私與安全","開發","支援","授權","致謝"],
     },
     {
+      label: "日本語",
+      path: "docs/i18n/README.ja-JP.md",
+      sections: ["主な機能","動作環境と互換性","インストール","使い方","設定","制限事項","プライバシーとセキュリティ","開発","サポート","ライセンス","謝辞"],
+    },
+    {
+      label: "한국어",
+      path: "docs/i18n/README.ko-KR.md",
+      sections: ["주요 기능","요구 사항 및 호환성","설치","사용 방법","설정","제한 사항","개인정보 보호 및 보안","개발","지원","라이선스","감사의 말"],
+    },
+    {
       label: "Deutsch",
       path: "docs/i18n/README.de-DE.md",
       sections: ["Funktionen","Voraussetzungen und Kompatibilität","Installation","Verwendung","Einstellungen","Einschränkungen","Datenschutz und Sicherheit","Entwicklung","Hilfe","Lizenz","Danksagung"],
@@ -38,7 +48,7 @@ const config = {
       sections: ["Funciones","Requisitos y compatibilidad","Instalación","Uso","Configuración","Limitaciones","Privacidad y seguridad","Desarrollo","Ayuda","Licencia","Agradecimientos"],
     },
     {
-      label: "Português",
+      label: "Português (Brasil)",
       path: "docs/i18n/README.pt-BR.md",
       sections: ["Recursos","Requisitos e compatibilidade","Instalação","Como usar","Configurações","Limitações","Privacidade e segurança","Desenvolvimento","Suporte","Licença","Agradecimentos"],
     },
@@ -46,16 +56,6 @@ const config = {
       label: "Русский",
       path: "docs/i18n/README.ru-RU.md",
       sections: ["Возможности","Требования и совместимость","Установка","Использование","Настройки","Ограничения","Конфиденциальность и безопасность","Разработка","Поддержка","Лицензия","Благодарности"],
-    },
-    {
-      label: "日本語",
-      path: "docs/i18n/README.ja-JP.md",
-      sections: ["主な機能","動作環境と互換性","インストール","使い方","設定","制限事項","プライバシーとセキュリティ","開発","サポート","ライセンス","謝辞"],
-    },
-    {
-      label: "한국어",
-      path: "docs/i18n/README.ko-KR.md",
-      sections: ["주요 기능","요구 사항 및 호환성","설치","사용 방법","설정","제한 사항","개인정보 보호 및 보안","개발","지원","라이선스","감사의 말"],
     },
     {
       label: "Tiếng Việt",
@@ -97,7 +97,7 @@ const config = {
   ],
 };
 
-const ignoredDirectories = new Set([".git", "coverage", "dist", "node_modules", "release"]);
+const ignoredDirectories = new Set([".git", "coverage", "dist", "node_modules", "release", "test-results", "playwright-report"]);
 const normalizePath = (filePath) => filePath.split(path.sep).join("/");
 
 function expectedNavigation(filePath) {

@@ -43,6 +43,12 @@ jobs:
       - name: Type-check, test, and build
         run: npm run check
 
+      - name: Install Chromium for settings interaction tests
+        run: npm exec playwright -- install --with-deps chromium
+
+      - name: Test settings interaction in Chromium
+        run: npm run test:browser
+
       - name: Test deterministic date behavior across time zones
         run: npm run test:timezones
 
@@ -68,3 +74,11 @@ jobs:
           name: chrono-notes-production
           path: dist/
           if-no-files-found: error
+
+      - name: Upload browser regression evidence
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: chrono-notes-browser-tests
+          path: test-results/
+          if-no-files-found: ignore

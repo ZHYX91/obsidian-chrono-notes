@@ -67,7 +67,7 @@
   border-radius: 2px;
   box-shadow: none;
   color: var(--text-normal);
-  cursor: pointer;
+  cursor: var(--cursor, default);
   min-width: 0;
   overflow: hidden;
   padding: 0 5px;
@@ -246,7 +246,7 @@
   border: 0;
   box-shadow: none;
   color: var(--text-muted);
-  cursor: pointer;
+  cursor: var(--cursor, default);
   font-size: 9px;
   line-height: 14px;
   overflow: hidden;

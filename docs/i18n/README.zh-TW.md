@@ -1,6 +1,6 @@
 # Chrono Notes
 
-[English](../../README.md) · [简体中文](README.zh-CN.md) · [繁體中文](README.zh-TW.md) · [Deutsch](README.de-DE.md) · [Français](README.fr-FR.md) · [Español](README.es-ES.md) · [Português](README.pt-BR.md) · [Русский](README.ru-RU.md) · [日本語](README.ja-JP.md) · [한국어](README.ko-KR.md) · [Tiếng Việt](README.vi-VN.md) · [العربية](README.ar.md) · [فارسی](README.fa.md) · [עברית](README.he.md) · [አማርኛ](README.am.md) · [हिन्दी](README.hi.md)
+[English](../../README.md) · [简体中文](README.zh-CN.md) · [繁體中文](README.zh-TW.md) · [日本語](README.ja-JP.md) · [한국어](README.ko-KR.md) · [Deutsch](README.de-DE.md) · [Français](README.fr-FR.md) · [Español](README.es-ES.md) · [Português (Brasil)](README.pt-BR.md) · [Русский](README.ru-RU.md) · [Tiếng Việt](README.vi-VN.md) · [العربية](README.ar.md) · [فارسی](README.fa.md) · [עברית](README.he.md) · [አማርኛ](README.am.md) · [हिन्दी](README.hi.md)
 
 Chrono Notes 是 Obsidian 的日曆工作區，整合週期筆記、任務、地區假日、本機日曆事件及日期區間筆記。
 
@@ -38,6 +38,8 @@ Chrono Notes 是 Obsidian 的日曆工作區，整合週期筆記、任務、地
 若已有 `data.json`，請備份並保留。只需替換外掛程式檔案；除非要重設偏好設定，否則不要刪除 `data.json`。
 
 ## 使用方式
+
+主日曆、月份選擇器和日期彈窗始終使用公曆。切換介面語言只改變月份名稱與數字的顯示方式，不會切換曆法；需要其他曆法資訊時，請另外選擇曆法擴充。
 
 先在設定中選取週期筆記類型、路徑與範本，再透過側邊欄或命令面板開啟日曆。**按一下日期只會選取，不會自動建立筆記。**按兩下或按 Enter 才會開啟或建立筆記。按右鍵可以叫出日期操作選單；當天有 ICS 事件時，選擇「查看行事曆事件」即可查看完整清單。Ctrl/Cmd 加按或滑鼠中鍵可在新分頁開啟。也可視需要啟用其他曆法、假日及本機 ICS 來源。
 
@@ -87,6 +89,8 @@ end: 2026-10-20
 如果沒有 `chrono-notes` 屬性，只有位於設定的「未標記區間筆記辨識範圍」內才會被辨識；如果該屬性的值不是 `interval`，則不會被當成區間筆記。外掛不會自動改動既有筆記。
 
 ## 設定
+
+一般設定提供使用指南與回報問題入口。修改曆法或節假日擴充後，目前設定分頁仍保持可見，鍵盤焦點留在剛操作的控制項上。
 
 可設定介面語言、一週從哪一天開始、日期顯示格式、路徑及範本。變更檔名使用的語言不會替現有檔案重新命名，請先檢查路徑預覽。外觀、任務、統計、區間筆記及擴充功能各有獨立設定。
 
