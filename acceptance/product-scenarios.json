@@ -288,14 +288,15 @@
         "android-emulator": []
       },
       "steps": [
-        "Install and enable a released Templater plugin in the isolated test Vault, record its version, and disable automatic folder templates to prevent double rendering. If Templater is unavailable, record unverified, not passed.",
+        "Install and enable a released Templater plugin in the isolated test Vault and record its version. Enable Trigger Templater on new file creation and map Daily and Calendar/Range Notes to Templates/Templater Automatic.md. If Templater is unavailable, record unverified, not passed.",
         "Select Templater as the Chrono Notes template engine and Templates/Templater Context.md. Create a daily note for 2026-10-17 through the calendar confirmation. Inspect the result: kind=periodic, title matching the destination, target=2026-10-17 and no remaining template delimiters.",
         "Use the same template for a range note from 2026-10-17 to 2026-10-19. Verify kind=interval, start/end dates, dayCount=3, destination title and canonical interval identity.",
+        "Choose Templates/Templater Slow.md for both daily and range notes. Create a fresh daily note and a fresh range note separately, leave each template prompt open for at least one second, then accept the default answer. Verify both finish with selected=selected-template and correct context, no automatic-folder-template text, and no changed-during-rendering error. This checks protection while creation is pending; an automatic callback that runs only after completed creation follows Templater's native rules.",
         "Select Templates/Templater Failure.md and create another note. Verify an actionable localized rendering error and preservation of the created target. Then configure a missing template, retry with a different destination, and verify no target was created.",
         "Restore the working template, enable larger-period cascading with a missing monthly template, create a fresh daily note, and verify one partial-success notice plus preserved daily/yearly successes. Restore settings."
       ],
       "expected": [
-        "Real Templater renders in create-note mode against the actual target file; selected dates and range boundaries are correct. Failures and partial success remain distinct and never erase successful files."
+        "Real Templater renders in create-note mode against the actual target file; selected dates and range boundaries are correct. Automatic folder templates do not take over targets while Chrono Notes creation is still pending. Failures and partial success remain distinct and never erase successful files."
       ]
     },
     {

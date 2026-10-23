@@ -11,9 +11,10 @@ import type {
   NoteOpenTarget,
   PeriodicNoteWorkspacePort,
 } from "../periodic/periodic-note-commands";
-import type {
-  IntervalNoteTemplateContext,
-  NoteTemplatePort,
+import {
+  runPreparedNoteCreation,
+  type IntervalNoteTemplateContext,
+  type NoteTemplatePort,
 } from "../templates/note-template-port";
 import type { CreatedNoteFilePort } from "../templates/created-note-file-port";
 
@@ -135,18 +136,20 @@ export class IntervalNoteCommands {
         context,
         buildIntervalNoteContent(spec),
       );
-      const created = await this.files.create(
-        spec.path,
-        applyIntervalNoteMetadata(prepared.initialContent, spec),
-      );
-      retainedCreatedNote = true;
-      if (prepared.renderAfterCreate !== undefined) {
-        const rendered = await prepared.renderAfterCreate(spec.path);
-        await this.files.finalize(
-          created,
-          applyIntervalNoteMetadata(rendered, spec),
+      await runPreparedNoteCreation(prepared, async () => {
+        const created = await this.files.create(
+          spec.path,
+          applyIntervalNoteMetadata(prepared.initialContent, spec),
         );
-      }
+        retainedCreatedNote = true;
+        if (prepared.renderAfterCreate !== undefined) {
+          const rendered = await prepared.renderAfterCreate(spec.path);
+          await this.files.finalize(
+            created,
+            applyIntervalNoteMetadata(rendered, spec),
+          );
+        }
+      });
     } catch (cause) {
       throw new IntervalNoteCreationError(spec.path, cause, retainedCreatedNote);
     }
