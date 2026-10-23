@@ -4,6 +4,8 @@
 
 Chrono Notes bổ sung cho Obsidian một không gian lịch để quản lý ghi chú định kỳ, công việc, ngày lễ khu vực, sự kiện trên máy và ghi chú theo khoảng ngày.
 
+Đây là **hướng dẫn ngắn** cho các thao tác thường dùng. Cách thiết lập và các giới hạn chi tiết có trong tài liệu đầy đủ bằng [tiếng Anh](../../README.md) và [tiếng Trung giản thể](README.zh-CN.md).
+
 ## Tính năng
 
 Giao diện lịch trên máy tính và Android:
@@ -39,6 +41,8 @@ Sao lưu và giữ lại `data.json`; chỉ thay các tệp của plugin. Chỉ 
 ## Cách sử dụng
 
 Lịch chính, bộ chọn tháng và hộp thoại ngày luôn dùng lịch Gregory. Đổi ngôn ngữ sẽ đổi tên tháng và cách hiển thị chữ số, không đổi hệ lịch. Hãy chọn tiện ích lịch riêng nếu cần hiển thị thêm thông tin từ lịch khác.
+
+**Trước khi thêm ICS:** Chrono Notes chỉ đọc tệp cục bộ, không tải lịch đăng ký từ xa và không mở rộng các sự kiện lặp có `RRULE` hoặc `RDATE`. Số sự kiện bỏ qua được báo lại; vì thế lịch phụ thuộc vào lặp lại có thể hiển thị thiếu. Đường dẫn ngoài Vault chỉ dùng được trên máy tính.
 
 Chọn loại ghi chú, đường dẫn và mẫu trong phần cài đặt Chrono Notes, rồi mở lịch bằng biểu tượng bên hoặc bảng lệnh. **Nhấp một lần chỉ chọn ngày, không tự tạo ghi chú.** Nhấp đúp hoặc nhấn Enter để mở hay tạo ghi chú. Nhấp phải để mở menu của ngày; nếu có sự kiện ICS, bạn có thể xem toàn bộ danh sách sự kiện từ menu này. Ctrl/Cmd+nhấp hoặc nhấp nút giữa sẽ mở ghi chú trong thẻ mới. Bật thêm lịch và nguồn ICS khi cần.
 
