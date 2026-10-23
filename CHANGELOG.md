@@ -4,6 +4,20 @@ Notable changes to Chrono Notes are documented in this file. The repository's nu
 
 ## Unreleased
 
+## 0.7.9
+
+### Fixed
+
+- Respect Ctrl/Cmd-click on the weekly-note entry while preserving middle-click and touch opening.
+- Keep escaped image and Wiki embed syntax visible in note previews without counting it as an embed; rebuild older derived caches automatically.
+- Keep Gregorian dates and notes available when lunar extensions cannot represent the October 1582 reform gap.
+- Skip ICS events whose occupied display dates exceed the supported year range while preserving valid neighboring events and the final supported day.
+- Coordinate Templater automatic new-file templates with periodic and range-note creation, including slow rendering, concurrent requests, final-write protection, and lifecycle cleanup.
+
+### Changed
+
+- Explain local ICS and recurring-event limitations before first use in all 16 guides, and identify concise translations with links to the complete guides.
+
 ## 0.7.8
 
 - Keep localized month labels, date dialogs and accessible week ranges on the primary Gregorian calendar.
