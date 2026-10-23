@@ -8,6 +8,7 @@ import type {
 } from "../../core/calendar/regional-holidays";
 import {
   createLunarDateContext,
+  isLunarDateSupported,
   type LunarDateContext,
 } from "../../core/calendar/lunar-date-context";
 import {
@@ -112,11 +113,13 @@ export class CalendarDecorationCache {
     const key = JSON.stringify([dateKey, locale, id]);
     const existing = touchEntry(this.calendarExtensionEntries, key);
     if (existing !== undefined) return existing;
+    const needsLunarContext = usesLunarCalendarContext(id);
+    if (needsLunarContext && !isLunarDateSupported(date)) return null;
     const result = selectCalendarExtensionDay(
       date,
       locale,
       id,
-      usesLunarCalendarContext(id)
+      needsLunarContext
         ? this.getLunarContext(date, dateKey)
         : undefined,
     );

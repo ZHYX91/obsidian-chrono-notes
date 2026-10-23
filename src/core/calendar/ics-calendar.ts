@@ -318,7 +318,7 @@ function parseEvent(
   const titleValue = component.getFirstPropertyValue("summary");
   const title = String(titleValue ?? "").trim();
   const uid = String(component.getFirstPropertyValue("uid") ?? "").trim();
-  return Object.freeze({
+  const event = Object.freeze({
     id: uid || `${source}#${index}`,
     source,
     sourceLabel: getSourceLabel(source),
@@ -327,6 +327,16 @@ function parseEvent(
     start: displayedStart,
     endExclusive: displayedEnd,
   });
+  // Bound occupied display dates, not the exclusive end: the final supported
+  // day can legitimately end at 10000-01-01 midnight. Reject invalid ranges
+  // here so they count as skipped events before the shared index is built.
+  return isIndexableDate(event.start.date) && isIndexableDate(getInclusiveEndDate(event))
+    ? event
+    : null;
+}
+
+function isIndexableDate(date: LocalDate): boolean {
+  return date.year >= 0 && date.year <= 9_999;
 }
 
 function getDurationEnd(

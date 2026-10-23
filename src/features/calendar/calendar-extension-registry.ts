@@ -16,6 +16,7 @@ import {
 } from "../../core/calendar/ganzhi";
 import {
   createLunarDateContext,
+  isLunarDateSupported,
   type LunarDateContext,
 } from "../../core/calendar/lunar-date-context";
 import type { LocalDate } from "../../core/periodic/periodic-date";
@@ -101,7 +102,8 @@ export function selectCalendarExtensionDays(
   locale: string,
   selected: readonly CalendarExtensionId[],
 ): readonly CalendarExtensionDay[] {
-  const needsLunarContext = selected.some((id) => PROVIDERS.get(id)?.usesLunarContext);
+  const needsLunarContext = isLunarDateSupported(date) &&
+    selected.some((id) => PROVIDERS.get(id)?.usesLunarContext);
   const context = needsLunarContext ? createLunarDateContext(date) : undefined;
   return Object.freeze(selected.flatMap((id) => {
     const day = selectCalendarExtensionDay(date, locale, id, context);
@@ -118,6 +120,7 @@ export function selectCalendarExtensionDay(
   const provider = PROVIDERS.get(id);
   if (provider === undefined) throw new Error(`Unknown calendar extension: ${id}`);
   if (!provider.isSupported(locale)) return null;
+  if (provider.usesLunarContext && !isLunarDateSupported(date)) return null;
   return Object.freeze({ id, ...provider.getDay(date, locale, context) });
 }
 

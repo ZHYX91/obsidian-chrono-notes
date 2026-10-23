@@ -26,6 +26,40 @@ function deferred<T>() {
 }
 
 describe("IcsEventIndex", () => {
+  it("finishes a refresh with invalid year ranges and preserves valid events from every source", async () => {
+    const mixed = [
+      "BEGIN:VCALENDAR", "VERSION:2.0",
+      "BEGIN:VEVENT", "UID:neighbor", "DTSTART:20261023T120000Z", "END:VEVENT",
+      "BEGIN:VEVENT", "UID:overflow", "DTSTART;VALUE=DATE:99991231", "DURATION:P2D", "END:VEVENT",
+      "BEGIN:VEVENT", "UID:underflow", "DTSTART;TZID=Etc/GMT-1:00000101T000000", "END:VEVENT",
+      "BEGIN:VEVENT", "UID:final-day", "DTSTART;VALUE=DATE:99991231", "END:VEVENT",
+      "END:VCALENDAR",
+    ].join("\r\n");
+    const index = new IcsEventIndex({
+      read: async (source) => source === "mixed.ics"
+        ? mixed
+        : calendar("other-source", "20261024"),
+    });
+
+    await index.refresh({
+      enabled: true, sources: ["mixed.ics", "other.ics"], displayZone: "UTC",
+    });
+
+    const snapshot = index.getSnapshot();
+    expect(snapshot).toMatchObject({
+      state: "ready", totalSources: 2, loadedSources: 2, eventCount: 3,
+      skippedInvalid: 2, skippedRecurring: 0, skippedUnsupportedTimezone: 0,
+      truncatedEvents: 0, errors: [],
+      sourceStatuses: [
+        { source: "mixed.ics", eventCount: 2, skippedInvalid: 2, error: null },
+        { source: "other.ics", eventCount: 1, skippedInvalid: 0, error: null },
+      ],
+    });
+    expect(snapshot.eventsByDate["2026-10-23"]?.map(({ id }) => id)).toEqual(["neighbor"]);
+    expect(snapshot.eventsByDate["2026-10-24"]?.map(({ id }) => id)).toEqual(["other-source"]);
+    expect(snapshot.eventsByDate["9999-12-31"]?.map(({ id }) => id)).toEqual(["final-day"]);
+  });
+
   it("caps configured sources and one revision's logically live reads", async () => {
     const pending = Array.from({ length: 5 }, () => deferred<string>());
     const read = vi.fn((_source: string) => {
