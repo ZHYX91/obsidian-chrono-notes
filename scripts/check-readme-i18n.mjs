@@ -294,6 +294,26 @@ export function checkReadmeI18n(projectRoot = defaultProjectRoot) {
         errors.push(`${filePath} is missing required README contract token: ${token}`);
       }
     }
+    const usageStart = lines.indexOf(`## ${usageHeading}`);
+    const firstUsageSubheading = lines.findIndex(
+      (line, index) => index > usageStart && line.startsWith("### "),
+    );
+    const usageIntroduction = lines.slice(
+      usageStart + 1,
+      firstUsageSubheading < 0 ? lines.length : firstUsageSubheading,
+    ).join("\n");
+    if (!usageIntroduction.includes("RRULE") || !usageIntroduction.includes("RDATE")) {
+      errors.push(`${filePath} must explain skipped recurring ICS events before daily use`);
+    }
+    if (filePath !== "README.md" && filePath !== "docs/i18n/README.zh-CN.md") {
+      const firstSection = lines.indexOf(`## ${language.sections[0]}`);
+      const introduction = lines.slice(4, firstSection).join("\n");
+      for (const guidePath of ["../../README.md", "README.zh-CN.md"]) {
+        if (!introduction.includes(`](${guidePath})`)) {
+          errors.push(`${filePath} must identify its full-language reference ${guidePath}`);
+        }
+      }
+    }
     validateTargets(projectRoot, filePath, source, errors);
   }
 
