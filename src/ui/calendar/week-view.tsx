@@ -358,7 +358,11 @@ export function WeekView({
               event.stopPropagation();
               return;
             }
-            void onOpenPeriodic(query.weekStart, "weekly", "default");
+            void onOpenPeriodic(
+              query.weekStart,
+              "weekly",
+              event.ctrlKey || event.metaKey ? "tab" : "default",
+            );
           }}
           onAuxClick={(event) => {
             if (event.button === 1)

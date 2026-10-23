@@ -146,6 +146,11 @@ function parseEmbedAt(
   line: string,
   startIndex: number,
 ): Readonly<{ target: string; wiki: boolean; nextIndex: number }> | null {
+  if (!line.startsWith("![", startIndex)) return null;
+  let backslashes = 0;
+  for (let index = startIndex - 1; line[index] === "\\"; index -= 1) backslashes += 1;
+  if (backslashes % 2 === 1) return null;
+
   if (line.startsWith("![[", startIndex)) {
     const endIndex = findWikiEmbedEnd(line, startIndex + 3);
     return endIndex === null
@@ -156,7 +161,6 @@ function parseEmbedAt(
           nextIndex: endIndex + 2,
         });
   }
-  if (!line.startsWith("![", startIndex)) return null;
   const altEnd = findUnescapedCharacter(line, startIndex + 2, "]");
   if (altEnd === null || line[altEnd + 1] !== "(") return null;
   const destinationEnd = findBalancedDestinationEnd(line, altEnd + 2);

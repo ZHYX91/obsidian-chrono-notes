@@ -67,6 +67,36 @@ describe("note content derivation", () => {
     expect(Object.isFrozen(derived.embeds)).toBe(true);
   });
 
+  it.each(["![[photo.png]]", "![photo](photo.png)"])(
+    "keeps escaped embed text and respects backslash parity for %s", (embed) => {
+      for (const backslashes of [1, 3]) {
+        const derived = derivePreview(`Before ${"\\".repeat(backslashes)}${embed} after`);
+        expect(derived.embeds).toBe(EMPTY_NOTE_EMBED_STATISTICS);
+        expect(derived.text).toContain("photo");
+        expect(derived.text).toContain("Before");
+        expect(derived.text).toContain("after");
+      }
+      for (const backslashes of [0, 2, 4]) {
+        const derived = derivePreview(`Before ${"\\".repeat(backslashes)}${embed} after`);
+        expect(derived.embeds.imageCount).toBe(1);
+        expect(derived.text).not.toContain("photo");
+        expect(derived.text).toContain("Before");
+        expect(derived.text).toContain("after");
+      }
+    },
+  );
+
+  it("ignores escaped embeds after the preview excerpt is complete", () => {
+    const derived = derivePreview([
+      "One", "Two", "Three", "Four",
+      String.raw`\![[photo.png]] \![photo](photo.png)`,
+      "![[actual.png]]",
+    ].join("\n"));
+
+    expect(derived.text).toBe("One\nTwo\nThree\nFour");
+    expect(derived.embeds.imageCount).toBe(1);
+  });
+
   it("keeps balanced Markdown destinations out of the excerpt", () => {
     expect(derivePreview([
       "Before ![local](assets/image_(1).png) after",

@@ -11,7 +11,7 @@ import {
 } from "../../core/note/note-interval";
 import type { IndexedNote } from "./indexed-note";
 
-const NOTE_INDEX_CACHE_SCHEMA = 5;
+const NOTE_INDEX_CACHE_SCHEMA = 6;
 const NOTE_INDEX_CACHE_METADATA_SCHEMA = 1;
 
 export type NoteIndexCacheStorageStatus =
