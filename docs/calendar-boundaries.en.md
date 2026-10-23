@@ -32,6 +32,8 @@ Under RFC 5545 section 3.6.1, a DATE-TIME event without `DTEND` or `DURATION` is
 
 Explicit equal or reversed `DTEND`, zero or negative `DURATION`, simultaneous end fields and mismatched date types remain isolated by the existing invalid-event rules. This does not add recurring-event expansion or change existing ICS input and event-span limits.
 
+The index accepts only events whose occupied display-zone dates are within `0000–9999`. If duration arithmetic or time-zone conversion moves the start date or last occupied date outside that range, the event counts toward `skippedInvalid`; valid events in the same and other sources continue indexing, and the refresh completes. An exclusive end exactly at midnight on `10000-01-01` can still represent the final valid day, `9999-12-31`, and must not be rejected as an overflow.
+
 One runtime owner maintains the ICS index. All sources share a budget of 100,000 daily occurrences; expansion yields in batches and discards work superseded by a newer refresh. At the limit, the index retains bounded partial results. Both settings and refresh notifications explain the limit, the number of events not fully displayed, and the option to reduce sources or event spans before refreshing. Successful source reads do not imply complete event expansion.
 
 ## 3. Task edits
@@ -46,11 +48,17 @@ The century view has one Tab stop, preferring a still-visible keyboard focus, th
 
 Horizontal arrows traverse periods in display order and respect RTL direction. Vertical arrows follow the rendered year-column count, moving five years in the regular layout or two in the narrow two-column layout; on century/decade headings they move between headings. Home/End reach the first/last period. Moving focus neither creates nor opens a note and does not change semantic selection. Enter retains selection and opening; mouse and long-press behavior remain unchanged. Note refreshes retain a visible focus stop, while changing centuries provides a valid fallback.
 
-## 5. Regression verification
+## 5. Calendar extension date support
+
+The primary calendar and note identity use Gregorian dates. The lunar library does not accept the historical reform gap from `1582-10-05` through `1582-10-14`. On those dates, only the Chinese lunar and Ganzhi dates and events that depend on that library are omitted; the original Gregorian date, note state, and other available calendars remain visible. Direct and cached queries use the same support boundary without shifting to a neighboring date or another calendar. Known unsupported dates are handled separately from programming errors; other conversion failures still propagate.
+
+## 6. Regression verification
 
 Path tests cover missing period fields, literal text resembling format tokens, valid-rule priority, leap days, month/year boundaries, Sunday-start cross-year weeks, stable localized filename identity across interface-language changes, migration of each period's path language while preserving explicit values, and the requirement that invalid rules never call file or workspace ports. Preview tests distinguish parseability from period identity. Cascade tests prove that a failed larger period remains absent while the primary and later successful periods remain on disk and the failure is surfaced after the primary opens.
 
 ICS tests cover spring and autumn daylight-saving transitions, different source and display zones, `P1D`, `PT24H`, `P1W`, mixed durations, floating times, UTC sources, points at and just before midnight, and exclusive all-day ends. Existing invalid-end and cancelled/recurring-event tests remain in place.
+
+Year-boundary tests cover duration and time-zone overflows at both bounds, valid first and last dates, an exclusive end exactly at next-year midnight, refresh completion, skip counts, and retention of valid neighboring events. Calendar-extension tests cover every date in the historical gap, both adjacent supported dates, ordinary modern dates, cached and direct month/week queries, preserved note identity and other extensions, and propagation of unexpected conversion failures.
 
 Task tests cover masked date markers, UTF-16 coordinates, line endings, minimal editor transactions, no-op updates and refused writes. Century-view tests cover one tab stop, arrow navigation with five or two columns, Home/End, Enter, RTL, refresh retention and cross-century fallback.
 
