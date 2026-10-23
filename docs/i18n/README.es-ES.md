@@ -4,6 +4,8 @@
 
 Chrono Notes añade a Obsidian un calendario para notas periódicas, tareas, festivos regionales, eventos locales y notas de intervalos de fechas.
 
+Esta es una **guía breve** para tareas habituales. Los ajustes y límites detallados están en las guías completas en [inglés](../../README.md) y [chino simplificado](README.zh-CN.md).
+
 ## Funciones
 
 Así se ve el calendario en escritorio y Android:
@@ -39,6 +41,8 @@ Conserva una copia de `data.json` y reemplaza solo los archivos del plugin. Borr
 ## Uso
 
 El calendario principal, los selectores de mes y los diálogos de fecha siempre usan el calendario gregoriano. Cambiar el idioma traduce los meses y los dígitos, pero no cambia el calendario. Las extensiones permiten añadir información de otros calendarios por separado.
+
+**Antes de añadir ICS:** Chrono Notes lee archivos locales, pero no descarga suscripciones remotas ni desarrolla los eventos repetidos con `RRULE` o `RDATE`. Cuenta los eventos omitidos; por eso un calendario basado en recurrencias puede parecer incompleto. Las rutas fuera del Vault solo funcionan en escritorio.
 
 Configura los tipos de notas, sus rutas y plantillas, y abre el calendario desde la barra lateral o la paleta de comandos. **Un clic selecciona la fecha, pero no crea ninguna nota.** Haz doble clic o pulsa Intro para abrir o crear la nota. El clic derecho abre el menú de la fecha; si hay eventos ICS, puedes consultar la lista completa desde ese menú. Ctrl/Cmd-clic o clic central abre la nota en una pestaña nueva. Activa los calendarios, festivos y archivos ICS según los necesites.
 

@@ -51,6 +51,8 @@ Back up and preserve `Vault/.obsidian/plugins/chrono-notes/data.json` when it ex
 
 The main calendar, month selectors, and date dialogs always use the Gregorian calendar. Changing the interface language translates month names and digits; it does not select a different calendar. Choose calendar extensions separately to show additional date information.
 
+**Before adding ICS events:** Chrono Notes reads local calendar files, not remote subscriptions, and does not expand `RRULE` or `RDATE` recurring events. Skipped events are counted, so a calendar relying on recurrence may look incomplete. A source path outside the Vault is desktop-only.
+
 **First time:** Choose your periodic-note types and note paths under Chrono Notes settings, then open the calendar from the ribbon. Click a date to select it; double-click or press Enter to open or create its note. On a touch screen, long-press a date and choose the note action from its menu. Selecting a date alone never creates a note.
 
 1. Enable the periodic-note types you use and confirm their path patterns in Chrono Notes settings.
@@ -73,7 +75,7 @@ Use the due-date dropdown in Week view to move a deadline to another day of the 
 
 ### Decadal and century notes
 
-The century view places each decade beside two rows of five years. Narrow layouts move the decade above its years; very narrow panes or large text use two year columns. Years outside the century leave empty slots. Entering the view reveals the selected year’s decade; This century returns to the current decade. Navigation stays visible while the years scroll.
+The century view places each decade beside two rows of five years. Narrow layouts move the decade above its years; very narrow panes or large text use two year columns. Years outside the century leave empty slots. Entering the view reveals the selected year's decade; **This century** returns to the current decade. Navigation stays visible while the years scroll.
 
 Enable these note types in settings, then select Century in the sidebar. Use the decade cells on the left to access decadal notes; the enabled century note has its own cell. The view tabs are Week, Month, Year and Century. Period cells share the year view's note dots, task progress, selection and preview. Click to select; double-click or press Enter to open or create the note. Ctrl/Cmd-click or middle-click opens a new tab; touch supports long press. Use the view tabs to browse the selected period. Default paths are `[diary]/DEC[s]` (2020s) and `[diary]/[C]CEN` (C21).
 

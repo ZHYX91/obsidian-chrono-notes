@@ -4,6 +4,8 @@
 
 O Chrono Notes adiciona ao Obsidian um calendário para notas periódicas, tarefas, feriados regionais, eventos locais e notas sobre intervalos de datas.
 
+Este é um **guia resumido** das tarefas comuns. Para configurações e limites em detalhes, consulte as versões completas em [inglês](../../README.md) e [chinês simplificado](README.zh-CN.md).
+
 ## Recursos
 
 Veja o calendário no computador e no Android:
@@ -39,6 +41,8 @@ Faça backup de `data.json` e preserve o arquivo. Substitua apenas os arquivos d
 ## Como usar
 
 O calendário principal, os seletores de mês e as janelas de data sempre usam o calendário gregoriano. Mudar o idioma traduz os meses e os dígitos, sem trocar o calendário. Use as extensões para adicionar informações de outros calendários.
+
+**Antes de adicionar ICS:** o Chrono Notes lê arquivos locais, mas não busca assinaturas remotas nem expande eventos recorrentes com `RRULE` ou `RDATE`. Os eventos ignorados são contados; assim, um calendário que depende de recorrências pode parecer incompleto. Caminhos fora do Vault funcionam apenas no desktop.
 
 Configure os tipos de notas, os caminhos e os modelos; depois abra o calendário pelo ícone lateral ou pela paleta de comandos. **Um clique seleciona a data, mas não cria uma nota.** Clique duas vezes ou pressione Enter para abrir ou criar a nota. O botão direito abre o menu da data; se houver eventos ICS, esse menu permite consultar a lista completa. Ctrl/Cmd+clique ou o botão do meio abre a nota em uma nova aba. Ative as extensões e fontes ICS conforme necessário.
 

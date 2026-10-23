@@ -70,6 +70,28 @@ describe("README marketplace link contract", () => {
     );
   });
 
+  it("requires the ICS recurrence warning in the first-use guidance", async () => {
+    await replaceInReadme(
+      "README.md",
+      "does not expand `RRULE` or `RDATE` recurring events",
+      "does not expand recurring events",
+    );
+    expect(checkReadmeI18n(fixtureRoot)).toContain(
+      "README.md must explain skipped recurring ICS events before daily use",
+    );
+  });
+
+  it("identifies compact guides without relying only on language navigation", async () => {
+    await replaceInReadme(
+      "docs/i18n/README.ja-JP.md",
+      "[英語の完全版](../../README.md)",
+      "英語の完全版",
+    );
+    expect(checkReadmeI18n(fixtureRoot)).toContain(
+      "docs/i18n/README.ja-JP.md must identify its full-language reference ../../README.md",
+    );
+  });
+
   it("rejects a missing translated README", async () => {
     await rm(path.join(fixtureRoot, "docs/i18n/README.de-DE.md"));
     expect(checkReadmeI18n(fixtureRoot)).toContain(
