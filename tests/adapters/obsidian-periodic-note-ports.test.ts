@@ -1,5 +1,10 @@
 import { getPeriodRange } from "../../src/core/periodic/periodic-date";
 import { describe, expect, it, vi } from "vitest";
+import {
+  runPreparedNoteCreation,
+  type PreparedNoteTemplate,
+} from "../../src/features/templates/note-template-port";
+import { createTemplaterLifecycle } from "../support/templater-lifecycle";
 
 import {
   ObsidianBuiltinTemplatePort,
@@ -14,6 +19,14 @@ import {
 interface FakeFile {
   path: string;
   extension?: string;
+}
+
+async function renderPrepared(prepared: PreparedNoteTemplate, path: string): Promise<string> {
+  let rendered = "";
+  await runPreparedNoteCreation(prepared, async () => {
+    rendered = await prepared.renderAfterCreate?.(path) ?? prepared.initialContent;
+  });
+  return rendered;
 }
 
 class FakeVault {
@@ -434,6 +447,7 @@ describe("Obsidian periodic note ports", () => {
     vault.contents.set(template.path, "<% tp.config.run_mode %>");
     const templates = new ObsidianNoteTemplatePort({
       plugins: { getPlugin: () => ({ templater: {
+        ...createTemplaterLifecycle(),
         create_running_config: (templateFile: unknown, targetFile: unknown, runMode: number) => ({
           template_file: templateFile, target_file: targetFile, run_mode: runMode,
         }),
@@ -449,7 +463,7 @@ describe("Obsidian periodic note ports", () => {
       locale: "en", noteType: "daily", path: target.path,
       templatePath: template.path, templateEngine: "templater", title: "2026-10-17",
     }, "");
-    await expect(prepared.renderAfterCreate?.(target.path)).resolves.toBe("# New note initialized");
+    await expect(renderPrepared(prepared, target.path)).resolves.toBe("# New note initialized");
   });
 
   it("injects target-period context and accepts Templater tuple results", async () => {
@@ -470,6 +484,7 @@ describe("Obsidian periodic note ports", () => {
       plugins: {
         getPlugin: () => ({
           templater: {
+            ...createTemplaterLifecycle(),
             create_running_config: createRunningConfig,
             parse_template: parseTemplate,
           },
@@ -493,7 +508,7 @@ describe("Obsidian periodic note ports", () => {
     expect(prepared.renderAfterCreate).toBeTypeOf("function");
     vault.files.set(target.path, target);
     vault.contents.set(target.path, "");
-    const rendered = await prepared.renderAfterCreate?.(target.path);
+    const rendered = await renderPrepared(prepared, target.path);
 
     expect(createRunningConfig).toHaveBeenCalledWith(template, target, 0);
     expect(parseTemplate).toHaveBeenCalledOnce();
@@ -521,6 +536,7 @@ describe("Obsidian periodic note ports", () => {
       plugins: {
         getPlugin: () => ({
           templater: {
+            ...createTemplaterLifecycle(),
             create_running_config: vi.fn(() => ({})),
             parse_template: parseTemplate,
           },
@@ -542,7 +558,7 @@ describe("Obsidian periodic note ports", () => {
     }, "generated range");
     expect(prepared.initialContent).toBe("generated range");
     vault.files.set(target.path, target);
-    const rendered = await prepared.renderAfterCreate?.(target.path);
+    const rendered = await renderPrepared(prepared, target.path);
 
     const injected = parseTemplate.mock.calls[0]?.[1] ?? "";
     expect(injected).toContain('kind: "interval"');
@@ -569,6 +585,7 @@ describe("Obsidian periodic note ports", () => {
       .mockReturnValueOnce(firstRender)
       .mockResolvedValueOnce("second rendered");
     const templater = {
+      ...createTemplaterLifecycle(),
       create_running_config: vi.fn((_template, target) => ({ target })),
       parse_template: parseTemplate,
     };
@@ -593,8 +610,8 @@ describe("Obsidian periodic note ports", () => {
       title: "second",
     }, "");
 
-    const firstResult = first.renderAfterCreate?.(firstTarget.path);
-    const secondResult = second.renderAfterCreate?.(secondTarget.path);
+    const firstResult = renderPrepared(first, firstTarget.path);
+    const secondResult = renderPrepared(second, secondTarget.path);
     await vi.waitFor(() => expect(parseTemplate).toHaveBeenCalledOnce());
     expect(templater.create_running_config).toHaveBeenCalledOnce();
 

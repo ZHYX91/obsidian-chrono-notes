@@ -30,6 +30,17 @@ export type NoteTemplateContext =
 export interface PreparedNoteTemplate {
   readonly initialContent: string;
   readonly renderAfterCreate?: (path: string) => Promise<string>;
+  /** Own external template resources until creation and final write both settle. */
+  readonly runCreation?: (createAndFinalize: () => Promise<void>) => Promise<void>;
+}
+
+export function runPreparedNoteCreation(
+  prepared: PreparedNoteTemplate,
+  createAndFinalize: () => Promise<void>,
+): Promise<void> {
+  return prepared.runCreation === undefined
+    ? createAndFinalize()
+    : prepared.runCreation(createAndFinalize);
 }
 
 export interface NoteTemplatePort {

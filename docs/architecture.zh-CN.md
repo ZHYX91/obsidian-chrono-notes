@@ -96,7 +96,7 @@ Markdown 正文投影统一处理代码、HTML 注释和 Obsidian `%%` 注释；
 
 区间列表继续消费上述冻结结果，并由纯 feature selector 完成标题/路径不区分大小写搜索、与当前月/年相交的范围筛选和升降序稳定排序。原生 Modal 的 `useSyncExternalStore` 只从 NoteIndex 返回稳定的 `intervals` 子快照，并另行订阅区间扫描范围设置修订号；普通非区间笔记或仅持久化设置变化不会唤醒列表。列表打开和创建仍经统一工作区与命令端口，不维护手动刷新缓存。
 
-共享模板端口为周期笔记和区间笔记按设置显式选择内置引擎或 Templater，并在任何目标写入前解析完整 Vault 相对路径、确认 Markdown 模板存在并通过 `cachedRead()` 取得只读正文。内置周期上下文支持文档化的 `date/start/end/days/time/title` 占位符，区间上下文改用 `start/end/days/time/title`，两者都直接返回可用于单次创建的最终正文。Templater adapter 预检后返回延后渲染步骤，在目标文件创建后注入按类型冻结的 `tp_calendar` 上下文并返回渲染正文。Templater 不可用或执行失败时抛出明确错误，不允许静默回退到内置引擎。区间模板正文由 core 在写入前强制合并规范 `start`/`end` frontmatter，同时保留其他有效 mapping 属性和正文；模板 frontmatter 非法或未闭合时创建失败，且内置路径不会留下需要回滚的目标文件。
+共享模板端口为周期笔记和区间笔记按设置显式选择内置引擎或 Templater，并在任何目标写入前解析完整 Vault 相对路径、确认 Markdown 模板存在并通过 `cachedRead()` 取得只读正文。内置周期上下文支持文档化的 `date/start/end/days/time/title` 占位符，区间上下文改用 `start/end/days/time/title`，两者都直接返回可用于单次创建的最终正文。Templater adapter 预检后返回延后渲染步骤与创建作用域，命令在该作用域内完成目标创建、渲染和最终写入；渲染在真实目标上注入按类型冻结的 `tp_calendar` 上下文。Templater 不可用或执行失败时抛出明确错误，不允许静默回退到内置引擎。区间模板正文由 core 在写入前强制合并规范 `start`/`end` frontmatter，同时保留其他有效 mapping 属性和正文；模板 frontmatter 非法或未闭合时创建失败，且内置路径不会留下需要回滚的目标文件。
 
 周期日期使用不含时区和时间的 `LocalDate` 领域值。core 统一拥有严格补零的日期键解析/格式化、相等/排序、非法民用日期拒绝和无宿主时区漂移的 UTC 格式化桥；日、周、月、季、年、年代、世纪都先归一化到唯一锚点，路径格式化、路径反向识别、导航和模板上下文必须复用这些 canonical helper。`isSamePeriod()` 只比较 `getPeriodAnchor()` 产生的 canonical 锚点，并显式接收周起始规则。独立 `calendar-week` core 以 ISO 周一为周年/周号参考；周日起始只把该周边界向前扩一天，不能改用所选周日自身的 ISO 身份。它统一提供周身份、动态 52/53 周枚举、跨年边界、按周选择和按周年选择；后两者保留相对周首的星期偏移，W53 进入 52 周年份时夹到 W52。Luxon 只封装在 core 的日期算法与编译后格式后端中；对外路径与内置模板统一使用明确支持的 Obsidian/Moment 子集，Luxon 和 Moment 都不成为 UI 或 adapter 数据类型。系统时钟读取隔离在 shared 的本地日期时钟中，以本地年/月/日而非 UTC 日期产生今日值并计算下一个本地午夜。日历 root 通过 `useLocalToday()` 在午夜重新同步，页面从后台恢复可见时再校准一次；呈现层再以该值和 core `isSamePeriod()` 即时派生统一的 `is-current-period`，今日标记和依赖今日的逾期查询随之更新，但不重置用户当前选择或导航上下文。current 状态不进入 month/week/year query、NoteIndex/ICS 快照、任何缓存或设置；周期选择器和迷你日历保留各自独立的状态实现。
 
@@ -202,4 +202,6 @@ Properties 日期/时间显示与打开行为使用两个独立 Obsidian 适配�
 
 高于当前版本的设置 schema 只归一化已知字段供本次运行读取，整个插件实例拒绝持久化设置，避免回滚版本删除未知字段。五个设置页签都会显示本地化只读告警并禁用编辑控件，同时保留页签导航。首次引导只有在 modal 完成实际渲染后才设置并保存 seen；卸载前未显示不改变状态，保存失败则恢复 unseen。
 
-Templater 的 render-only 集成仍是明确标注的内部兼容边界。创建 running config 与解析模板在同一 Templater 实例上串行执行，运行模式集中为一个具名常量；缺少预期内部方法时直接失败，不静默退回内置引擎。ICS 每次刷新只接受去重后的前 32 个来源；整个索引跨所有重叠 revision 同时最多运行 4 个底层来源读取。revision 被替代或索引停止时，该 revision 的逻辑等待立即结束，但无法取消的宿主读取继续占用物理槽直到 reader promise 真正结束；新工作必须等待，不能绕过上限。单来源上限为 5 MiB 和 10,000 个 VEVENT，解析前即拒绝超限输入。跨 revision 的旧结果仍由 revision gate 丢弃，等待槽位的旧工作在获得槽位后会先重新检查 signal，再决定是否发起读取。
+Templater 的 render-only 集成仍是明确标注的内部兼容边界。adapter 在排队和 `Vault.create` 前把目标路径加入原生 `files_with_pending_templates`；已被其他任务持有的路径在任何目标写入前失败，不接管或删除其标记。目标创建、running config、解析、最终写入与原生 `end_templater_task` 清理在同一 Templater 实例上串行执行，排队路径提前预留，避免前一任务过早触发全局完成通知或模块 teardown。每条退出路径都调用原生清理；异步清理结束后才启动下一条创建，创建与清理同时失败时保留两个原因。此协调仅在创建、渲染或最终写入尚未完成期间阻止自动新文件模板接管；如果上游延迟回调在作用域结束后才运行，仍会按 Templater 自身规则处理空正文或残留模板语法。运行模式集中为一个具名常量；缺少预期渲染或生命周期 API 时直接失败，不静默退回内置引擎。原有目标身份、路径、编辑器与初始正文校验继续决定最终写入是否安全。
+
+ICS 每次刷新只接受去重后的前 32 个来源；整个索引跨所有重叠 revision 同时最多运行 4 个底层来源读取。revision 被替代或索引停止时，该 revision 的逻辑等待立即结束，但无法取消的宿主读取继续占用物理槽直到 reader promise 真正结束；新工作必须等待，不能绕过上限。单来源上限为 5 MiB 和 10,000 个 VEVENT，解析前即拒绝超限输入。跨 revision 的旧结果仍由 revision gate 丢弃，等待槽位的旧工作在获得槽位后会先重新检查 signal，再决定是否发起读取。

@@ -12,9 +12,10 @@ import {
   type OperationErrorDetails,
 } from "../../shared/operation-error";
 import type { PeriodicNoteSettings, TemplateEngine } from "../../shared/settings";
-import type {
-  NoteTemplatePort,
-  PeriodicNoteTemplateContext,
+import {
+  runPreparedNoteCreation,
+  type NoteTemplatePort,
+  type PeriodicNoteTemplateContext,
 } from "../templates/note-template-port";
 import type { CreatedNoteFilePort } from "../templates/created-note-file-port";
 
@@ -239,11 +240,13 @@ export class PeriodicNoteCommands {
         title: getNoteTitle(path),
       });
       const prepared = await this.templates.prepare(context, "");
-      const created = await this.files.create(path, prepared.initialContent);
-      retainedCreatedNote = true;
-      if (prepared.renderAfterCreate !== undefined) {
-        await this.files.finalize(created, await prepared.renderAfterCreate(path));
-      }
+      await runPreparedNoteCreation(prepared, async () => {
+        const created = await this.files.create(path, prepared.initialContent);
+        retainedCreatedNote = true;
+        if (prepared.renderAfterCreate !== undefined) {
+          await this.files.finalize(created, await prepared.renderAfterCreate(path));
+        }
+      });
     } catch (cause) {
       throw new PeriodicNoteCreationError(
         noteType,

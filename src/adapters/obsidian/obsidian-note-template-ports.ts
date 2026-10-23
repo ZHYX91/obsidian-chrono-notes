@@ -15,10 +15,10 @@ import { isMarkdownFile } from "./obsidian-markdown-files";
 import { OperationError } from "../../shared/operation-error";
 
 // Templater exposes no stable public render-only API. Keep the current
-// internal create-note mode isolated and serialize access to its mutable
-// running configuration so concurrent note creation cannot cross contexts.
+// internal create-note mode isolated. Serialize the complete creation lifecycle
+// so a preceding task cannot tear down the next task's rendering context.
 const TEMPLATER_CREATE_NEW_NOTE_RUN_MODE = 0;
-const templaterRenderTails = new WeakMap<object, Promise<void>>();
+const templaterCreationTails = new WeakMap<object, Promise<void>>();
 
 export class ObsidianBuiltinTemplatePort implements NoteTemplatePort {
   constructor(
@@ -109,10 +109,16 @@ class ObsidianTemplaterTemplatePort implements NoteTemplatePort {
     const templater = plugin.templater;
     const createRunningConfig = templater?.create_running_config;
     const parseTemplate = templater?.parse_template;
+    const pendingFiles = templater?.files_with_pending_templates;
+    const endTemplaterTask = templater?.end_templater_task;
     if (
       templater === undefined ||
       typeof createRunningConfig !== "function" ||
-      typeof parseTemplate !== "function"
+      typeof parseTemplate !== "function" ||
+      typeof pendingFiles?.has !== "function" ||
+      typeof pendingFiles.add !== "function" ||
+      typeof pendingFiles.delete !== "function" ||
+      typeof endTemplaterTask !== "function"
     ) {
       throw new OperationError("templaterIncompatible", "Templater rendering API is unavailable.");
     }
@@ -128,33 +134,68 @@ class ObsidianTemplaterTemplatePort implements NoteTemplatePort {
     const rawTemplate = await this.vault.cachedRead(template);
     return Object.freeze({
       initialContent: defaultContent,
+      runCreation: async (createAndFinalize: () => Promise<void>) => {
+        // Reserve before queueing or emitting Vault.create. Templater's delayed
+        // automatic handler must see this path while another note is rendering.
+        if (pendingFiles.has(context.path)) {
+          throw new OperationError(
+            "templaterFailed",
+            `Templater is already processing the target note: ${context.path}`,
+            { path: context.path },
+          );
+        }
+        pendingFiles.add(context.path);
+        await runTemplaterExclusive(templater, async () => {
+          let creationFailure: { error: unknown } | undefined;
+          try {
+            await createAndFinalize();
+          } catch (error) {
+            creationFailure = { error };
+          }
+          try {
+            // The native lifecycle removes only our reserved path and defers
+            // all-templates-executed/teardown until every pending path ends.
+            await endTemplaterTask.call(templater, context.path);
+          } catch (error) {
+            if (creationFailure !== undefined) {
+              throw new AggregateError(
+                [creationFailure.error, error],
+                `${errorMessage(creationFailure.error)}; Templater cleanup failed: ${errorMessage(error)}`,
+                { cause: creationFailure.error },
+              );
+            }
+            throw new OperationError(
+              "templaterFailed", `Templater cleanup failed: ${errorMessage(error)}`, { cause: error },
+            );
+          }
+          if (creationFailure !== undefined) throw creationFailure.error;
+        });
+      },
       renderAfterCreate: async (path: string) => {
         const target = this.vault.getAbstractFileByPath(path);
         if (!isMarkdownFile(target)) {
           throw new OperationError("targetMissing", `Target note not found: ${path}`, { path });
         }
-        return runTemplaterExclusive(templater, async () => {
-          const config = createRunningConfig.call(
+        const config = createRunningConfig.call(
+          templater,
+          template,
+          target,
+          TEMPLATER_CREATE_NEW_NOTE_RUN_MODE,
+        );
+        let rendered: unknown;
+        try {
+          rendered = await parseTemplate.call(
             templater,
-            template,
-            target,
-            TEMPLATER_CREATE_NEW_NOTE_RUN_MODE,
+            config,
+            buildTemplaterTemplate(rawTemplate, context),
           );
-          let rendered: unknown;
-          try {
-            rendered = await parseTemplate.call(
-              templater,
-              config,
-              buildTemplaterTemplate(rawTemplate, context),
-            );
-          } catch (error) {
-            const message = error instanceof Error ? error.message : String(error);
-            throw new OperationError("templaterFailed", `Templater rendering failed: ${message}`, {
-              cause: error,
-            });
-          }
-          return Array.isArray(rendered) ? String(rendered[0]) : String(rendered);
-        });
+        } catch (error) {
+          const message = errorMessage(error);
+          throw new OperationError("templaterFailed", `Templater rendering failed: ${message}`, {
+            cause: error,
+          });
+        }
+        return Array.isArray(rendered) ? String(rendered[0]) : String(rendered);
       },
     });
   }
@@ -162,23 +203,23 @@ class ObsidianTemplaterTemplatePort implements NoteTemplatePort {
 
 async function runTemplaterExclusive<T>(
   templater: object,
-  render: () => Promise<T>,
+  createAndFinalize: () => Promise<T>,
 ): Promise<T> {
-  const previous = templaterRenderTails.get(templater) ?? Promise.resolve();
+  const previous = templaterCreationTails.get(templater) ?? Promise.resolve();
   let release!: () => void;
   const gate = new Promise<void>((resolve) => {
     release = resolve;
   });
   const tail = previous.then(() => gate);
-  templaterRenderTails.set(templater, tail);
+  templaterCreationTails.set(templater, tail);
   await previous;
   try {
-    return await render();
+    return await createAndFinalize();
   } finally {
     release();
-    if (templaterRenderTails.get(templater) === tail) {
+    if (templaterCreationTails.get(templater) === tail) {
       void tail.then(() => {
-        if (templaterRenderTails.get(templater) === tail) templaterRenderTails.delete(templater);
+        if (templaterCreationTails.get(templater) === tail) templaterCreationTails.delete(templater);
       });
     }
   }
@@ -186,6 +227,10 @@ async function runTemplaterExclusive<T>(
 
 function preparedContent(initialContent: string): PreparedNoteTemplate {
   return Object.freeze({ initialContent });
+}
+
+function errorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
 }
 
 function withMarkdownExtension(path: string): string {
@@ -196,6 +241,8 @@ interface TemplaterPlugin {
   readonly templater?: {
     readonly create_running_config?: (template: TFile, target: TFile, mode: number) => unknown;
     readonly parse_template?: (config: unknown, content: string) => Promise<unknown>;
+    readonly files_with_pending_templates?: Set<string>;
+    readonly end_templater_task?: (path: string) => Promise<void>;
   };
 }
 
