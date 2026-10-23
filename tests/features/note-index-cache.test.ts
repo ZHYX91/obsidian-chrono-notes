@@ -140,7 +140,7 @@ describe("persistent NoteIndex cache", () => {
 
     await expect(index.persistCacheNow()).resolves.toBeUndefined();
     expect(cache.save).toHaveBeenCalledOnce();
-    expect(cache.value).toMatchObject({ schema: 5 });
+    expect(cache.value).toMatchObject({ schema: 6 });
 
     const saveError = new Error("save failed");
     const consoleError = vi.spyOn(console, "error").mockImplementation(() => undefined);
@@ -238,7 +238,7 @@ describe("persistent NoteIndex cache", () => {
     index.stop();
   });
 
-  it.each([2, 3, 4])("clears parser-semantic schema %i and falls back to a complete scan", async (schema) => {
+  it.each([2, 3, 4, 5])("clears parser-semantic schema %i and falls back to a complete scan", async (schema) => {
     const source = new MetadataNoteSource();
     source.files = [FILE];
     source.read.mockResolvedValue("fresh");
@@ -432,7 +432,7 @@ describe("persistent NoteIndex cache", () => {
       entries: [duplicate.entries[0], duplicate.entries[0]],
     })).toBeNull();
     expect(parsePersistedNoteIndexSnapshot({
-      schema: 5,
+      schema: 6,
       entries: [{
         ...duplicate.entries[0],
         file: { ...FILE, mtime: Number.NaN },
