@@ -4,6 +4,8 @@ Notable changes to Chrono Notes are documented in this file. The repository's nu
 
 ## Unreleased
 
+## 0.8.0 - 2026-10-25
+
 ### Added
 
 - Show task-level progress, failure, and save warnings while preventing duplicate task edits.
