@@ -4,7 +4,7 @@ Notable changes to Chrono Notes are documented in this file. The repository's nu
 
 ## Unreleased
 
-## 0.8.0 - 2026-10-25
+## 0.8.0
 
 ### Added
 
