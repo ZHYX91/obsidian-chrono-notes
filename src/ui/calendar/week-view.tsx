@@ -1,6 +1,9 @@
+import type { TaskUiFeedback } from "../../features/tasks/task-write-feedback";
 import { CalendarPlus } from "lucide-react";
 import {
   useMemo,
+  useEffect,
+  useId,
   useState,
   type KeyboardEvent,
   type MouseEvent as ReactMouseEvent,
@@ -49,6 +52,7 @@ import {
 } from "./calendar-period-preview";
 import type { CalendarPreviewCell } from "./calendar-preview-tooltip";
 import type { CalendarSelectionKind } from "./calendar-selection";
+import { useTaskActionFeedback } from "./use-task-action-feedback";
 
 export interface WeekViewProps {
   readonly query: WeekCalendarQuery;
@@ -69,11 +73,11 @@ export interface WeekViewProps {
   ) => Promise<void>;
   readonly onOpenPath: (path: string, target: NoteOpenTarget) => Promise<void>;
   readonly onCreateRange: (initialDate: LocalDate) => void;
-  readonly onToggleTask: (task: NoteTask) => Promise<void>;
+  readonly onToggleTask: (task: NoteTask) => Promise<TaskUiFeedback | void>;
   readonly onRescheduleTask: (
     task: NoteTask,
     nextDueDate: LocalDate,
-  ) => Promise<void>;
+  ) => Promise<TaskUiFeedback | void>;
   readonly onOpenTaskSource: (
     task: NoteTask,
     target: NoteOpenTarget,
@@ -120,6 +124,21 @@ export function WeekView({
   const messages = getWeekViewMessages(t);
   const [draggedTask, setDraggedTask] = useState<NoteTask | null>(null);
   const [dropTarget, setDropTarget] = useState<string | null>(null);
+  const visibleTasks = useMemo(() => query.tasks.map(({ task }) => task), [query.tasks]);
+  const taskActions = useTaskActionFeedback(visibleTasks);
+  const feedbackId = useId();
+  const weekKey = formatLocalDateKey(query.weekStart);
+  const [taskPageState, setTaskPage] = useState({ week: weekKey, page: 0 });
+  const taskPageSize = 100;
+  const lastTaskPage = Math.max(0, Math.ceil(query.tasks.length / taskPageSize) - 1);
+  const taskPage = Math.min(taskPageState.week === weekKey ? taskPageState.page : 0, lastTaskPage);
+  useEffect(() => {
+    if (taskPageState.week !== weekKey || taskPageState.page !== taskPage) {
+      setTaskPage({ week: weekKey, page: taskPage });
+    }
+  }, [taskPage, taskPageState, weekKey]);
+  const pageStart = taskPage * taskPageSize;
+  const pageTasks = query.tasks.slice(pageStart, pageStart + taskPageSize);
   const {
     weekdayFormatter,
     compactWeekdayFormatter,
@@ -263,7 +282,7 @@ export function WeekView({
                   setDraggedTask(null);
                   setDropTarget(null);
                   if (task !== null && task.dueDate !== dayKey) {
-                    void onRescheduleTask(task, day.date);
+                    void taskActions.run(task, () => onRescheduleTask(task, day.date));
                   }
                 }}
               >
@@ -421,6 +440,21 @@ export function WeekView({
             {query.tasks.length}
           </span>
         </header>
+        {query.tasks.length > taskPageSize ? (
+          <nav className="chrono-notes-week-task-pages" aria-label={messages.datedTasks}>
+            <button type="button" disabled={taskPage === 0}
+              onClick={() => setTaskPage({ week: weekKey, page: taskPage - 1 })}>
+              {t("weekView.previousTasks")}
+            </button>
+            <span role="status">{t("weekView.taskPage", {
+              start: pageStart + 1, end: pageStart + pageTasks.length, count: query.tasks.length,
+            })}</span>
+            <button type="button" disabled={taskPage === lastTaskPage}
+              onClick={() => setTaskPage({ week: weekKey, page: taskPage + 1 })}>
+              {t("weekView.nextTasks")}
+            </button>
+          </nav>
+        ) : null}
         {query.tasks.length === 0 ? (
           <div className="chrono-notes-week-tasks-empty">
             <strong>{messages.emptyDatedTasks}</strong>
@@ -428,17 +462,21 @@ export function WeekView({
           </div>
         ) : (
           <div className="chrono-notes-week-task-list">
-            {query.tasks.map((occurrence) => {
+            {pageTasks.map((occurrence, index) => {
               const overdueLabel = formatWeekTaskOverdue(occurrence.overdue, t);
+              const feedback = taskActions.get(occurrence.task);
+              const statusId = `${feedbackId}-${index}`;
+              const hasFeedback = feedback.pending || feedback.message !== null;
               return (
                 <div
                   className="chrono-notes-week-task"
                   data-completed={String(occurrence.task.completed)}
                   data-overdue={occurrence.overdue}
+                  aria-busy={feedback.pending}
                   key={`${occurrence.task.path}:${occurrence.task.line}:${occurrence.dateKey}`}
-                  draggable={occurrence.task.dueDate === occurrence.dateKey}
+                  draggable={!feedback.pending && occurrence.task.dueDate === occurrence.dateKey}
                   onDragStart={(event) => {
-                    if (occurrence.task.dueDate !== occurrence.dateKey) {
+                    if (feedback.pending || occurrence.task.dueDate !== occurrence.dateKey) {
                       event.preventDefault();
                       return;
                     }
@@ -458,19 +496,23 @@ export function WeekView({
                     <input
                       type="checkbox"
                       checked={occurrence.task.completed}
+                      disabled={feedback.pending}
+                      aria-describedby={hasFeedback ? statusId : undefined}
                       aria-label={formatWeekTaskToggleLabel(
                         occurrence.task.text,
                         occurrence.dateKinds,
                         occurrence.overdue,
                         t,
                       )}
-                      onChange={() => void onToggleTask(occurrence.task)}
+                      onChange={() => void taskActions.run(occurrence.task, () => onToggleTask(occurrence.task))}
                     />
                   </label>
                   {occurrence.task.dueDate === occurrence.dateKey ? (
                     <select
                       className="chrono-notes-week-task-due"
                       value={occurrence.task.dueDate}
+                      disabled={feedback.pending}
+                      aria-describedby={hasFeedback ? statusId : undefined}
                       aria-label={formatWeekTaskRescheduleLabel(
                         occurrence.task.text,
                         t,
@@ -491,7 +533,7 @@ export function WeekView({
                           nextDay !== undefined &&
                           occurrence.task.dueDate !== event.currentTarget.value
                         ) {
-                          void onRescheduleTask(occurrence.task, nextDay.date);
+                          void taskActions.run(occurrence.task, () => onRescheduleTask(occurrence.task, nextDay.date));
                         }
                       }}
                     >
@@ -529,6 +571,11 @@ export function WeekView({
                       </span>
                     )}
                   </small>
+                  {hasFeedback ? (
+                    <small id={statusId} role="status" className="chrono-notes-week-task-feedback" data-level={feedback.level}>
+                      {feedback.pending ? t("weekView.taskPending") : feedback.message}
+                    </small>
+                  ) : null}
                 </div>
               );
             })}

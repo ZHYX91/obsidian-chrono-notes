@@ -279,7 +279,7 @@ export function checkReadmeI18n(projectRoot = defaultProjectRoot) {
     const imageBase = filePath === "README.md"
       ? `https://raw.githubusercontent.com/${config.repository}/main/docs/assets/`
       : "../assets/";
-    for (const imageName of ["chrono-notes-desktop-en.png", "chrono-notes-android-en.png"]) {
+    for (const imageName of ["chrono-notes-calendar-wide-en.png", "chrono-notes-calendar-narrow-en.png"]) {
       if (!source.includes(`](${imageBase}${imageName})`)) {
         errors.push(`${filePath} must link screenshot ${imageName}`);
       }

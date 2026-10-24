@@ -990,3 +990,20 @@ body.is-mobile
 .chrono-notes-calendar-extension-event-overflow {
   flex: none;
 }
+
+.chrono-notes-selected-day-details {
+  border-top: 1px solid var(--background-modifier-border);
+  margin-block-start: 12px;
+  padding-block-start: 8px;
+  overflow-wrap: anywhere;
+}
+
+.chrono-notes-selected-day-details h3,
+.chrono-notes-selected-day-details p {
+  margin-block: 4px;
+}
+
+.chrono-notes-selected-day-details ul {
+  margin-block: 4px;
+  padding-inline-start: 20px;
+}

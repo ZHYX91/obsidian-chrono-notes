@@ -79,6 +79,27 @@ function createPorts(existing: readonly string[] = []) {
 }
 
 describe("PeriodicNoteCommands", () => {
+  it("confirms the exact cascade paths and distinguishes existing notes before creating anything", async () => {
+    const ports = createPorts(["Months/2026-05.md"]);
+    const confirmCreate = vi.fn(async () => false);
+    const commands = new PeriodicNoteCommands(ports.files, ports.templates, ports.workspace);
+    await commands.openOrCreate({
+      date: { year: 2026, month: 5, day: 18 }, noteType: "daily", cascade: true, confirmCreate,
+    }, createSettings({
+      daily: { enabled: true, pattern: "[Daily]/YYYY-MM-DD" },
+      monthly: { enabled: true, pattern: "[Months]/YYYY-MM" },
+      yearly: { enabled: true, pattern: "[Years]/YYYY" },
+    }));
+    expect(confirmCreate).toHaveBeenCalledWith(expect.objectContaining({
+      path: "Daily/2026-05-18.md",
+      cascade: [
+        { noteType: "monthly", path: "Months/2026-05.md", exists: true },
+        { noteType: "yearly", path: "Years/2026.md", exists: false },
+      ],
+    }));
+    expect(ports.files.create).not.toHaveBeenCalled();
+  });
+
   it("cascades each long period from the original year and preserves existing files", async () => {
     const ports = createPorts(["diary/2000s.md"]);
     const commands = new PeriodicNoteCommands(ports.files, ports.templates, ports.workspace);
@@ -215,6 +236,7 @@ describe("PeriodicNoteCommands", () => {
       path: "Daily/2026-05-18.md",
     });
     expect(confirmCreate).toHaveBeenCalledWith({
+      cascade: [],
       date: { year: 2026, month: 5, day: 18 },
       noteType: "daily",
       path: "Daily/2026-05-18.md",

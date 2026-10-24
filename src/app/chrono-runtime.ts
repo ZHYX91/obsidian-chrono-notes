@@ -1,3 +1,4 @@
+import type { TaskUiFeedback } from "../features/tasks/task-write-feedback";
 import type {
   App,
   EventRef,
@@ -53,8 +54,8 @@ export interface ChronoRuntimeHost {
     initialEndDate?: LocalDate,
     onSettled?: () => void,
   ): void;
-  toggleTask(task: NoteTask): Promise<void>;
-  rescheduleTask(task: NoteTask, nextDueDate: LocalDate): Promise<void>;
+  toggleTask(task: NoteTask): Promise<TaskUiFeedback | void>;
+  rescheduleTask(task: NoteTask, nextDueDate: LocalDate): Promise<TaskUiFeedback | void>;
   openTaskSource(task: NoteTask, target: "default" | "tab"): Promise<void>;
   saveSettings(): Promise<void>;
   setRelatedIntervalNotesCollapsed(collapsed: boolean): Promise<void>;

@@ -8,11 +8,11 @@ Chrono Notes bổ sung cho Obsidian một không gian lịch để quản lý gh
 
 ## Tính năng
 
-Giao diện lịch trên máy tính và Android:
+Bố cục rộng và hẹp hiện tại, được dựng từ giao diện plugin trong môi trường thử nghiệm trình duyệt. Đây là hình minh họa bố cục, không phải ảnh chụp trong Obsidian hay Android.
 
-![Lịch Chrono Notes trên máy tính](../assets/chrono-notes-desktop-en.png)
+![Chrono Notes · 840 px](../assets/chrono-notes-calendar-wide-en.png)
 
-![Lịch Chrono Notes trên Android](../assets/chrono-notes-android-en.png)
+![Chrono Notes · 340 px](../assets/chrono-notes-calendar-narrow-en.png)
 
 - Xem lịch theo tuần, tháng, năm và thế kỷ, kèm trạng thái ghi chú, công việc, thống kê và xem trước.
 - Ghi chú ngày, tuần, tháng, quý, năm, thập kỷ và thế kỷ với mẫu tích hợp hoặc Templater.
@@ -48,6 +48,8 @@ Chọn loại ghi chú, đường dẫn và mẫu trong phần cài đặt Chron
 
 Trên màn hình cảm ứng, nhấn giữ một ngày để mở menu, rồi chọn thao tác mở hoặc tạo ghi chú ngày. Nếu không có menu xuất hiện, ghi chú sẽ được mở hoặc tạo khi bạn nhấc ngón tay. Nhấn giữ một mục tuần, tháng hoặc khoảng thời gian khác sẽ mở trực tiếp ghi chú tương ứng.
 
+Chọn một ngày trong chế độ xem tháng để đọc trạng thái ghi chú, thông tin lịch, ngày lễ và toàn bộ sự kiện ICS kèm nguồn bên dưới lưới. Khi bật xác nhận tạo, hộp thoại cho biết đường dẫn đích và các ghi chú chu kỳ lớn hơn sẽ được tạo hoặc giữ lại.
+
 ### Hiển thị công việc trên lịch
 
 Thêm công việc có ô đánh dấu vào ghi chú và ghi ngày kèm ký hiệu:
@@ -61,6 +63,8 @@ Thêm công việc có ô đánh dấu vào ghi chú và ghi ngày kèm ký hi�
 `🛫` là ngày bắt đầu, `⏳` là ngày dự kiến và `📅` là hạn chót. Dùng định dạng `YYYY-MM-DD`. Chế độ xem tuần hiển thị công việc có một trong các ngày này nằm trong tuần đang xem. Một công việc xuất hiện ở từng ngày khác nhau; nhiều ký hiệu cùng chỉ một ngày sẽ được gộp thành một mục. Vì vậy, công việc cuối trong ví dụ chỉ xuất hiện một lần vào ngày 20 tháng 10. Công việc không có ngày vẫn được tính vào tiến độ của ghi chú.
 
 Trong chế độ xem tuần, dùng danh sách chọn hạn chót để chuyển sang một ngày khác của tuần đó. Trên máy tính, bạn cũng có thể kéo công việc có hạn chót vào ngày muốn chọn. Các thao tác này sửa hạn chót đã có trong ghi chú gốc.
+
+Ô đánh dấu trong chế độ xem tuần thay đổi trạng thái công việc trong ghi chú nguồn. Khi đang cập nhật, ô đánh dấu, hạn chót và thao tác kéo của công việc đó bị vô hiệu hóa; lỗi hoặc cảnh báo lưu xuất hiện bên cạnh. Nếu chưa rõ kết quả, hãy kiểm tra ghi chú trước khi thử lại. Danh sách hơn 100 mục có nút “Công việc trước” và “Công việc tiếp theo”; tổng số vẫn tính đầy đủ.
 
 ### Ghi chú thập kỷ và thế kỷ
 

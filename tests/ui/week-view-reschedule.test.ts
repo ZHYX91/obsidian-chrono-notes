@@ -57,9 +57,9 @@ describe("WeekView task rescheduling", () => {
   });
 
   it("offers the seven week dates through a native keyboard and touch control", async () => {
-    const onRescheduleTask = vi.fn<WeekViewProps["onRescheduleTask"]>(
-      async () => undefined,
-    );
+    let finish!: (value: { message: string; level: "error" }) => void;
+    const pending = new Promise<{ message: string; level: "error" }>((resolve) => { finish = resolve; });
+    const onRescheduleTask = vi.fn<WeekViewProps["onRescheduleTask"]>(() => pending);
     const query = selectWeekCalendar(
       { year: 2026, month: 7, day: 22 },
       createParsedNoteIndexSnapshot({
@@ -123,7 +123,16 @@ describe("WeekView task rescheduling", () => {
       select.dispatchEvent(new Event("change", { bubbles: true }));
     });
 
+    expect(select.disabled).toBe(true);
+    expect(container.querySelector<HTMLInputElement>("input[type=checkbox]")?.disabled).toBe(true);
+    expect(container.querySelector("[role=status]")?.textContent).toBe("Updating task…");
+    await act(async () => { select.dispatchEvent(new Event("change", { bubbles: true })); });
     expect(onRescheduleTask).toHaveBeenCalledOnce();
+    await act(async () => { finish({ message: "Task changed; check the source note.", level: "error" }); });
+    expect(select.disabled).toBe(false);
+    expect(container.querySelector("[role=status]")?.textContent).toBe("Task changed; check the source note.");
+    expect(container.querySelector("[role=status]")?.getAttribute("data-level")).toBe("error");
+    expect(select.value).toBe("2026-07-22");
     expect(onRescheduleTask).toHaveBeenCalledWith(
       expect.objectContaining({
         path: "Projects/release.md",
@@ -131,6 +140,48 @@ describe("WeekView task rescheduling", () => {
       }),
       { year: 2026, month: 7, day: 24 },
     );
+  });
+
+  it("resets task pages across week navigation and retains a reduced-data clamp", async () => {
+    const snapshot = createParsedNoteIndexSnapshot({
+      "A.md": Array.from({ length: 205 }, (_, index) => `- [ ] A-${index} 📅 2026-07-22`).join("\n"),
+      "B.md": Array.from({ length: 205 }, (_, index) => `- [ ] B-${index} 📅 2026-07-29`).join("\n"),
+    }, 1);
+    const queryAt = (day: number) => selectWeekCalendar({ year: 2026, month: 7, day }, snapshot, DISABLED_ICS, {
+      locale: "en-US", weekStartDay: "monday", today: { year: 2026, month: 7, day: 20 },
+      calendarExtensions: [], holidayRegions: [], daily: { enabled: false, pattern: "" }, weekly: { enabled: false, pattern: "" },
+      rangeNotes: { showInCalendar: false, folder: "", templatePath: "", scanScope: "range-folder", customFolder: "", monthViewLimit: 2, weekViewLimit: 2 },
+    });
+    const weekA = queryAt(22);
+    const weekB = queryAt(29);
+    const render = async (query: typeof weekA) => act(async () => root.render(createElement(WeekView, {
+      query, translator: createTranslator("en", "en-US"), selectionKind: "day", selectedDate: query.weekStart,
+      today: { year: 2026, month: 7, day: 20 }, weekStartDay: "monday", showNoteIndicators: true, showTaskProgress: true,
+      activePreviewKey: null, previewId: "preview", onSelectDate: () => undefined, onOpenPeriodic: async () => undefined,
+      onOpenPath: async () => undefined, onCreateRange: () => undefined, onToggleTask: async () => undefined,
+      onRescheduleTask: async () => undefined, onOpenTaskSource: async () => undefined, onSchedulePreview: () => undefined,
+      onDismissPreview: () => undefined, onOpenDateContextMenu: () => undefined, longPress,
+    })));
+    const nextPage = async () => {
+      const next = container.querySelector<HTMLButtonElement>(".chrono-notes-week-task-pages button:last-child");
+      if (next === null) throw new Error("Expected next task page");
+      await act(async () => next.click());
+    };
+    const firstTask = () => container.querySelector(".chrono-notes-week-task")?.textContent;
+    await render(weekA);
+    await nextPage();
+    expect(firstTask()).toContain("A-100");
+    await render(weekB);
+    expect(firstTask()).toContain("B-0");
+    await render(weekA);
+    expect(firstTask()).toContain("A-0");
+    await nextPage();
+    await nextPage();
+    expect(firstTask()).toContain("A-200");
+    await render({ ...weekA, tasks: weekA.tasks.slice(0, 150) });
+    expect(firstTask()).toContain("A-100");
+    await render(weekA);
+    expect(firstTask()).toContain("A-100");
   });
 
   it("opens one date menu instead of also opening the daily note on Android", async () => {

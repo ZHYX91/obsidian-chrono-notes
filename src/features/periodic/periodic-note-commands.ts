@@ -46,6 +46,13 @@ interface PeriodicNoteCreateConfirmation {
   readonly date: LocalDate;
   readonly noteType: PeriodicNoteType;
   readonly path: string;
+  readonly cascade: readonly PeriodicNoteCreationTarget[];
+}
+
+export interface PeriodicNoteCreationTarget {
+  readonly noteType: PeriodicNoteType;
+  readonly path: string;
+  readonly exists: boolean;
 }
 
 interface CascadeFailure {
@@ -133,6 +140,7 @@ export class PeriodicNoteCommands {
           date: getPeriodAnchor(request.date, request.noteType, settings.weekStartDay),
           noteType: request.noteType,
           path,
+          cascade: request.cascade ? this.largerNoteTargets(request.date, request.noteType, settings) : [],
         }),
       );
       if (!confirmed) {
@@ -164,10 +172,7 @@ export class PeriodicNoteCommands {
     settings: PeriodicNoteCommandSettings,
   ): Promise<CascadeResult[]> {
     const results: CascadeResult[] = [];
-    const triggerIndex = PERIODIC_NOTE_TYPES.indexOf(triggerType);
-    for (const noteType of PERIODIC_NOTE_TYPES.slice(triggerIndex + 1)) {
-      const path = resolvePath(date, noteType, settings);
-      if (path === null) continue;
+    for (const { noteType, path } of this.largerNoteTargets(date, triggerType, settings)) {
       try {
         const created = await this.createPopulatedOnce(date, noteType, path, settings);
         results.push(Object.freeze({
@@ -191,6 +196,19 @@ export class PeriodicNoteCommands {
       }
     }
     return results;
+  }
+
+  private largerNoteTargets(
+    date: LocalDate,
+    triggerType: PeriodicNoteType,
+    settings: PeriodicNoteCommandSettings,
+  ): readonly PeriodicNoteCreationTarget[] {
+    const result: PeriodicNoteCreationTarget[] = [];
+    for (const noteType of PERIODIC_NOTE_TYPES.slice(PERIODIC_NOTE_TYPES.indexOf(triggerType) + 1)) {
+      const path = resolvePath(date, noteType, settings);
+      if (path !== null) result.push(Object.freeze({ noteType, path, exists: this.files.exists(path) }));
+    }
+    return Object.freeze(result);
   }
 
   private async createPopulatedOnce(

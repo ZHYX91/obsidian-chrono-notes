@@ -1,6 +1,20 @@
 import type { MessageCatalog } from "../types";
 
 export const AM_MESSAGES = Object.freeze({
+  "weekView.previousTasks": "ያለፉ ተግባራት",
+  "weekView.nextTasks": "ቀጣይ ተግባራት",
+  "weekView.taskPage": "ከ {count} ውስጥ {start}–{end}",
+  "calendar.selectedDayDetails": "የተመረጠ ቀን · {date}",
+
+  "weekView.taskPending": "ተግባሩን በማዘመን ላይ…",
+  "pluginNotice.taskSaveWarning": "ተግባሩ በአርታዒው ተዘምኗል፣ ግን ማስቀመጥ ሊጀመር አልቻለም። የምንጭ ማስታወሻውን ከፍተው ያስቀምጡት።",
+  "pluginNotice.taskEditorWarning": "ተግባሩ ተዘምኗል፣ ግን አርታዒው ስህተት ሪፖርት አድርጓል። የምንጭ ማስታወሻውን ያረጋግጡ።",
+  "pluginNotice.taskNotApplied": "ለውጡ አልተተገበረም። እንደገና ከመሞከርዎ በፊት የምንጭ ማስታወሻውን ያረጋግጡ።",
+  "pluginNotice.taskUnconfirmed": "የለውጡን ውጤት ማረጋገጥ አልተቻለም። እንደገና ከመሞከርዎ በፊት የምንጭ ማስታወሻውን ያረጋግጡ።",
+  "creationModal.cascadeTitle": "የረጅም ጊዜ ማስታወሻዎች",
+  "creationModal.cascadeDescription": "የሌሉ ማስታወሻዎች ብቻ ይፈጠራሉ። ያሉት ማስታወሻዎች አይቀየሩም።",
+  "creationModal.cascadeExisting": "ያለውን አቆይ",
+
   "navbar.weekLabel": "ሳምንት {week}",
   "operationError.details": "ቴክኒካዊ ዝርዝሮች፦ {message}",
   "operationError.icsEmptySource": "የ.ics ፋይል ዱካ ያስገቡ።",

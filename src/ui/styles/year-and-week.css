@@ -850,3 +850,30 @@
     width: clamp(32px, 14cqw, 44px);
   }
 }
+.chrono-notes-week-task-feedback {
+  grid-column: 1 / -1;
+  color: var(--text-muted);
+  overflow-wrap: anywhere;
+}
+
+.chrono-notes-week-task-feedback[data-level="error"] {
+  color: var(--text-error);
+}
+
+.chrono-notes-week-task-feedback[data-level="warning"] {
+  color: var(--text-warning);
+}
+
+
+.chrono-notes-week-task-pages {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-block: 8px;
+}
+
+.chrono-notes-week-task-pages span {
+  color: var(--text-muted);
+}

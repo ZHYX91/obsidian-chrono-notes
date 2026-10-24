@@ -1,6 +1,20 @@
 import type { MessageCatalog } from "../types";
 
 export const DE_MESSAGES: MessageCatalog = Object.freeze({
+  "weekView.previousTasks": "Vorherige Aufgaben",
+  "weekView.nextTasks": "Nächste Aufgaben",
+  "weekView.taskPage": "{start}–{end} von {count}",
+  "calendar.selectedDayDetails": "Ausgewählter Tag · {date}",
+
+  "weekView.taskPending": "Aufgabe wird aktualisiert…",
+  "pluginNotice.taskSaveWarning": "Die Aufgabe wurde im Editor geändert, aber das Speichern konnte nicht angestoßen werden. Öffnen Sie die Quellnotiz und speichern Sie sie.",
+  "pluginNotice.taskEditorWarning": "Die Aufgabe wurde geändert, aber der Editor meldete einen Fehler. Prüfen Sie die Quellnotiz.",
+  "pluginNotice.taskNotApplied": "Die Änderung wurde nicht angewendet. Prüfen Sie die Quellnotiz vor einem erneuten Versuch.",
+  "pluginNotice.taskUnconfirmed": "Das Ergebnis der Änderung konnte nicht bestätigt werden. Prüfen Sie die Quellnotiz vor einem erneuten Versuch.",
+  "creationModal.cascadeTitle": "Notizen für größere Zeiträume",
+  "creationModal.cascadeDescription": "Nur fehlende Notizen werden erstellt. Vorhandene Notizen bleiben unverändert.",
+  "creationModal.cascadeExisting": "Vorhandene beibehalten",
+
   "navbar.weekLabel": "Woche {week}",
   "operationError.details": "Technische Details: {message}",
   "operationError.icsEmptySource": "Geben Sie den Pfad zu einer .ics-Datei ein.",

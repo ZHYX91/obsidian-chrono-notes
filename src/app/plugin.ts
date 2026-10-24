@@ -22,6 +22,7 @@ import {
 import type { NoteIndexCacheStorageStatus } from "../features/notes/note-index-cache";
 import { getSettingsChangeImpact } from "../features/settings/settings-change-impact";
 import type { TaskCommandResult } from "../features/tasks/task-commands";
+import { TaskWriteError, type TaskUiFeedback } from "../features/tasks/task-write-feedback";
 import { FirstUseGuideGate } from "../features/onboarding/first-use-guide";
 import { createTranslator, type Translator } from "../shared/i18n";
 import { getCurrentLocalDate } from "../shared/local-date-clock";
@@ -404,12 +405,13 @@ export default class ChronoNotesPlugin extends Plugin {
           cascade: this.settings.cascadeLargerNotes,
           ...(this.settings.confirmPeriodicNoteCreation
             ? {
-                confirmCreate: ({ path }) =>
+                confirmCreate: ({ path, cascade }) =>
                   resolveNoteCreationConfirmation(
                     () => new ConfirmPeriodicNoteModal(
                       this.app,
                       path,
                       this.getTranslator(),
+                      cascade,
                     ).confirm(),
                     async () => {
                       this.settings.confirmPeriodicNoteCreation = false;
@@ -488,23 +490,23 @@ export default class ChronoNotesPlugin extends Plugin {
     }
   }
 
-  private async toggleTask(task: NoteTask): Promise<void> {
+  private async toggleTask(task: NoteTask): Promise<TaskUiFeedback | void> {
     const runtime = this.runtime;
     if (runtime === null) return;
     try {
-      this.showTaskCommandResult(await runtime.taskCommands.toggle(task));
+      return this.showTaskCommandResult(await runtime.taskCommands.toggle(task));
     } catch (error) {
-      this.showTaskCommandError(error);
+      return this.showTaskCommandError(error);
     }
   }
 
-  private async rescheduleTask(task: NoteTask, nextDueDate: LocalDate): Promise<void> {
+  private async rescheduleTask(task: NoteTask, nextDueDate: LocalDate): Promise<TaskUiFeedback | void> {
     const runtime = this.runtime;
     if (runtime === null) return;
     try {
-      this.showTaskCommandResult(await runtime.taskCommands.rescheduleDue(task, nextDueDate));
+      return this.showTaskCommandResult(await runtime.taskCommands.rescheduleDue(task, nextDueDate));
     } catch (error) {
-      this.showTaskCommandError(error);
+      return this.showTaskCommandError(error);
     }
   }
 
@@ -518,13 +520,22 @@ export default class ChronoNotesPlugin extends Plugin {
     }
   }
 
-  private showTaskCommandResult(result: TaskCommandResult): void {
-    const message = getTaskCommandNotice(result.status, this.getTranslator().t);
-    if (message !== null) new Notice(formatPluginErrorNotice(message, this.getTranslator().t));
+  private showTaskCommandResult(result: TaskCommandResult): TaskUiFeedback {
+    const { t } = this.getTranslator();
+    const warning = result.status === "updated" ? result.warning : undefined;
+    const message = warning === undefined ? getTaskCommandNotice(result.status, t)
+      : t(warning === "save-not-confirmed" ? "pluginNotice.taskSaveWarning" : "pluginNotice.taskEditorWarning");
+    if (message !== null) new Notice(formatPluginErrorNotice(message, t));
+    return { message, level: message === null ? null : warning === undefined ? "error" : "warning" };
   }
 
-  private showTaskCommandError(error: unknown): void {
-    new Notice(formatPluginErrorNotice(error, this.getTranslator().t));
+  private showTaskCommandError(error: unknown): TaskUiFeedback {
+    const { t } = this.getTranslator();
+    const message = error instanceof TaskWriteError
+      ? t(error.outputState === "not-applied" ? "pluginNotice.taskNotApplied" : "pluginNotice.taskUnconfirmed")
+      : formatPluginErrorNotice(error, t);
+    new Notice(message);
+    return { message, level: "error" };
   }
 
   openIntervalNoteList(): void {

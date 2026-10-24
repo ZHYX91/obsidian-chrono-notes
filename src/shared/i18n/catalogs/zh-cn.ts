@@ -1,6 +1,20 @@
 import type { MessageValue } from "../message-value";
 
 export const ZH_CN_MESSAGES = {
+  "weekView.previousTasks": "上一页任务",
+  "weekView.nextTasks": "下一页任务",
+  "weekView.taskPage": "第 {start}–{end} 项，共 {count} 项",
+  "calendar.selectedDayDetails": "所选日期 · {date}",
+
+  "weekView.taskPending": "正在更新任务…",
+  "pluginNotice.taskSaveWarning": "任务已在编辑器中更新，但未能安排保存。请打开源笔记并保存。",
+  "pluginNotice.taskEditorWarning": "任务已更新，但编辑器报错。请检查源笔记。",
+  "pluginNotice.taskNotApplied": "任务修改未生效。请先检查源笔记，再重试。",
+  "pluginNotice.taskUnconfirmed": "无法确认任务修改结果。请先检查源笔记，再重试。",
+  "creationModal.cascadeTitle": "更大周期的笔记",
+  "creationModal.cascadeDescription": "仅创建缺少的笔记，已有笔记保持不变。",
+  "creationModal.cascadeExisting": "保留已有笔记",
+
   "navbar.weekLabel": "第{week}周",
   "operationError.details": "技术详情：{message}",
   "operationError.icsEmptySource": "请填写 .ics 文件路径。",

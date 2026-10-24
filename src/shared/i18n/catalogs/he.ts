@@ -1,6 +1,20 @@
 import type { MessageCatalog } from "../types";
 
 export const HE_MESSAGES = Object.freeze({
+  "weekView.previousTasks": "המשימות הקודמות",
+  "weekView.nextTasks": "המשימות הבאות",
+  "weekView.taskPage": "{start}–{end} מתוך {count}",
+  "calendar.selectedDayDetails": "היום שנבחר · {date}",
+
+  "weekView.taskPending": "מעדכן משימה…",
+  "pluginNotice.taskSaveWarning": "המשימה עודכנה בעורך, אך לא ניתן היה לתזמן שמירה. יש לפתוח את הערת המקור ולשמור אותה.",
+  "pluginNotice.taskEditorWarning": "המשימה עודכנה, אך העורך דיווח על שגיאה. יש לבדוק את הערת המקור.",
+  "pluginNotice.taskNotApplied": "השינוי לא הוחל. יש לבדוק את הערת המקור לפני ניסיון נוסף.",
+  "pluginNotice.taskUnconfirmed": "לא ניתן לאשר את תוצאת השינוי. יש לבדוק את הערת המקור לפני ניסיון נוסף.",
+  "creationModal.cascadeTitle": "הערות לתקופות ארוכות יותר",
+  "creationModal.cascadeDescription": "רק הערות חסרות ייווצרו. הערות קיימות יישארו ללא שינוי.",
+  "creationModal.cascadeExisting": "שמירת ההערה הקיימת",
+
   "navbar.weekLabel": "שבוע {week}",
   "operationError.details": "פרטים טכניים: {message}",
   "operationError.icsEmptySource": "יש להזין נתיב לקובץ .ics.",

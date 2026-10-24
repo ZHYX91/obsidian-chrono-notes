@@ -5,6 +5,7 @@ import {
   type NoteCreationConfirmationDecision,
 } from "../../features/notes/note-creation-confirmation";
 import type { Translator } from "../../shared/i18n";
+import type { PeriodicNoteCreationTarget } from "../../features/periodic/periodic-note-commands";
 import { getCreationModalMessages } from "./creation-modal-presentation";
 
 export class ConfirmPeriodicNoteModal extends Modal {
@@ -16,6 +17,7 @@ export class ConfirmPeriodicNoteModal extends Modal {
     app: App,
     private readonly path: string,
     private readonly translator: Translator,
+    private readonly cascade: readonly PeriodicNoteCreationTarget[] = [],
   ) {
     super(app);
   }
@@ -31,6 +33,17 @@ export class ConfirmPeriodicNoteModal extends Modal {
     const messages = getCreationModalMessages(this.translator.t);
     this.titleEl.setText(messages.createPeriodicTitle);
     this.contentEl.createEl("p", { text: this.path });
+    if (this.cascade.length > 0) {
+      const { t } = this.translator;
+      this.contentEl.createEl("h3", { text: t("creationModal.cascadeTitle") });
+      this.contentEl.createEl("p", { text: t("creationModal.cascadeDescription") });
+      const list = this.contentEl.createEl("ul");
+      for (const item of this.cascade) {
+        const entry = list.createEl("li");
+        entry.createEl("code", { text: item.path });
+        entry.createSpan({ text: ` — ${t(item.exists ? "creationModal.cascadeExisting" : "creationModal.create")}` });
+      }
+    }
     new Setting(this.contentEl)
       .setName(messages.suppressFuturePeriodicConfirmation)
       .addToggle((toggle) => {

@@ -1,6 +1,20 @@
 import type { MessageCatalog } from "../types";
 
 export const HI_MESSAGES = Object.freeze({
+  "weekView.previousTasks": "पिछले कार्य",
+  "weekView.nextTasks": "अगले कार्य",
+  "weekView.taskPage": "{count} में से {start}–{end}",
+  "calendar.selectedDayDetails": "चुना गया दिन · {date}",
+
+  "weekView.taskPending": "कार्य अपडेट हो रहा है…",
+  "pluginNotice.taskSaveWarning": "संपादक में कार्य अपडेट हो गया, लेकिन सहेजना निर्धारित नहीं हो सका। स्रोत नोट खोलकर उसे सहेजें।",
+  "pluginNotice.taskEditorWarning": "कार्य अपडेट हो गया, लेकिन संपादक ने त्रुटि बताई। स्रोत नोट जाँचें।",
+  "pluginNotice.taskNotApplied": "बदलाव लागू नहीं हुआ। दोबारा कोशिश करने से पहले स्रोत नोट जाँचें।",
+  "pluginNotice.taskUnconfirmed": "बदलाव के परिणाम की पुष्टि नहीं हो सकी। दोबारा कोशिश करने से पहले स्रोत नोट जाँचें।",
+  "creationModal.cascadeTitle": "बड़ी अवधियों के नोट",
+  "creationModal.cascadeDescription": "केवल वे नोट बनाए जाएँगे जो मौजूद नहीं हैं। मौजूदा नोट नहीं बदलेंगे।",
+  "creationModal.cascadeExisting": "मौजूदा नोट रखें",
+
   "navbar.weekLabel": "सप्ताह {week}",
   "operationError.details": "तकनीकी विवरण: {message}",
   "operationError.icsEmptySource": ".ics फ़ाइल का पथ लिखें।",

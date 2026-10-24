@@ -8,11 +8,11 @@ Ce document est un **guide abrégé** pour les tâches courantes. Les réglages 
 
 ## Fonctionnalités
 
-Aperçu du calendrier sur ordinateur et Android :
+Vues actuelles, large et étroite, rendues à partir de l’interface du module dans un environnement de test du navigateur. Ces images illustrent la disposition ; elles ne proviennent pas d’Obsidian ou d’Android.
 
-![Calendrier Chrono Notes sur ordinateur](../assets/chrono-notes-desktop-en.png)
+![Chrono Notes · 840 px](../assets/chrono-notes-calendar-wide-en.png)
 
-![Calendrier Chrono Notes sur Android](../assets/chrono-notes-android-en.png)
+![Chrono Notes · 340 px](../assets/chrono-notes-calendar-narrow-en.png)
 
 - Vues par semaine, mois, année et siècle avec état des notes, tâches, statistiques et aperçus.
 - Notes quotidiennes, hebdomadaires, mensuelles, trimestrielles, annuelles, décennales et séculaires, avec modèles intégrés ou Templater.
@@ -48,6 +48,8 @@ Choisissez les types de notes, leurs chemins et leurs modèles dans les paramèt
 
 Sur un écran tactile, un appui long sur une date ouvre son menu. Choisissez ensuite l’action qui ouvre ou crée la note quotidienne. Si aucun menu ne s’affiche, la note s’ouvre ou se crée lorsque vous relâchez le doigt. Un appui long sur une semaine, un mois ou une autre période ouvre directement la note correspondante.
 
+Sélectionnez une date dans la vue mensuelle pour lire sous la grille l’état de la note, les détails du calendrier, les jours fériés et tous les événements ICS avec leurs sources. Si la confirmation de création est activée, la boîte de dialogue indique le chemin cible et les notes des périodes supérieures à créer ou à conserver.
+
 ### Afficher les tâches dans le calendrier
 
 Ajoutez une tâche avec case à cocher dans une note, puis indiquez une date :
@@ -61,6 +63,8 @@ Ajoutez une tâche avec case à cocher dans une note, puis indiquez une date :
 `🛫` indique la date de début, `⏳` la date prévue et `📅` la date d’échéance. Utilisez le format `YYYY-MM-DD`. La vue hebdomadaire affiche les tâches dont l’une de ces dates tombe dans la semaine affichée. Une tâche apparaît à chacune de ses dates distinctes ; plusieurs marqueurs pour le même jour sont regroupés en une seule entrée. La dernière tâche de l’exemple apparaît donc une seule fois le 20 octobre. Les tâches sans date restent prises en compte dans la progression de leur note.
 
 Dans la vue hebdomadaire, utilisez la liste déroulante de l’échéance pour la déplacer vers un autre jour de la même semaine. Sur ordinateur, vous pouvez aussi faire glisser une tâche avec échéance sur un jour. Ces actions modifient la date d’échéance déjà présente dans la note d’origine.
+
+Dans la vue hebdomadaire, la case d’une tâche modifie son état dans la note source. Pendant la mise à jour, sa case, son échéance et son glisser-déposer sont désactivés ; les erreurs et avertissements d’enregistrement apparaissent à côté. En cas de résultat incertain, vérifiez la note avant de réessayer. Au-delà de 100 entrées, utilisez « Tâches précédentes » et « Tâches suivantes » ; le total inclut toujours toutes les entrées.
 
 ### Notes décennales et séculaires
 
