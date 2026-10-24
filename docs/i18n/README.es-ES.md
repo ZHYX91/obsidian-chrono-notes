@@ -8,11 +8,11 @@ Esta es una **guía breve** para tareas habituales. Los ajustes y límites detal
 
 ## Funciones
 
-Así se ve el calendario en escritorio y Android:
+Vistas actuales ancha y estrecha, generadas con la interfaz del plugin en un entorno de prueba del navegador. Ilustran la distribución; no son capturas de Obsidian ni de Android.
 
-![Calendario de Chrono Notes en escritorio](../assets/chrono-notes-desktop-en.png)
+![Chrono Notes · 840 px](../assets/chrono-notes-calendar-wide-en.png)
 
-![Calendario de Chrono Notes en Android](../assets/chrono-notes-android-en.png)
+![Chrono Notes · 340 px](../assets/chrono-notes-calendar-narrow-en.png)
 
 - Vistas de semana, mes, año y siglo con indicadores de notas, tareas, estadísticas y vistas previas.
 - Notas diarias, semanales, mensuales, trimestrales, anuales, de década y de siglo, con plantillas integradas o Templater.
@@ -48,6 +48,8 @@ Configura los tipos de notas, sus rutas y plantillas, y abre el calendario desde
 
 En una pantalla táctil, mantén pulsada una fecha para abrir su menú y elige la acción para abrir o crear la nota diaria. Si no aparece ningún menú, la nota se abre o se crea al levantar el dedo. Mantener pulsada una entrada de semana, mes u otro periodo abre directamente su nota.
 
+Selecciona una fecha en la vista mensual para leer debajo de la cuadrícula el estado de la nota, los detalles del calendario, los festivos y todos los eventos ICS con sus fuentes. Si está activada la confirmación de creación, el diálogo muestra la ruta de destino y las notas de períodos mayores que se crearán o conservarán.
+
 ### Tareas en el calendario
 
 Añade una tarea con casilla a una nota e incluye un marcador de fecha:
@@ -61,6 +63,8 @@ Añade una tarea con casilla a una nota e incluye un marcador de fecha:
 `🛫` indica la fecha de inicio, `⏳` la fecha programada y `📅` la fecha de vencimiento. Usa el formato `YYYY-MM-DD`. La vista semanal muestra las tareas con alguna de estas fechas dentro de la semana visible. Cada tarea aparece en sus distintas fechas; varios marcadores para el mismo día se agrupan en una sola entrada. Por ejemplo, la última tarea aparece una sola vez el 20 de octubre. Las tareas sin fecha siguen contando para el progreso de su nota.
 
 Usa el desplegable de vencimiento en la vista semanal para cambiar la fecha a otro día de esa semana. En el ordenador también puedes arrastrar una tarea con vencimiento hasta un día. Estas acciones modifican la fecha de vencimiento que ya existe en la nota original.
+
+La casilla de una tarea en la vista semanal cambia su estado en la nota original. Durante la actualización se desactivan su casilla, su selector de vencimiento y el arrastre; los errores o avisos de guardado aparecen junto a ella. Si el resultado es incierto, revisa la nota antes de reintentarlo. Las listas de más de 100 entradas tienen botones «Tareas anteriores» y «Tareas siguientes», y conservan el total completo.
 
 ### Notas de década y de siglo
 

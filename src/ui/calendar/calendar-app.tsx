@@ -1,3 +1,4 @@
+import type { TaskUiFeedback } from "../../features/tasks/task-write-feedback";
 import {
   useCallback,
   useEffect,
@@ -103,11 +104,11 @@ export interface CalendarAppProps {
     initialDate: LocalDate,
     initialEndDate?: LocalDate,
   ) => void;
-  readonly onToggleTask: (task: NoteTask) => Promise<void>;
+  readonly onToggleTask: (task: NoteTask) => Promise<TaskUiFeedback | void>;
   readonly onRescheduleTask: (
     task: NoteTask,
     nextDueDate: LocalDate,
-  ) => Promise<void>;
+  ) => Promise<TaskUiFeedback | void>;
   readonly onOpenTaskSource: (
     task: NoteTask,
     target: NoteOpenTarget,

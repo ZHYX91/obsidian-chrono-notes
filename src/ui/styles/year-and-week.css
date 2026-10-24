@@ -440,21 +440,23 @@
   justify-content: center;
 }
 
-.chrono-notes-week-task-source {
+.chrono-notes-calendar button.chrono-notes-week-task-source {
   background: transparent;
   border: 0;
   border-radius: 2px;
   box-shadow: none !important;
   color: var(--text-normal);
+  display: block;
+  max-width: 100%;
   min-width: 0;
   overflow: hidden;
   padding: 3px 1px;
-  text-align: left;
+  text-align: start;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.chrono-notes-week-task-source:hover {
+.chrono-notes-calendar button.chrono-notes-week-task-source:hover {
   color: var(--text-accent);
 }
 
@@ -681,20 +683,6 @@
     display: inline;
   }
 
-  .chrono-notes-week-task {
-    gap: 5px;
-    grid-template-columns: auto auto minmax(0, 1fr) auto;
-  }
-
-  .chrono-notes-week-task-due {
-    max-width: 82px;
-  }
-
-  .chrono-notes-week-task[data-overdue="none"] small,
-  .chrono-notes-week-task-kind {
-    display: none;
-  }
-
   .chrono-notes-heatmap-legend {
     display: none;
   }
@@ -744,6 +732,45 @@
     line-height: 10px;
   }
 
+}
+
+@container (max-width: 480px) {
+  .chrono-notes-week-task {
+    column-gap: 7px;
+    grid-template-columns: auto minmax(0, auto) minmax(0, 1fr);
+    row-gap: 2px;
+  }
+
+  .chrono-notes-week-task-toggle {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .chrono-notes-week-task-source {
+    grid-column: 2 / -1;
+    grid-row: 1;
+  }
+
+  .chrono-notes-week-task > time,
+  .chrono-notes-week-task-due {
+    grid-column: 2;
+    grid-row: 2;
+    justify-self: start;
+  }
+
+  .chrono-notes-week-task .chrono-notes-week-task-meta {
+    flex-wrap: wrap;
+    grid-column: 3;
+    grid-row: 2;
+    min-width: 0;
+    overflow-wrap: anywhere;
+    white-space: normal;
+  }
+
+  .chrono-notes-week-task[data-overdue="none"] .chrono-notes-week-task-meta,
+  .chrono-notes-week-task-kind {
+    display: none;
+  }
 }
 
 @container (min-width: 720px) {
@@ -811,6 +838,10 @@
     max-width: min(140px, 32cqw);
   }
 
+  .chrono-notes-calendar button.chrono-notes-week-task-source {
+    min-height: 44px;
+  }
+
   .chrono-notes-week-task-toggle,
   .chrono-notes-week-create-range,
   .chrono-notes-interval-list-create {
@@ -849,4 +880,31 @@
     height: clamp(32px, 14cqw, 44px);
     width: clamp(32px, 14cqw, 44px);
   }
+}
+.chrono-notes-week-task-feedback {
+  grid-column: 1 / -1;
+  color: var(--text-muted);
+  overflow-wrap: anywhere;
+}
+
+.chrono-notes-week-task-feedback[data-level="error"] {
+  color: var(--text-error);
+}
+
+.chrono-notes-week-task-feedback[data-level="warning"] {
+  color: var(--text-warning);
+}
+
+
+.chrono-notes-week-task-pages {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-block: 8px;
+}
+
+.chrono-notes-week-task-pages span {
+  color: var(--text-muted);
 }

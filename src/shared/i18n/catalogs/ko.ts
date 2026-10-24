@@ -1,6 +1,20 @@
 import type { MessageCatalog } from "../types";
 
 export const KO_MESSAGES: MessageCatalog = Object.freeze({
+  "weekView.previousTasks": "이전 작업",
+  "weekView.nextTasks": "다음 작업",
+  "weekView.taskPage": "전체 {count}개 중 {start}~{end}개",
+  "calendar.selectedDayDetails": "선택한 날짜 · {date}",
+
+  "weekView.taskPending": "작업 업데이트 중…",
+  "pluginNotice.taskSaveWarning": "편집기에서 작업을 업데이트했지만 저장을 예약하지 못했습니다. 원본 노트를 열어 저장하세요.",
+  "pluginNotice.taskEditorWarning": "작업은 업데이트되었지만 편집기에서 오류가 발생했습니다. 원본 노트를 확인하세요.",
+  "pluginNotice.taskNotApplied": "작업 변경이 적용되지 않았습니다. 원본 노트를 확인한 후 다시 시도하세요.",
+  "pluginNotice.taskUnconfirmed": "작업 변경 결과를 확인할 수 없습니다. 원본 노트를 확인한 후 다시 시도하세요.",
+  "creationModal.cascadeTitle": "더 큰 주기의 노트",
+  "creationModal.cascadeDescription": "없는 노트만 만듭니다. 기존 노트는 변경하지 않습니다.",
+  "creationModal.cascadeExisting": "기존 노트 유지",
+
   "navbar.weekLabel": "{week}주차",
   "operationError.details": "기술 세부 정보: {message}",
   "operationError.icsEmptySource": ".ics 파일 경로를 입력하세요.",

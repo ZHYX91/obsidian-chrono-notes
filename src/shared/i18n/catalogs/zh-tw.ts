@@ -2,6 +2,20 @@ import type { MessageValue } from "../message-value";
 import type { MessageKey } from "../types";
 
 export const ZH_TW_MESSAGES = {
+  "weekView.previousTasks": "上一頁任務",
+  "weekView.nextTasks": "下一頁任務",
+  "weekView.taskPage": "第 {start}–{end} 項，共 {count} 項",
+  "calendar.selectedDayDetails": "所選日期 · {date}",
+
+  "weekView.taskPending": "正在更新任務…",
+  "pluginNotice.taskSaveWarning": "任務已在編輯器中更新，但無法安排儲存。請開啟來源筆記並儲存。",
+  "pluginNotice.taskEditorWarning": "任務已更新，但編輯器發生錯誤。請檢查來源筆記。",
+  "pluginNotice.taskNotApplied": "任務修改未生效。請先檢查來源筆記，再重試。",
+  "pluginNotice.taskUnconfirmed": "無法確認任務修改結果。請先檢查來源筆記，再重試。",
+  "creationModal.cascadeTitle": "更大週期的筆記",
+  "creationModal.cascadeDescription": "僅建立缺少的筆記，已有筆記保持不變。",
+  "creationModal.cascadeExisting": "保留已有筆記",
+
   "navbar.weekLabel": "第{week}週",
   "operationError.details": "技術詳細資訊：{message}",
   "operationError.icsEmptySource": "請填入 .ics 檔案路徑。",

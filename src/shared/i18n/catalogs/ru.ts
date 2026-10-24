@@ -1,6 +1,20 @@
 import type { MessageCatalog } from "../types";
 
 export const RU_MESSAGES: MessageCatalog = Object.freeze({
+  "weekView.previousTasks": "Предыдущие задачи",
+  "weekView.nextTasks": "Следующие задачи",
+  "weekView.taskPage": "{start}–{end} из {count}",
+  "calendar.selectedDayDetails": "Выбранный день · {date}",
+
+  "weekView.taskPending": "Обновление задачи…",
+  "pluginNotice.taskSaveWarning": "Задача изменена в редакторе, но запланировать сохранение не удалось. Откройте исходную заметку и сохраните её.",
+  "pluginNotice.taskEditorWarning": "Задача изменена, но редактор сообщил об ошибке. Проверьте исходную заметку.",
+  "pluginNotice.taskNotApplied": "Изменение не применено. Проверьте исходную заметку, прежде чем повторить попытку.",
+  "pluginNotice.taskUnconfirmed": "Не удалось подтвердить результат изменения. Проверьте исходную заметку, прежде чем повторить попытку.",
+  "creationModal.cascadeTitle": "Заметки более крупных периодов",
+  "creationModal.cascadeDescription": "Будут созданы только отсутствующие заметки. Существующие останутся без изменений.",
+  "creationModal.cascadeExisting": "Сохранить существующую",
+
   "navbar.weekLabel": "Неделя {week}",
   "operationError.details": "Технические подробности: {message}",
   "operationError.icsEmptySource": "Укажите путь к файлу .ics.",

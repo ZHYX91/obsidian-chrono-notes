@@ -6,9 +6,10 @@ import {
 } from "../../core/note/task-line-rewrite";
 import type { LocalDate } from "../../core/periodic/periodic-date";
 import type { NoteOpenTarget } from "../periodic/periodic-note-commands";
+import type { TaskWriteFeedback } from "./task-write-feedback";
 
 export interface TaskFilePort {
-  process(path: string, update: (content: string) => string | null): Promise<void>;
+  process(path: string, update: (content: string) => string | null): Promise<TaskWriteFeedback | void>;
 }
 
 export interface TaskWorkspacePort {
@@ -16,7 +17,7 @@ export interface TaskWorkspacePort {
 }
 
 export type TaskCommandResult = Exclude<TaskLineRewriteResult, { status: "updated" }> |
-  Readonly<{ status: "updated" }>;
+  Readonly<{ status: "updated" } & TaskWriteFeedback>;
 
 export class TaskCommands {
   constructor(
@@ -44,12 +45,12 @@ export class TaskCommands {
     rewrite: (content: string) => TaskLineRewriteResult,
   ): Promise<TaskCommandResult> {
     let outcome: TaskLineRewriteResult | null = null;
-    await this.files.process(task.path, (content) => {
+    const feedback = await this.files.process(task.path, (content) => {
       outcome = rewrite(content);
       return outcome.status === "updated" ? outcome.content : null;
     });
     const result = outcome as TaskLineRewriteResult | null;
     if (result === null) throw new Error("Task file processor did not run");
-    return result.status === "updated" ? Object.freeze({ status: "updated" }) : result;
+    return result.status === "updated" ? Object.freeze({ status: "updated", ...feedback }) : result;
   }
 }

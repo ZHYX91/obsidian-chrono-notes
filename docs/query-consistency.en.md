@@ -20,6 +20,8 @@ New range notes write the explicit range marker. Their destination must satisfy 
 
 NoteIndex is the sole derived note index. Query caches retain immutable index entries and dependency references, never reread the Vault, and own no second copy of note facts. NoteIndex live no-op detection retains fixed-size canonical-document fingerprints rather than long-lived body or frontmatter strings for that detection. Persistent caching stores only discardable derived data.
 
+`NoteIndexCacheWriter` only schedules and serializes persistence of snapshots supplied by NoteIndex; it publishes no query state. Week task paging slices the complete query only for rendering and preserves its total count. Month selected-day details reuse the same queried day. Pending and error feedback is local interaction state keyed by complete task identity and cannot replace the indexed checkbox or due date.
+
 ## 4. Regression verification
 
 `calendar-query-consistency.test.ts` compares cached business values with direct selector results. Provenance version fields are excluded from the business comparison; all other values must agree. Tests cover non-English paths across periodic-note types, modifications and deletions while readiness remains ready, and month/week updates to out-of-scope explicit range boundaries, moves, deletions, and marker changes. React regressions keep each view open while changing only its path language and require immediate note-state updates in Month, Week, Year, and Century. `interval-list-setup.test.ts` independently verifies that unmarked scanning does not block creation eligibility.

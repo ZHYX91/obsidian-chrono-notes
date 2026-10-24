@@ -1,6 +1,20 @@
 import type { MessageCatalog } from "../types";
 
 export const VI_MESSAGES: MessageCatalog = Object.freeze({
+  "weekView.previousTasks": "Công việc trước",
+  "weekView.nextTasks": "Công việc tiếp theo",
+  "weekView.taskPage": "{start}–{end} trên {count}",
+  "calendar.selectedDayDetails": "Ngày đã chọn · {date}",
+
+  "weekView.taskPending": "Đang cập nhật công việc…",
+  "pluginNotice.taskSaveWarning": "Công việc đã được cập nhật trong trình soạn thảo nhưng chưa thể lên lịch lưu. Hãy mở ghi chú nguồn và lưu lại.",
+  "pluginNotice.taskEditorWarning": "Công việc đã được cập nhật nhưng trình soạn thảo báo lỗi. Hãy kiểm tra ghi chú nguồn.",
+  "pluginNotice.taskNotApplied": "Thay đổi chưa được áp dụng. Hãy kiểm tra ghi chú nguồn trước khi thử lại.",
+  "pluginNotice.taskUnconfirmed": "Không thể xác nhận kết quả thay đổi. Hãy kiểm tra ghi chú nguồn trước khi thử lại.",
+  "creationModal.cascadeTitle": "Ghi chú cho chu kỳ lớn hơn",
+  "creationModal.cascadeDescription": "Chỉ tạo những ghi chú còn thiếu. Ghi chú hiện có được giữ nguyên.",
+  "creationModal.cascadeExisting": "Giữ ghi chú hiện có",
+
   "navbar.weekLabel": "Tuần {week}",
   "operationError.details": "Chi tiết kỹ thuật: {message}",
   "operationError.icsEmptySource": "Hãy nhập đường dẫn đến tệp .ics.",

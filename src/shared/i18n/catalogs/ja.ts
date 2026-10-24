@@ -1,6 +1,20 @@
 import type { MessageCatalog } from "../types";
 
 export const JA_MESSAGES: MessageCatalog = Object.freeze({
+  "weekView.previousTasks": "前のタスク",
+  "weekView.nextTasks": "次のタスク",
+  "weekView.taskPage": "{count} 件中 {start}～{end} 件",
+  "calendar.selectedDayDetails": "選択した日 · {date}",
+
+  "weekView.taskPending": "タスクを更新中…",
+  "pluginNotice.taskSaveWarning": "エディター内のタスクは更新されましたが、保存を予約できませんでした。元のノートを開いて保存してください。",
+  "pluginNotice.taskEditorWarning": "タスクは更新されましたが、エディターでエラーが発生しました。元のノートを確認してください。",
+  "pluginNotice.taskNotApplied": "タスクの変更は適用されませんでした。元のノートを確認してから再試行してください。",
+  "pluginNotice.taskUnconfirmed": "タスクの変更結果を確認できませんでした。元のノートを確認してから再試行してください。",
+  "creationModal.cascadeTitle": "より長い期間のノート",
+  "creationModal.cascadeDescription": "存在しないノートだけを作成します。既存のノートは変更しません。",
+  "creationModal.cascadeExisting": "既存のノートを保持",
+
   "navbar.weekLabel": "第{week}週",
   "operationError.details": "技術的な詳細：{message}",
   "operationError.icsEmptySource": ".ics ファイルのパスを入力してください。",

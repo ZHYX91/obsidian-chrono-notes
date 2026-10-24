@@ -6,11 +6,11 @@ Chrono Notes adds a calendar to Obsidian for daily, weekly, and other periodic n
 
 ## Features
 
-See the desktop and Android calendar layouts:
+Current wide and narrow calendar layouts, rendered from the plugin UI in a browser fixture. These images are examples of the layout, not Obsidian or Android host screenshots.
 
-![Chrono Notes desktop calendar workspace](https://raw.githubusercontent.com/ZHYX91/obsidian-chrono-notes/main/docs/assets/chrono-notes-desktop-en.png)
+![Chrono Notes · 840 px](https://raw.githubusercontent.com/ZHYX91/obsidian-chrono-notes/main/docs/assets/chrono-notes-calendar-wide-en.png)
 
-![Chrono Notes Android calendar workspace](https://raw.githubusercontent.com/ZHYX91/obsidian-chrono-notes/main/docs/assets/chrono-notes-android-en.png)
+![Chrono Notes · 340 px](https://raw.githubusercontent.com/ZHYX91/obsidian-chrono-notes/main/docs/assets/chrono-notes-calendar-narrow-en.png)
 
 - A century view grouped by decade, with the same periodic-note cells, indicators and interactions as the year overview.
 - Year, month, and week calendar views with note state, tasks, holidays, local ICS events, and time-range notes.
@@ -60,6 +60,8 @@ The main calendar, month selectors, and date dialogs always use the Gregorian ca
 3. Optionally enable calendar and holiday extensions or add local ICS sources.
 4. Click a date to select it; double-click or press Enter to open or create its periodic note. Right-click opens date actions; when ICS events exist, **View calendar events** shows the complete event list. On a touch screen, long-press a date to open its menu. If no menu appears, releasing your finger opens or creates the daily note. Long-pressing a week, month, or other period entry opens its note directly.
 
+Select a date in Month view to read its note status, calendar details, holidays, and complete ICS event list with sources below the grid. When creation confirmation is enabled, the dialog shows the target path and any larger-period notes that will be created or kept.
+
 ### Tasks on the calendar
 
 Add a checkbox task to a note and include a date marker:
@@ -72,6 +74,8 @@ Add a checkbox task to a note and include a date marker:
 `🛫` marks the start date, `⏳` the scheduled date, and `📅` the due date. Use `YYYY-MM-DD` dates. Week view lists tasks whose start, scheduled, or due date falls in the displayed week. A task appears on each distinct date; multiple markers for the same day share one entry. Tasks without dates still count toward their note's task progress.
 
 Use the due-date dropdown in Week view to move a deadline to another day of the displayed week. On desktop, you can also drag a due-date task onto a day. These actions change the task's existing due date in its source note.
+
+In Week view, tick a task to change its completion state in the source note. While an update runs, that task’s checkbox, due-date control, and drag action are disabled; a message beside the task explains any failure or saving warning. Check the source note before retrying an uncertain update. Lists longer than 100 entries have Previous tasks and Next tasks buttons, with the full count retained.
 
 ### Decadal and century notes
 

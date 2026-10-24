@@ -1,6 +1,20 @@
 import type { MessageCatalog } from "../types";
 
 export const AR_MESSAGES = Object.freeze({
+  "weekView.previousTasks": "المهام السابقة",
+  "weekView.nextTasks": "المهام التالية",
+  "weekView.taskPage": "{start}–{end} من {count}",
+  "calendar.selectedDayDetails": "اليوم المحدد · {date}",
+
+  "weekView.taskPending": "جارٍ تحديث المهمة…",
+  "pluginNotice.taskSaveWarning": "تم تحديث المهمة في المحرر، لكن تعذّر جدولة الحفظ. افتح الملاحظة المصدر واحفظها.",
+  "pluginNotice.taskEditorWarning": "تم تحديث المهمة، لكن المحرر أبلغ عن خطأ. تحقّق من الملاحظة المصدر.",
+  "pluginNotice.taskNotApplied": "لم يُطبّق التغيير. تحقّق من الملاحظة المصدر قبل المحاولة مجددًا.",
+  "pluginNotice.taskUnconfirmed": "تعذّر التأكد من نتيجة التغيير. تحقّق من الملاحظة المصدر قبل المحاولة مجددًا.",
+  "creationModal.cascadeTitle": "ملاحظات الفترات الأكبر",
+  "creationModal.cascadeDescription": "ستُنشأ الملاحظات الناقصة فقط. ستبقى الملاحظات الموجودة دون تغيير.",
+  "creationModal.cascadeExisting": "الإبقاء على الموجودة",
+
   "navbar.weekLabel": "الأسبوع {week}",
   "operationError.details": "التفاصيل التقنية: {message}",
   "operationError.icsEmptySource": "أدخل مسار ملف .ics.",

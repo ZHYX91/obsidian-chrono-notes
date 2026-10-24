@@ -22,6 +22,7 @@ import {
   type PersistedNoteIndexEntry,
   type PersistedNoteIndexSnapshot,
 } from "./note-index-cache";
+import { NoteIndexCacheWriter } from "./note-index-cache-writer";
 import {
   EMPTY_INTERVAL_INDEX_SNAPSHOT,
   EMPTY_TASK_DATE_INDEX_SNAPSHOT,
@@ -268,12 +269,10 @@ export class NoteIndex {
   private readonly scheduleLiveCommitCheckpoint: (callback: () => void) => () => void;
   private readonly scheduleReadinessCheckpoint: (callback: () => void) => () => void;
   private readonly cache: NoteIndexCache | null;
-  private readonly scheduleCacheSave: (callback: () => void) => () => void;
+  private readonly cacheWriter: NoteIndexCacheWriter;
   private diagnosticsEnabled: boolean;
   private scheduledEventFlush: ScheduledFlush | null = null;
   private cancelReadinessCheckpoint: (() => void) | null = null;
-  private cancelCacheSave: (() => void) | null = null;
-  private cacheSaveTail: Promise<void> = Promise.resolve();
   private lastFullIndex: NoteIndexOperationDiagnostics | null = null;
   private lastIncrementalUpdate: NoteIndexOperationDiagnostics | null = null;
 
@@ -303,8 +302,15 @@ export class NoteIndex {
     this.scheduleReadinessCheckpoint = options.scheduleReadinessCheckpoint
       ?? scheduleMacrotaskCheckpoint;
     this.cache = options.cache ?? null;
-    this.scheduleCacheSave = options.scheduleCacheSave
-      ?? ((callback) => scheduleTimeout(callback, DEFAULT_CACHE_SAVE_DELAY_MS));
+    this.cacheWriter = new NoteIndexCacheWriter({
+      cache: this.cache,
+      schedule: options.scheduleCacheSave
+        ?? ((callback) => scheduleTimeout(callback, DEFAULT_CACHE_SAVE_DELAY_MS)),
+      canSchedule: () => this.active && this.source.listFiles !== undefined,
+      canSave: () => this.active && this.snapshot.readiness === "ready" && this.isLiveWorkIdle(),
+      snapshot: () => this.createCacheSnapshot(),
+      onError: (error) => reportCacheFailure("save", error),
+    });
     this.diagnosticsEnabled = this.diagnostics !== null;
   }
 
@@ -403,8 +409,7 @@ export class NoteIndex {
     this.scheduledEventFlush = null;
     this.cancelReadinessCheckpoint?.();
     this.cancelReadinessCheckpoint = null;
-    this.cancelCacheSave?.();
-    this.cancelCacheSave = null;
+    this.cacheWriter.cancel();
     this.cancelLiveReadBatches();
     this.cancelQueuedReads();
     this.releaseRunningReadSlots();
@@ -459,7 +464,7 @@ export class NoteIndex {
       throw new Error("NoteIndex cache is not configured");
     }
     const clearLifecycle = this.lifecycle;
-    await this.cacheSaveTail;
+    await this.cacheWriter.settled();
     if (this.active || this.lifecycle !== clearLifecycle) {
       throw new Error("NoteIndex lifecycle changed before clearing its cache");
     }
@@ -477,9 +482,8 @@ export class NoteIndex {
     if (this.cache === null || this.source.listFiles === undefined) {
       throw new Error("NoteIndex cache is not configured");
     }
-    this.cancelCacheSave?.();
-    this.cancelCacheSave = null;
-    await this.persistCacheSnapshot(this.createCacheSnapshot());
+    this.cacheWriter.cancel();
+    await this.cacheWriter.save(this.createCacheSnapshot());
   }
 
   get(path: string): NoteIndexEntry {
@@ -503,7 +507,7 @@ export class NoteIndex {
   private async loadCacheSnapshot(lifecycle: number): Promise<PersistedNoteIndexSnapshot | null> {
     if (this.cache === null) return null;
     try {
-      await this.cacheSaveTail;
+      await this.cacheWriter.settled();
       if (!this.isCurrentLifecycle(lifecycle)) return null;
       const raw = await this.cache.load();
       if (!this.isCurrentLifecycle(lifecycle)) return null;
@@ -1196,8 +1200,7 @@ export class NoteIndex {
     this.scheduledEventFlush = null;
     this.cancelReadinessCheckpoint?.();
     this.cancelReadinessCheckpoint = null;
-    this.cancelCacheSave?.();
-    this.cancelCacheSave = null;
+    this.cacheWriter.cancel();
     this.cancelLiveReadBatches();
     this.cancelQueuedReads();
     this.releaseRunningReadSlots();
@@ -1295,44 +1298,7 @@ export class NoteIndex {
     } finally {
       this.finishDiagnosticTiming("listenerNotificationsMs", notificationStarted);
     }
-    if (readiness === "ready") this.scheduleCachePersistence();
-  }
-
-  private scheduleCachePersistence(): void {
-    if (
-      this.cache === null ||
-      this.source.listFiles === undefined ||
-      !this.active ||
-      this.cancelCacheSave !== null
-    ) {
-      return;
-    }
-    this.cancelCacheSave = this.scheduleCacheSave(() => {
-      this.cancelCacheSave = null;
-      if (
-        !this.active ||
-        this.snapshot.readiness !== "ready" ||
-        !this.isLiveWorkIdle()
-      ) {
-        this.scheduleCachePersistence();
-        return;
-      }
-      void this.persistCacheSnapshot(this.createCacheSnapshot()).catch(() => undefined);
-    });
-  }
-
-  private persistCacheSnapshot(
-    snapshot: PersistedNoteIndexSnapshot,
-  ): Promise<void> {
-    const cache = this.cache;
-    if (cache === null) {
-      return Promise.reject(new Error("NoteIndex cache is not configured"));
-    }
-    const save = this.cacheSaveTail.then(() => cache.save(snapshot));
-    this.cacheSaveTail = save.catch((error: unknown) => {
-      reportCacheFailure("save", error);
-    });
-    return save;
+    if (readiness === "ready") this.cacheWriter.schedule();
   }
 
   private createCacheSnapshot(): PersistedNoteIndexSnapshot {

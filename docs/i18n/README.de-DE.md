@@ -8,11 +8,11 @@ Dies ist eine **Kurzanleitung** für die üblichen Aufgaben. Die vollständigen 
 
 ## Funktionen
 
-So sieht der Kalender auf Desktop und Android aus:
+Aktuelle breite und schmale Kalenderansichten, mit der Plugin-Oberfläche in einer Browser-Testumgebung gerendert. Die Bilder zeigen das Layout, keine Aufnahmen aus Obsidian oder Android.
 
-![Chrono Notes Kalender auf Desktop](../assets/chrono-notes-desktop-en.png)
+![Chrono Notes · 840 px](../assets/chrono-notes-calendar-wide-en.png)
 
-![Chrono Notes Kalender auf Android](../assets/chrono-notes-android-en.png)
+![Chrono Notes · 340 px](../assets/chrono-notes-calendar-narrow-en.png)
 
 - Kalenderansichten für Woche, Monat, Jahr und Jahrhundert mit Notizstatus, Aufgaben, Vorschau und Statistiken.
 - Tages-, Wochen-, Monats-, Quartals-, Jahres-, Jahrzehnt- und Jahrhundertnotizen mit eigenen Pfaden und Vorlagen, auch mit Templater.
@@ -40,13 +40,15 @@ Eine vorhandene `data.json` sichern und behalten; nur die drei Programmdateien e
 
 ## Verwendung
 
-Hauptkalender, Monatsauswahl und Datumsdialoge verwenden immer den gregorianischen Kalender. Die Oberflächensprache ändert Monatsnamen und Ziffern, nicht das Kalendersystem. Zusätzliche Datumsinformationen wählst du über Kalendererweiterungen.
+Hauptkalender, Monatsauswahl und Datumsdialoge verwenden immer den gregorianischen Kalender. Die Oberflächensprache ändert Monatsnamen und Ziffern, nicht das Kalendersystem. Zusätzliche Datumsinformationen wählen Sie über Kalendererweiterungen.
 
 **Vor dem Hinzufügen einer ICS-Datei:** Chrono Notes liest lokale Kalenderdateien, ruft aber keine Online-Abonnements ab und erweitert keine wiederkehrenden Ereignisse mit `RRULE` oder `RDATE`. Übersprungene Termine werden gezählt; Kalender mit Wiederholungsregeln können daher unvollständig aussehen. Pfade außerhalb des Vaults sind nur am Desktop verfügbar.
 
 Stellen Sie in Chrono Notes die gewünschten Notizarten, Pfade und Vorlagen ein und öffnen Sie den Kalender über die Seitenleiste oder Befehlspalette. **Ein Klick wählt ein Datum aus, erstellt aber keine Notiz.** Mit einem Doppelklick oder Enter öffnen oder erstellen Sie die Notiz. Ein Rechtsklick öffnet das Datumsmenü. Sind ICS-Termine vorhanden, können Sie dort die vollständige Terminliste öffnen. Strg/Befehl-Klick oder Mittelklick öffnet die Notiz in einem neuen Tab. Kalendererweiterungen und ICS-Quellen lassen sich bei Bedarf in den Einstellungen aktivieren.
 
 Auf einem Touchscreen öffnet langes Drücken auf ein Datum dessen Menü. Wählen Sie dort die Aktion zum Öffnen oder Erstellen der Tagesnotiz. Erscheint kein Menü, wird die Tagesnotiz beim Loslassen geöffnet oder erstellt. Langes Drücken auf einen Wochen-, Monats- oder anderen Periodeneintrag öffnet die zugehörige Notiz direkt.
+
+Wählen Sie in der Monatsansicht ein Datum, um darunter Notizstatus, Kalenderdetails, Feiertage und die vollständige ICS-Terminliste mit Quellen zu lesen. Bei aktivierter Erstellungsbestätigung zeigt der Dialog den Zielpfad sowie größere Periodennotizen, die erstellt oder beibehalten werden.
 
 ### Aufgaben im Kalender
 
@@ -61,6 +63,8 @@ Ergänzen Sie eine Aufgabe in einer Notiz um ein Datumszeichen:
 `🛫` steht für das Startdatum, `⏳` für das geplante Datum und `📅` für das Fälligkeitsdatum. Verwenden Sie das Format `YYYY-MM-DD`. Die Wochenansicht zeigt Aufgaben, deren Start-, Plan- oder Fälligkeitsdatum in die angezeigte Woche fällt. Eine Aufgabe erscheint an jedem ihrer unterschiedlichen Termine; mehrere Datumszeichen für denselben Tag ergeben nur einen Eintrag. Die letzte Beispielaufgabe erscheint also am 20. Oktober nur einmal. Aufgaben ohne Datum zählen weiterhin zum Aufgabenfortschritt ihrer Notiz.
 
 Über die Auswahl des Fälligkeitsdatums in der Wochenansicht können Sie eine Frist auf einen anderen Tag derselben Woche verschieben. Auf dem Desktop können Sie eine Aufgabe mit Fälligkeitsdatum auch auf einen Tag ziehen. Beide Aktionen ändern das bereits vorhandene Fälligkeitsdatum in der ursprünglichen Notiz.
+
+Mit dem Kontrollkästchen in der Wochenansicht ändern Sie den Aufgabenstatus in der Quellnotiz. Während der Aktualisierung sind Kontrollkästchen, Fälligkeitsauswahl und Ziehen für diese Aufgabe gesperrt; Fehler oder Speicherwarnungen erscheinen daneben. Prüfen Sie bei unklarem Ergebnis die Quellnotiz vor einem erneuten Versuch. Über 100 Einträge werden mit „Vorherige Aufgaben“ und „Nächste Aufgaben“ seitenweise angezeigt; die Gesamtzahl bleibt vollständig.
 
 ### Jahrzehnt- und Jahrhundertnotizen
 
@@ -94,7 +98,7 @@ Ohne die Eigenschaft `chrono-notes` wird eine Notiz nur im konfigurierten Suchbe
 
 ## Einstellungen
 
-Unter Allgemein findest du Anleitung und Problem melden. Beim Ändern einer Kalender- oder Feiertagserweiterung bleibt der aktuelle Reiter sichtbar und der Tastaturfokus beim gerade verwendeten Steuerelement.
+Unter Allgemein finden Sie die Anleitung und die Möglichkeit, ein Problem zu melden. Beim Ändern einer Kalender- oder Feiertagserweiterung bleibt der aktuelle Reiter sichtbar und der Tastaturfokus beim gerade verwendeten Steuerelement.
 
 Unter Allgemein Sprache, Wochenbeginn, Datumsanzeige und Vorlagen wählen. Unter Periodische Notizen die Dateipfade prüfen, bevor vorhandene Namen durch eine andere Pfadsprache nicht mehr gefunden werden. Darstellung, Aufgaben, Statistiken, Erweiterungen und Zeitraumnotizen haben eigene Einstellungsbereiche.
 

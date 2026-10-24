@@ -4,6 +4,27 @@ Notable changes to Chrono Notes are documented in this file. The repository's nu
 
 ## Unreleased
 
+## 0.8.0
+
+### Added
+
+- Show task-level progress, failure, and save warnings while preventing duplicate task edits.
+- List planned larger-period paths and existing-note status in creation confirmations.
+- Show selected-day details below the month grid, including complete calendar events and ICS sources.
+- Add repeatable browser measurements for 1,000/5,000 weekly tasks, real IndexedDB cache writes, pagination, and long tasks.
+
+### Fixed
+
+- Give weekly task text its own row in narrow calendars, with wrapping date/status details below and separate touch-sized source and date controls.
+- Verify open-editor task transactions against the actual resulting buffer, original file identity, and owning view before reporting success or requesting a save.
+- Keep large weekly task lists responsive with 100-item pages while preserving the complete query and task count.
+- Update development-only Happy DOM to 21.0.4 and fast-uri to 3.1.9 for upstream security fixes; runtime dependencies remain unchanged.
+
+### Changed
+
+- Isolate serialized cache persistence from NoteIndex while retaining one authoritative publisher.
+- Replace outdated host screenshots with clearly labelled current browser-fixture layouts and synchronize all 16 setup guides and the paired engineering documents.
+
 ## 0.7.9
 
 ### Fixed

@@ -8,11 +8,11 @@ Este é um **guia resumido** das tarefas comuns. Para configurações e limites 
 
 ## Recursos
 
-Veja o calendário no computador e no Android:
+Layouts atuais largo e estreito, renderizados com a interface do plugin em um ambiente de teste do navegador. São exemplos do layout, não capturas do Obsidian ou do Android.
 
-![Calendário Chrono Notes no computador](../assets/chrono-notes-desktop-en.png)
+![Chrono Notes · 840 px](../assets/chrono-notes-calendar-wide-en.png)
 
-![Calendário Chrono Notes no Android](../assets/chrono-notes-android-en.png)
+![Chrono Notes · 340 px](../assets/chrono-notes-calendar-narrow-en.png)
 
 - Visões de semana, mês, ano e século com status das notas, tarefas, estatísticas e prévias.
 - Notas diárias, semanais, mensais, trimestrais, anuais, por década e por século, com modelos próprios ou Templater.
@@ -48,6 +48,8 @@ Configure os tipos de notas, os caminhos e os modelos; depois abra o calendário
 
 Em uma tela sensível ao toque, mantenha uma data pressionada para abrir o menu e escolha a ação para abrir ou criar a nota diária. Se nenhum menu aparecer, a nota será aberta ou criada quando você soltar o dedo. Um toque prolongado em uma entrada de semana, mês ou outro período abre diretamente a nota correspondente.
 
+Selecione uma data na visão mensal para ver abaixo da grade o estado da nota, detalhes do calendário, feriados e todos os eventos ICS com suas fontes. Se a confirmação de criação estiver ativada, a janela mostra o caminho de destino e as notas de períodos maiores que serão criadas ou mantidas.
+
 ### Tarefas no calendário
 
 Adicione uma tarefa com caixa de seleção a uma nota e inclua um marcador de data:
@@ -61,6 +63,8 @@ Adicione uma tarefa com caixa de seleção a uma nota e inclua um marcador de da
 `🛫` indica a data de início, `⏳` a data programada e `📅` o prazo. Use o formato `YYYY-MM-DD`. A visão semanal mostra as tarefas que tenham uma dessas datas na semana exibida. Cada tarefa aparece em suas diferentes datas; marcadores para o mesmo dia são reunidos em uma única entrada. A última tarefa do exemplo, portanto, aparece apenas uma vez em 20 de outubro. Tarefas sem data continuam contando no progresso da nota.
 
 Na visão semanal, use a lista de prazos para escolher outro dia da mesma semana. No computador, também é possível arrastar uma tarefa com prazo para um dia. Essas ações alteram a data de prazo já existente na nota original.
+
+A caixa de seleção de uma tarefa na visão semanal muda seu estado na nota de origem. Durante a atualização, a caixa, a seleção de prazo e o arraste ficam desativados; erros e avisos de salvamento aparecem ao lado. Se o resultado for incerto, verifique a nota antes de tentar de novo. Listas com mais de 100 entradas têm botões “Tarefas anteriores” e “Próximas tarefas”, mantendo a contagem completa.
 
 ### Notas de década e de século
 
@@ -90,7 +94,7 @@ Use datas completas no formato `YYYY-MM-DD`, com o início anterior ou igual ao 
 
 Uma nota de intervalo precisa das propriedades `start` e `end` com datas válidas. O Chrono Notes também grava `chrono-notes: interval` nas novas notas de intervalo, permitindo reconhecê-las em todo o Vault.
 
-Quando `chrono-notes` não existe, a nota só é reconhecida no escopo configurado para notas de intervalo sem marcador. Se a propriedade tiver outro valor que não `interval`, a nota é excluída. Notas existentes não são alteradas automaticamente.
+Quando `chrono-notes` não existe, a nota só é reconhecida no escopo configurado para notas de intervalo sem marcador. Se a propriedade tiver outro valor que não `interval`, a nota não aparece como nota de intervalo. Notas existentes não são alteradas automaticamente.
 
 ## Configurações
 

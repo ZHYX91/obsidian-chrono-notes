@@ -2,6 +2,20 @@ import type { MessageValue } from "../message-value";
 import type { MessageKey } from "../types";
 
 export const EN_MESSAGES = {
+  "weekView.previousTasks": "Previous tasks",
+  "weekView.nextTasks": "Next tasks",
+  "weekView.taskPage": "{start}–{end} of {count}",
+  "calendar.selectedDayDetails": "Selected day · {date}",
+
+  "weekView.taskPending": "Updating task…",
+  "pluginNotice.taskSaveWarning": "Task updated in the editor, but saving could not be scheduled. Open the source note and save it.",
+  "pluginNotice.taskEditorWarning": "Task updated, but the editor reported an error. Check the source note.",
+  "pluginNotice.taskNotApplied": "Task update was not applied. Check the source note before trying again.",
+  "pluginNotice.taskUnconfirmed": "The task update could not be confirmed. Check the source note before trying again.",
+  "creationModal.cascadeTitle": "Larger-period notes",
+  "creationModal.cascadeDescription": "Only missing notes will be created. Existing notes stay unchanged.",
+  "creationModal.cascadeExisting": "Keep existing",
+
   "navbar.weekLabel": "Week {week}",
   "operationError.details": "Technical details: {message}",
   "operationError.icsEmptySource": "Enter the path to an .ics file.",

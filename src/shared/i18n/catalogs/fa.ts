@@ -1,6 +1,20 @@
 import type { MessageCatalog } from "../types";
 
 export const FA_MESSAGES = Object.freeze({
+  "weekView.previousTasks": "کارهای قبلی",
+  "weekView.nextTasks": "کارهای بعدی",
+  "weekView.taskPage": "{start}–{end} از {count}",
+  "calendar.selectedDayDetails": "روز انتخاب‌شده · {date}",
+
+  "weekView.taskPending": "در حال به‌روزرسانی کار…",
+  "pluginNotice.taskSaveWarning": "کار در ویرایشگر به‌روز شد، اما زمان‌بندی ذخیره ممکن نشد. یادداشت مبدأ را باز و ذخیره کنید.",
+  "pluginNotice.taskEditorWarning": "کار به‌روز شد، اما ویرایشگر خطا گزارش کرد. یادداشت مبدأ را بررسی کنید.",
+  "pluginNotice.taskNotApplied": "تغییر اعمال نشد. پیش از تلاش دوباره، یادداشت مبدأ را بررسی کنید.",
+  "pluginNotice.taskUnconfirmed": "نتیجهٔ تغییر قابل تأیید نیست. پیش از تلاش دوباره، یادداشت مبدأ را بررسی کنید.",
+  "creationModal.cascadeTitle": "یادداشت‌های دوره‌های بزرگ‌تر",
+  "creationModal.cascadeDescription": "فقط یادداشت‌های ناموجود ساخته می‌شوند. یادداشت‌های موجود تغییر نمی‌کنند.",
+  "creationModal.cascadeExisting": "نگه‌داشتن یادداشت موجود",
+
   "navbar.weekLabel": "هفتهٔ {week}",
   "operationError.details": "جزئیات فنی: {message}",
   "operationError.icsEmptySource": "مسیر یک فایل .ics را وارد کنید.",

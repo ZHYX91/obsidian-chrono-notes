@@ -3,6 +3,7 @@ import type { Editor, TFile, Vault, Workspace, WorkspaceLeaf } from "obsidian";
 import type { IntervalNoteFilePort } from "../../features/intervals/interval-note-commands";
 import type { PeriodicNoteFilePort } from "../../features/periodic/periodic-note-commands";
 import type { TaskFilePort } from "../../features/tasks/task-commands";
+import { TaskWriteError, type TaskWriteFeedback } from "../../features/tasks/task-write-feedback";
 import type { CreatedNoteReference } from "../../features/templates/created-note-file-port";
 import { isMarkdownFile } from "./obsidian-markdown-files";
 
@@ -95,7 +96,7 @@ function assertCreatedNoteIdentity(
 }
 
 function assertNoOpenMarkdownEditor(workspace: Workspace, path: string): void {
-  if (getOpenTaskEditors(workspace, path).length > 0) {
+  if (getOpenTaskPanes(workspace, path).length > 0) {
     throw new Error(`Created note opened during template rendering: ${path}`);
   }
 }
@@ -106,7 +107,7 @@ export class ObsidianTaskFilePort implements TaskFilePort {
     private readonly workspace: Workspace,
   ) {}
 
-  async process(path: string, update: (content: string) => string | null): Promise<void> {
+  async process(path: string, update: (content: string) => string | null): Promise<TaskWriteFeedback | void> {
     const file = this.vault.getAbstractFileByPath(path);
     if (!isMarkdownFile(file)) throw new Error(`Markdown note not found: ${path}`);
     const openEditor = findOpenTaskEditor(this.workspace, path);
@@ -114,7 +115,8 @@ export class ObsidianTaskFilePort implements TaskFilePort {
       const current = openEditor.editor.getValue();
       const next = update(current);
       if (next === null || next === current) return;
-      if (!isSameOpenTaskEditor(this.workspace, path, openEditor) ||
+      assertTaskFileIdentity(this.vault, file, path);
+      if (openEditor.file !== file || !isSameOpenTaskEditor(this.workspace, path, openEditor) ||
         openEditor.editor.getValue() !== current) {
         throw new Error(`Markdown editor changed before task update: ${path}`);
       }
@@ -131,20 +133,48 @@ export class ObsidianTaskFilePort implements TaskFilePort {
         currentEnd -= 1;
         nextEnd -= 1;
       }
-      openEditor.editor.transaction({
-        changes: [{
-          from: openEditor.editor.offsetToPos(start),
-          to: openEditor.editor.offsetToPos(currentEnd),
-          text: next.slice(start, nextEnd),
-        }],
-      }, "chrono-notes-task");
-      openEditor.requestSave();
+      let transactionError: unknown;
+      let transactionFailed = false;
+      try {
+        openEditor.editor.transaction({
+          changes: [{
+            from: openEditor.editor.offsetToPos(start),
+            to: openEditor.editor.offsetToPos(currentEnd),
+            text: next.slice(start, nextEnd),
+          }],
+        }, "chrono-notes-task");
+      } catch (error) {
+        transactionError = error;
+        transactionFailed = true;
+      }
+      let published: string;
+      try {
+        published = openEditor.editor.getValue();
+      } catch (cause) {
+        throw new TaskWriteError("unconfirmed", path, { cause });
+      }
+      if (published !== next) {
+        throw new TaskWriteError(published === current ? "not-applied" : "unconfirmed", path,
+          transactionFailed ? { cause: transactionError } : undefined);
+      }
+      // The edit is applied. A later host callback/save failure is a warning,
+      // not permission to replay a checkbox toggle or overwrite a third state.
+      try {
+        assertTaskFileIdentity(this.vault, file, path);
+        if (!isSameOpenTaskEditor(this.workspace, path, openEditor)) {
+          return { warning: "save-not-confirmed" };
+        }
+        openEditor.requestSave.call(openEditor.view);
+      } catch {
+        return { warning: "save-not-confirmed" };
+      }
+      if (transactionFailed) return { warning: "editor-reported-error" };
       return;
     }
     let expectedPublished: string | undefined;
     const published = await this.vault.process(file, (content) => {
       assertTaskFileIdentity(this.vault, file, path);
-      if (getOpenTaskEditors(this.workspace, path).length > 0) {
+      if (getOpenTaskPanes(this.workspace, path).length > 0) {
         throw new Error(`Markdown editor opened before task update: ${path}`);
       }
       expectedPublished = update(content) ?? content;
@@ -167,18 +197,36 @@ function assertTaskFileIdentity(vault: Vault, file: TFile, path: string): void {
   }
 }
 
-interface OpenTaskEditor {
+interface OpenTaskPane {
   readonly leaf: WorkspaceLeaf;
+  readonly file: unknown;
+  readonly view: unknown;
+  readonly editor: Editor | null | undefined;
+  readonly requestSave: unknown;
+}
+
+interface OpenTaskEditor extends OpenTaskPane {
   readonly editor: Editor;
   readonly requestSave: () => void;
 }
 
 function findOpenTaskEditor(workspace: Workspace, path: string): OpenTaskEditor | null {
-  const matches = getOpenTaskEditors(workspace, path);
+  const matches = getOpenTaskPanes(workspace, path);
   if (matches.length > 1) {
     throw new Error(`Cannot update task while Markdown note is open in multiple editors: ${path}`);
   }
-  return matches[0] ?? null;
+  const match = matches[0];
+  if (match === undefined) return null;
+  if (!isWritableTaskEditor(match)) {
+    throw new Error(`Cannot update task while the open Markdown editor is unavailable: ${path}`);
+  }
+  return match;
+}
+
+function isWritableTaskEditor(pane: OpenTaskPane): pane is OpenTaskEditor {
+  return pane.editor != null && typeof pane.editor.getValue === "function" &&
+    typeof pane.editor.offsetToPos === "function" && typeof pane.editor.transaction === "function" &&
+    typeof pane.requestSave === "function";
 }
 
 function isSameOpenTaskEditor(
@@ -186,30 +234,25 @@ function isSameOpenTaskEditor(
   path: string,
   expected: OpenTaskEditor,
 ): boolean {
-  const matches = getOpenTaskEditors(workspace, path);
-  return matches.length === 1 &&
-    matches[0]?.leaf === expected.leaf &&
-    matches[0].editor === expected.editor;
+  const matches = getOpenTaskPanes(workspace, path);
+  const current = matches[0];
+  return matches.length === 1 && current !== undefined && isWritableTaskEditor(current) &&
+    current.leaf === expected.leaf && current.view === expected.view &&
+    current.file === expected.file && current.editor === expected.editor &&
+    current.requestSave === expected.requestSave;
 }
 
-function getOpenTaskEditors(workspace: Workspace, path: string): OpenTaskEditor[] {
-  const matches: OpenTaskEditor[] = [];
+/** A matching pane blocks disk fallback even when its editor capabilities are unavailable. */
+function getOpenTaskPanes(workspace: Workspace, path: string): OpenTaskPane[] {
+  const matches: OpenTaskPane[] = [];
   for (const leaf of workspace.getLeavesOfType("markdown")) {
     const view = leaf.view as typeof leaf.view & {
       file?: { path?: unknown } | null;
-      editor?: Editor;
-      requestSave?: () => void;
+      editor?: Editor | null;
+      requestSave?: unknown;
     };
-    if (
-      view.file?.path === path &&
-      view.editor !== undefined &&
-      typeof view.requestSave === "function"
-    ) {
-      matches.push({
-        leaf,
-        editor: view.editor,
-        requestSave: () => view.requestSave?.(),
-      });
+    if (view.file?.path === path) {
+      matches.push({ leaf, file: view.file, view, editor: view.editor, requestSave: view.requestSave });
     }
   }
   return matches;

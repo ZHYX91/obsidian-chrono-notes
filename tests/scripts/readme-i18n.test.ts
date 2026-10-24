@@ -58,7 +58,7 @@ describe("README marketplace link contract", () => {
     );
     await replaceInReadme(
       "docs/i18n/README.de-DE.md",
-      "../assets/chrono-notes-android-en.png",
+      "../assets/chrono-notes-calendar-narrow-en.png",
       "../assets/missing-android-screenshot.png",
     );
     const issues = checkReadmeI18n(fixtureRoot);
@@ -66,7 +66,7 @@ describe("README marketplace link contract", () => {
       "docs/i18n/README.de-DE.md must include 3 installation and 3 usage subsections",
     );
     expect(issues).toContain(
-      "docs/i18n/README.de-DE.md must link screenshot chrono-notes-android-en.png",
+      "docs/i18n/README.de-DE.md must link screenshot chrono-notes-calendar-narrow-en.png",
     );
   });
 

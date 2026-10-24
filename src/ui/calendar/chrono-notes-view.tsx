@@ -1,3 +1,4 @@
+import type { TaskUiFeedback } from "../../features/tasks/task-write-feedback";
 import { ItemView, type WorkspaceLeaf } from "obsidian";
 import { createRoot, type Root } from "react-dom/client";
 
@@ -30,8 +31,8 @@ export interface ChronoNotesViewHost {
   setStatisticDimension(dimension: StatisticDisplayDimension): Promise<void>;
   openPath(path: string, target: NoteOpenTarget): Promise<void>;
   createRange(initialDate: LocalDate, initialEndDate?: LocalDate): void;
-  toggleTask(task: NoteTask): Promise<void>;
-  rescheduleTask(task: NoteTask, nextDueDate: LocalDate): Promise<void>;
+  toggleTask(task: NoteTask): Promise<TaskUiFeedback | void>;
+  rescheduleTask(task: NoteTask, nextDueDate: LocalDate): Promise<TaskUiFeedback | void>;
   openTaskSource(task: NoteTask, target: NoteOpenTarget): Promise<void>;
   openDateContextMenu(
     date: LocalDate,

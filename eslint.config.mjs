@@ -110,7 +110,7 @@ export default defineConfig([
     // Tests, benchmarks, and the Node script declarations use a plain typed
     // ruleset; strict unsafe-typing and binding checks are relaxed because
     // test code intentionally asserts through loose casts and method refs.
-    files: ["tests/**/*.ts", "benchmarks/**/*.ts", "scripts/**/*.d.mts"],
+    files: ["tests/**/*.{ts,tsx}", "benchmarks/**/*.ts", "scripts/**/*.d.mts"],
     extends: [tseslint.configs.recommendedTypeChecked],
     languageOptions: {
       parser: tseslint.parser,

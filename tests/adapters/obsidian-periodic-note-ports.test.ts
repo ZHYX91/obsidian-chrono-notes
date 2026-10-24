@@ -275,7 +275,7 @@ describe("Obsidian periodic note ports", () => {
       }),
     };
     const requestSave = vi.fn();
-    const backgroundLeaf = { view: { file: { path: "Tasks.md" }, editor, requestSave } };
+    const backgroundLeaf = { view: { file: vault.files.get("Tasks.md"), editor, requestSave } };
     const workspace = { getLeavesOfType: vi.fn(() => [backgroundLeaf]) };
     const tasks = new ObsidianTaskFilePort(vault as never, workspace as never);
 

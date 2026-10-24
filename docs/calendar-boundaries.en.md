@@ -38,6 +38,8 @@ One runtime owner maintains the ICS index. All sources share a budget of 100,000
 
 ## 3. Task edits
 
+Editor updates distinguish an unchanged source, an exact intended result and an unconfirmed third state, including when a host transaction throws. An exact applied result may request saving only while the captured file/view/editor binding remains valid. A save-request failure is a warning, not a reason to repeat the edit; requesting a save is not a durability guarantee. An occupied path without a unique usable editor target is refused without a disk fallback.
+
 Task rescheduling locates the due date in the latest Markdown projection's semantic text, using the same masking semantics as task parsing. Only the date characters are replaced; lookalike markers in preceding inline code, HTML comments, or Obsidian `%%` comments, marker spacing, original line endings and unrelated text remain unchanged.
 
 A single open Markdown editor receives a minimal-range transaction instead of a full-document replacement. Closed files still use `Vault.process` for atomic validation and replacement. Multiple editors, changed editor identities and a buffer changed during rewriting still refuse the write. Event-driven task indexing and latest-task identity checks remain intact.
@@ -54,7 +56,7 @@ The primary calendar and note identity use Gregorian dates. The lunar library do
 
 ## 6. Regression verification
 
-Path tests cover missing period fields, literal text resembling format tokens, valid-rule priority, leap days, month/year boundaries, Sunday-start cross-year weeks, stable localized filename identity across interface-language changes, migration of each period's path language while preserving explicit values, and the requirement that invalid rules never call file or workspace ports. Preview tests distinguish parseability from period identity. Cascade tests prove that a failed larger period remains absent while the primary and later successful periods remain on disk and the failure is surfaced after the primary opens.
+Path tests cover missing period fields, literal text resembling format tokens, valid-rule priority, leap days, month/year boundaries, Sunday-start cross-year weeks, stable localized filename identity across interface-language changes, migration of each period's path language while preserving explicit values, and the requirement that invalid rules never call file or workspace ports. Preview tests distinguish parseability from period identity. Cascade tests cover the target list shown before creation, including existing larger notes, cancellation without writes and execution-time existence checks. A pre-creation failure leaves that larger target absent while the primary and later successful periods remain on disk; the failure is surfaced after the primary opens. Failures after creation retain the target and concurrent edits, as defined by the creation contract.
 
 ICS tests cover spring and autumn daylight-saving transitions, different source and display zones, `P1D`, `PT24H`, `P1W`, mixed durations, floating times, UTC sources, points at and just before midnight, and exclusive all-day ends. Existing invalid-end and cancelled/recurring-event tests remain in place.
 
