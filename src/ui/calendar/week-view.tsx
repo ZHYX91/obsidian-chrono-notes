@@ -561,7 +561,7 @@ export function WeekView({
                   >
                     {occurrence.task.text}
                   </button>
-                  <small>
+                  <small className="chrono-notes-week-task-meta">
                     <span className="chrono-notes-week-task-kind">
                       {formatWeekTaskDateKinds(occurrence.dateKinds, t)}
                     </span>

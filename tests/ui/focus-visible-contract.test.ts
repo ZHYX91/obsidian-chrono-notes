@@ -22,9 +22,6 @@ describe("plugin focus visibility", () => {
     const styles = readPluginStyles();
 
     expect(styles).toMatch(
-      /@container \(max-width: 360px\)[\s\S]*?\.chrono-notes-week-task-due\s*\{[^}]*max-width:\s*82px;/s,
-    );
-    expect(styles).toMatch(
       /@media \(pointer: coarse\)[\s\S]*?\.chrono-notes-week-task-due\s*\{[^}]*min-height:\s*44px;[^}]*max-width:\s*min\(140px, 32cqw\);/s,
     );
   });

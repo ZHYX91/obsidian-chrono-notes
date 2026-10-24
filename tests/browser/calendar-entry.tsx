@@ -30,6 +30,8 @@ declare global {
   interface Window {
     runChronoBrowserBenchmark: (count: number) => Promise<BrowserMetrics>;
     mountChronoCalendar: (locale: PluginLocale, width: number) => Promise<void>;
+    mountChronoTaskLayout: (width: number, locale: PluginLocale) => Promise<void>;
+    chronoTaskActions: string[];
   }
 }
 
@@ -175,6 +177,38 @@ window.mountChronoCalendar = async (locale, width) => {
     onRescheduleTask={noAction} onOpenTaskSource={noAction} onOpenDateContextMenu={() => undefined}
     navigationRequest={{ revision: 1, date, noteType: "daily", mode: "jump" }}
   />));
+  await frame();
+  await frame();
+};
+
+window.mountChronoTaskLayout = async (width, locale) => {
+  const container = rootContainer(width);
+  container.classList.add("chrono-notes-view");
+  const fixture = sourceFixture(0);
+  fixture.add("Projects/long-task.md", "- [ ] Review the current period and reconcile every outstanding project decision 📅 2026-12-30 ⏳ 2026-12-30 🛫 2026-12-30\n- [ ] Scheduled task with another long source label ⏳ 2026-12-31");
+  const index = currentIndex = new NoteIndex(fixture.source);
+  await index.start();
+  const settings = createDefaultSettings();
+  const day = { year: 2026, month: 12, day: 30 } as const;
+  const today = { year: 2027, month: 1, day: 3 } as const;
+  const ics = new IcsEventIndex({ read: async () => "" });
+  const translator = createTranslator(locale, locale === "de-DE" ? "de-DE" : "en-US");
+  const query = selectWeekCalendar(day, index.getSnapshot(), ics.getSnapshot(), {
+    locale: translator.locale, weekStartDay: "monday", today, calendarExtensions: [], holidayRegions: [],
+    daily: settings.periodicNotes.daily, weekly: settings.periodicNotes.weekly, rangeNotes: settings.rangeNotes,
+  });
+  window.chronoTaskActions = [];
+  gesture = new LongPressGesture({ setTimeout: (callback, delay) => window.setTimeout(callback, delay), clearTimeout: (handle) => window.clearTimeout(handle) });
+  flushSync(() => root!.render(<div className="chrono-notes-calendar"><WeekView
+    query={query} translator={translator} selectionKind="day" selectedDate={day} today={today} weekStartDay="monday"
+    showNoteIndicators showTaskProgress activePreviewKey={null} previewId="preview"
+    onSelectDate={() => undefined} onOpenPeriodic={noAction} onOpenPath={noAction} onCreateRange={() => undefined}
+    onToggleTask={async () => { window.chronoTaskActions.push("toggle"); }}
+    onRescheduleTask={async (_task, target) => { window.chronoTaskActions.push(`date:${target.day}`); }}
+    onOpenTaskSource={async (_task, target) => { window.chronoTaskActions.push(`source:${target}`); }}
+    onSchedulePreview={() => undefined} onDismissPreview={() => undefined}
+    onOpenDateContextMenu={() => undefined} longPress={gesture!}
+  /></div>));
   await frame();
   await frame();
 };

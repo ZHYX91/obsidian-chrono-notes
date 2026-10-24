@@ -15,8 +15,10 @@ Notable changes to Chrono Notes are documented in this file. The repository's nu
 
 ### Fixed
 
+- Give weekly task text its own row in narrow calendars, with wrapping date/status details below and separate touch-sized source and date controls.
 - Verify open-editor task transactions against the actual resulting buffer, original file identity, and owning view before reporting success or requesting a save.
 - Keep large weekly task lists responsive with 100-item pages while preserving the complete query and task count.
+- Update development-only Happy DOM to 21.0.4 and fast-uri to 3.1.9 for upstream security fixes; runtime dependencies remain unchanged.
 
 ### Changed
 
