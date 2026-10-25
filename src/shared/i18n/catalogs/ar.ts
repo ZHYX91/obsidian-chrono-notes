@@ -1,6 +1,7 @@
 import type { MessageCatalog } from "../types";
 
 export const AR_MESSAGES = Object.freeze({
+  "operationError.noteCreationStopped": "توقف إنشاء الملاحظات لأن الإضافة أُوقفت. تم الاحتفاظ بالملفات التي أُنشئت بالفعل؛ راجعها قبل المتابعة.",
   "weekView.previousTasks": "المهام السابقة",
   "weekView.nextTasks": "المهام التالية",
   "weekView.taskPage": "{start}–{end} من {count}",

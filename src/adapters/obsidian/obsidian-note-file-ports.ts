@@ -5,6 +5,7 @@ import type { PeriodicNoteFilePort } from "../../features/periodic/periodic-note
 import type { TaskFilePort } from "../../features/tasks/task-commands";
 import { TaskWriteError, type TaskWriteFeedback } from "../../features/tasks/task-write-feedback";
 import type { CreatedNoteReference } from "../../features/templates/created-note-file-port";
+import { assertNoteCreationActive } from "../../features/notes/note-creation-lifecycle";
 import { isMarkdownFile } from "./obsidian-markdown-files";
 
 const pendingFolderCreates = new WeakMap<Vault, Map<string, Promise<void>>>();
@@ -13,6 +14,7 @@ export class ObsidianPeriodicNoteFilePort implements PeriodicNoteFilePort {
   constructor(
     private readonly vault: Vault,
     private readonly workspace: Workspace,
+    private readonly signal?: AbortSignal,
   ) {}
 
   exists(path: string): boolean {
@@ -20,11 +22,11 @@ export class ObsidianPeriodicNoteFilePort implements PeriodicNoteFilePort {
   }
 
   async create(path: string, content: string): Promise<CreatedNoteReference> {
-    return createNote(this.vault, path, content);
+    return createNote(this.vault, path, content, this.signal);
   }
 
   async finalize(reference: CreatedNoteReference, content: string): Promise<void> {
-    await finalizeCreatedNote(this.vault, this.workspace, reference, content);
+    await finalizeCreatedNote(this.vault, this.workspace, reference, content, this.signal);
   }
 }
 
@@ -32,6 +34,7 @@ export class ObsidianIntervalNoteFilePort implements IntervalNoteFilePort {
   constructor(
     private readonly vault: Vault,
     private readonly workspace: Workspace,
+    private readonly signal?: AbortSignal,
   ) {}
 
   exists(path: string): boolean {
@@ -39,11 +42,11 @@ export class ObsidianIntervalNoteFilePort implements IntervalNoteFilePort {
   }
 
   async create(path: string, content: string): Promise<CreatedNoteReference> {
-    return createNote(this.vault, path, content);
+    return createNote(this.vault, path, content, this.signal);
   }
 
   async finalize(reference: CreatedNoteReference, content: string): Promise<void> {
-    await finalizeCreatedNote(this.vault, this.workspace, reference, content);
+    await finalizeCreatedNote(this.vault, this.workspace, reference, content, this.signal);
   }
 }
 
@@ -51,8 +54,11 @@ async function createNote(
   vault: Vault,
   path: string,
   content: string,
+  signal?: AbortSignal,
 ): Promise<CreatedNoteReference> {
-  await ensureParentFolders(vault, path);
+  assertNoteCreationActive(signal);
+  await ensureParentFolders(vault, path, signal);
+  assertNoteCreationActive(signal);
   const file = await vault.create(path, content);
   return Object.freeze({ identity: file, initialContent: content, path });
 }
@@ -62,11 +68,14 @@ async function finalizeCreatedNote(
   workspace: Workspace,
   reference: CreatedNoteReference,
   content: string,
+  signal?: AbortSignal,
 ): Promise<void> {
+  assertNoteCreationActive(signal);
   const file = reference.identity;
   assertCreatedNoteIdentity(vault, reference, file);
   assertNoOpenMarkdownEditor(workspace, reference.path);
   const published = await vault.process(file, (current) => {
+    assertNoteCreationActive(signal);
     assertCreatedNoteIdentity(vault, reference, file);
     assertNoOpenMarkdownEditor(workspace, reference.path);
     if (current !== reference.initialContent) {
@@ -258,10 +267,11 @@ function getOpenTaskPanes(workspace: Workspace, path: string): OpenTaskPane[] {
   return matches;
 }
 
-async function ensureParentFolders(vault: Vault, filePath: string): Promise<void> {
+async function ensureParentFolders(vault: Vault, filePath: string, signal?: AbortSignal): Promise<void> {
   const parts = filePath.split("/").slice(0, -1);
   let current = "";
   for (const part of parts) {
+    assertNoteCreationActive(signal);
     current = current.length === 0 ? part : `${current}/${part}`;
     await ensureFolder(vault, current);
   }

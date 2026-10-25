@@ -1,6 +1,7 @@
 import type { MessageCatalog } from "../types";
 
 export const KO_MESSAGES: MessageCatalog = Object.freeze({
+  "operationError.noteCreationStopped": "플러그인이 비활성화되어 노트 생성을 중지했습니다. 이미 생성된 파일은 유지됩니다. 계속하기 전에 확인하세요.",
   "weekView.previousTasks": "이전 작업",
   "weekView.nextTasks": "다음 작업",
   "weekView.taskPage": "전체 {count}개 중 {start}~{end}개",

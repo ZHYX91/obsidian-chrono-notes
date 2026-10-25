@@ -14,6 +14,7 @@ import type { NoteTask } from "../core/note/note-tasks";
 import { IcsEventIndex, type IcsEventIndexSnapshot } from "../features/calendar/ics-event-index";
 import { notifyListeners } from "../features/notify-listeners";
 import { resolveNoteCreationConfirmation } from "../features/notes/note-creation-confirmation";
+import { assertNoteCreationActive } from "../features/notes/note-creation-lifecycle";
 import {
   NoteIndex,
   type NoteIndexDiagnosticsSnapshot,
@@ -163,7 +164,8 @@ export default class ChronoNotesPlugin extends Plugin {
     }
   }
 
-  async saveSettings(): Promise<void> {
+  async saveSettings(signal?: AbortSignal): Promise<void> {
+    assertNoteCreationActive(signal);
     if (this.settingsReadOnly) {
       throw new Error(
         "Chrono Notes settings were created by a newer plugin version and are read-only.",
@@ -172,6 +174,7 @@ export default class ChronoNotesPlugin extends Plugin {
     const runtimeRevision = this.runtimeRevision;
     const snapshot = normalizeSettings(this.settings);
     const save = this.settingsSaveTail.then(async () => {
+      assertNoteCreationActive(signal);
       await this.saveData(snapshot);
       const previousLocale = this.persistedSettings.locale;
       const impact = getSettingsChangeImpact(this.persistedSettings, snapshot);
@@ -412,11 +415,12 @@ export default class ChronoNotesPlugin extends Plugin {
                       path,
                       this.getTranslator(),
                       cascade,
-                    ).confirm(),
+                    ).confirm(runtime.noteCreationSignal),
                     async () => {
                       this.settings.confirmPeriodicNoteCreation = false;
-                      await this.saveSettings();
+                      await this.saveSettings(runtime.noteCreationSignal);
                     },
+                    runtime.noteCreationSignal,
                   ),
               }
             : {}),
@@ -455,11 +459,12 @@ export default class ChronoNotesPlugin extends Plugin {
                     this.app,
                     spec,
                     this.getTranslator(),
-                  ).confirm(),
+                  ).confirm(runtime.noteCreationSignal),
                   async () => {
                     this.settings.confirmIntervalNoteCreation = false;
-                    await this.saveSettings();
+                    await this.saveSettings(runtime.noteCreationSignal);
                   },
+                  runtime.noteCreationSignal,
                 ),
               }
             : {}),
@@ -761,15 +766,22 @@ export default class ChronoNotesPlugin extends Plugin {
     initialEndDate?: LocalDate,
     onSettled?: () => void,
   ): void {
+    const runtime = this.runtime;
+    if (runtime === null) return;
+    const settle = () => {
+      if (this.runtime === runtime && !runtime.noteCreationSignal.aborted) onSettled?.();
+    };
     new CreateIntervalNoteModal(
       this.app,
       initialDate,
       this.getTranslator(),
       (start, end) => {
-        void this.openIntervalNote(start, end).finally(onSettled);
+        if (this.runtime !== runtime || runtime.noteCreationSignal.aborted) return;
+        void this.openIntervalNote(start, end).finally(settle);
       },
-      onSettled,
+      settle,
       initialEndDate,
+      runtime.noteCreationSignal,
     ).open();
   }
 

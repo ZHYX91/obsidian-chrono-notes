@@ -17,6 +17,7 @@ import {
   type NoteTemplatePort,
 } from "../templates/note-template-port";
 import type { CreatedNoteFilePort } from "../templates/created-note-file-port";
+import { assertNoteCreationActive } from "../notes/note-creation-lifecycle";
 
 export type IntervalNoteFilePort = CreatedNoteFilePort;
 
@@ -62,12 +63,14 @@ export class IntervalNoteCommands {
     private readonly files: IntervalNoteFilePort,
     private readonly templates: NoteTemplatePort,
     private readonly workspace: PeriodicNoteWorkspacePort,
+    private readonly signal?: AbortSignal,
   ) {}
 
   async openOrCreate(
     request: OpenOrCreateIntervalNoteRequest,
     settings: IntervalNoteCommandSettings,
   ): Promise<OpenOrCreateIntervalNoteResult> {
+    assertNoteCreationActive(this.signal);
     if (normalizeIntervalNoteFolder(request.folder).length === 0) {
       return Object.freeze({ status: "not-configured" });
     }
@@ -77,18 +80,25 @@ export class IntervalNoteCommands {
     const pendingCreation = this.creationsByPath.get(spec.path);
     if (pendingCreation !== undefined) {
       await pendingCreation;
+      assertNoteCreationActive(this.signal);
       await this.workspace.open(spec.path, target);
+      assertNoteCreationActive(this.signal);
       return Object.freeze({ status: "opened", path: spec.path, created: false });
     }
     if (this.files.exists(spec.path)) {
       await this.workspace.open(spec.path, target);
+      assertNoteCreationActive(this.signal);
       return Object.freeze({ status: "opened", path: spec.path, created: false });
     }
-    if (request.confirmCreate !== undefined && !await request.confirmCreate(spec)) {
-      return Object.freeze({ status: "cancelled", path: spec.path });
+    if (request.confirmCreate !== undefined) {
+      const confirmed = await request.confirmCreate(spec);
+      assertNoteCreationActive(this.signal);
+      if (!confirmed) return Object.freeze({ status: "cancelled", path: spec.path });
     }
     const created = await this.createOnce(spec, settings);
+    assertNoteCreationActive(this.signal);
     await this.workspace.open(spec.path, target);
+    assertNoteCreationActive(this.signal);
     return Object.freeze({ status: "opened", path: spec.path, created });
   }
 
@@ -96,9 +106,11 @@ export class IntervalNoteCommands {
     spec: IntervalNoteSpec,
     settings: IntervalNoteCommandSettings,
   ): Promise<boolean> {
+    assertNoteCreationActive(this.signal);
     const existing = this.creationsByPath.get(spec.path);
     if (existing !== undefined) {
       await existing;
+      assertNoteCreationActive(this.signal);
       return false;
     }
     if (this.files.exists(spec.path)) return false;
@@ -121,6 +133,7 @@ export class IntervalNoteCommands {
   ): Promise<void> {
     let retainedCreatedNote = false;
     try {
+      assertNoteCreationActive(this.signal);
       const context: IntervalNoteTemplateContext = Object.freeze({
         kind: "interval",
         start: spec.start,
@@ -137,17 +150,21 @@ export class IntervalNoteCommands {
         buildIntervalNoteContent(spec),
       );
       await runPreparedNoteCreation(prepared, async () => {
+        assertNoteCreationActive(this.signal);
         const created = await this.files.create(
           spec.path,
           applyIntervalNoteMetadata(prepared.initialContent, spec),
         );
         retainedCreatedNote = true;
+        assertNoteCreationActive(this.signal);
         if (prepared.renderAfterCreate !== undefined) {
           const rendered = await prepared.renderAfterCreate(spec.path);
+          assertNoteCreationActive(this.signal);
           await this.files.finalize(
             created,
             applyIntervalNoteMetadata(rendered, spec),
           );
+          assertNoteCreationActive(this.signal);
         }
       });
     } catch (cause) {

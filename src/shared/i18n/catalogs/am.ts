@@ -1,6 +1,7 @@
 import type { MessageCatalog } from "../types";
 
 export const AM_MESSAGES = Object.freeze({
+  "operationError.noteCreationStopped": "ተሰኪው ስለተሰናከለ ማስታወሻ መፍጠር ቆሟል። አስቀድመው የተፈጠሩ ፋይሎች ተጠብቀዋል፤ ከመቀጠልዎ በፊት ያረጋግጡ።",
   "weekView.previousTasks": "ያለፉ ተግባራት",
   "weekView.nextTasks": "ቀጣይ ተግባራት",
   "weekView.taskPage": "ከ {count} ውስጥ {start}–{end}",

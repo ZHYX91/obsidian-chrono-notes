@@ -12,6 +12,7 @@ export class ConfirmPeriodicNoteModal extends Modal {
   private settled = false;
   private suppressFutureConfirmation = false;
   private resolveResult: ((decision: NoteCreationConfirmationDecision) => void) | null = null;
+  private removeAbortListener: (() => void) | null = null;
 
   constructor(
     app: App,
@@ -22,9 +23,16 @@ export class ConfirmPeriodicNoteModal extends Modal {
     super(app);
   }
 
-  confirm(): Promise<NoteCreationConfirmationDecision> {
+  confirm(signal?: AbortSignal): Promise<NoteCreationConfirmationDecision> {
     return new Promise((resolve) => {
       this.resolveResult = resolve;
+      if (signal?.aborted) {
+        this.finish(false);
+        return;
+      }
+      const abort = () => this.finish(false);
+      signal?.addEventListener("abort", abort, { once: true });
+      this.removeAbortListener = () => signal?.removeEventListener("abort", abort);
       this.open();
     });
   }
@@ -68,6 +76,8 @@ export class ConfirmPeriodicNoteModal extends Modal {
   private finish(confirmed: boolean): void {
     if (this.settled) return;
     this.settled = true;
+    this.removeAbortListener?.();
+    this.removeAbortListener = null;
     this.resolveResult?.(createNoteCreationConfirmationDecision(
       confirmed,
       this.suppressFutureConfirmation,

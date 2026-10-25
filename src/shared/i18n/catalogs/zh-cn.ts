@@ -1,6 +1,7 @@
 import type { MessageValue } from "../message-value";
 
 export const ZH_CN_MESSAGES = {
+  "operationError.noteCreationStopped": "插件已停用，笔记创建已停止。已创建的文件会保留，请检查后再继续。",
   "weekView.previousTasks": "上一页任务",
   "weekView.nextTasks": "下一页任务",
   "weekView.taskPage": "第 {start}–{end} 项，共 {count} 项",

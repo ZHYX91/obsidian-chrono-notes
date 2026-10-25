@@ -30,6 +30,7 @@ function deferred<T>() {
 }
 
 function createFixture() {
+  const controller = new AbortController();
   const lifecycle = createTemplaterLifecycle();
   const files = new Map<string, FakeFile>([
     [TEMPLATE_PATH, { path: TEMPLATE_PATH, extension: "md" }],
@@ -76,17 +77,22 @@ function createFixture() {
   const workspace = { getLeavesOfType: vi.fn((): unknown[] => []) };
   const noteWorkspace = { open: vi.fn(async () => undefined) };
   const app = { plugins: { getPlugin: () => ({ templater }) } };
-  const templates = new ObsidianNoteTemplatePort(app as never, vault as never);
-  const periodic = new PeriodicNoteCommands(
-    new ObsidianPeriodicNoteFilePort(vault as never, workspace as never),
-    templates,
-    noteWorkspace,
-  );
-  const intervals = new IntervalNoteCommands(
-    new ObsidianIntervalNoteFilePort(vault as never, workspace as never),
-    templates,
-    noteWorkspace,
-  );
+  function createCommands(signal: AbortSignal) {
+    const templates = new ObsidianNoteTemplatePort(
+      app as never, vault as never, undefined, undefined, signal,
+    );
+    return {
+      periodic: new PeriodicNoteCommands(
+        new ObsidianPeriodicNoteFilePort(vault as never, workspace as never, signal),
+        templates, noteWorkspace, signal,
+      ),
+      intervals: new IntervalNoteCommands(
+        new ObsidianIntervalNoteFilePort(vault as never, workspace as never, signal),
+        templates, noteWorkspace, signal,
+      ),
+    };
+  }
+  const { periodic, intervals } = createCommands(controller.signal);
   const settings = createDefaultSettings();
   settings.templateEngine = "templater";
   settings.periodicNotes.daily = {
@@ -103,6 +109,7 @@ function createFixture() {
 
   return {
     ...lifecycle, templater, vault, files, contents, workspace, noteWorkspace,
+    controller, periodic, intervals, settings, createCommands,
     creationStarted, reservationsAtCreate, createDaily, createInterval, automaticWrites,
     async finishAutomaticCheck() {
       automaticDelay.resolve();
@@ -112,6 +119,207 @@ function createFixture() {
 }
 
 describe("Templater creation lifecycle", () => {
+  it.each(["periodic", "interval"] as const)(
+    "stops %s creation after a confirmation resolves for an unloaded runtime",
+    async (kind) => {
+      const fixture = createFixture();
+      const confirmation = deferred<boolean>();
+      const confirmCreate = vi.fn(() => confirmation.promise);
+      const creation = kind === "periodic"
+        ? fixture.periodic.openOrCreate({
+            date: { year: 2026, month: 5, day: 18 }, noteType: "daily", confirmCreate,
+          }, fixture.settings)
+        : fixture.intervals.openOrCreate({
+            start: { year: 2026, month: 5, day: 18 },
+            end: { year: 2026, month: 5, day: 20 }, folder: "Ranges", confirmCreate,
+          }, { locale: "en", templateEngine: "templater", templatePath: TEMPLATE_PATH });
+      const rejected = expect(creation).rejects.toMatchObject({
+        details: { code: "noteCreationStopped" },
+      });
+      fixture.controller.abort();
+      confirmation.resolve(true);
+      await rejected;
+      expect(fixture.vault.cachedRead).not.toHaveBeenCalled();
+      expect(fixture.vault.create).not.toHaveBeenCalled();
+      expect(fixture.noteWorkspace.open).not.toHaveBeenCalled();
+    },
+  );
+
+  it.each(["periodic", "interval"] as const)(
+    "stops %s creation after a pending template read",
+    async (kind) => {
+      const fixture = createFixture();
+      const read = deferred<string>();
+      fixture.vault.cachedRead.mockReturnValueOnce(read.promise);
+      const creation = kind === "periodic" ? fixture.createDaily() : fixture.createInterval();
+      const rejected = expect(creation).rejects.toMatchObject({ retainedCreatedNote: false });
+      await vi.waitFor(() => expect(fixture.vault.cachedRead).toHaveBeenCalledOnce());
+      fixture.controller.abort();
+      read.resolve("template");
+      await rejected;
+      expect(fixture.vault.create).not.toHaveBeenCalled();
+      expect(fixture.files_with_pending_templates.size).toBe(0);
+      expect(fixture.noteWorkspace.open).not.toHaveBeenCalled();
+    },
+  );
+
+  it.each(["periodic", "interval"] as const)(
+    "retains a dispatched %s create without starting rendering after unload",
+    async (kind) => {
+      const fixture = createFixture();
+      const created = deferred<void>();
+      const original = fixture.vault.create.getMockImplementation()!;
+      fixture.vault.create.mockImplementationOnce(async (path, content) => {
+        const file = await original(path, content);
+        await created.promise;
+        return file;
+      });
+      const creation = kind === "periodic" ? fixture.createDaily() : fixture.createInterval();
+      const rejected = expect(creation).rejects.toMatchObject({ retainedCreatedNote: true });
+      await fixture.creationStarted.promise;
+      await fixture.finishAutomaticCheck();
+      fixture.controller.abort();
+      created.resolve();
+      await rejected;
+      expect(fixture.files.has(kind === "periodic" ? DAILY_PATH : INTERVAL_PATH)).toBe(true);
+      expect(fixture.templater.parse_template).not.toHaveBeenCalled();
+      expect(fixture.vault.process).not.toHaveBeenCalled();
+      expect(fixture.noteWorkspace.open).not.toHaveBeenCalled();
+      expect(fixture.files_with_pending_templates.size).toBe(0);
+      expect(fixture.end_templater_task).toHaveBeenCalledOnce();
+    },
+  );
+
+  it.each(["periodic", "interval"] as const)(
+    "retains the initial %s note when rendering finishes after unload",
+    async (kind) => {
+      const fixture = createFixture();
+      const render = deferred<string>();
+      fixture.templater.parse_template.mockReturnValueOnce(render.promise);
+      const creation = kind === "periodic" ? fixture.createDaily() : fixture.createInterval();
+      const rejected = expect(creation).rejects.toMatchObject({ retainedCreatedNote: true });
+      await vi.waitFor(() => expect(fixture.templater.parse_template).toHaveBeenCalledOnce());
+      await fixture.finishAutomaticCheck();
+      const path = kind === "periodic" ? DAILY_PATH : INTERVAL_PATH;
+      const initial = fixture.contents.get(path);
+      fixture.controller.abort();
+      render.resolve(RENDERED);
+      await rejected;
+      expect(fixture.contents.get(path)).toBe(initial);
+      expect(fixture.vault.process).not.toHaveBeenCalled();
+      expect(fixture.noteWorkspace.open).not.toHaveBeenCalled();
+      expect(fixture.files_with_pending_templates.size).toBe(0);
+      expect(fixture.end_templater_task).toHaveBeenCalledOnce();
+    },
+  );
+
+  it("releases queued reservations after unload and lets a fresh runtime create", async () => {
+    const fixture = createFixture();
+    const render = deferred<string>();
+    fixture.templater.parse_template.mockReturnValueOnce(render.promise);
+    const first = expect(fixture.createDaily()).rejects.toMatchObject({ retainedCreatedNote: true });
+    await vi.waitFor(() => expect(fixture.templater.parse_template).toHaveBeenCalledOnce());
+    const second = expect(fixture.createInterval()).rejects.toMatchObject({ retainedCreatedNote: false });
+    await vi.waitFor(() => expect(fixture.files_with_pending_templates.size).toBe(2));
+    await fixture.finishAutomaticCheck();
+    fixture.controller.abort();
+    render.resolve(RENDERED);
+    await Promise.all([first, second]);
+    expect(fixture.vault.create).toHaveBeenCalledOnce();
+    expect(fixture.vault.process).not.toHaveBeenCalled();
+    expect(fixture.noteWorkspace.open).not.toHaveBeenCalled();
+    expect(fixture.files_with_pending_templates.size).toBe(0);
+    expect(fixture.end_templater_task.mock.calls).toEqual([[DAILY_PATH], [INTERVAL_PATH]]);
+    const fresh = fixture.createCommands(new AbortController().signal);
+    await expect(fresh.periodic.openOrCreate({
+      date: { year: 2026, month: 5, day: 19 }, noteType: "daily",
+    }, fixture.settings)).resolves.toMatchObject({ status: "opened", created: true });
+  });
+
+  it("releases cancellation ownership before an independent delayed automatic template runs", async () => {
+    const fixture = createFixture();
+    const render = deferred<string>();
+    fixture.templater.parse_template.mockReturnValueOnce(render.promise);
+    const stopped = expect(fixture.createDaily()).rejects.toMatchObject({ retainedCreatedNote: true });
+    await vi.waitFor(() => expect(fixture.templater.parse_template).toHaveBeenCalledOnce());
+    fixture.controller.abort();
+    render.resolve(RENDERED);
+    await stopped;
+    expect(fixture.contents.get(DAILY_PATH)).toBe("");
+    expect(fixture.files_with_pending_templates.size).toBe(0);
+    expect(fixture.vault.process).not.toHaveBeenCalled();
+    expect(fixture.noteWorkspace.open).not.toHaveBeenCalled();
+
+    // Cancellation cannot take ownership of Templater's independent handler
+    // after cleanup. This is the substitute's ordering, not a host verdict.
+    await fixture.finishAutomaticCheck();
+    expect(fixture.automaticWrites).toHaveBeenCalledExactlyOnceWith(DAILY_PATH);
+    expect(fixture.contents.get(DAILY_PATH)).toBe(AUTOMATIC);
+  });
+
+  it.each(["periodic", "interval"] as const)(
+    "refuses a delayed %s mutation callback after unload",
+    async (kind) => {
+      const fixture = createFixture();
+      const process = deferred<void>();
+      const entered = deferred<void>();
+      fixture.vault.process.mockImplementationOnce(async (file, update) => {
+        entered.resolve();
+        await process.promise;
+        const next = update(fixture.contents.get(file.path) ?? "");
+        fixture.contents.set(file.path, next);
+        return next;
+      });
+      const creation = kind === "periodic" ? fixture.createDaily() : fixture.createInterval();
+      const rejected = expect(creation).rejects.toMatchObject({ retainedCreatedNote: true });
+      await entered.promise;
+      await fixture.finishAutomaticCheck();
+      const path = kind === "periodic" ? DAILY_PATH : INTERVAL_PATH;
+      const initial = fixture.contents.get(path);
+      fixture.controller.abort();
+      process.resolve();
+      await rejected;
+      expect(fixture.contents.get(path)).toBe(initial);
+      expect(fixture.noteWorkspace.open).not.toHaveBeenCalled();
+      expect(fixture.files_with_pending_templates.size).toBe(0);
+    },
+  );
+
+  it("does not open a same-path waiter or start a larger period after unload", async () => {
+    const fixture = createFixture();
+    const render = deferred<string>();
+    fixture.templater.parse_template.mockReturnValueOnce(render.promise);
+    fixture.settings.periodicNotes.weekly = { enabled: true, pattern: "[Weekly]/GGGG-[W]WW", templatePath: "" };
+    const request = { date: { year: 2026, month: 5, day: 18 }, noteType: "daily" as const, cascade: true };
+    const first = expect(fixture.periodic.openOrCreate(request, fixture.settings)).rejects.toThrow();
+    await vi.waitFor(() => expect(fixture.templater.parse_template).toHaveBeenCalledOnce());
+    const waiter = expect(fixture.periodic.openOrCreate(request, fixture.settings)).rejects.toThrow();
+    await fixture.finishAutomaticCheck();
+    fixture.controller.abort();
+    render.resolve(RENDERED);
+    await Promise.all([first, waiter]);
+    expect(fixture.vault.create).toHaveBeenCalledOnce();
+    expect(fixture.noteWorkspace.open).not.toHaveBeenCalled();
+  });
+
+  it("stops between parent-folder creation and the note write", async () => {
+    const fixture = createFixture();
+    const folder = deferred<void>();
+    fixture.settings.periodicNotes.daily.pattern = "[Nested/Days]/YYYY-MM-DD";
+    fixture.vault.createFolder.mockImplementationOnce(async (path) => {
+      await folder.promise;
+      fixture.files.set(path, { path });
+    });
+    const stopped = expect(fixture.createDaily()).rejects.toMatchObject({ retainedCreatedNote: false });
+    await vi.waitFor(() => expect(fixture.vault.createFolder).toHaveBeenCalledOnce());
+    fixture.controller.abort();
+    folder.resolve();
+    await stopped;
+    expect(fixture.vault.createFolder).toHaveBeenCalledOnce();
+    expect(fixture.vault.create).not.toHaveBeenCalled();
+    expect(fixture.files_with_pending_templates.size).toBe(0);
+  });
+
   it.each(["periodic", "interval"] as const)(
     "protects a slow %s template from automatic folder rendering",
     async (kind) => {

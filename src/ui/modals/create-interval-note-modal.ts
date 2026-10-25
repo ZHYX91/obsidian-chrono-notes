@@ -14,6 +14,7 @@ export class CreateIntervalNoteModal extends Modal {
   private startValue: string;
   private endValue: string;
   private settled = false;
+  private readonly abort = () => this.close();
 
   constructor(
     app: App,
@@ -22,6 +23,7 @@ export class CreateIntervalNoteModal extends Modal {
     private readonly onSubmit: (start: LocalDate, end: LocalDate) => void,
     private readonly onCancel?: () => void,
     initialEndDate?: LocalDate,
+    private readonly signal?: AbortSignal,
   ) {
     super(app);
     this.startValue = formatLocalDateKey(initialDate);
@@ -31,6 +33,11 @@ export class CreateIntervalNoteModal extends Modal {
   }
 
   override onOpen(): void {
+    if (this.signal?.aborted) {
+      this.close();
+      return;
+    }
+    this.signal?.addEventListener("abort", this.abort, { once: true });
     const messages = getCreationModalMessages(this.translator.t);
     this.titleEl.setText(messages.createRangeTitle);
     this.contentEl.createEl("p", {
@@ -54,6 +61,7 @@ export class CreateIntervalNoteModal extends Modal {
   }
 
   override onClose(): void {
+    this.signal?.removeEventListener("abort", this.abort);
     this.contentEl.empty();
     if (this.settled) return;
     this.settled = true;
@@ -61,6 +69,7 @@ export class CreateIntervalNoteModal extends Modal {
   }
 
   private submit(): void {
+    if (this.settled || this.signal?.aborted) return;
     const start = parseLocalDateKey(this.startValue);
     const end = parseLocalDateKey(this.endValue);
     if (start === null || end === null || toDateTime(start).equals(toDateTime(end))) {

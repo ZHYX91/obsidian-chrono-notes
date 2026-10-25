@@ -1,6 +1,7 @@
 import type { MessageCatalog } from "../types";
 
 export const HE_MESSAGES = Object.freeze({
+  "operationError.noteCreationStopped": "יצירת ההערות הופסקה כי התוסף הושבת. הקבצים שכבר נוצרו נשמרו; יש לבדוק אותם לפני שממשיכים.",
   "weekView.previousTasks": "המשימות הקודמות",
   "weekView.nextTasks": "המשימות הבאות",
   "weekView.taskPage": "{start}–{end} מתוך {count}",

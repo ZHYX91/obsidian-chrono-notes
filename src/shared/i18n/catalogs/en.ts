@@ -2,6 +2,7 @@ import type { MessageValue } from "../message-value";
 import type { MessageKey } from "../types";
 
 export const EN_MESSAGES = {
+  "operationError.noteCreationStopped": "Note creation stopped because the plugin was unloaded. Already created files were kept; review them before continuing.",
   "weekView.previousTasks": "Previous tasks",
   "weekView.nextTasks": "Next tasks",
   "weekView.taskPage": "{start}–{end} of {count}",

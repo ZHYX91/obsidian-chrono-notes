@@ -1,6 +1,7 @@
 import type { MessageCatalog } from "../types";
 
 export const ES_MESSAGES: MessageCatalog = Object.freeze({
+  "operationError.noteCreationStopped": "La creación de notas se detuvo porque se desactivó el plugin. Los archivos ya creados se conservaron; revísalos antes de continuar.",
   "weekView.previousTasks": "Tareas anteriores",
   "weekView.nextTasks": "Tareas siguientes",
   "weekView.taskPage": "{start}–{end} de {count}",

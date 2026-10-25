@@ -4,6 +4,14 @@ Notable changes to Chrono Notes are documented in this file. The repository's nu
 
 ## Unreleased
 
+## 0.8.1
+
+### Fixed
+
+- Stop pending periodic and range-note creation when the plugin unloads, including stale confirmations, queued template work, final writes, opening, and larger-period creation.
+- Keep files already created before a stop and release Templater reservations without starting another write. Third-party template scripts and independent automatic-template handlers remain outside Chrono Notes cancellation control.
+- Close stale creation dialogs and prevent their confirmation preferences from being saved after unload.
+
 ## 0.8.0
 
 ### Added

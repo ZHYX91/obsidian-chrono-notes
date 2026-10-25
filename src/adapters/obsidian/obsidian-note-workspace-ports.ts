@@ -6,14 +6,17 @@ import type {
 } from "../../features/periodic/periodic-note-commands";
 import type { TaskWorkspacePort } from "../../features/tasks/task-commands";
 import { isMarkdownFile } from "./obsidian-markdown-files";
+import { assertNoteCreationActive } from "../../features/notes/note-creation-lifecycle";
 
 export class ObsidianPeriodicNoteWorkspacePort implements PeriodicNoteWorkspacePort {
   constructor(
     private readonly vault: Vault,
     private readonly workspace: Workspace,
+    private readonly signal?: AbortSignal,
   ) {}
 
   async open(path: string, target: NoteOpenTarget): Promise<void> {
+    assertNoteCreationActive(this.signal);
     const file = this.vault.getAbstractFileByPath(path);
     if (!isMarkdownFile(file)) throw new Error(`Markdown note not found: ${path}`);
 
@@ -22,7 +25,9 @@ export class ObsidianPeriodicNoteWorkspacePort implements PeriodicNoteWorkspaceP
         ? findOpenMarkdownLeaf(this.workspace, path) ?? this.workspace.getLeaf("tab")
         : this.workspace.getLeaf("tab");
     if (getLeafFilePath(leaf) !== path) await leaf.openFile(file);
+    assertNoteCreationActive(this.signal);
     await this.workspace.revealLeaf(leaf);
+    assertNoteCreationActive(this.signal);
     this.workspace.setActiveLeaf(leaf, { focus: true });
   }
 }

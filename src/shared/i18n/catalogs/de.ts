@@ -1,6 +1,7 @@
 import type { MessageCatalog } from "../types";
 
 export const DE_MESSAGES: MessageCatalog = Object.freeze({
+  "operationError.noteCreationStopped": "Die Notizerstellung wurde gestoppt, weil das Plugin entladen wurde. Bereits erstellte Dateien bleiben erhalten. Prüfen Sie diese, bevor Sie fortfahren.",
   "weekView.previousTasks": "Vorherige Aufgaben",
   "weekView.nextTasks": "Nächste Aufgaben",
   "weekView.taskPage": "{start}–{end} von {count}",

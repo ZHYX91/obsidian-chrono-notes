@@ -1,6 +1,7 @@
 import type { MessageCatalog } from "../types";
 
 export const VI_MESSAGES: MessageCatalog = Object.freeze({
+  "operationError.noteCreationStopped": "Đã dừng tạo ghi chú vì plugin bị tắt. Các tệp đã tạo được giữ lại; hãy kiểm tra trước khi tiếp tục.",
   "weekView.previousTasks": "Công việc trước",
   "weekView.nextTasks": "Công việc tiếp theo",
   "weekView.taskPage": "{start}–{end} trên {count}",

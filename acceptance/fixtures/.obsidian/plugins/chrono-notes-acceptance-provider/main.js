@@ -2,6 +2,43 @@ const { Plugin, Notice } = require("obsidian");
 
 module.exports = class ChronoAcceptanceProvider extends Plugin {
   onload() {
+    // Explicit lifecycle setup only. Creation and prompt decisions remain UI actions.
+    this.addCommand({
+      id: "prepare-lifecycle-reload",
+      name: "Prepare lifecycle reload in 30 seconds",
+      callback: () => {
+        if (this.lifecycleReloadTimer) {
+          new Notice("A lifecycle reload is already armed.");
+          return;
+        }
+        const armedAt = new Date().toISOString();
+        new Notice("Chrono Notes lifecycle reload armed for 30 seconds.");
+        this.lifecycleReloadTimer = window.setTimeout(async () => {
+          this.lifecycleReloadTimer = null;
+          const observation = {
+            armedAt,
+            firedAt: new Date().toISOString(),
+            dialogText: document.querySelector(".modal-content")?.textContent ?? null,
+            activePathBefore: this.app.workspace.getActiveFile()?.path ?? null,
+            loadedBefore: Boolean(this.app.plugins.getPlugin("chrono-notes")),
+          };
+          try {
+            await this.app.plugins.disablePlugin("chrono-notes");
+            observation.disabledAt = new Date().toISOString();
+            observation.loadedAfterDisable = Boolean(this.app.plugins.getPlugin("chrono-notes"));
+            await this.app.plugins.enablePlugin("chrono-notes");
+            observation.enabledAt = new Date().toISOString();
+            observation.loadedAfterEnable = Boolean(this.app.plugins.getPlugin("chrono-notes"));
+            observation.activePathAfter = this.app.workspace.getActiveFile()?.path ?? null;
+          } catch (error) {
+            observation.error = String(error);
+          }
+          await this.app.vault.adapter.write(`Chrono lifecycle ${armedAt.replaceAll(":", "-")}.json`, JSON.stringify(observation, null, 2));
+          new Notice("Chrono Notes lifecycle reload observation saved.");
+        }, 30000);
+      },
+    });
+    this.register(() => window.clearTimeout(this.lifecycleReloadTimer));
     this.addCommand({
       id: "prepare-opening-calendar",
       name: "Prepare opening calendar",

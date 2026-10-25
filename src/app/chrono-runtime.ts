@@ -63,6 +63,7 @@ export interface ChronoRuntimeHost {
 }
 
 export interface ChronoRuntime {
+  readonly noteCreationSignal: AbortSignal;
   readonly noteIndex: NoteIndex;
   readonly icsEventIndex: IcsEventIndex;
   readonly periodicNoteCommands: PeriodicNoteCommands;
@@ -76,6 +77,7 @@ export interface ChronoRuntime {
 }
 
 export function createChronoRuntime(host: ChronoRuntimeHost): ChronoRuntime {
+  const noteCreation = new AbortController();
   const disposers: Array<() => void> = [];
   const registerDisposer = (dispose: () => void): void => {
     let disposed = false;
@@ -103,12 +105,16 @@ export function createChronoRuntime(host: ChronoRuntimeHost): ChronoRuntime {
     const noteWorkspace = new ObsidianPeriodicNoteWorkspacePort(
       host.vault,
       host.workspace,
+      noteCreation.signal,
     );
-    const noteTemplates = new ObsidianNoteTemplatePort(host.app, host.vault);
+    const noteTemplates = new ObsidianNoteTemplatePort(
+      host.app, host.vault, undefined, undefined, noteCreation.signal,
+    );
     const periodicNoteCommands = new PeriodicNoteCommands(
-      new ObsidianPeriodicNoteFilePort(host.vault, host.workspace),
+      new ObsidianPeriodicNoteFilePort(host.vault, host.workspace, noteCreation.signal),
       noteTemplates,
       noteWorkspace,
+      noteCreation.signal,
     );
     const propertiesDateInterceptor = new ObsidianPropertiesDateInterceptor({
       getEnabled: () => host.getSettings().interceptPropertyDateClicks,
@@ -141,9 +147,10 @@ export function createChronoRuntime(host: ChronoRuntimeHost): ChronoRuntime {
       propertiesDateDocuments.removeDocument(closedWindow.document);
     }));
     const intervalNoteCommands = new IntervalNoteCommands(
-      new ObsidianIntervalNoteFilePort(host.vault, host.workspace),
+      new ObsidianIntervalNoteFilePort(host.vault, host.workspace, noteCreation.signal),
       noteTemplates,
       noteWorkspace,
+      noteCreation.signal,
     );
     const taskCommands = new TaskCommands(
       new ObsidianTaskFilePort(host.vault, host.workspace),
@@ -162,6 +169,7 @@ export function createChronoRuntime(host: ChronoRuntimeHost): ChronoRuntime {
     registerDisposer(() => noteNavbar.unmount());
 
     return Object.freeze({
+      noteCreationSignal: noteCreation.signal,
       noteIndex,
       icsEventIndex,
       periodicNoteCommands,
@@ -172,11 +180,13 @@ export function createChronoRuntime(host: ChronoRuntimeHost): ChronoRuntime {
       propertiesDateDisplay,
       noteIndexCache,
       dispose: () => {
+        noteCreation.abort();
         for (const dispose of [...disposers].reverse()) dispose();
         disposers.length = 0;
       },
     });
   } catch (error) {
+    noteCreation.abort();
     for (const dispose of [...disposers].reverse()) dispose();
     disposers.length = 0;
     throw error;
