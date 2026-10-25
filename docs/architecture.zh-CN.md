@@ -108,6 +108,8 @@ app 组合根通过公开的 `getLanguage()` API 取得 Obsidian 当前界面语
 
 插件类本身只负责设置加载/保存、创建运行时与注册顶层 view/command/setting tab。所有运行时服务由 `createChronoRuntime()` 统一构造并装配为单一 `ChronoRuntime` 所有权边界：NoteIndex 与设备缓存、ICS 索引、周期/区间/任务命令、工作区端口、Note Navbar 与 Properties 日期适配器都以非空字段暴露，并逆序释放于唯一 `ChronoRuntime.dispose()`；插件卸载与运行时构造失败共用同一条释放路径，不再散布 nullable 服务字段或分散 disposer。设置页只消费窄 `SettingsHost` port（设置读写、索引/ICS 状态与重建、入口能力），不依赖整个插件实例。
 
+周期和区间笔记创建共用所属运行实例的 AbortSignal。运行实例释放时先使信号失效，再释放其他服务。命令、创建窗口、模板/文件/工作区端口与排队的确认偏好保存，在新副作用前和异步等待后复验；最终 Vault 变更回调内再次检查。停止会保留已创建文件，并继续完成 Templater 预留清理。已派发的宿主 I/O 或第三方模板脚本不能被中断；Chrono Notes 后续的最终写入、打开和级联创建会被拒绝。
+
 - React reducer 只维护当前日期、选中对象和视图类型等界面状态。
 - Vault 派生数据使用外部 store 快照和 `useSyncExternalStore`。
 - 设置页使用 Obsidian 原生 Setting API，不强制 React。

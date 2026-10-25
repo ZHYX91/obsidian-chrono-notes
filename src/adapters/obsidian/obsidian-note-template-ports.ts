@@ -13,6 +13,7 @@ import type {
 } from "../../features/templates/note-template-port";
 import { isMarkdownFile } from "./obsidian-markdown-files";
 import { OperationError } from "../../shared/operation-error";
+import { assertNoteCreationActive } from "../../features/notes/note-creation-lifecycle";
 
 // Templater exposes no stable public render-only API. Keep the current
 // internal create-note mode isolated. Serialize the complete creation lifecycle
@@ -25,12 +26,14 @@ export class ObsidianBuiltinTemplatePort implements NoteTemplatePort {
     private readonly vault: Vault,
     private readonly now: () => Date = () => new Date(),
     private readonly timeZone?: string,
+    private readonly signal?: AbortSignal,
   ) {}
 
   async prepare(
     context: NoteTemplateContext,
     defaultContent: string,
   ): Promise<PreparedNoteTemplate> {
+    assertNoteCreationActive(this.signal);
     const configuredPath = context.templatePath.trim();
     if (configuredPath.length === 0) return preparedContent(defaultContent);
 
@@ -43,6 +46,7 @@ export class ObsidianBuiltinTemplatePort implements NoteTemplatePort {
     }
 
     const content = await this.vault.cachedRead(template);
+    assertNoteCreationActive(this.signal);
     const baseContext = {
       locale: context.locale,
       title: context.title,
@@ -74,9 +78,10 @@ export class ObsidianNoteTemplatePort implements NoteTemplatePort {
     vault: Vault,
     now: () => Date = () => new Date(),
     timeZone?: string,
+    signal?: AbortSignal,
   ) {
-    this.builtin = new ObsidianBuiltinTemplatePort(vault, now, timeZone);
-    this.templater = new ObsidianTemplaterTemplatePort(app, vault);
+    this.builtin = new ObsidianBuiltinTemplatePort(vault, now, timeZone, signal);
+    this.templater = new ObsidianTemplaterTemplatePort(app, vault, signal);
   }
 
   prepare(
@@ -93,12 +98,14 @@ class ObsidianTemplaterTemplatePort implements NoteTemplatePort {
   constructor(
     private readonly app: App,
     private readonly vault: Vault,
+    private readonly signal?: AbortSignal,
   ) {}
 
   async prepare(
     context: NoteTemplateContext,
     defaultContent: string,
   ): Promise<PreparedNoteTemplate> {
+    assertNoteCreationActive(this.signal);
     const configuredPath = context.templatePath.trim();
     if (configuredPath.length === 0) return preparedContent(defaultContent);
 
@@ -132,9 +139,11 @@ class ObsidianTemplaterTemplatePort implements NoteTemplatePort {
     }
 
     const rawTemplate = await this.vault.cachedRead(template);
+    assertNoteCreationActive(this.signal);
     return Object.freeze({
       initialContent: defaultContent,
       runCreation: async (createAndFinalize: () => Promise<void>) => {
+        assertNoteCreationActive(this.signal);
         // Reserve before queueing or emitting Vault.create. Templater's delayed
         // automatic handler must see this path while another note is rendering.
         if (pendingFiles.has(context.path)) {
@@ -148,6 +157,7 @@ class ObsidianTemplaterTemplatePort implements NoteTemplatePort {
         await runTemplaterExclusive(templater, async () => {
           let creationFailure: { error: unknown } | undefined;
           try {
+            assertNoteCreationActive(this.signal);
             await createAndFinalize();
           } catch (error) {
             creationFailure = { error };
@@ -172,6 +182,7 @@ class ObsidianTemplaterTemplatePort implements NoteTemplatePort {
         });
       },
       renderAfterCreate: async (path: string) => {
+        assertNoteCreationActive(this.signal);
         const target = this.vault.getAbstractFileByPath(path);
         if (!isMarkdownFile(target)) {
           throw new OperationError("targetMissing", `Target note not found: ${path}`, { path });
@@ -195,6 +206,7 @@ class ObsidianTemplaterTemplatePort implements NoteTemplatePort {
             cause: error,
           });
         }
+        assertNoteCreationActive(this.signal);
         return Array.isArray(rendered) ? String(rendered[0]) : String(rendered);
       },
     });

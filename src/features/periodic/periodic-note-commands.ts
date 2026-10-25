@@ -18,6 +18,7 @@ import {
   type PeriodicNoteTemplateContext,
 } from "../templates/note-template-port";
 import type { CreatedNoteFilePort } from "../templates/created-note-file-port";
+import { assertNoteCreationActive } from "../notes/note-creation-lifecycle";
 
 export type NoteOpenTarget = "default" | "tab";
 
@@ -103,12 +104,14 @@ export class PeriodicNoteCommands {
     private readonly files: PeriodicNoteFilePort,
     private readonly templates: NoteTemplatePort,
     private readonly workspace: PeriodicNoteWorkspacePort,
+    private readonly signal?: AbortSignal,
   ) {}
 
   async openOrCreate(
     request: OpenOrCreatePeriodicNoteRequest,
     settings: PeriodicNoteCommandSettings,
   ): Promise<OpenOrCreatePeriodicNoteResult> {
+    assertNoteCreationActive(this.signal);
     const path = resolvePath(request.date, request.noteType, settings);
     if (path === null) {
       return Object.freeze({ status: "not-configured", noteType: request.noteType });
@@ -118,7 +121,9 @@ export class PeriodicNoteCommands {
     const pendingCreation = this.creationsByPath.get(path);
     if (pendingCreation !== undefined) {
       await pendingCreation;
+      assertNoteCreationActive(this.signal);
       await this.workspace.open(path, target);
+      assertNoteCreationActive(this.signal);
       const cascade = request.cascade
         ? await this.createLargerNotes(request.date, request.noteType, settings)
         : [];
@@ -131,6 +136,7 @@ export class PeriodicNoteCommands {
     }
     if (this.files.exists(path)) {
       await this.workspace.open(path, target);
+      assertNoteCreationActive(this.signal);
       return Object.freeze({ status: "opened", path, created: false, cascade: [] });
     }
 
@@ -143,6 +149,7 @@ export class PeriodicNoteCommands {
           cascade: request.cascade ? this.largerNoteTargets(request.date, request.noteType, settings) : [],
         }),
       );
+      assertNoteCreationActive(this.signal);
       if (!confirmed) {
         return Object.freeze({ status: "cancelled", noteType: request.noteType, path });
       }
@@ -154,7 +161,9 @@ export class PeriodicNoteCommands {
       path,
       settings,
     );
+    assertNoteCreationActive(this.signal);
     await this.workspace.open(path, target);
+    assertNoteCreationActive(this.signal);
     const cascade = request.cascade
       ? await this.createLargerNotes(request.date, request.noteType, settings)
       : [];
@@ -173,14 +182,17 @@ export class PeriodicNoteCommands {
   ): Promise<CascadeResult[]> {
     const results: CascadeResult[] = [];
     for (const { noteType, path } of this.largerNoteTargets(date, triggerType, settings)) {
+      assertNoteCreationActive(this.signal);
       try {
         const created = await this.createPopulatedOnce(date, noteType, path, settings);
+        assertNoteCreationActive(this.signal);
         results.push(Object.freeze({
           noteType,
           path,
           status: created ? "created" : "existing",
         }));
       } catch (error) {
+        if (this.signal?.aborted) throw error;
         const cause = error instanceof PeriodicNoteCreationError ? error.cause : error;
         const details = getOperationErrorDetails(error);
         results.push(Object.freeze({
@@ -217,9 +229,11 @@ export class PeriodicNoteCommands {
     path: string,
     settings: PeriodicNoteCommandSettings,
   ): Promise<boolean> {
+    assertNoteCreationActive(this.signal);
     const existing = this.creationsByPath.get(path);
     if (existing !== undefined) {
       await existing;
+      assertNoteCreationActive(this.signal);
       return false;
     }
     if (this.files.exists(path)) return false;
@@ -245,6 +259,7 @@ export class PeriodicNoteCommands {
   ): Promise<void> {
     let retainedCreatedNote = false;
     try {
+      assertNoteCreationActive(this.signal);
       const config = settings.periodicNotes[noteType];
       const context: PeriodicNoteTemplateContext = Object.freeze({
         kind: "periodic",
@@ -259,10 +274,15 @@ export class PeriodicNoteCommands {
       });
       const prepared = await this.templates.prepare(context, "");
       await runPreparedNoteCreation(prepared, async () => {
+        assertNoteCreationActive(this.signal);
         const created = await this.files.create(path, prepared.initialContent);
         retainedCreatedNote = true;
+        assertNoteCreationActive(this.signal);
         if (prepared.renderAfterCreate !== undefined) {
-          await this.files.finalize(created, await prepared.renderAfterCreate(path));
+          const rendered = await prepared.renderAfterCreate(path);
+          assertNoteCreationActive(this.signal);
+          await this.files.finalize(created, rendered);
+          assertNoteCreationActive(this.signal);
         }
       });
     } catch (cause) {

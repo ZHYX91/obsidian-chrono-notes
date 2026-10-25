@@ -1,6 +1,7 @@
 import type { MessageCatalog } from "../types";
 
 export const JA_MESSAGES: MessageCatalog = Object.freeze({
+  "operationError.noteCreationStopped": "プラグインが無効になったため、ノートの作成を停止しました。作成済みのファイルは保持されています。続行する前に確認してください。",
   "weekView.previousTasks": "前のタスク",
   "weekView.nextTasks": "次のタスク",
   "weekView.taskPage": "{count} 件中 {start}～{end} 件",

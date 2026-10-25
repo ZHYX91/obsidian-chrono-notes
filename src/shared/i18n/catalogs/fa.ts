@@ -1,6 +1,7 @@
 import type { MessageCatalog } from "../types";
 
 export const FA_MESSAGES = Object.freeze({
+  "operationError.noteCreationStopped": "ایجاد یادداشت متوقف شد زیرا افزونه غیرفعال شد. فایل‌های ایجادشده حفظ شده‌اند؛ پیش از ادامه آن‌ها را بررسی کنید.",
   "weekView.previousTasks": "کارهای قبلی",
   "weekView.nextTasks": "کارهای بعدی",
   "weekView.taskPage": "{start}–{end} از {count}",

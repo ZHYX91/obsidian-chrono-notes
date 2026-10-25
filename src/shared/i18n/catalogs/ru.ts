@@ -1,6 +1,7 @@
 import type { MessageCatalog } from "../types";
 
 export const RU_MESSAGES: MessageCatalog = Object.freeze({
+  "operationError.noteCreationStopped": "Создание заметок остановлено, поскольку плагин выгружен. Уже созданные файлы сохранены; проверьте их перед продолжением.",
   "weekView.previousTasks": "Предыдущие задачи",
   "weekView.nextTasks": "Следующие задачи",
   "weekView.taskPage": "{start}–{end} из {count}",

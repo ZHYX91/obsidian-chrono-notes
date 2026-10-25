@@ -2,6 +2,7 @@ import type { MessageValue } from "../message-value";
 import type { MessageKey } from "../types";
 
 export const ZH_TW_MESSAGES = {
+  "operationError.noteCreationStopped": "外掛已停用，筆記建立已停止。已建立的檔案會保留，請檢查後再繼續。",
   "weekView.previousTasks": "上一頁任務",
   "weekView.nextTasks": "下一頁任務",
   "weekView.taskPage": "第 {start}–{end} 項，共 {count} 項",

@@ -1,6 +1,7 @@
 import type { Translator } from "./i18n";
 
 export type OperationErrorCode =
+  | "noteCreationStopped"
   | "templateMissing"
   | "templaterUnavailable"
   | "templaterIncompatible"

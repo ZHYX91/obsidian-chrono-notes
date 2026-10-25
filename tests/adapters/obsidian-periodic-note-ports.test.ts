@@ -653,6 +653,40 @@ describe("Obsidian periodic note ports", () => {
     expect(newLeaf.openFile).toHaveBeenCalledWith(file);
   });
 
+  it.each(["openFile", "revealLeaf"] as const)(
+    "stops workspace actions after %s completes for an unloaded runtime",
+    async (pauseAt) => {
+      const controller = new AbortController();
+      const vault = new FakeVault();
+      const file = { path: "Daily/today.md", extension: "md" };
+      vault.files.set(file.path, file);
+      let finish!: () => void;
+      const pending = new Promise<void>((resolve) => { finish = resolve; });
+      const leaf = {
+        view: { file: null },
+        openFile: vi.fn(async () => { if (pauseAt === "openFile") await pending; }),
+      };
+      const workspace = {
+        getLeaf: vi.fn(() => leaf),
+        revealLeaf: vi.fn(async () => { if (pauseAt === "revealLeaf") await pending; }),
+        setActiveLeaf: vi.fn(),
+      };
+      const port = new ObsidianPeriodicNoteWorkspacePort(
+        vault as never, workspace as never, controller.signal,
+      );
+      const opening = expect(port.open(file.path, "tab")).rejects.toMatchObject({
+        details: { code: "noteCreationStopped" },
+      });
+      await vi.waitFor(() => expect(pauseAt === "openFile" ? leaf.openFile : workspace.revealLeaf)
+        .toHaveBeenCalledOnce());
+      controller.abort();
+      finish();
+      await opening;
+      expect(workspace.setActiveLeaf).not.toHaveBeenCalled();
+      if (pauseAt === "openFile") expect(workspace.revealLeaf).not.toHaveBeenCalled();
+    },
+  );
+
   it("opens a task source and positions the Markdown editor at its exact line", async () => {
     const vault = new FakeVault();
     const file = { path: "Tasks.md", extension: "md" };

@@ -24,6 +24,31 @@ import { createTranslator } from "../../src/shared/i18n";
 import { CreateIntervalNoteModal } from "../../src/ui/modals/create-interval-note-modal";
 
 describe("CreateIntervalNoteModal", () => {
+  it("closes an obsolete date dialog without allowing a late submission", () => {
+    const controller = new AbortController();
+    const onSubmit = vi.fn();
+    const onCancel = vi.fn();
+    const modal = new CreateIntervalNoteModal(
+      {} as never, { year: 2026, month: 7, day: 14 }, createTranslator("en", "en"),
+      onSubmit, onCancel, undefined, controller.signal,
+    );
+    controller.abort();
+    modal.onOpen();
+    (modal as unknown as { submit(): void }).submit();
+    expect(onSubmit).not.toHaveBeenCalled();
+    expect(onCancel).toHaveBeenCalledOnce();
+  });
+
+  it("cannot submit a cancelled date dialog again", () => {
+    const onSubmit = vi.fn();
+    const modal = new CreateIntervalNoteModal(
+      {} as never, { year: 2026, month: 7, day: 14 }, createTranslator("en", "en"), onSubmit,
+    );
+    modal.onClose();
+    (modal as unknown as { submit(): void }).submit();
+    expect(onSubmit).not.toHaveBeenCalled();
+  });
+
   it("reports cancellation when it closes before submission", () => {
     const onCancel = vi.fn();
     const modal = new CreateIntervalNoteModal(

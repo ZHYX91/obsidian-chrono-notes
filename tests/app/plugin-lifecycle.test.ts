@@ -447,6 +447,36 @@ describe("ChronoNotesPlugin lifecycle composition", () => {
     vi.unstubAllGlobals();
   });
 
+  it("invalidates creation commands and queued confirmation saves when the runtime unloads", async () => {
+    const plugin = createPlugin();
+    await plugin.onload();
+    const runtime = (plugin as unknown as { runtime: ChronoRuntime }).runtime;
+    const save = mocks.createDeferred<void>();
+    mocks.state.saveData.mockReturnValueOnce(save.promise);
+    const preceding = plugin.saveSettings();
+    await Promise.resolve();
+    const callsBefore = mocks.state.saveData.mock.calls.length;
+    const queued = expect(plugin.saveSettings(runtime.noteCreationSignal)).rejects.toMatchObject({
+      details: { code: "noteCreationStopped" },
+    });
+    plugin.unload();
+    expect(runtime.noteCreationSignal.aborted).toBe(true);
+    save.resolve();
+    await Promise.all([preceding, queued]);
+    expect(mocks.state.saveData).toHaveBeenCalledTimes(callsBefore);
+    await expect(runtime.periodicNoteCommands.openOrCreate({
+      date: { year: 2026, month: 5, day: 18 }, noteType: "daily",
+    }, plugin.settings)).rejects.toMatchObject({ details: { code: "noteCreationStopped" } });
+    await expect(runtime.intervalNoteCommands.openOrCreate({
+      start: { year: 2026, month: 5, day: 18 }, end: { year: 2026, month: 5, day: 20 }, folder: "Ranges",
+    }, { locale: "en", templateEngine: "builtin", templatePath: "" }))
+      .rejects.toMatchObject({ details: { code: "noteCreationStopped" } });
+    const freshPlugin = createPlugin();
+    await freshPlugin.onload();
+    expect((freshPlugin as unknown as { runtime: ChronoRuntime }).runtime.noteCreationSignal.aborted).toBe(false);
+    freshPlugin.unload();
+  });
+
   it("registers the composition root and releases every registered runtime resource", async () => {
     const existingPopoutDocument = {} as Document;
     mocks.state.workspaceAllLeaves.push({

@@ -1,6 +1,7 @@
 import type { MessageCatalog } from "../types";
 
 export const HI_MESSAGES = Object.freeze({
+  "operationError.noteCreationStopped": "प्लगइन बंद होने के कारण नोट बनाना रोक दिया गया। पहले से बनाई गई फ़ाइलें रखी गई हैं; आगे बढ़ने से पहले उनकी जाँच करें।",
   "weekView.previousTasks": "पिछले कार्य",
   "weekView.nextTasks": "अगले कार्य",
   "weekView.taskPage": "{count} में से {start}–{end}",
