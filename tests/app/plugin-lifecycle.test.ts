@@ -346,18 +346,6 @@ vi.mock("../../src/adapters/obsidian/obsidian-date-context-menu", () => ({
   showObsidianDateContextMenu: vi.fn(),
 }));
 
-vi.mock("../../src/adapters/obsidian/obsidian-periodic-note-ports", () => {
-  class MockPort {}
-  return {
-    ObsidianIntervalNoteFilePort: MockPort,
-    ObsidianPeriodicNoteFilePort: MockPort,
-    ObsidianNoteTemplatePort: MockPort,
-    ObsidianPeriodicNoteWorkspacePort: MockPort,
-    ObsidianTaskFilePort: MockPort,
-    ObsidianTaskWorkspacePort: MockPort,
-  };
-});
-
 vi.mock("../../src/ui/note-navbar/note-navbar", () => ({
   NoteNavbarManager: mocks.MockNoteNavbarManager,
 }));
@@ -409,6 +397,7 @@ import { openObsidianPluginSettings } from "../../src/adapters/obsidian/obsidian
 import type { ChronoRuntime } from "../../src/app/chrono-runtime";
 import ChronoNotesPlugin from "../../src/app/plugin";
 import { createDefaultSettings } from "../../src/shared/settings";
+import { createTemplaterLifecycle } from "../support/templater-lifecycle";
 
 describe("ChronoNotesPlugin lifecycle composition", () => {
   beforeEach(() => {
@@ -476,6 +465,97 @@ describe("ChronoNotesPlugin lifecycle composition", () => {
     expect((freshPlugin as unknown as { runtime: ChronoRuntime }).runtime.noteCreationSignal.aborted).toBe(false);
     freshPlugin.unload();
   });
+
+  it.each(["periodic", "interval"] as const)(
+    "stops a real runtime's pending %s template before any later write or open",
+    async (kind) => {
+      const plugin = createPlugin();
+      const templatePath = "Template.md";
+      const files = new Map<string, { path: string; extension?: string }>([
+        [templatePath, { path: templatePath, extension: "md" }],
+      ]);
+      const contents = new Map<string, string>([[templatePath, "template"]]);
+      const rendered = mocks.createDeferred<string>();
+      const lifecycle = createTemplaterLifecycle();
+      const templater = {
+        ...lifecycle,
+        create_running_config: vi.fn(() => ({})),
+        parse_template: vi.fn(async () => "# rendered").mockReturnValueOnce(rendered.promise),
+      };
+      Object.assign(plugin.app, { plugins: { getPlugin: () => ({ templater }) } });
+      const create = vi.fn(async (path: string, content: string) => {
+        const file = { path, extension: "md" };
+        files.set(path, file);
+        contents.set(path, content);
+        return file;
+      });
+      const process = vi.fn(async (file: { path: string }, update: (content: string) => string) => {
+        const next = update(contents.get(file.path) ?? "");
+        contents.set(file.path, next);
+        return next;
+      });
+      Object.assign(plugin.app.vault, {
+        getAbstractFileByPath: (path: string) => files.get(path) ?? null,
+        cachedRead: vi.fn(async (file: { path: string }) => contents.get(file.path) ?? ""),
+        createFolder: vi.fn(async (path: string) => { files.set(path, { path }); }),
+        create, process,
+      });
+      const openFile = vi.fn(async () => undefined);
+      Object.assign(plugin.app.workspace, {
+        getLeaf: vi.fn(() => ({ view: {}, openFile })),
+        iterateRootLeaves: vi.fn(),
+        setActiveLeaf: vi.fn(),
+      });
+      await plugin.onload();
+      plugin.settings.templateEngine = "templater";
+      plugin.settings.periodicNotes.daily = {
+        enabled: true, pattern: "YYYY-MM-DD", templatePath,
+      };
+      plugin.settings.periodicNotes.weekly.enabled = true;
+      const runtime = (plugin as unknown as { runtime: ChronoRuntime }).runtime;
+      const creation = kind === "periodic"
+        ? runtime.periodicNoteCommands.openOrCreate({
+            date: { year: 2026, month: 5, day: 18 }, noteType: "daily", cascade: true,
+          }, plugin.settings)
+        : runtime.intervalNoteCommands.openOrCreate({
+            start: { year: 2026, month: 5, day: 18 },
+            end: { year: 2026, month: 5, day: 20 }, folder: "Ranges",
+          }, { locale: "en", templateEngine: "templater", templatePath });
+      const stopped = expect(creation).rejects.toMatchObject({ retainedCreatedNote: true });
+      await vi.waitFor(() => expect(templater.parse_template).toHaveBeenCalledOnce());
+      const createdPath = create.mock.calls[0]![0];
+      const initial = contents.get(createdPath);
+      plugin.unload();
+      rendered.resolve("# stale output");
+      await stopped;
+      expect(contents.get(createdPath)).toBe(initial);
+      expect(files.has(createdPath)).toBe(true);
+      expect(create).toHaveBeenCalledOnce();
+      expect(process).not.toHaveBeenCalled();
+      expect(openFile).not.toHaveBeenCalled();
+      expect(plugin.app.workspace.revealLeaf).not.toHaveBeenCalled();
+      expect(plugin.app.workspace.setActiveLeaf).not.toHaveBeenCalled();
+      expect(lifecycle.files_with_pending_templates.size).toBe(0);
+      expect(lifecycle.end_templater_task).toHaveBeenCalledExactlyOnceWith(createdPath);
+
+      const freshPlugin = new ChronoNotesPlugin(plugin.app, plugin.manifest);
+      await freshPlugin.onload();
+      const freshRuntime = (freshPlugin as unknown as { runtime: ChronoRuntime }).runtime;
+      const freshCreation = kind === "periodic"
+        ? freshRuntime.periodicNoteCommands.openOrCreate({
+            date: { year: 2026, month: 5, day: 19 }, noteType: "daily",
+          }, plugin.settings)
+        : freshRuntime.intervalNoteCommands.openOrCreate({
+            start: { year: 2026, month: 5, day: 19 },
+            end: { year: 2026, month: 5, day: 21 }, folder: "Ranges",
+          }, { locale: "en", templateEngine: "templater", templatePath });
+      await expect(freshCreation).resolves.toMatchObject({ status: "opened", created: true });
+      expect(process).toHaveBeenCalledOnce();
+      expect(openFile).toHaveBeenCalledOnce();
+      expect(contents.get(createdPath)).toBe(initial);
+      freshPlugin.unload();
+    },
+  );
 
   it("registers the composition root and releases every registered runtime resource", async () => {
     const existingPopoutDocument = {} as Document;
