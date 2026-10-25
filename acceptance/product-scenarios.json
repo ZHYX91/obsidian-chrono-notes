@@ -191,7 +191,8 @@
         "android-emulator": []
       },
       "steps": [
-        "Enable larger-period cascading, create a new daily note through its confirmation, and observe the one partial-success notice for the missing monthly template. Confirm the daily and yearly notes remain available. Disable larger-period cascading after the observation."
+        "Enable larger-period cascading, create a new daily note through its confirmation, and observe the one partial-success notice for the missing monthly template. Confirm the daily and yearly notes remain available. Disable larger-period cascading after the observation.",
+        "For lifecycle changes, run Prepare lifecycle reload in 30 seconds and open a fresh periodic-note confirmation through the UI before the timer fires. Leave it pending. Verify the observation records the pending dialog and loaded true/false/true; the old confirmation closes without creating or opening its target. Verify a fresh request succeeds in the new runtime. This setup only schedules plugin disable/enable and records observations; it creates no notes and issues no verdict."
       ],
       "expected": [
         "Partial creation keeps success and failure distinguishable and preserves the successfully created files."
@@ -294,7 +295,8 @@
         "Use the same template for a range note from 2026-10-17 to 2026-10-19. Verify kind=interval, start/end dates, dayCount=3, destination title and canonical interval identity.",
         "Run Prepare Templater slow to select Templates/Templater Slow.md for daily and range notes. Create a fresh daily note and a fresh range note separately, leave each template prompt open for at least one second, then accept the default answer. Verify both finish with selected=selected-template and correct context, no automatic-folder-template text, and no changed-during-rendering error. This checks protection while creation is pending; an automatic callback that runs only after completed creation follows Templater's native rules.",
         "Run Prepare Templater failure and create another note. Verify an actionable localized rendering error and preservation of the created target. Then run Prepare Templater missing, retry with its different destination, and verify no target was created.",
-        "Run Prepare Templater cascade to restore the working template and enable larger-period cascading with a missing monthly template. Create its fresh daily note, and verify one partial-success notice plus preserved daily/yearly successes. Restore settings."
+        "Run Prepare Templater cascade to restore the working template and enable larger-period cascading with a missing monthly template. Create its fresh daily note, and verify one partial-success notice plus preserved daily/yearly successes. Restore settings.",
+        "For lifecycle changes, use Prepare Templater slow and Prepare lifecycle reload in 30 seconds before creating a fresh daily or range note through the UI. Keep the real prompt open until the lifecycle observation records disable/enable, then submit it through the UI. Preserve the already-created target and record its actual bytes separately from Chrono subsequent open/cascade behavior; the old runtime must not open the target or begin further cascade work. Dispatched third-party scripts and independent automatic callbacks are outside cancellation control. Verify a fresh request in the new runtime succeeds. Record cascade as unverified unless it was enabled with known parent targets."
       ],
       "expected": [
         "Real Templater renders in create-note mode against the actual target file; selected dates and range boundaries are correct. Automatic folder templates do not take over targets while Chrono Notes creation is still pending. Failures and partial success remain distinct and never erase successful files."
