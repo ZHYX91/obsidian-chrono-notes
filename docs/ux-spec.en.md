@@ -47,6 +47,8 @@ Quarter, month and year labels stay vertically centered in their cells. Week num
 
 ## 3. Month cells
 
+ICS summaries fold with the calendar container width: below `560px`, month cells show the first summary and a separate `+N` row for the remaining count so long titles keep their width; at `560px` and above, they show up to three summaries with the remaining count beside the last. Complete events, sources, and titles remain in selected-day details, the unified preview, and accessible names; date keyboard navigation is preserved.
+
 Selecting a day in the current month query displays a persistent details section below the grid. It contains note status, task progress where present, complete configured calendar dates, calendar events with their sources, regional-holiday information and every ICS event. The section follows day selection and is available with hover previews disabled, including on touch screens. Selecting a week or another non-day period hides it. It reads the existing query model and does not load note text.
 
 The top accessory row spans the cell's entire usable width. The state dot and task progress share a fixed left anchor, while the regional marker uses a fixed right anchor. Task progress grows only rightward from that anchor; the two sides retain at least `4px` of separation, and a narrow cell shortens progress rather than moving either anchor or allowing overlap. If an `8px` state plus the required gap leaves insufficient room for a multi-character marker, only the marker text may ellipsize; its complete meaning remains in the tooltip and accessible label.

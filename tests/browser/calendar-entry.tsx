@@ -29,7 +29,7 @@ interface BrowserMetrics {
 declare global {
   interface Window {
     runChronoBrowserBenchmark: (count: number) => Promise<BrowserMetrics>;
-    mountChronoCalendar: (locale: PluginLocale, width: number) => Promise<void>;
+    mountChronoCalendar: (locale: PluginLocale, width: number, eventTitles?: readonly string[]) => Promise<void>;
     mountChronoTaskLayout: (width: number, locale: PluginLocale) => Promise<void>;
     chronoTaskActions: string[];
   }
@@ -149,8 +149,8 @@ window.runChronoBrowserBenchmark = async (count) => {
 
 };
 
-window.mountChronoCalendar = async (locale, width) => {
-  rootContainer(width);
+window.mountChronoCalendar = async (locale, width, eventTitles) => {
+  rootContainer(width).classList.add("chrono-notes-view");
   const fixture = sourceFixture(4);
   fixture.add("Daily/2026-10-20.md", "# Daily note\n- [x] Review notes\n- [ ] Prepare weekly plan 📅 2026-10-20");
   const index = currentIndex = new NoteIndex(fixture.source);
@@ -167,7 +167,12 @@ window.mountChronoCalendar = async (locale, width) => {
     "BEGIN:VCALENDAR", "VERSION:2.0", "BEGIN:VEVENT", "UID:team-review",
     "DTSTART:20261020T090000Z", "DTEND:20261020T093000Z", "SUMMARY:Team review",
     "END:VEVENT", "BEGIN:VEVENT", "UID:project-plan", "DTSTART;VALUE=DATE:20261020",
-    "SUMMARY:Project planning", "END:VEVENT", "END:VCALENDAR", "",
+    "SUMMARY:Project planning", "END:VEVENT",
+    ...(eventTitles ?? []).flatMap((title, index) => [
+      "BEGIN:VEVENT", `UID:extra-${index}`, "DTSTART;VALUE=DATE:20261020",
+      `SUMMARY:${title}`, "END:VEVENT",
+    ]),
+    "END:VCALENDAR", "",
   ].join("\r\n") });
   await ics.refresh({ enabled: true, sources: ["Calendars/example.ics"], displayZone: "UTC" });
   flushSync(() => root!.render(<CalendarApp noteIndex={index} icsEventIndex={ics}

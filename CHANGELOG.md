@@ -4,6 +4,8 @@ Notable changes to Chrono Notes are documented in this file. The repository's nu
 
 ## Unreleased
 
+- Fold narrow month cells to one ICS summary plus the remaining count, while preserving complete selected-day details, accessible names, and keyboard date navigation.
+
 ## 0.8.1
 
 ### Fixed

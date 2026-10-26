@@ -172,7 +172,7 @@ export function MonthDayCell({
             </span>
             <span className="chrono-notes-day-content">
               <CalendarDayCalendarDetails day={cell} translator={translator} />
-              <CalendarDayEvents events={cell.icsEvents} translator={translator} />
+              <CalendarDayEvents events={cell.icsEvents} translator={translator} responsive />
             </span>
           </>
         )}
