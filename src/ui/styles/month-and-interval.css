@@ -824,7 +824,8 @@ body.is-mobile
   color: var(--text-faint);
 }
 
-.chrono-notes-ics-list[data-has-overflow="true"] .chrono-notes-ics-event:last-of-type {
+.chrono-notes-ics-list[data-responsive="false"][data-wide-overflow="true"]
+  .chrono-notes-ics-event[data-event-index="2"] {
   padding-inline-end: 24px;
 }
 
@@ -852,43 +853,42 @@ body.is-mobile
   inset-inline-end: 0;
 }
 
-/* Keep one summary readable in narrow month cells, with its count on a separate
-   line instead of taking the remaining title width. The selected day stays complete. */
+/* Month and week cells share one summary/count layout at each available width.
+   Full event titles remain available in selected-day details. */
 .chrono-notes-day-content .chrono-notes-ics-list[data-responsive="true"] {
   display: grid;
 }
 
-.chrono-notes-day-content .chrono-notes-ics-list[data-responsive="true"]
+.chrono-notes-ics-list[data-responsive="true"]
   .chrono-notes-ics-event[data-event-index="1"],
-.chrono-notes-day-content .chrono-notes-ics-list[data-responsive="true"]
+.chrono-notes-ics-list[data-responsive="true"]
   .chrono-notes-ics-event[data-event-index="2"],
-.chrono-notes-day-content .chrono-notes-ics-more.is-wide {
+.chrono-notes-ics-list[data-responsive="true"] .chrono-notes-ics-more.is-wide {
   display: none;
 }
 
-.chrono-notes-day-content .chrono-notes-ics-more.is-medium {
+.chrono-notes-ics-list[data-responsive="true"] .chrono-notes-ics-more.is-medium {
   justify-self: end;
   position: static;
 }
 
 @container (min-width: 560px) {
-  .chrono-notes-day-content .chrono-notes-ics-list[data-responsive="true"]
+  .chrono-notes-ics-list[data-responsive="true"]
     .chrono-notes-ics-event[data-event-index="1"],
-  .chrono-notes-day-content .chrono-notes-ics-list[data-responsive="true"]
+  .chrono-notes-ics-list[data-responsive="true"]
     .chrono-notes-ics-event[data-event-index="2"] {
     display: flex;
   }
 
-  .chrono-notes-day-content .chrono-notes-ics-more.is-medium {
+  .chrono-notes-ics-list[data-responsive="true"] .chrono-notes-ics-more.is-medium {
     display: none;
   }
 
-  .chrono-notes-day-content .chrono-notes-ics-more.is-wide {
+  .chrono-notes-ics-list[data-responsive="true"] .chrono-notes-ics-more.is-wide {
     display: block;
   }
 
-  .chrono-notes-day-content
-    .chrono-notes-ics-list[data-responsive="true"][data-wide-overflow="true"]
+  .chrono-notes-ics-list[data-responsive="true"][data-wide-overflow="true"]
     .chrono-notes-ics-event[data-event-index="2"] {
     padding-inline-end: 24px;
   }

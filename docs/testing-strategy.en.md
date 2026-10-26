@@ -12,6 +12,8 @@ translation_status: synced
 
 The same suite resizes one mounted calendar through `559px → 560px → 559px` with one, two, three and four events. It checks the exact summary/count boundary while focus, the single tab stop, complete accessible names and selected-day details survive each resize.
 
+`week-event-density.spec.ts` switches the real CalendarApp to its week view and checks English and Arabic event-title/count rectangles at `400px` and `600px`. It covers the shared responsive layout without relying on CSS selector text, and checks that full event titles remain in accessible names and month details after switching back.
+
 Runtime-owned note creation uses controlled promises to pause confirmation, template reading, folder creation, target creation, Templater queueing/rendering, final mutation callbacks and workspace opening. Unload must prevent the next side effect, preserve already created content, release template reservations, and let a new runtime work normally. Confirmation tests also cover closing stale dialogs and rejecting queued preference saves. These regressions use real commands and adapters with substituted host I/O; they do not establish real Obsidian, Android or Templater acceptance. Host acceptance repeats unload/reload during confirmation and a pending template prompt, verifies the retained note and absence of subsequent opens/cascade notes, and checks a fresh creation. Already dispatched Templater scripts and its independent automatic-template handler remain outside Chrono Notes cancellation control.
 
 The interaction regressions for task feedback, selected-day details and creation previews use these boundaries:
