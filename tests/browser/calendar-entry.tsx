@@ -29,7 +29,7 @@ interface BrowserMetrics {
 declare global {
   interface Window {
     runChronoBrowserBenchmark: (count: number) => Promise<BrowserMetrics>;
-    mountChronoCalendar: (locale: PluginLocale, width: number, eventTitles?: readonly string[]) => Promise<void>;
+    mountChronoCalendar: (locale: PluginLocale, width: number, eventTitles?: readonly string[], eventCount?: number) => Promise<void>;
     mountChronoTaskLayout: (width: number, locale: PluginLocale) => Promise<void>;
     chronoTaskActions: string[];
   }
@@ -149,7 +149,7 @@ window.runChronoBrowserBenchmark = async (count) => {
 
 };
 
-window.mountChronoCalendar = async (locale, width, eventTitles) => {
+window.mountChronoCalendar = async (locale, width, eventTitles, eventCount) => {
   rootContainer(width).classList.add("chrono-notes-view");
   const fixture = sourceFixture(4);
   fixture.add("Daily/2026-10-20.md", "# Daily note\n- [x] Review notes\n- [ ] Prepare weekly plan 📅 2026-10-20");
@@ -163,15 +163,16 @@ window.mountChronoCalendar = async (locale, width, eventTitles) => {
   settings.periodicNotes.daily.pattern = "[Daily]/YYYY-MM-DD";
   settings.periodicNotes.weekly.pattern = "[Weeks]/GGGG-[W]WW";
   settings.periodicNotes.monthly.pattern = "[Months]/YYYY-MM";
-  const ics = new IcsEventIndex({ read: async () => [
-    "BEGIN:VCALENDAR", "VERSION:2.0", "BEGIN:VEVENT", "UID:team-review",
+  const eventBlocks = [["BEGIN:VEVENT", "UID:team-review",
     "DTSTART:20261020T090000Z", "DTEND:20261020T093000Z", "SUMMARY:Team review",
-    "END:VEVENT", "BEGIN:VEVENT", "UID:project-plan", "DTSTART;VALUE=DATE:20261020",
-    "SUMMARY:Project planning", "END:VEVENT",
-    ...(eventTitles ?? []).flatMap((title, index) => [
+    "END:VEVENT"], ["BEGIN:VEVENT", "UID:project-plan", "DTSTART;VALUE=DATE:20261020",
+    "SUMMARY:Project planning", "END:VEVENT"],
+    ...(eventTitles ?? []).map((title, index) => [
       "BEGIN:VEVENT", `UID:extra-${index}`, "DTSTART;VALUE=DATE:20261020",
       `SUMMARY:${title}`, "END:VEVENT",
-    ]),
+    ])];
+  const ics = new IcsEventIndex({ read: async () => [
+    "BEGIN:VCALENDAR", "VERSION:2.0", ...eventBlocks.slice(0, eventCount ?? eventBlocks.length).flat(),
     "END:VCALENDAR", "",
   ].join("\r\n") });
   await ics.refresh({ enabled: true, sources: ["Calendars/example.ics"], displayZone: "UTC" });

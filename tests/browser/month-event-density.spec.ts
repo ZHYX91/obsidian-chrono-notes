@@ -11,6 +11,36 @@ const longTitles = [
   "مراجعة جميع قرارات المشروع مع الفريق قبل الموعد النهائي",
 ];
 
+for (const locale of ["en", "ar"] as const) {
+  for (const count of [1, 2, 3, 4]) {
+    test(`retains ${count} events and focus across 559 to 560 and back in ${locale}`, async ({ page }) => {
+      await page.setContent(fixture.html);
+      await page.addStyleTag({ content: "body{margin:0} #calendar-fixture{padding:0;border:0;height:auto}" });
+      await page.addScriptTag({ content: fixture.script });
+      await page.evaluate(({ locale, titles, count }) => window.mountChronoCalendar(locale, 559, titles, count), {
+        locale, titles: longTitles, count,
+      });
+      const selected = page.locator(".chrono-notes-day.is-selected");
+      await selected.focus();
+      for (const width of [559, 560, 559]) {
+        // Resize the existing host container without remounting the calendar.
+        await page.locator("#calendar-fixture").evaluate((element, width) => { element.style.width = `${width}px`; }, width);
+        const shown = Math.min(count, width < 560 ? 1 : 3);
+        await expect(selected.locator(".chrono-notes-ics-event:visible")).toHaveCount(shown);
+        const overflow = selected.locator(".chrono-notes-ics-more:visible");
+        if (count > shown) await expect(overflow).toHaveText(`+${count - shown}`);
+        else await expect(overflow).toHaveCount(0);
+        await expect(selected).toBeFocused();
+        await expect(page.locator('.chrono-notes-day[tabindex="0"]')).toHaveCount(1);
+        for (const title of ["Team review", "Project planning", ...longTitles].slice(0, count)) {
+          await expect(selected).toHaveAccessibleName(new RegExp(title));
+          await expect(page.locator(".chrono-notes-selected-day-details")).toContainText(title);
+        }
+      }
+    });
+  }
+}
+
 for (const width of [320, 360, 600]) {
   for (const locale of ["en", "ar"] as const) {
     test(`keeps month events compact and complete at ${width}px in ${locale}`, async ({ page }) => {
