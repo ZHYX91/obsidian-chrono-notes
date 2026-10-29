@@ -520,11 +520,14 @@ export function CalendarApp({
   }, [headerWeek.weekYear, selected, settings.weekStartDay]);
   const selectMonthItem = useCallback(
     (kind: CalendarSelectionKind, date: LocalDate) => {
-      if (!isInteractiveCalendarDate(date)) return;
-      setSelected(date);
+      const selectionDate = kind === "week"
+        ? getInteractivePeriodicSelection(date, "weekly", settings.weekStartDay)
+        : isInteractiveCalendarDate(date) ? date : null;
+      if (selectionDate === null) return;
+      setSelected(selectionDate);
       setSelectionKind(kind);
     },
-    [],
+    [settings.weekStartDay],
   );
   const moveMonthSelection = useCallback((date: LocalDate) => {
     if (!isInteractiveCalendarDate(date)) return;
