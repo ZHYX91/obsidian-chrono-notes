@@ -1,4 +1,6 @@
 import { getPeriodRange } from "../../src/core/periodic/periodic-date";
+import { createRequire } from "node:module";
+import { runInNewContext } from "node:vm";
 import { describe, expect, it, vi } from "vitest";
 import {
   runPreparedNoteCreation,
@@ -62,6 +64,50 @@ class FakeVault {
 
 describe("Obsidian periodic note ports", () => {
   const closedWorkspace = () => ({ getLeavesOfType: vi.fn((): unknown[] => []) });
+
+  it.each(["periodic", "interval"] as const)(
+    "executes the injected %s time binding against real Moment without a reference",
+    async (kind) => {
+      const hostRequire = createRequire(createRequire(import.meta.url).resolve("obsidian/package.json"));
+      const moment = hostRequire("moment") as typeof import("moment");
+      const clock = vi.spyOn(moment, "now").mockReturnValue(Date.UTC(2026, 8, 7, 12, 34, 56));
+      const locale = moment.locale();
+      moment.locale("en");
+      try {
+        const vault = new FakeVault();
+        const template = { path: "Templates/Time.md", extension: "md" };
+        const target = { path: "Notes/time.md", extension: "md" };
+        vault.files.set(template.path, template);
+        vault.files.set(target.path, target);
+        vault.contents.set(template.path, '<% tp_calendar.time("DEC[s] [C]CEN") %>');
+        const templates = new ObsidianNoteTemplatePort({
+          plugins: { getPlugin: () => ({ templater: {
+            ...createTemplaterLifecycle(),
+            create_running_config: () => ({}),
+            parse_template: async (_config: unknown, injected: string) => {
+              const bridge = injected.slice("<%*\n".length, injected.indexOf("\n_%>"));
+              const tp = { obsidian: { moment }, date: { now: (format: string) => moment().format(format) } };
+              return runInNewContext(`${bridge}; [tp_calendar.time("DEC[s] [C]CEN"), tp_calendar.time("HH:mm:ss")].join(" | ");`, { tp }) as string;
+            },
+          } }) },
+        } as never, vault as never);
+        const common = {
+          locale: "en", path: target.path, templatePath: template.path,
+          templateEngine: "templater", title: "time",
+        } as const;
+        const date = { year: 2000, month: 12, day: 31 };
+        const context = kind === "periodic"
+          ? { ...common, kind, date, noteType: "daily" as const, range: getPeriodRange(date, "daily", "monday") }
+          : { ...common, kind, start: date, end: date, dayCount: 1 };
+        const prepared = await templates.prepare(context, "");
+        await expect(renderPrepared(prepared, target.path))
+          .resolves.toBe(`2020s C21 | ${moment().format("HH:mm:ss")}`);
+      } finally {
+        clock.mockRestore();
+        moment.locale(locale);
+      }
+    },
+  );
 
   it("creates interval note content after ensuring parent folders", async () => {
     const vault = new FakeVault();

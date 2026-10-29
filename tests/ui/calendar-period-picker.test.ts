@@ -16,6 +16,17 @@ import { renderWithTestHost } from "../support/render-with-host";
 const styles = readPluginStyles();
 
 describe("calendar period picker", () => {
+  it.each([[0, "1"], [10000, "9999"]] as const)(
+    "recovers an out-of-range year %i into a usable boundary page",
+    (year, selected) => {
+      const document = renderPicker({
+        kind: "year", year, month: 1, today: { year: 2026, month: 7, day: 20 },
+      });
+      expect(document.querySelector('[aria-pressed="true"]')?.textContent).toBe(selected);
+      expect(document.querySelectorAll(".chrono-notes-year-picker-grid button").length).toBeGreaterThan(0);
+    },
+  );
+
   it.each([
     [2001, 2001, 2020],
     [2020, 2001, 2020],

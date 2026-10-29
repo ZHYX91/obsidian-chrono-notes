@@ -13,7 +13,7 @@ export function buildTemplaterPeriodFormatter(): string {
     "    return tp.date.now(format, offset, reference, 'YYYY-MM-DD');",
     "  }",
     "  const moment = tp.obsidian.moment;",
-    "  const date = moment(reference, 'YYYY-MM-DD');",
+    "  const date = reference === undefined ? moment() : moment(reference, 'YYYY-MM-DD');",
     "  if (!date.isValid()) throw new Error('Invalid calendar reference date');",
     "  date.add(typeof offset === 'string' ? moment.duration(offset) : moment.duration(offset, 'days'));",
     "  const year = date.year();",

@@ -293,6 +293,7 @@
         "Use the released Templater plugin prepared in the isolated test Vault and record its version. Run Chrono Notes acceptance provider: Prepare Templater context. This configures only the input settings: automatic new-file folder templates for Daily and Calendar/Range Notes, the selected context template, and the initial calendar date. It creates no notes and produces no verdict. Inspect the actual settings and perform every note creation through the product UI. If Templater is unavailable, record unverified, not passed.",
         "Select Templater as the Chrono Notes template engine and Templates/Templater Context.md. Create a daily note for 2026-10-17 through the calendar confirmation. Inspect the result: kind=periodic, title matching the destination, target=2026-10-17 and no remaining template delimiters.",
         "Use the same template for a range note from 2026-10-17 to 2026-10-19. Verify kind=interval, start/end dates, dayCount=3, destination title and canonical interval identity.",
+        "Using the context template, create a fresh periodic note and a fresh range anchored in 2000 through the product UI. Verify time, timeDecade and timeCentury render from the actual creation clock (record that clock), independently of the selected date. No Invalid calendar reference date error or template delimiters remain.",
         "Run Prepare Templater slow to select Templates/Templater Slow.md for daily and range notes. Create a fresh daily note and a fresh range note separately, leave each template prompt open for at least one second, then accept the default answer. Verify both finish with selected=selected-template and correct context, no automatic-folder-template text, and no changed-during-rendering error. This checks protection while creation is pending; an automatic callback that runs only after completed creation follows Templater's native rules.",
         "Run Prepare Templater failure and create another note. Verify an actionable localized rendering error and preservation of the created target. Then run Prepare Templater missing, retry with its different destination, and verify no target was created.",
         "Run Prepare Templater cascade to restore the working template and enable larger-period cascading with a missing monthly template. Create its fresh daily note, and verify one partial-success notice plus preserved daily/yearly successes. Restore settings.",
@@ -334,6 +335,7 @@
       },
       "steps": [
         "Switch the interface to Arabic, then repeat in Persian and Hebrew. Focus a middle Month date with adjacent cells on both sides. ArrowRight moves to the visually right neighbor (previous date); ArrowLeft returns. Home/End and Enter preserve visible focus and normal opening behavior.",
+        "Focus a Month week-number button. ArrowLeft enters its first available date in RTL, restores focus on that date and does not open a note; ArrowRight does not enter the date cells. Repeat with month heatmap enabled at a boundary week and verify hidden outside-month dates are skipped. In English, verify the inward key is ArrowRight.",
         "Open the week picker and test ArrowRight/ArrowLeft between adjacent weeks. Inspect Year heatmap and Century navigation, and the date picker modal: keyboard movement follows visual direction, focus stays visible and closing restores usable calendar navigation.",
         "Inspect all five settings tabs at narrow and normal widths. Restore English and confirm LTR keyboard movement returns."
       ],
@@ -361,6 +363,48 @@
         "Localized language and digits retain Gregorian date identity.",
         "Saving preserves values and keeps the active settings tab visible.",
         "Desktop focus and mobile narrow controls remain usable."
+      ]
+    },
+    {
+      "id": "periodic-creation-plan",
+      "title": "Confirmed periodic targets remain fixed during settings changes",
+      "surfaces": [
+        "desktop",
+        "android-emulator"
+      ],
+      "requiredCapabilities": {
+        "desktop": [],
+        "android-emulator": []
+      },
+      "steps": [
+        "Use a released Templater plugin in the isolated Vault and record its version. Enable creation confirmation and larger-period cascading. Configure daily [PlanDaily]/YYYY-MM-DD with Templates/Templater Delayed Plan.md, monthly [Reviewed]/YYYY-MM with Templates/Templater Reviewed.md, and yearly [PlanYears]/YYYY with Templates/Templater Reviewed.md. Disable other larger types.",
+        "Create a fresh daily note for 2030-07-22 through the calendar. Record the confirmation paths, then confirm. The primary template waits 45 seconds without opening a modal. While it is pending, use actual product settings to change monthly to [Unreviewed]/YYYY-MM and Templates/Templater Different.md; return to the calendar and let rendering finish. If the settings change was not completed while creation was pending, record this boundary as unverified rather than passed.",
+        "Inspect the actual files. The primary contains plan=reviewed-primary; Reviewed/2030-07.md and PlanYears/2030.md contain plan=reviewed-cascade. No Unreviewed/2030-07.md is created by that request. Restore settings. Use a fresh month for any retry; do not mistake opening an existing target for creation.",
+        "On a separate fresh date, keep one confirmed cascade target already present with a sentinel. Verify it remains byte-identical. Configure a missing template for another cascade type and confirm that its failure is reported separately while the primary and later successful cascade files remain."
+      ],
+      "expected": [
+        "The single confirmation and subsequent writes use the same paths and template selections despite in-flight setting changes. Existing files are preserved and per-item cascade failures retain partial-success behavior."
+      ]
+    },
+    {
+      "id": "calendar-interactive-year-boundaries",
+      "title": "Interactive year limits and recoverable picker boundaries",
+      "surfaces": [
+        "desktop",
+        "android-emulator"
+      ],
+      "requiredCapabilities": {
+        "desktop": [],
+        "android-emulator": []
+      },
+      "steps": [
+        "Open Jump to date. Submit 0000-01-01 and 10000-01-01 separately; verify an invalid-date notice, editable input and unchanged calendar. Then submit 0001-01-01 and open the year picker; it remains usable.",
+        "At 0001-01-01, try previous-week navigation and inspect adjacent-month padding dates. They must not activate year zero. Repeat at 9999-12-31 with next-week navigation and the year picker; the calendar remains usable and active dates stay in 1–9999.",
+        "Open the mini calendar at the first and last supported years. Verify outward month/year paging stops at the boundary, the outward controls are disabled, and year-zero/year-10000 padding dates are not selectable.",
+        "At the first century, select the first decade and open its configured note. Verify its real 0000s file anchor is preserved while returning to Month/Year keeps UI year 1. With Sunday week start, inspect the first boundary week and verify note identity remains distinct from the in-range calendar selection. Record only actually exercised note types as passed."
+      ],
+      "expected": [
+        "Out-of-range daily input and navigation cannot poison calendar state or crash year-picker rendering. Valid boundary dates remain selectable; UI limits do not rewrite legitimate boundary-period file identities or alter the ICS/domain date range."
       ]
     }
   ]

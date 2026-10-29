@@ -79,7 +79,7 @@ The shared Markdown body projection handles code, HTML comments, and Obsidian `%
 
 ## 5. Commands, queries, and UI
 
-When periodic-note confirmation is enabled, its modal lists the primary target and configured larger-period targets, marking each larger target as Create or Keep existing. Preview and execution share the same target derivation. Execution rechecks existence, so the preview is a plan rather than a reservation. Opening an existing primary note does not start a creation cascade.
+When periodic-note confirmation is enabled, its modal lists the primary target and configured larger-period targets, marking each larger target as Create or Keep existing. The command entry deeply snapshots each period rule (including enabled, pattern, pathLocale and template), locale, week start and template engine, then materializes frozen primary and cascade template contexts before its first await. Preview and execution use that same plan rather than reinterpreting mutable settings after confirmation, rendering or opening waits. Execution rechecks existence, file ports continue checking target identity and content, and the runtime continues checking cancellation; the preview is a plan rather than a reservation. Opening an existing primary note does not start a creation cascade.
 
 Primary-calendar labels use the shared `createGregorianDateFormatter()` with explicit `calendar: "gregory"` and `timeZone: "UTC"`. Month buttons, the mini-calendar month/year label and complete week-picker accessible ranges therefore describe the same Gregorian `LocalDate` they select. Locale still controls language and digits; calendar-extension providers retain their own explicit calendar semantics.
 

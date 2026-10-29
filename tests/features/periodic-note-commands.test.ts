@@ -79,6 +79,146 @@ function createPorts(existing: readonly string[] = []) {
 }
 
 describe("PeriodicNoteCommands", () => {
+  it.each(["confirmation", "render", "open", "cascade"])(
+    "executes the confirmed immutable plan when settings change during %s",
+    async (boundary) => {
+      const ports = createPorts();
+      const settings = { ...createSettings({
+        daily: { enabled: true, pattern: "[Daily]/YYYY-MM-DD", templatePath: "Templates/Daily.md" },
+        weekly: { enabled: true, pattern: "[Reviewed]/GGGG-[W]WW", templatePath: "Templates/Weekly.md" },
+        monthly: { enabled: true, pattern: "[Reviewed]/YYYY-MM", templatePath: "Templates/Monthly.md" },
+        yearly: { enabled: true, pattern: "[Reviewed]/YYYY", templatePath: "Templates/Yearly.md" },
+      }) };
+      const changeSettings = () => {
+        settings.locale = "fr-FR";
+        settings.weekStartDay = "sunday";
+        settings.templateEngine = "templater";
+        for (const type of ["daily", "weekly", "monthly", "yearly"] as const) {
+          Object.assign(settings.periodicNotes[type], {
+            pattern: `[Unreviewed-${type}]/YYYY-MMMM`,
+            templatePath: "Templates/Different.md",
+            pathLocale: "fr-FR",
+          });
+        }
+        settings.periodicNotes.monthly.enabled = false;
+        Object.assign(settings.periodicNotes.quarterly, {
+          enabled: true, pattern: "[Unreviewed]/YYYY-[Q]Q",
+        });
+      };
+      vi.mocked(ports.templates.prepare).mockImplementation(async (context) => ({
+        initialContent: "",
+        renderAfterCreate: async () => {
+          if (context.kind === "periodic" && (
+            (boundary === "render" && context.noteType === "daily") ||
+            (boundary === "cascade" && context.noteType === "weekly")
+          )) changeSettings();
+          return context.templatePath;
+        },
+      }));
+      vi.mocked(ports.workspace.open).mockImplementation(async () => {
+        if (boundary === "open") changeSettings();
+      });
+      const commands = new PeriodicNoteCommands(ports.files, ports.templates, ports.workspace);
+      const result = await commands.openOrCreate({
+        date: { year: 2026, month: 7, day: 22 }, noteType: "daily", cascade: true,
+        confirmCreate: async (confirmation) => {
+          expect(confirmation.cascade.map(({ path }) => path)).toEqual([
+            "Reviewed/2026-W30.md", "Reviewed/2026-07.md", "Reviewed/2026.md",
+          ]);
+          expect(Object.isFrozen(confirmation)).toBe(true);
+          expect(Object.isFrozen(confirmation.date)).toBe(true);
+          expect(Object.isFrozen(confirmation.cascade)).toBe(true);
+          expect(confirmation.cascade.every(Object.isFrozen)).toBe(true);
+          if (boundary === "confirmation") changeSettings();
+          return true;
+        },
+      }, settings);
+      expect(result).toMatchObject({ status: "opened", created: true, cascade: [
+        { path: "Reviewed/2026-W30.md", status: "created" },
+        { path: "Reviewed/2026-07.md", status: "created" },
+        { path: "Reviewed/2026.md", status: "created" },
+      ] });
+      expect([...ports.paths]).toEqual([
+        "Daily/2026-07-22.md", "Reviewed/2026-W30.md", "Reviewed/2026-07.md", "Reviewed/2026.md",
+      ]);
+      expect([...ports.contents.values()]).toEqual([
+        "Templates/Daily.md", "Templates/Weekly.md", "Templates/Monthly.md", "Templates/Yearly.md",
+      ]);
+      for (const [context] of vi.mocked(ports.templates.prepare).mock.calls) {
+        expect(context).toMatchObject({ locale: "en-US", templateEngine: "builtin" });
+        expect(Object.isFrozen(context)).toBe(true);
+        if (context.kind === "periodic" && context.noteType === "weekly") {
+          expect(context.date).toEqual({ year: 2026, month: 7, day: 20 });
+        }
+      }
+    },
+  );
+
+  it("rechecks approved paths without changing the plan and preserves partial cascade success", async () => {
+    const ports = createPorts();
+    const settings = createSettings({
+      daily: { enabled: true, pattern: "[Daily]/YYYY-MM-DD" },
+      weekly: { enabled: true, pattern: "[Reviewed]/GGGG-[W]WW" },
+      monthly: { enabled: true, pattern: "[Reviewed]/YYYY-MM" },
+      yearly: { enabled: true, pattern: "[Reviewed]/YYYY" },
+    });
+    vi.mocked(ports.templates.prepare).mockImplementation(async (context) => {
+      if (context.kind === "periodic" && context.noteType === "weekly") {
+        settings.periodicNotes.yearly.pattern = "[Unreviewed]/YYYY";
+        throw new Error("weekly template failed");
+      }
+      return { initialContent: "" };
+    });
+    const commands = new PeriodicNoteCommands(ports.files, ports.templates, ports.workspace);
+    const result = await commands.openOrCreate({
+      date: { year: 2026, month: 7, day: 22 }, noteType: "daily", cascade: true,
+      confirmCreate: async () => {
+        ports.paths.add("Reviewed/2026-07.md");
+        ports.contents.set("Reviewed/2026-07.md", "External note");
+        return true;
+      },
+    }, settings);
+    expect(result).toMatchObject({ status: "opened", cascade: [
+      { path: "Reviewed/2026-W30.md", status: "failed", error: { message: "weekly template failed" } },
+      { path: "Reviewed/2026-07.md", status: "existing" },
+      { path: "Reviewed/2026.md", status: "created" },
+    ] });
+    expect(ports.contents.get("Reviewed/2026-07.md")).toBe("External note");
+    expect(ports.paths.has("Unreviewed/2026.md")).toBe(false);
+  });
+
+  it("keeps each same-path waiter cascade tied to its own settings snapshot", async () => {
+    const ports = createPorts();
+    const rendering = deferred<string>();
+    vi.mocked(ports.templates.prepare).mockResolvedValueOnce({
+      initialContent: "", renderAfterCreate: () => rendering.promise,
+    });
+    const commands = new PeriodicNoteCommands(ports.files, ports.templates, ports.workspace);
+    const settings = createSettings({
+      daily: { enabled: true, pattern: "[Daily]/YYYY-MM-DD" },
+      monthly: { enabled: true, pattern: "[First]/YYYY-MM", templatePath: "First.md" },
+    });
+    const request = { date: { year: 2026, month: 7, day: 22 }, noteType: "daily", cascade: true } as const;
+    const first = commands.openOrCreate(request, settings);
+    await vi.waitFor(() => expect(ports.files.create).toHaveBeenCalledOnce());
+    Object.assign(settings.periodicNotes.monthly, { pattern: "[Second]/YYYY-MM", templatePath: "Second.md" });
+    const second = commands.openOrCreate(request, settings);
+    Object.assign(settings.periodicNotes.monthly, { pattern: "[Neither]/YYYY-MM", templatePath: "Neither.md" });
+    rendering.resolve("Rendered daily");
+    const results = await Promise.all([first, second]);
+    expect(results).toMatchObject([
+      { created: true, cascade: [{ path: "First/2026-07.md", status: "created" }] },
+      { created: false, cascade: [{ path: "Second/2026-07.md", status: "created" }] },
+    ]);
+    expect(ports.templates.prepare).toHaveBeenCalledWith(expect.objectContaining({
+      path: "First/2026-07.md", templatePath: "First.md",
+    }), "");
+    expect(ports.templates.prepare).toHaveBeenCalledWith(expect.objectContaining({
+      path: "Second/2026-07.md", templatePath: "Second.md",
+    }), "");
+    expect(ports.paths.has("Neither/2026-07.md")).toBe(false);
+  });
+
   it("confirms the exact cascade paths and distinguishes existing notes before creating anything", async () => {
     const ports = createPorts(["Months/2026-05.md"]);
     const confirmCreate = vi.fn(async () => false);
