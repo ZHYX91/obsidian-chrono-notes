@@ -15,7 +15,7 @@ describe("calendar ICS layout", () => {
       /\.chrono-notes-ics-list\s*\{[^}]*gap:\s*1px;[^}]*grid-auto-rows:\s*12px;[^}]*min-height:\s*0;/s,
     );
     expect(styles).toMatch(
-      /\.chrono-notes-ics-list\[data-has-overflow="true"\] \.chrono-notes-ics-event:last-of-type\s*\{[^}]*padding-inline-end:\s*24px;/s,
+      /\.chrono-notes-ics-list\[data-responsive="false"\]\[data-wide-overflow="true"\]\s*\.chrono-notes-ics-event\[data-event-index="2"\]\s*\{[^}]*padding-inline-end:\s*24px;/s,
     );
     expect(styles).toMatch(
       /\.chrono-notes-ics-more\s*\{[^}]*bottom:\s*0;[^}]*position:\s*absolute;[^}]*inset-inline-end:\s*0;/s,

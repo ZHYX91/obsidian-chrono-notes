@@ -4,6 +4,9 @@ Notable changes to Chrono Notes are documented in this file. The repository's nu
 
 ## Unreleased
 
+- Fold narrow month cells to one ICS summary plus the remaining count, while preserving complete selected-day details, accessible names, and keyboard date navigation.
+- Share the month and week event layout so weekly overflow counts cannot cover long summaries in narrow or wide calendars.
+
 ## 0.8.1
 
 ### Fixed

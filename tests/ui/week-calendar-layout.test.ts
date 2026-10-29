@@ -101,7 +101,7 @@ describe("week calendar layout", () => {
       /\.chrono-notes-week-day-name \.is-medium\s*\{[^}]*display:\s*inline;/s,
     );
     expect(styles).toMatch(
-      /@container \(min-width: 560px\)[\s\S]*?\.chrono-notes-week-day-name \.is-full\s*\{[^}]*display:\s*inline;[\s\S]*?data-event-index="1"\],[\s\S]*?data-event-index="2"\]\s*\{[^}]*display:\s*flex;/s,
+      /@container \(min-width: 560px\)[\s\S]*?\.chrono-notes-week-day-name \.is-full\s*\{[^}]*display:\s*inline;/s,
     );
     expect(styles).toMatch(
       /@container \(max-width: 360px\)[\s\S]*?\.chrono-notes-week-day-name \.is-compact\s*\{[^}]*display:\s*inline;[\s\S]*?\.chrono-notes-week-day-content\s*\{[^}]*display:\s*none;/s,

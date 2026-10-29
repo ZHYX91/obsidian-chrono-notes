@@ -12,6 +12,7 @@ export interface MonthWeekNumberProps {
   readonly showNoteIndicators: boolean;
   readonly showTaskProgress: boolean;
   readonly ariaLabel: string;
+  readonly direction?: "ltr" | "rtl";
   readonly longPress: LongPressGesture;
   readonly previewActive?: boolean;
   readonly previewId?: string;
@@ -29,6 +30,7 @@ export function MonthWeekNumber({
   showNoteIndicators,
   showTaskProgress,
   ariaLabel,
+  direction = "ltr",
   longPress,
   previewActive = false,
   previewId,
@@ -60,7 +62,7 @@ export function MonthWeekNumber({
           if (event.button === 1) onOpen("tab");
         }}
         onKeyDown={(event) => {
-          handleKeyDown(event, onOpen, onMoveToDay);
+          handleKeyDown(event, direction, onOpen, onMoveToDay);
         }}
         onMouseEnter={(event) => onSchedulePreview?.(event.currentTarget)}
         onMouseLeave={onDismissPreview}
@@ -89,10 +91,11 @@ export function MonthWeekNumber({
 
 function handleKeyDown(
   event: KeyboardEvent<HTMLButtonElement>,
+  direction: "ltr" | "rtl",
   onOpen: (target: NoteOpenTarget) => void,
   onMoveToDay: () => void,
 ): void {
-  if (event.key === "ArrowRight") {
+  if (event.key === (direction === "rtl" ? "ArrowLeft" : "ArrowRight")) {
     event.preventDefault();
     onMoveToDay();
     return;

@@ -32,6 +32,7 @@ import {
 } from "./calendar-period-preview";
 import type { CalendarPreviewCell } from "./calendar-preview-tooltip";
 import { moveCalendarSelection } from "./calendar-interaction";
+import { isInteractiveCalendarYear } from "../../features/calendar/date-picker";
 import type { LongPressGesture } from "./long-press";
 import { MonthDayCell } from "./month-day-cell";
 import { MonthIntervalStrip } from "./month-interval-strip";
@@ -138,7 +139,8 @@ export function MonthView({
   const tabStopKey = useMemo(() => {
     const visibleDays = query.weeks
       .flatMap((week) => week.days)
-      .filter((cell) => !heatmapEnabled || cell.inCurrentMonth);
+      .filter((cell) => isInteractiveCalendarYear(cell.date.year) &&
+        (!heatmapEnabled || cell.inCurrentMonth));
     const visibleKeys = new Set(
       visibleDays.map((cell) => formatLocalDateKey(cell.date)),
     );
@@ -262,6 +264,7 @@ export function MonthView({
             <div className="chrono-notes-week-row" role="row">
               <MonthWeekNumber
                 week={week}
+                direction={translator.direction}
                 current={isSamePeriod(
                   today,
                   week.weekStart,
@@ -314,7 +317,8 @@ export function MonthView({
                 }
                 onMoveToDay={() => {
                   const target = week.days.find(
-                    (cell) => !heatmapEnabled || cell.inCurrentMonth,
+                    (cell) => isInteractiveCalendarYear(cell.date.year) &&
+                      (!heatmapEnabled || cell.inCurrentMonth),
                   );
                   if (target === undefined) return;
                   focusAfterMove.current = true;

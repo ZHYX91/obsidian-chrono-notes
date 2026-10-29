@@ -9,6 +9,7 @@ import {
   type LocalDate,
 } from "../../core/periodic/periodic-date";
 import type { MonthCalendarDay } from "../../features/calendar/month-calendar-query";
+import { isInteractiveCalendarYear } from "../../features/calendar/date-picker";
 import type { NoteOpenTarget } from "../../features/periodic/periodic-note-commands";
 import type { Translator } from "../../shared/i18n";
 import {
@@ -94,6 +95,7 @@ export function MonthDayCell({
   const key = formatLocalDateKey(cell.date);
   const isToday = isSameLocalDate(cell.date, today);
   const isHiddenHeatmapCell = heatmapEnabled && !cell.inCurrentMonth;
+  const isOutsideYearRange = !isInteractiveCalendarYear(cell.date.year);
   const isRangePreview = rangePreview !== null &&
     isDateInMonthRange(cell.date, rangePreview);
   const isRangeStart = rangePreview !== null && isSameLocalDate(cell.date, rangePreview.start);
@@ -114,7 +116,7 @@ export function MonthDayCell({
       type="button"
       role="gridcell"
       className={`chrono-notes-day${cell.inCurrentMonth ? "" : " is-outside"}${isToday ? " is-current-period" : ""}${selected ? " is-selected" : ""}${heatmapEnabled ? " is-heatmap" : ""}${isRangePreview ? " is-range-preview" : ""}${isRangeStart ? " is-range-start" : ""}${isRangeEnd ? " is-range-end" : ""}`}
-      disabled={isHiddenHeatmapCell}
+      disabled={isHiddenHeatmapCell || isOutsideYearRange}
       data-note-state={cell.noteState}
       data-heatmap-level={cell.heatmap?.level ?? "none"}
       data-has-tasks={String(cell.statistics.taskTotal > 0)}
@@ -125,7 +127,7 @@ export function MonthDayCell({
       aria-current={isToday ? "date" : undefined}
       aria-selected={selected}
       aria-describedby={activePreviewKey === key ? previewId : undefined}
-      tabIndex={isHiddenHeatmapCell ? -1 : tabStop ? 0 : -1}
+      tabIndex={isHiddenHeatmapCell || isOutsideYearRange ? -1 : tabStop ? 0 : -1}
       onClick={(event) => onClick(event, cell.date)}
       onDoubleClick={() => onOpenPeriodic(cell.date, "default")}
       onAuxClick={(event) => {
@@ -172,7 +174,7 @@ export function MonthDayCell({
             </span>
             <span className="chrono-notes-day-content">
               <CalendarDayCalendarDetails day={cell} translator={translator} />
-              <CalendarDayEvents events={cell.icsEvents} translator={translator} />
+              <CalendarDayEvents events={cell.icsEvents} translator={translator} responsive />
             </span>
           </>
         )}
