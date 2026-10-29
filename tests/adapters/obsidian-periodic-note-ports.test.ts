@@ -7,6 +7,7 @@ import {
   type PreparedNoteTemplate,
 } from "../../src/features/templates/note-template-port";
 import { createTemplaterLifecycle } from "../support/templater-lifecycle";
+import { createTemplaterDateNow } from "../support/templater-date";
 
 import {
   ObsidianBuiltinTemplatePort,
@@ -86,8 +87,13 @@ describe("Obsidian periodic note ports", () => {
             create_running_config: () => ({}),
             parse_template: async (_config: unknown, injected: string) => {
               const bridge = injected.slice("<%*\n".length, injected.indexOf("\n_%>"));
-              const tp = { obsidian: { moment }, date: { now: (format: string) => moment().format(format) } };
-              return runInNewContext(`${bridge}; [tp_calendar.time("DEC[s] [C]CEN"), tp_calendar.time("HH:mm:ss")].join(" | ");`, { tp }) as string;
+              const tp = { obsidian: { moment }, date: { now: createTemplaterDateNow(moment) } };
+              return runInNewContext(`${bridge}; [
+                tp_calendar.time(), tp_calendar.time("HH:mm:ss"),
+                tp_calendar.time("DEC[s] [C]CEN"), tp_calendar.time("[DEC/CEN] YYYY-MM-DD"),
+                tp_calendar.start(), tp_calendar.end("DEC[s] [C]CEN"),
+                tp_calendar.kind === "periodic" ? tp_calendar.date("YYYY-MM-DD", 1) : tp_calendar.dayCount,
+              ].join(" | ");`, { tp }) as string;
             },
           } }) },
         } as never, vault as never);
@@ -101,7 +107,11 @@ describe("Obsidian periodic note ports", () => {
           : { ...common, kind, start: date, end: date, dayCount: 1 };
         const prepared = await templates.prepare(context, "");
         await expect(renderPrepared(prepared, target.path))
-          .resolves.toBe(`2020s C21 | ${moment().format("HH:mm:ss")}`);
+          .resolves.toBe([
+            moment().format("HH:mm"), moment().format("HH:mm:ss"),
+            "2020s C21", "DEC/CEN 2026-09-07", "2000-12-31", "2000s C20",
+            kind === "periodic" ? "2001-01-01" : "1",
+          ].join(" | "));
       } finally {
         clock.mockRestore();
         moment.locale(locale);

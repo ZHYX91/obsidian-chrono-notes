@@ -4,6 +4,7 @@ import { runInNewContext } from "node:vm";
 import { fileURLToPath } from "node:url";
 import { build } from "esbuild";
 import { buildTemplaterPeriodFormatter } from "../../src/core/template/templater-period-format";
+import { createTemplaterDateNow } from "../support/templater-date";
 
 // Emulate the host with the Moment dependency declared by Obsidian itself.
 const require = createRequire(import.meta.url);
@@ -14,9 +15,7 @@ moment.locale("en");
 
 function formatter(source = buildTemplaterPeriodFormatter(), locale = "en") {
   moment.locale(locale);
-  const tp = { date: { now: (format: string, offset = 0, reference?: string) =>
-    (reference === undefined ? moment() : moment(reference, "YYYY-MM-DD"))
-      .add(offset, "days").format(format) }, obsidian: { moment } };
+  const tp = { date: { now: createTemplaterDateNow(moment) }, obsidian: { moment } };
   // Execute the exact bridge injected into Templater, including the serialized shared lexer.
   return runInNewContext(`${source}; chronoDate;`, { tp }) as
     (format: string, offset?: number | string, reference?: string) => string;
@@ -33,9 +32,17 @@ describe("Templater extended date bridge", () => {
 
   it("uses the actual host Moment current-time semantics without a reference", () => {
     expect(moment(undefined, "YYYY-MM-DD").isValid()).toBe(false);
+    const now = createTemplaterDateNow(moment);
+    expect(now("HH:mm:ss", 0, undefined, "YYYY-MM-DD")).toBe("Invalid date");
+    expect(now("HH:mm:ss")).toBe(moment().format("HH:mm:ss"));
     const format = formatter();
     expect(format("DEC[s] [C]CEN YYYY-MM-DD")).toBe("2020s C21 2026-09-07");
     expect(format("HH:mm:ss")).toBe(moment().format("HH:mm:ss"));
+    expect(format("HH:mm:ss", 0, undefined)).toBe(moment().format("HH:mm:ss"));
+    expect(format("YYYY-MM-DD", 0, "2000-12-31")).toBe("2000-12-31");
+    expect(format("YYYY-MM-DD", 1, "2000-12-31")).toBe("2001-01-01");
+    expect(format("YYYY-MM-DD", 1)).toBe(moment().add(1, "days").format("YYYY-MM-DD"));
+    expect(format("YYYY-MM-DD", "P1Y")).toBe("2027-09-07");
     expect(() => format("CEN", 0, "not-a-date")).toThrow("Invalid calendar reference date");
   });
 
@@ -49,6 +56,8 @@ describe("Templater extended date bridge", () => {
     const format = formatter(module.exports.buildTemplaterPeriodFormatter());
     expect(format("[DEC/CEN] DEC[s] [C]CEN", 1, "2000-12-31")).toBe("DEC/CEN 2000s C21");
     expect(format("DEC[s] [C]CEN")).toBe("2020s C21");
+    expect(format("HH:mm:ss")).toBe(moment().format("HH:mm:ss"));
+    expect(format("YYYY-MM-DD", 0, "2000-12-31")).toBe("2000-12-31");
   });
 
   it("preserves native formats, literal tokens and date offsets", () => {
@@ -66,6 +75,7 @@ describe("Templater extended date bridge", () => {
     const format = formatter(undefined, locale);
     const nativeYear = moment.utc("2026-09-07", "YYYY-MM-DD", locale, true).format("YYYY");
     expect(nativeYear).not.toBe("2026");
+    expect(format("YYYY")).toBe(nativeYear);
     expect(format("DEC[s] [C]CEN YYYY")).toBe(`2020s C21 ${nativeYear}`);
     expect(format("[DEC] DEC[s]", 1, "2000-12-31")).toBe("DEC 2000s");
     expect(format("CEN", 1, "2000-12-31")).toBe("21");

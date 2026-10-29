@@ -10,7 +10,9 @@ export function buildTemplaterPeriodFormatter(): string {
     "const chronoDate = (format, offset = 0, reference) => {",
     "  const chunks = chronoSplitFormat(format);",
     "  if (chunks === null || !chunks.some(part => part.token !== null && /DEC|CEN/.test(part.value))) {",
-    "    return tp.date.now(format, offset, reference, 'YYYY-MM-DD');",
+    // A format with an undefined reference makes Templater parse an invalid date.
+    "    return reference === undefined ? tp.date.now(format, offset)",
+    "      : tp.date.now(format, offset, reference, 'YYYY-MM-DD');",
     "  }",
     "  const moment = tp.obsidian.moment;",
     "  const date = reference === undefined ? moment() : moment(reference, 'YYYY-MM-DD');",

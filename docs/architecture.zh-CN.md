@@ -186,7 +186,7 @@ Properties 日期/时间显示与打开行为使用两个独立 Obsidian 适配�
 
 相邻参考项目保持只读，只提供经过验证的需求、纯算法、数据和回归样例。本仓库不包含该项目的分散 Manager 缓存、CSS 结构或重复文件读取路径。
 
-格式词法层统一处理方括号字面量和反斜杠转义，period-format 将标准 token 编译到 Luxon，并将 DEC/CEN 当作独立字段参与路径反向解析。最终通过规范锚点重新格式化验证整条路径，拒绝互相矛盾的字段；较粗分组不能替代较细周期的路径身份。getPeriodRange 为模板和世纪查询提供首尾日期及包含两端的天数。Templater 在隔离执行上下文中复用序列化的纯词法和周期计算函数，扩展仅作用于 tp_calendar helper，保留原生 Moment 格式与 offset 行为。扩展数字在宿主 Moment 完成 locale postformat 后替换，因此阿拉伯语、波斯语与印地语的原生数字也不会改变 DEC/CEN 的 ASCII 输出。century-calendar-query 只构造最多 100 个年份的周期笔记投影，接入同一个请求绑定的 CalendarQueryStore；依赖项仅包括可见年份、年代和世纪笔记及就绪状态，其他笔记与 ICS 变化不触发新视图更新。
+格式词法层统一处理方括号字面量和反斜杠转义，period-format 将标准 token 编译到 Luxon，并将 DEC/CEN 当作独立字段参与路径反向解析。最终通过规范锚点重新格式化验证整条路径，拒绝互相矛盾的字段；较粗分组不能替代较细周期的路径身份。getPeriodRange 为模板和世纪查询提供首尾日期及包含两端的天数。Templater 在隔离执行上下文中复用序列化的纯词法和周期计算函数，扩展仅作用于 tp_calendar helper，保留原生 Moment 格式与 offset 行为。普通格式在没有引用日期时只向 tp.date.now 传 format/offset，避免上游将 undefined 与固定输入格式一起解析；显式目标日期仍以 YYYY-MM-DD 解析，time 则使用执行时的当前时刻。扩展数字在宿主 Moment 完成 locale postformat 后替换，因此阿拉伯语、波斯语与印地语的原生数字也不会改变 DEC/CEN 的 ASCII 输出。century-calendar-query 只构造最多 100 个年份的周期笔记投影，接入同一个请求绑定的 CalendarQueryStore；依赖项仅包括可见年份、年代和世纪笔记及就绪状态，其他笔记与 ICS 变化不触发新视图更新。
 
 周期选择器通过 CalendarPeriodGrid 共用民用年份、ISO 周年、年代和世纪的分页、选中状态与键盘导航；calendar-period-picker 中的纯窗口模型提供页面范围、完整周期标签和相邻页面，周期身份复用 core 的日期锚点。PeriodTargetButton 集中处理目标按钮，只有显式传入打开回调的年份/月/季度入口拥有笔记快捷操作；年代/世纪选择器不接收打开笔记端口。CalendarPickerLayer 统一拥有桌面与移动宿主模态层，月份/季度和周编号继续保留专属布局。
 
