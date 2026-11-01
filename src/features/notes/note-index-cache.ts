@@ -261,7 +261,7 @@ function parseBoundary(value: unknown): NonNullable<IndexedNote["interval"]>["st
 function parseLocalDate(value: unknown): LocalDate | null {
   if (
     !isRecord(value) ||
-    !isPositiveInteger(value.year) ||
+    !isNonNegativeInteger(value.year) ||
     !isPositiveInteger(value.month) ||
     !isPositiveInteger(value.day)
   ) {

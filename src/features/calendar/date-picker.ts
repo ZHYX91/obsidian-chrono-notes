@@ -20,6 +20,21 @@ export interface DatePickerModel {
   readonly grid: MonthGrid;
 }
 
+/** UI navigation is bounded independently of the domain/ICS date range. */
+export function isInteractiveCalendarYear(year: number): boolean {
+  return Number.isInteger(year) && year >= 1 && year <= 9999;
+}
+
+export function isInteractiveCalendarDate(date: LocalDate): boolean {
+  if (!isInteractiveCalendarYear(date.year)) return false;
+  try {
+    toDateTime(date);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export function createDatePickerModel(
   selectedDate: LocalDate,
   displayMonth: CalendarMonth,
@@ -43,7 +58,8 @@ export function parseDateInput(value: string): LocalDate | null {
     ? separated === null ? null : [separated[1], separated[3], separated[4]]
     : [compact[1], compact[2], compact[3]];
   if (parts === null || parts.some((part) => part === undefined)) return null;
-  return parseLocalDateKey(`${parts[0]}-${parts[1]}-${parts[2]}`);
+  const date = parseLocalDateKey(`${parts[0]}-${parts[1]}-${parts[2]}`);
+  return date !== null && isInteractiveCalendarDate(date) ? date : null;
 }
 
 export function shiftPickerMonth(month: CalendarMonth, amount: number): CalendarMonth {
@@ -67,6 +83,7 @@ function shiftMonth(
   }
   const shifted = current.plus(duration);
   if (!shifted.isValid) throw new RangeError("Date picker shift is out of range");
+  if (!isInteractiveCalendarYear(shifted.year)) return freezeMonth(month);
   return Object.freeze({ year: shifted.year, month: shifted.month });
 }
 

@@ -4,6 +4,14 @@ Notable changes to Chrono Notes are documented in this file. The repository's nu
 
 ## Unreleased
 
+## 0.8.2
+
+- Restore cached intervals in calendar year zero without rereading unchanged source notes; retain strict date and derived-interval validation.
+- Fold narrow month cells to one ICS summary plus the remaining count, while preserving complete selected-day details, accessible names, and keyboard date navigation.
+- Share the month and week event layout so weekly overflow counts cannot cover long summaries in narrow or wide calendars.
+- Keep captured note-creation paths and template contexts stable during confirmation and asynchronous rendering, and preserve the current time in native Templater formats.
+- Keep calendar navigation within supported dates while allowing legitimate week anchors across the year-one boundary.
+
 ## 0.8.1
 
 ### Fixed

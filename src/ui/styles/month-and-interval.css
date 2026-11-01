@@ -824,7 +824,8 @@ body.is-mobile
   color: var(--text-faint);
 }
 
-.chrono-notes-ics-list[data-has-overflow="true"] .chrono-notes-ics-event:last-of-type {
+.chrono-notes-ics-list[data-responsive="false"][data-wide-overflow="true"]
+  .chrono-notes-ics-event[data-event-index="2"] {
   padding-inline-end: 24px;
 }
 
@@ -850,6 +851,47 @@ body.is-mobile
   line-height: 12px;
   position: absolute;
   inset-inline-end: 0;
+}
+
+/* Month and week cells share one summary/count layout at each available width.
+   Full event titles remain available in selected-day details. */
+.chrono-notes-day-content .chrono-notes-ics-list[data-responsive="true"] {
+  display: grid;
+}
+
+.chrono-notes-ics-list[data-responsive="true"]
+  .chrono-notes-ics-event[data-event-index="1"],
+.chrono-notes-ics-list[data-responsive="true"]
+  .chrono-notes-ics-event[data-event-index="2"],
+.chrono-notes-ics-list[data-responsive="true"] .chrono-notes-ics-more.is-wide {
+  display: none;
+}
+
+.chrono-notes-ics-list[data-responsive="true"] .chrono-notes-ics-more.is-medium {
+  justify-self: end;
+  position: static;
+}
+
+@container (min-width: 560px) {
+  .chrono-notes-ics-list[data-responsive="true"]
+    .chrono-notes-ics-event[data-event-index="1"],
+  .chrono-notes-ics-list[data-responsive="true"]
+    .chrono-notes-ics-event[data-event-index="2"] {
+    display: flex;
+  }
+
+  .chrono-notes-ics-list[data-responsive="true"] .chrono-notes-ics-more.is-medium {
+    display: none;
+  }
+
+  .chrono-notes-ics-list[data-responsive="true"] .chrono-notes-ics-more.is-wide {
+    display: block;
+  }
+
+  .chrono-notes-ics-list[data-responsive="true"][data-wide-overflow="true"]
+    .chrono-notes-ics-event[data-event-index="2"] {
+    padding-inline-end: 24px;
+  }
 }
 
 .chrono-notes-calendar-indicator {

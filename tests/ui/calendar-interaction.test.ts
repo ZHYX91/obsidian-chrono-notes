@@ -4,6 +4,17 @@ import { moveCalendarSelection } from "../../src/ui/calendar/calendar-interactio
 
 describe("moveCalendarSelection", () => {
   it.each([
+    [{ year: 1, month: 1, day: 1 }, "ArrowLeft", "ltr"],
+    [{ year: 1, month: 1, day: 1 }, "ArrowRight", "rtl"],
+    [{ year: 1, month: 1, day: 1 }, "ArrowUp", "ltr"],
+    [{ year: 9999, month: 12, day: 31 }, "ArrowRight", "ltr"],
+    [{ year: 9999, month: 12, day: 31 }, "ArrowLeft", "rtl"],
+    [{ year: 9999, month: 12, day: 31 }, "ArrowDown", "ltr"],
+  ] as const)("keeps a boundary date inside interactive years %#", (date, key, direction) => {
+    expect(moveCalendarSelection(date, key, direction)).toBe(date);
+  });
+
+  it.each([
     ["ArrowLeft", { year: 2024, month: 8, day: 31 }],
     ["ArrowRight", { year: 2024, month: 9, day: 2 }],
     ["ArrowUp", { year: 2024, month: 8, day: 25 }],

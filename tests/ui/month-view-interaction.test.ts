@@ -111,6 +111,14 @@ describe("MonthView interactions", () => {
     expect(getDateTabStops()).toEqual([getDayButton("1")]);
   });
 
+  it("keeps padding dates outside the interactive year range disabled and out of the tab order", async () => {
+    const before = { year: 0, month: 12, day: 31 };
+    const first = { year: 1, month: 1, day: 1 };
+    await renderView(monthQuery(1, 1, [monthDay(before, false), monthDay(first, true)]), before);
+    expect(getDayButton("31").disabled).toBe(true);
+    expect(getDateTabStops()).toEqual([getDayButton("1")]);
+  });
+
   it("references hidden accessible text without exposing a host tooltip label", async () => {
     const previewableDay = Object.freeze({
       ...monthDay(AUGUST_1, true),
@@ -131,67 +139,86 @@ describe("MonthView interactions", () => {
 
   });
 
-  it("moves right from a week number into its first enabled date", async () => {
-    const onMoveSelection = vi.fn<(date: LocalDate) => void>();
-    const augustQuery = monthQuery(2026, 8, [
-      monthDay(JULY_31, false),
-      monthDay(AUGUST_1, true),
-    ]);
-    await renderView(augustQuery, JULY_31, {
-      selection: { kind: "week", date: JULY_31 },
-      onMoveSelection,
-    });
-    const weekNumber = container.querySelector<HTMLButtonElement>(
-      ".chrono-notes-week-number-button",
-    );
-    if (weekNumber === null) throw new Error("Expected week number button");
-    weekNumber.focus();
+  it.each([["en", "ArrowRight", "ArrowLeft"], ["ar", "ArrowLeft", "ArrowRight"]] as const)(
+    "moves inward from a %s week number into its first enabled date",
+    async (locale, inward, outward) => {
+      const onMoveSelection = vi.fn<(date: LocalDate) => void>();
+      const onOpenPeriodic = vi.fn<MonthViewProps["onOpenPeriodic"]>(async () => undefined);
+      const translator = createTranslator(locale, locale);
+      const augustQuery = monthQuery(2026, 8, [
+        monthDay(JULY_31, false),
+        monthDay(AUGUST_1, true),
+      ]);
+      await renderView(augustQuery, JULY_31, {
+        selection: { kind: "week", date: JULY_31 },
+        onMoveSelection,
+        onOpenPeriodic,
+        translator,
+      });
+      const weekNumber = container.querySelector<HTMLButtonElement>(
+        ".chrono-notes-week-number-button",
+      );
+      if (weekNumber === null) throw new Error("Expected week number button");
+      weekNumber.focus();
 
-    await dispatch(weekNumber, new KeyboardEvent("keydown", {
-      key: "ArrowRight",
-      bubbles: true,
-      cancelable: true,
-    }));
+      const outwardEvent = new KeyboardEvent("keydown", { key: outward, bubbles: true, cancelable: true });
+      await dispatch(weekNumber, outwardEvent);
+      expect(outwardEvent.defaultPrevented).toBe(false);
+      expect(onMoveSelection).not.toHaveBeenCalled();
 
-    expect(onMoveSelection).toHaveBeenCalledWith(JULY_31);
+      await dispatch(weekNumber, new KeyboardEvent("keydown", {
+        key: inward,
+        bubbles: true,
+        cancelable: true,
+      }));
 
-    await renderView(
-      monthQuery(2026, 7, [monthDay(JULY_31, true)]),
-      JULY_31,
-      { onMoveSelection },
-    );
-    expect(document.activeElement).toBe(getDayButton("31"));
-  });
+      expect(onMoveSelection).toHaveBeenCalledWith(JULY_31);
+      expect(onOpenPeriodic).not.toHaveBeenCalled();
 
-  it("skips disabled outside-month heatmap dates when entering from a week number", async () => {
-    const onMoveSelection = vi.fn<(date: LocalDate) => void>();
-    const query = monthQuery(2026, 8, [
-      monthDay(JULY_31, false),
-      monthDay(AUGUST_1, true),
-    ]);
-    await renderView(query, JULY_31, {
-      selection: { kind: "week", date: JULY_31 },
-      heatmapEnabled: true,
-      onMoveSelection,
-    });
-    const weekNumber = container.querySelector<HTMLButtonElement>(
-      ".chrono-notes-week-number-button",
-    );
-    if (weekNumber === null) throw new Error("Expected week number button");
+      await renderView(
+        monthQuery(2026, 7, [monthDay(JULY_31, true)]),
+        JULY_31,
+        { onMoveSelection, translator },
+      );
+      expect(document.activeElement).toBe(getDayButton("31"));
+    },
+  );
 
-    await dispatch(weekNumber, new KeyboardEvent("keydown", {
-      key: "ArrowRight",
-      bubbles: true,
-      cancelable: true,
-    }));
-    expect(onMoveSelection).toHaveBeenCalledWith(AUGUST_1);
+  it.each([["en", "ArrowRight"], ["ar", "ArrowLeft"]] as const)(
+    "skips disabled heatmap dates when entering from a %s week number",
+    async (locale, inward) => {
+      const onMoveSelection = vi.fn<(date: LocalDate) => void>();
+      const translator = createTranslator(locale, locale);
+      const query = monthQuery(2026, 8, [
+        monthDay(JULY_31, false),
+        monthDay(AUGUST_1, true),
+      ]);
+      await renderView(query, JULY_31, {
+        selection: { kind: "week", date: JULY_31 },
+        heatmapEnabled: true,
+        onMoveSelection,
+        translator,
+      });
+      const weekNumber = container.querySelector<HTMLButtonElement>(
+        ".chrono-notes-week-number-button",
+      );
+      if (weekNumber === null) throw new Error("Expected week number button");
 
-    await renderView(query, AUGUST_1, {
-      heatmapEnabled: true,
-      onMoveSelection,
-    });
-    expect(document.activeElement).toBe(getDayButton("1"));
-  });
+      await dispatch(weekNumber, new KeyboardEvent("keydown", {
+        key: inward,
+        bubbles: true,
+        cancelable: true,
+      }));
+      expect(onMoveSelection).toHaveBeenCalledWith(AUGUST_1);
+
+      await renderView(query, AUGUST_1, {
+        heatmapEnabled: true,
+        onMoveSelection,
+        translator,
+      });
+      expect(document.activeElement).toBe(getDayButton("1"));
+    },
+  );
 
   it("consumes the long-press click before a pending range-drag click", async () => {
     const onSelect = vi.fn<MonthViewProps["onSelect"]>();

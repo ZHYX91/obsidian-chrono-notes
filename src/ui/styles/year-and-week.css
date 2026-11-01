@@ -231,14 +231,6 @@
   width: 100%;
 }
 
-.chrono-notes-week-day-content .chrono-notes-ics-list[data-responsive="true"]
-  .chrono-notes-ics-event[data-event-index="1"],
-.chrono-notes-week-day-content .chrono-notes-ics-list[data-responsive="true"]
-  .chrono-notes-ics-event[data-event-index="2"],
-.chrono-notes-week-day-content .chrono-notes-ics-more.is-wide {
-  display: none;
-}
-
 .chrono-notes-week-ranges {
   margin-top: 7px;
   min-width: 0;
@@ -607,27 +599,6 @@
 
   .chrono-notes-week-day-name .is-medium {
     display: none;
-  }
-
-  .chrono-notes-week-day-content .chrono-notes-ics-list[data-responsive="true"]
-    .chrono-notes-ics-event[data-event-index="1"],
-  .chrono-notes-week-day-content .chrono-notes-ics-list[data-responsive="true"]
-    .chrono-notes-ics-event[data-event-index="2"] {
-    display: flex;
-  }
-
-  .chrono-notes-week-day-content .chrono-notes-ics-more.is-medium {
-    display: none;
-  }
-
-  .chrono-notes-week-day-content .chrono-notes-ics-more.is-wide {
-    display: block;
-  }
-
-  .chrono-notes-week-day-content
-    .chrono-notes-ics-list[data-responsive="true"][data-wide-overflow="false"]
-    .chrono-notes-ics-event:last-of-type {
-    padding-inline-end: 0;
   }
 }
 

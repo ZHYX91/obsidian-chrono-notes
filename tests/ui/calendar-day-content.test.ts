@@ -69,7 +69,7 @@ describe("calendar day content", () => {
       }),
     );
 
-    expect(markup).toContain('data-has-overflow="true"');
+    expect(markup).toContain('data-responsive="true"');
     expect(markup).toContain('data-wide-overflow="false"');
     expect(markup).toContain("chrono-notes-ics-more is-medium");
     expect(markup).not.toContain("chrono-notes-ics-more is-wide");

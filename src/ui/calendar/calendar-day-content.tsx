@@ -152,9 +152,6 @@ export function CalendarDayEvents({
     <span
       className="chrono-notes-ics-list"
       data-responsive={String(responsive)}
-      data-has-overflow={String(
-        responsive ? mediumHiddenCount > 0 : wideHiddenCount > 0,
-      )}
       data-wide-overflow={String(wideHiddenCount > 0)}
       aria-hidden="true"
     >

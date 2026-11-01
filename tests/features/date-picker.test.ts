@@ -6,8 +6,25 @@ import {
   shiftPickerMonth,
   shiftPickerYear,
 } from "../../src/features/calendar/date-picker";
+import { parseLocalDateKey } from "../../src/core/periodic/periodic-date";
 
 describe("date picker contracts", () => {
+  it("bounds interactive input without changing the domain year-zero contract", () => {
+    for (const input of ["0000-01-01", "0000/01/01", "0000.01.01", "00000101", "10000-01-01"]) {
+      expect(parseDateInput(input)).toBeNull();
+    }
+    expect(parseDateInput("0001-01-01")).toEqual({ year: 1, month: 1, day: 1 });
+    expect(parseDateInput("9999-12-31")).toEqual({ year: 9999, month: 12, day: 31 });
+    expect(parseLocalDateKey("0000-01-01")).toEqual({ year: 0, month: 1, day: 1 });
+  });
+
+  it("keeps month and year paging within the interactive year range", () => {
+    expect(shiftPickerMonth({ year: 1, month: 1 }, -1)).toEqual({ year: 1, month: 1 });
+    expect(shiftPickerMonth({ year: 9999, month: 12 }, 1)).toEqual({ year: 9999, month: 12 });
+    expect(shiftPickerYear({ year: 1, month: 6 }, -1)).toEqual({ year: 1, month: 6 });
+    expect(shiftPickerYear({ year: 9999, month: 6 }, 1)).toEqual({ year: 9999, month: 6 });
+  });
+
   it("parses every accepted date input format without rolling invalid dates", () => {
     expect(parseDateInput(" 2026-05-06 ")).toEqual({ year: 2026, month: 5, day: 6 });
     expect(parseDateInput("2026/05/06")).toEqual({ year: 2026, month: 5, day: 6 });

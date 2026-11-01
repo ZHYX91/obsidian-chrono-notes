@@ -22,6 +22,8 @@ import {
 } from "../../core/periodic/periodic-date";
 import {
   createDatePickerModel,
+  isInteractiveCalendarDate,
+  isInteractiveCalendarYear,
   shiftPickerMonth,
   shiftPickerYear,
   type CalendarMonth,
@@ -104,11 +106,15 @@ function MiniCalendar({
   const PreviousIcon = translator.direction === "rtl" ? ChevronRight : ChevronLeft;
   const NextIcon = translator.direction === "rtl" ? ChevronLeft : ChevronRight;
   const messages = getDateModalMessages(t);
+  const safeInitialDate = useMemo(
+    () => isInteractiveCalendarDate(initialDate) ? initialDate : today,
+    [initialDate, today],
+  );
   const [displayMonth, setDisplayMonth] = useState<CalendarMonth>(() => ({
-    year: initialDate.year,
-    month: initialDate.month,
+    year: safeInitialDate.year,
+    month: safeInitialDate.month,
   }));
-  const [focusedDate, setFocusedDate] = useState(initialDate);
+  const [focusedDate, setFocusedDate] = useState(safeInitialDate);
   const [isSelecting, setIsSelecting] = useState(false);
   const [periodPickerOpen, setPeriodPickerOpen] = useState(false);
   const selecting = useRef(false);
@@ -118,8 +124,8 @@ function MiniCalendar({
   const periodTrigger = useRef<HTMLButtonElement>(null);
   const periodPickerId = useId();
   const model = useMemo(
-    () => createDatePickerModel(initialDate, displayMonth, weekStartDay),
-    [displayMonth, initialDate, weekStartDay],
+    () => createDatePickerModel(safeInitialDate, displayMonth, weekStartDay),
+    [displayMonth, safeInitialDate, weekStartDay],
   );
   const weekdayLabels = useMemo(
     () => formatNarrowWeekdayLabels(locale, weekStartDay),
@@ -134,7 +140,7 @@ function MiniCalendar({
     const key = formatLocalDateKey(focusedDate);
     if (
       !focusAfterMove.current &&
-      !isSameLocalDate(focusedDate, initialDate)
+      !isSameLocalDate(focusedDate, safeInitialDate)
     ) return;
     focusAfterMove.current = false;
     const handle = host.window.setTimeout(
@@ -142,7 +148,7 @@ function MiniCalendar({
       0,
     );
     return () => host.window.clearTimeout(handle);
-  }, [focusedDate, host.window, initialDate, model.grid]);
+  }, [focusedDate, host.window, safeInitialDate, model.grid]);
 
   useEffect(() => {
     if (!periodPickerOpen) return;
@@ -155,7 +161,7 @@ function MiniCalendar({
 
   const selectDate = useCallback(
     async (date: LocalDate) => {
-      if (selecting.current) return;
+      if (selecting.current || !isInteractiveCalendarDate(date)) return;
       selecting.current = true;
       setIsSelecting(true);
       try {
@@ -183,6 +189,7 @@ function MiniCalendar({
 
   const showMonth = useCallback(
     (month: CalendarMonth, focusDay = false) => {
+      if (!isInteractiveCalendarYear(month.year)) return;
       focusAfterMove.current = focusDay;
       setDisplayMonth(month);
       setFocusedDate(firstDateOfMonth(month));
@@ -216,6 +223,7 @@ function MiniCalendar({
             type="button"
             aria-label={messages.previousMonth}
             title={messages.previousMonth}
+            disabled={displayMonth.year === 1 && displayMonth.month === 1}
             onClick={() => {
               setPeriodPickerOpen(false);
               showMonth(shiftPickerMonth(displayMonth, -1));
@@ -244,6 +252,7 @@ function MiniCalendar({
             type="button"
             aria-label={messages.nextMonth}
             title={messages.nextMonth}
+            disabled={displayMonth.year === 9999 && displayMonth.month === 12}
             onClick={() => {
               setPeriodPickerOpen(false);
               showMonth(shiftPickerMonth(displayMonth, 1));
@@ -278,6 +287,7 @@ function MiniCalendar({
                 type="button"
                 aria-label={messages.previousYear}
                 title={messages.previousYear}
+                disabled={displayMonth.year === 1}
                 onClick={() => showMonth(shiftPickerYear(displayMonth, -1))}
               >
                 <PreviousIcon size={16} aria-hidden="true" />
@@ -289,6 +299,7 @@ function MiniCalendar({
                 type="button"
                 aria-label={messages.nextYear}
                 title={messages.nextYear}
+                disabled={displayMonth.year === 9999}
                 onClick={() => showMonth(shiftPickerYear(displayMonth, 1))}
               >
                 <NextIcon size={16} aria-hidden="true" />
@@ -371,7 +382,7 @@ function MiniCalendar({
                   aria-label={key}
                   aria-selected={selected}
                   aria-current={isToday ? "date" : undefined}
-                  disabled={isSelecting}
+                  disabled={isSelecting || !isInteractiveCalendarYear(day.date.year)}
                   tabIndex={isSameLocalDate(day.date, focusedDate) ? 0 : -1}
                   onClick={() => void selectDate(day.date)}
                   onKeyDown={(event) => {

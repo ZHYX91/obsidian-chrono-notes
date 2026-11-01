@@ -112,21 +112,32 @@ export class PeriodicNoteCommands {
     settings: PeriodicNoteCommandSettings,
   ): Promise<OpenOrCreatePeriodicNoteResult> {
     assertNoteCreationActive(this.signal);
-    const path = resolvePath(request.date, request.noteType, settings);
+    const snapshot = snapshotSettings(settings);
+    const date = Object.freeze({ ...request.date });
+    const noteType = request.noteType;
+    const path = resolvePath(date, noteType, snapshot);
     if (path === null) {
-      return Object.freeze({ status: "not-configured", noteType: request.noteType });
+      return Object.freeze({ status: "not-configured", noteType });
     }
 
     const target = request.target ?? "default";
     const pendingCreation = this.creationsByPath.get(path);
+    if (pendingCreation === undefined && this.files.exists(path)) {
+      await this.workspace.open(path, target);
+      assertNoteCreationActive(this.signal);
+      return Object.freeze({ status: "opened", path, created: false, cascade: [] });
+    }
+
+    // Resolve every authorized path and template before the first await. Runtime
+    // settings can change while confirmation, rendering or workspace.open waits.
+    const primary = createTemplateContext(date, noteType, path, snapshot);
+    const cascadePlan = request.cascade ? this.largerNotePlan(date, noteType, snapshot) : [];
     if (pendingCreation !== undefined) {
       await pendingCreation;
       assertNoteCreationActive(this.signal);
       await this.workspace.open(path, target);
       assertNoteCreationActive(this.signal);
-      const cascade = request.cascade
-        ? await this.createLargerNotes(request.date, request.noteType, settings)
-        : [];
+      const cascade = await this.createLargerNotes(cascadePlan);
       return Object.freeze({
         status: "opened",
         path,
@@ -134,39 +145,30 @@ export class PeriodicNoteCommands {
         cascade: Object.freeze(cascade),
       });
     }
-    if (this.files.exists(path)) {
-      await this.workspace.open(path, target);
-      assertNoteCreationActive(this.signal);
-      return Object.freeze({ status: "opened", path, created: false, cascade: [] });
-    }
-
     if (request.confirmCreate !== undefined) {
       const confirmed = await request.confirmCreate(
         Object.freeze({
-          date: getPeriodAnchor(request.date, request.noteType, settings.weekStartDay),
-          noteType: request.noteType,
+          date: primary.date,
+          noteType,
           path,
-          cascade: request.cascade ? this.largerNoteTargets(request.date, request.noteType, settings) : [],
+          cascade: Object.freeze(cascadePlan.map((context) => Object.freeze({
+            noteType: context.noteType,
+            path: context.path,
+            exists: this.files.exists(context.path),
+          }))),
         }),
       );
       assertNoteCreationActive(this.signal);
       if (!confirmed) {
-        return Object.freeze({ status: "cancelled", noteType: request.noteType, path });
+        return Object.freeze({ status: "cancelled", noteType, path });
       }
     }
 
-    const created = await this.createPopulatedOnce(
-      request.date,
-      request.noteType,
-      path,
-      settings,
-    );
+    const created = await this.createPopulatedOnce(primary);
     assertNoteCreationActive(this.signal);
     await this.workspace.open(path, target);
     assertNoteCreationActive(this.signal);
-    const cascade = request.cascade
-      ? await this.createLargerNotes(request.date, request.noteType, settings)
-      : [];
+    const cascade = await this.createLargerNotes(cascadePlan);
     return Object.freeze({
       status: "opened",
       path,
@@ -176,15 +178,14 @@ export class PeriodicNoteCommands {
   }
 
   private async createLargerNotes(
-    date: LocalDate,
-    triggerType: PeriodicNoteType,
-    settings: PeriodicNoteCommandSettings,
+    plan: readonly PeriodicNoteTemplateContext[],
   ): Promise<CascadeResult[]> {
     const results: CascadeResult[] = [];
-    for (const { noteType, path } of this.largerNoteTargets(date, triggerType, settings)) {
+    for (const context of plan) {
+      const { noteType, path } = context;
       assertNoteCreationActive(this.signal);
       try {
-        const created = await this.createPopulatedOnce(date, noteType, path, settings);
+        const created = await this.createPopulatedOnce(context);
         assertNoteCreationActive(this.signal);
         results.push(Object.freeze({
           noteType,
@@ -210,25 +211,23 @@ export class PeriodicNoteCommands {
     return results;
   }
 
-  private largerNoteTargets(
+  private largerNotePlan(
     date: LocalDate,
     triggerType: PeriodicNoteType,
     settings: PeriodicNoteCommandSettings,
-  ): readonly PeriodicNoteCreationTarget[] {
-    const result: PeriodicNoteCreationTarget[] = [];
+  ): readonly PeriodicNoteTemplateContext[] {
+    const result: PeriodicNoteTemplateContext[] = [];
     for (const noteType of PERIODIC_NOTE_TYPES.slice(PERIODIC_NOTE_TYPES.indexOf(triggerType) + 1)) {
       const path = resolvePath(date, noteType, settings);
-      if (path !== null) result.push(Object.freeze({ noteType, path, exists: this.files.exists(path) }));
+      if (path !== null) result.push(createTemplateContext(date, noteType, path, settings));
     }
     return Object.freeze(result);
   }
 
   private async createPopulatedOnce(
-    selectedDate: LocalDate,
-    noteType: PeriodicNoteType,
-    path: string,
-    settings: PeriodicNoteCommandSettings,
+    context: PeriodicNoteTemplateContext,
   ): Promise<boolean> {
+    const { path } = context;
     assertNoteCreationActive(this.signal);
     const existing = this.creationsByPath.get(path);
     if (existing !== undefined) {
@@ -239,7 +238,7 @@ export class PeriodicNoteCommands {
     if (this.files.exists(path)) return false;
 
     const creation = Promise.resolve().then(() =>
-      this.createPopulatedNote(selectedDate, noteType, path, settings));
+      this.createPopulatedNote(context));
     this.creationsByPath.set(path, creation);
     try {
       await creation;
@@ -252,26 +251,12 @@ export class PeriodicNoteCommands {
   }
 
   private async createPopulatedNote(
-    selectedDate: LocalDate,
-    noteType: PeriodicNoteType,
-    path: string,
-    settings: PeriodicNoteCommandSettings,
+    context: PeriodicNoteTemplateContext,
   ): Promise<void> {
+    const { noteType, path } = context;
     let retainedCreatedNote = false;
     try {
       assertNoteCreationActive(this.signal);
-      const config = settings.periodicNotes[noteType];
-      const context: PeriodicNoteTemplateContext = Object.freeze({
-        kind: "periodic",
-        range: getPeriodRange(selectedDate, noteType, settings.weekStartDay),
-        date: getPeriodAnchor(selectedDate, noteType, settings.weekStartDay),
-        locale: settings.locale,
-        noteType,
-        path,
-        templatePath: config.templatePath,
-        templateEngine: settings.templateEngine,
-        title: getNoteTitle(path),
-      });
       const prepared = await this.templates.prepare(context, "");
       await runPreparedNoteCreation(prepared, async () => {
         assertNoteCreationActive(this.signal);
@@ -294,6 +279,36 @@ export class PeriodicNoteCommands {
       );
     }
   }
+}
+
+function snapshotSettings(settings: PeriodicNoteCommandSettings): PeriodicNoteCommandSettings {
+  return Object.freeze({
+    locale: settings.locale,
+    weekStartDay: settings.weekStartDay,
+    templateEngine: settings.templateEngine,
+    periodicNotes: Object.freeze(Object.fromEntries(PERIODIC_NOTE_TYPES.map((noteType) => [
+      noteType, Object.freeze({ ...settings.periodicNotes[noteType] }),
+    ])) as Record<PeriodicNoteType, PeriodicNoteSettings>),
+  });
+}
+
+function createTemplateContext(
+  selectedDate: LocalDate,
+  noteType: PeriodicNoteType,
+  path: string,
+  settings: PeriodicNoteCommandSettings,
+): PeriodicNoteTemplateContext {
+  return Object.freeze({
+    kind: "periodic",
+    range: getPeriodRange(selectedDate, noteType, settings.weekStartDay),
+    date: getPeriodAnchor(selectedDate, noteType, settings.weekStartDay),
+    locale: settings.locale,
+    noteType,
+    path,
+    templatePath: settings.periodicNotes[noteType].templatePath,
+    templateEngine: settings.templateEngine,
+    title: getNoteTitle(path),
+  });
 }
 
 function resolvePath(

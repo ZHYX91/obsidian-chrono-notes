@@ -150,6 +150,119 @@ describe("CalendarApp active query", () => {
     document.body.replaceChildren();
   });
 
+  it.each(["jump", "sync"] as const)(
+    "ignores out-of-range %s requests and keeps the year picker recoverable",
+    async (mode) => {
+      const container = document.createElement("div");
+      document.body.append(container);
+      const root = createRoot(container);
+      const props = createProps(() => () => undefined, () => () => undefined);
+      try {
+        await act(async () => root.render(createElement(CalendarApp, props)));
+        for (const year of [0, 10000]) {
+          await act(async () => root.render(createElement(CalendarApp, {
+            ...props, navigationRequest: {
+              date: { year, month: 1, day: 1 }, noteType: "daily", mode, revision: year + 1,
+            },
+          })));
+          const trigger = container.querySelector<HTMLButtonElement>(".chrono-notes-calendar-picker-trigger");
+          expect(trigger?.textContent).toBe("2026");
+          await act(async () => trigger?.click());
+          expect(container.querySelectorAll(".chrono-notes-year-picker-grid button")).toHaveLength(20);
+          await act(async () => trigger?.click());
+        }
+      } finally {
+        await act(async () => root.unmount());
+      }
+    },
+  );
+
+  it.each(["jump", "sync"] as const)(
+    "keeps a boundary decade file anchor while selecting supported dates for %s",
+    async (mode) => {
+      const container = document.createElement("div");
+      document.body.append(container);
+      const root = createRoot(container);
+      const props = createProps(() => () => undefined, () => () => undefined);
+      const open = vi.fn(async () => undefined);
+      Object.assign(props.getSettings().periodicNotes.decadal, {
+        enabled: true, pattern: "[Decades]/DEC[s]",
+      });
+      try {
+        await act(async () => root.render(createElement(CalendarApp, {
+          ...props, onOpenPeriodic: open, navigationRequest: {
+            date: { year: 0, month: 1, day: 1 }, noteType: "decadal", mode, revision: 1,
+          },
+        })));
+        expect(container.querySelector(".chrono-notes-calendar-picker-trigger")?.textContent).toBe("C1 · 1–100");
+        const decade = container.querySelector<HTMLButtonElement>('[data-period-kind="decade"][data-period-year="0"]');
+        expect(decade?.getAttribute("aria-pressed")).toBe("true");
+        await act(async () => decade?.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true })));
+        expect(open).toHaveBeenCalledWith({ year: 0, month: 1, day: 1 }, "decadal", "default");
+        const views = container.querySelectorAll<HTMLButtonElement>(".chrono-notes-view-mode button");
+        await act(async () => views[1]?.click());
+        const trigger = container.querySelector<HTMLButtonElement>(".chrono-notes-calendar-picker-trigger");
+        expect(trigger?.textContent).toBe("1");
+        await act(async () => trigger?.click());
+        expect(container.querySelector(".chrono-notes-year-picker-grid")).not.toBeNull();
+      } finally {
+        await act(async () => root.unmount());
+      }
+    },
+  );
+
+  it("synchronizes a Sunday-first boundary week without activating its year-zero file date", async () => {
+    const container = document.createElement("div");
+    document.body.append(container);
+    const root = createRoot(container);
+    const props = createProps(() => () => undefined, () => () => undefined);
+    props.getSettings().weekStartDay = "sunday";
+    try {
+      await act(async () => root.render(createElement(CalendarApp, {
+        ...props, navigationRequest: {
+          date: { year: 0, month: 12, day: 31 }, noteType: "weekly", mode: "sync", revision: 1,
+        },
+      })));
+      const trigger = container.querySelector<HTMLButtonElement>(".chrono-notes-calendar-picker-trigger");
+      expect(trigger?.textContent).toBe("1");
+      await act(async () => trigger?.click());
+      expect(container.querySelector(".chrono-notes-year-picker-grid")).not.toBeNull();
+    } finally {
+      await act(async () => root.unmount());
+    }
+  });
+
+  it.each([
+    [{ year: 1, month: 1, day: 1 }, -1],
+    [{ year: 9999, month: 12, day: 31 }, 1],
+  ] as const)("keeps week navigation within interactive years %#", async (date, direction) => {
+    const container = document.createElement("div");
+    document.body.append(container);
+    const root = createRoot(container);
+    const props = createProps(() => () => undefined, () => () => undefined);
+    try {
+      await act(async () => root.render(createElement(CalendarApp, {
+        ...props, navigationRequest: { date, noteType: "daily", mode: "jump", revision: 1 },
+      })));
+      let trigger = container.querySelector<HTMLButtonElement>(".chrono-notes-calendar-picker-trigger");
+      expect(trigger?.textContent).toBe(String(date.year));
+      await act(async () => trigger?.click());
+      expect(container.querySelector(".chrono-notes-year-picker-grid")).not.toBeNull();
+      await act(async () => trigger?.click());
+      const views = container.querySelectorAll<HTMLButtonElement>(".chrono-notes-view-mode button");
+      await act(async () => views[0]?.click());
+      const navigation = container.querySelectorAll<HTMLButtonElement>(".chrono-notes-calendar-navigation > button");
+      await act(async () => navigation[direction < 0 ? 0 : 1]?.click());
+      await act(async () => views[1]?.click());
+      trigger = container.querySelector<HTMLButtonElement>(".chrono-notes-calendar-picker-trigger");
+      expect(trigger?.textContent).toBe(String(date.year));
+      await act(async () => trigger?.click());
+      expect(container.querySelector(".chrono-notes-year-picker-grid")).not.toBeNull();
+    } finally {
+      await act(async () => root.unmount());
+    }
+  });
+
   it("selects and caches only the query for the active view", async () => {
     const noteUnsubscribe = vi.fn();
     const icsUnsubscribe = vi.fn();

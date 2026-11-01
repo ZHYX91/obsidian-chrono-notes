@@ -4,6 +4,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import type { LocalDate, PeriodicNoteType } from "../../core/periodic/periodic-date";
 import type { NoteOpenTarget } from "../../features/periodic/periodic-note-commands";
 import type { Translator } from "../../shared/i18n";
+import { isInteractiveCalendarYear } from "../../features/calendar/date-picker";
 import { useHostEnvironment } from "../host-environment";
 import {
   formatPeriodPickerTargetLabel,
@@ -32,10 +33,14 @@ export function CalendarPeriodGrid({
   const { t } = translator;
   const PreviousIcon = translator.direction === "rtl" ? ChevronRight : ChevronLeft;
   const NextIcon = translator.direction === "rtl" ? ChevronLeft : ChevronRight;
-  const [pageYear, setPageYear] = useState(year);
+  const selectedYear = isInteractiveCalendarYear(year) ? year
+    : year < 1 ? 1 : year > 9999 ? 9999
+      : isInteractiveCalendarYear(currentYear) ? currentYear : 1;
+  const [pageYear, setPageYear] = useState(selectedYear);
   const page = useMemo(() => getPeriodPickerWindow(kind, pageYear), [kind, pageYear]);
-  const selected = getPeriodPickerAnchor(kind, year);
-  const current = getPeriodPickerAnchor(kind, currentYear);
+  const selected = getPeriodPickerAnchor(kind, selectedYear);
+  const current = isInteractiveCalendarYear(currentYear)
+    ? getPeriodPickerAnchor(kind, currentYear) : null;
   const [focused, setFocused] = useState(selected);
   const gridRef = useRef<HTMLDivElement>(null);
   const pendingFocus = useRef<number | null>(null);

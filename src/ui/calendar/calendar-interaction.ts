@@ -1,4 +1,5 @@
 import { shiftPeriod, type LocalDate } from "../../core/periodic/periodic-date";
+import { isInteractiveCalendarDate } from "../../features/calendar/date-picker";
 
 export function moveCalendarSelection(
   date: LocalDate,
@@ -19,5 +20,7 @@ export function moveCalendarSelection(
         return 0;
     }
   })();
-  return offset === 0 ? date : shiftPeriod(date, "daily", offset, "monday");
+  if (offset === 0) return date;
+  const next = shiftPeriod(date, "daily", offset, "monday");
+  return isInteractiveCalendarDate(next) ? next : date;
 }
