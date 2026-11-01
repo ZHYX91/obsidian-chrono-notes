@@ -1247,16 +1247,16 @@ describe("NoteIndex", () => {
         revision: 2,
         note: { preview: "latest content" },
       });
-    });
-    expect(diagnostics).toEqual({
-      queuedEvents: 2,
-      eventBatches: 1,
-      reducedEventPaths: 1,
-      reads: 1,
-      documentParses: 1,
-      parses: 1,
-      materializations: 1,
-      publishes: 4,
+      expect(diagnostics).toEqual({
+        queuedEvents: 2,
+        eventBatches: 1,
+        reducedEventPaths: 1,
+        reads: 1,
+        documentParses: 1,
+        parses: 1,
+        materializations: 1,
+        publishes: 4,
+      });
     });
   });
 
