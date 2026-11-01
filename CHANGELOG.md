@@ -4,6 +4,7 @@ Notable changes to Chrono Notes are documented in this file. The repository's nu
 
 ## Unreleased
 
+- Restore cached intervals in calendar year zero without rereading unchanged source notes; retain strict date and derived-interval validation.
 - Fold narrow month cells to one ICS summary plus the remaining count, while preserving complete selected-day details, accessible names, and keyboard date navigation.
 - Share the month and week event layout so weekly overflow counts cannot cover long summaries in narrow or wide calendars.
 

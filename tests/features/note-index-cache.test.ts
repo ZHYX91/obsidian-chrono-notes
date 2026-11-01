@@ -504,6 +504,37 @@ describe("persistent NoteIndex cache", () => {
     expect(yieldToHost).toHaveBeenCalledTimes(2);
   });
 
+  it("restores domain-valid year-zero intervals without rereading source files", async () => {
+    const snapshot = cached([
+      "---",
+      "start: 0000-02-28",
+      "end: 0000-03-01",
+      "---",
+      "body",
+    ].join("\n"));
+    expect(snapshot.entries[0]?.note.interval?.start.date.year).toBe(0);
+    expect(snapshot.entries[0]?.note.interval?.dayCount).toBe(3);
+    expect(parsePersistedNoteIndexSnapshot(snapshot)).toEqual(snapshot);
+    await expect(parsePersistedNoteIndexSnapshotIncrementally(snapshot, {
+      clock: () => 0,
+      timeSliceMs: 8,
+      yieldToHost: async () => undefined,
+    })).resolves.toEqual(snapshot);
+
+    const source = new MetadataNoteSource();
+    source.files = [FILE];
+    source.read.mockRejectedValue(new Error("valid cached intervals must not be reread"));
+    const index = new NoteIndex(source, { cache: new MemoryNoteIndexCache(snapshot) });
+    await index.start();
+    expect(index.getSnapshot().readiness).toBe("ready");
+    expect(source.read).not.toHaveBeenCalled();
+    expect(index.get(FILE.path)).toMatchObject({
+      kind: "parsed",
+      note: { interval: { start: { date: { year: 0, month: 2, day: 28 } }, dayCount: 3 } },
+    });
+    index.stop();
+  });
+
   it("rejects cached intervals whose derived fields contradict their source values", () => {
     const snapshot = cached([
       "---",
