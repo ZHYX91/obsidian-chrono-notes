@@ -2,7 +2,13 @@
 
 Notable changes to Chrono Notes are documented in this file. The repository's numeric Git tags are the evidence for released versions; an entry without a corresponding local tag remains unreleased even if the manifests already contain that version.
 
-## Unreleased
+## 0.8.3
+
+Date: 2026-11-02
+
+- Update the development-only minimatch dependencies to 11.0.4 with reviewed legacy lint-call adaptations and installed-caller regression checks.
+
+- Protect link targets, shared reference labels, image labels and HTML tags when rescheduling tasks, while retaining dates in explicit display labels. Prevent date matches across protected syntax and rebuild older derived caches.
 
 ## 0.8.2
 

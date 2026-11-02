@@ -30,7 +30,7 @@ export function parseNoteTasks(
     // RegExp indices are UTF-16 code-unit offsets, so keep the writable copy
     // in the same coordinate system even when emoji markers use surrogate pairs.
     const visibleWithoutDates = line.visibleText.split("");
-    for (const dateMarker of line.semanticText.matchAll(DISPLAY_DATE_MARKER_PATTERN)) {
+    for (const dateMarker of line.taskText.matchAll(DISPLAY_DATE_MARKER_PATTERN)) {
       const start = dateMarker.index;
       const end = start + dateMarker[0].length;
       for (let index = start; index < end; index += 1) visibleWithoutDates[index] = " ";
@@ -40,10 +40,10 @@ export function parseNoteTasks(
     tasks.push(Object.freeze({
       text: text || rawText,
       completed: line.semanticText[marker.checkboxOffset] !== " ",
-      dueDate: parseTaskDate(DUE_PATTERN, line.semanticText),
-      scheduledDate: parseTaskDate(SCHEDULED_PATTERN, line.semanticText),
-      startDate: parseTaskDate(START_PATTERN, line.semanticText),
-      doneDate: parseTaskDate(DONE_PATTERN, line.semanticText),
+      dueDate: parseTaskDate(DUE_PATTERN, line.taskText),
+      scheduledDate: parseTaskDate(SCHEDULED_PATTERN, line.taskText),
+      startDate: parseTaskDate(START_PATTERN, line.taskText),
+      doneDate: parseTaskDate(DONE_PATTERN, line.taskText),
       path,
       line: line.sourceLine,
     }));

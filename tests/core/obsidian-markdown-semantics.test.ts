@@ -24,6 +24,7 @@ describe("Obsidian comments in shared Markdown semantics", () => {
     for (const line of projection.lines) {
       expect(line.visibleText.length).toBe(line.rawText.length);
       expect(line.semanticText.length).toBe(line.rawText.length);
+      expect(line.taskText.length).toBe(line.rawText.length);
       expect(line.tagText.length).toBe(line.rawText.length);
     }
     expect(rescheduleTaskDueDateInContent(

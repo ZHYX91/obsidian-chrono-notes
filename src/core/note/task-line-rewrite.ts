@@ -65,8 +65,8 @@ function rewriteTaskLine(
   // before mapping semantic offsets back into the original first line.
   const bomOffset = document.hadBom && expected.line === 0 ? 1 : 0;
   const semanticLine = bomOffset === 1
-    ? ` ${projectedLine.semanticText}`
-    : projectedLine.semanticText;
+    ? ` ${projectedLine.taskText}`
+    : projectedLine.taskText;
   const updatedLine = update(line, semanticLine, projectedLine.taskMarker.checkboxOffset + bomOffset);
   if (updatedLine === line) return Object.freeze({ status: "stale" });
   return Object.freeze({
