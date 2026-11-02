@@ -139,10 +139,10 @@ npm run test:browser
 
 Developer references:
 
-- [Product requirements](https://github.com/ZHYX91/obsidian-chrono-notes/blob/main/docs/product-requirements.en.md)
-- [UX specification](https://github.com/ZHYX91/obsidian-chrono-notes/blob/main/docs/ux-spec.en.md)
-- [Architecture](https://github.com/ZHYX91/obsidian-chrono-notes/blob/main/docs/architecture.en.md)
-- [Testing strategy](https://github.com/ZHYX91/obsidian-chrono-notes/blob/main/docs/testing-strategy.en.md)
+- [Product requirements](https://github.com/ZHYX91/obsidian-chrono-notes/blob/main/docs/product-requirements.md)
+- [UX specification](https://github.com/ZHYX91/obsidian-chrono-notes/blob/main/docs/ux-spec.md)
+- [Architecture](https://github.com/ZHYX91/obsidian-chrono-notes/blob/main/docs/architecture.md)
+- [Testing strategy](https://github.com/ZHYX91/obsidian-chrono-notes/blob/main/docs/testing-strategy.md)
 - [Changelog](https://github.com/ZHYX91/obsidian-chrono-notes/blob/main/CHANGELOG.md)
 - [Contributing guide](https://github.com/ZHYX91/obsidian-chrono-notes/blob/main/CONTRIBUTING.md)
 - [Security policy](https://github.com/ZHYX91/obsidian-chrono-notes/blob/main/SECURITY.md)

@@ -105,7 +105,7 @@ Unter Allgemein Sprache, Wochenbeginn, Datumsanzeige und Vorlagen wählen. Unter
 ## Einschränkungen
 
 - ICS-Dateien werden nur lokal gelesen; Online-Abonnements werden nicht direkt abgerufen. Pro Aktualisierung werden standardmäßig höchstens 32 Quellen gelesen. Weitere Quellen werden als ausgelassen gemeldet. Wiederkehrende Ereignisse mit `RRULE` oder `RDATE` werden ausgelassen und gezählt.
-- Eingebettete Zeitzonen unterstützen ausdrücklich aufgeführte Umstellungstermine und eine begrenzte Auswahl jährlicher Regeln (`FREQ=YEARLY`). Ungültige, nicht unterstützte oder zu aufwendige Zeitzonendefinitionen führen dazu, dass die davon abhängigen Termine ausgelassen und gemeldet werden. Die unterstützten Regeln und Grenzen sind in der [Dokumentation zu Kalender- und Zeitgrenzen](../calendar-boundaries.en.md) auf Englisch beschrieben.
+- Eingebettete Zeitzonen unterstützen ausdrücklich aufgeführte Umstellungstermine und eine begrenzte Auswahl jährlicher Regeln (`FREQ=YEARLY`). Ungültige, nicht unterstützte oder zu aufwendige Zeitzonendefinitionen führen dazu, dass die davon abhängigen Termine ausgelassen und gemeldet werden. Die unterstützten Regeln und Grenzen sind in der [Dokumentation zu Kalender- und Zeitgrenzen](../calendar-boundaries.md) auf Englisch beschrieben.
 - Noch nicht offiziell veröffentlichte Feiertage werden nicht vorhergesagt. Zusätzliche Kalender ändern nur die Anzeige; Notiznamen, Datumsnavigation und Aufgabendaten verwenden weiterhin den gregorianischen Kalender. Erweiterungen ohne die nötigen Daten der Laufzeitumgebung werden ausgeblendet.
 
 ## Datenschutz und Sicherheit
@@ -114,7 +114,7 @@ Notizen, Aufgaben und lokale Kalenderdaten bleiben auf dem Gerät. Für Suche un
 
 ## Entwicklung
 
-Für die Entwicklung sind Node.js 24.19.0 und npm 11.17.0 erforderlich. Mit `npm ci` die Abhängigkeiten installieren; `npm run check` führt die Projektprüfungen aus. Technische Details stehen in der [Architektur](../architecture.en.md) und der [Teststrategie](../testing-strategy.en.md).
+Für die Entwicklung sind Node.js 24.19.0 und npm 11.17.0 erforderlich. Mit `npm ci` die Abhängigkeiten installieren; `npm run check` führt die Projektprüfungen aus. Technische Details stehen in der [Architektur](../architecture.md) und der [Teststrategie](../testing-strategy.md).
 
 ## Hilfe
 

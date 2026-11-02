@@ -32,10 +32,10 @@ describe("stable docs i18n contract", () => {
   });
 
   it("rejects a missing translation pair", async () => {
-    await rm(path.join(fixtureRoot, "docs", "ux-spec.en.md"));
+    await rm(path.join(fixtureRoot, "docs", "ux-spec.md"));
 
     expect(checkDocsI18n(fixtureRoot)).toContain(
-      "Missing paired translation: docs/ux-spec.en.md",
+      "Missing paired translation: docs/ux-spec.md",
     );
   });
 
@@ -49,32 +49,32 @@ describe("stable docs i18n contract", () => {
 
   it("rejects a translation without translation_of metadata", async () => {
     await replaceInDoc(
-      "docs/testing-strategy.en.md",
+      "docs/testing-strategy.md",
       "translation_of: testing-strategy.zh-CN.md",
       "translation_status: synced",
     );
 
     expect(checkDocsI18n(fixtureRoot)).toContain(
-      "docs/testing-strategy.en.md must declare translation_of: testing-strategy.zh-CN.md",
+      "docs/testing-strategy.md must declare translation_of: testing-strategy.zh-CN.md",
     );
   });
 
   it("rejects a synced translation whose heading structure diverges", async () => {
-    await appendToDoc("docs/architecture.en.md", "\n## 7. Missing section\n");
+    await appendToDoc("docs/architecture.md", "\n## 7. Missing section\n");
 
     const errors = checkDocsI18n(fixtureRoot);
     expect(errors.some((error: string) => error.startsWith(
-      "docs/architecture.en.md heading structure must match docs/architecture.zh-CN.md:",
+      "docs/architecture.md heading structure must match docs/architecture.zh-CN.md:",
     ))).toBe(true);
   });
 
   it("accepts an outdated translation whose heading structure diverges", async () => {
     await replaceInDoc(
-      "docs/ux-spec.en.md",
+      "docs/ux-spec.md",
       "translation_status: synced",
       "translation_status: outdated",
     );
-    await appendToDoc("docs/ux-spec.en.md", "\n## 8. Draft section\n");
+    await appendToDoc("docs/ux-spec.md", "\n## 8. Draft section\n");
 
     expect(checkDocsI18n(fixtureRoot)).toEqual([]);
   });

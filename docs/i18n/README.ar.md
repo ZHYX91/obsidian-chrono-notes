@@ -115,7 +115,7 @@ end: 2026-10-20
 
 ## التطوير
 
-يتطلب التطوير Node.js 24.19.0 وnpm 11.17.0. شغّل `npm ci` ثم `npm run check`. راجع [البنية](../architecture.en.md) و[خطة الاختبار](../testing-strategy.en.md).
+يتطلب التطوير Node.js 24.19.0 وnpm 11.17.0. شغّل `npm ci` ثم `npm run check`. راجع [البنية](../architecture.md) و[خطة الاختبار](../testing-strategy.md).
 
 ## الدعم
 

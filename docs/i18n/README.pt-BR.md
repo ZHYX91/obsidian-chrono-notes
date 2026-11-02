@@ -105,7 +105,7 @@ Escolha idioma, início da semana, formatos de data, caminhos e modelos. Alterar
 ## Limitações
 
 - As fontes ICS são locais e somente para leitura; assinaturas remotas não são baixadas. Por padrão, são lidas até 32 fontes por atualização, e as fontes que excederem esse limite são informadas como omitidas. Eventos recorrentes com `RRULE` ou `RDATE` são ignorados e contados.
-- Os fusos horários incluídos no arquivo aceitam datas explícitas de mudança de horário e um conjunto limitado de regras anuais (`FREQ=YEARLY`). Se uma definição for inválida, incompatível ou complexa demais, os eventos que dependem dela serão ignorados e informados. Veja as regras e os limites na [documentação de datas e fusos horários](../calendar-boundaries.en.md), em inglês.
+- Os fusos horários incluídos no arquivo aceitam datas explícitas de mudança de horário e um conjunto limitado de regras anuais (`FREQ=YEARLY`). Se uma definição for inválida, incompatível ou complexa demais, os eventos que dependem dela serão ignorados e informados. Veja as regras e os limites na [documentação de datas e fusos horários](../calendar-boundaries.md), em inglês.
 - Feriados ainda não publicados oficialmente não são previstos. Calendários alternativos mudam apenas a exibição: nomes de notas, navegação e datas das tarefas continuam usando o calendário gregoriano. Extensões indisponíveis no ambiente são ocultadas.
 
 ## Privacidade e segurança
@@ -114,7 +114,7 @@ O plugin lê as notas Markdown pertinentes e os arquivos ICS escolhidos para mon
 
 ## Desenvolvimento
 
-Use Node.js 24.19.0 e npm 11.17.0, execute `npm ci` e `npm run check`. Consulte a [arquitetura](../architecture.en.md) e a [estratégia de testes](../testing-strategy.en.md).
+Use Node.js 24.19.0 e npm 11.17.0, execute `npm ci` e `npm run check`. Consulte a [arquitetura](../architecture.md) e a [estratégia de testes](../testing-strategy.md).
 
 ## Suporte
 

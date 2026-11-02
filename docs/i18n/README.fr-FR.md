@@ -105,7 +105,7 @@ Réglez la langue, le premier jour de la semaine, les formats de date, les modè
 ## Limites
 
 - Les sources ICS sont locales et en lecture seule ; aucun abonnement distant n’est téléchargé. Par défaut, 32 sources au maximum sont lues à chaque actualisation, et les sources supplémentaires sont signalées comme omises. Les événements récurrents avec `RRULE` ou `RDATE` sont ignorés et comptabilisés.
-- Les fuseaux horaires intégrés aux fichiers prennent en charge les dates de changement d’heure explicitement indiquées et un ensemble limité de règles annuelles (`FREQ=YEARLY`). Si une définition est invalide, non prise en charge ou trop complexe, les événements qui en dépendent sont ignorés et signalés. Les règles et limites sont détaillées dans la [documentation des dates et fuseaux horaires](../calendar-boundaries.en.md), en anglais.
+- Les fuseaux horaires intégrés aux fichiers prennent en charge les dates de changement d’heure explicitement indiquées et un ensemble limité de règles annuelles (`FREQ=YEARLY`). Si une définition est invalide, non prise en charge ou trop complexe, les événements qui en dépendent sont ignorés et signalés. Les règles et limites sont détaillées dans la [documentation des dates et fuseaux horaires](../calendar-boundaries.md), en anglais.
 - Les jours fériés non encore publiés ne sont pas devinés. Les calendriers supplémentaires ne changent que l’affichage : les noms de notes, la navigation et les dates des tâches restent grégoriens. Les extensions indisponibles dans l’environnement d’Obsidian sont masquées.
 
 ## Confidentialité et sécurité
@@ -114,7 +114,7 @@ Le module lit les notes Markdown pertinentes et les fichiers ICS locaux sélecti
 
 ## Développement
 
-Utilisez Node.js 24.19.0 et npm 11.17.0, puis exécutez `npm ci` et `npm run check`. Consultez l'[architecture](../architecture.en.md) et la [stratégie de test](../testing-strategy.en.md).
+Utilisez Node.js 24.19.0 et npm 11.17.0, puis exécutez `npm ci` et `npm run check`. Consultez l'[architecture](../architecture.md) et la [stratégie de test](../testing-strategy.md).
 
 ## Assistance
 

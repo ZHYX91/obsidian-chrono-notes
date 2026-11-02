@@ -147,25 +147,25 @@ export function checkDocsI18n(projectRoot = defaultProjectRoot) {
   const docsRoot = path.join(projectRoot, "docs");
   if (!existsSync(docsRoot)) return errors;
   const files = readdirSync(docsRoot)
-    .filter((name) => name.endsWith(".md") && !name.endsWith(".d.md"))
+    .filter((name) => name.endsWith(".md") && !name.endsWith(".d.md") && name !== "README.md")
     .sort();
   const sources = [];
   const translations = [];
   for (const name of files) {
     if (name.endsWith(".zh-CN.md")) sources.push(name);
-    else if (name.endsWith(".en.md")) translations.push(name);
+    else if (name.endsWith(".md")) translations.push(name);
     else errors.push(`Unexpected stable document outside the zh-CN/en pair layout: ${name}`);
   }
   for (const name of translations) {
     if (!name.endsWith(".zh-CN.md")) {
-      const sourceName = `${name.slice(0, -".en.md".length)}.zh-CN.md`;
+      const sourceName = `${name.slice(0, -".md".length)}.zh-CN.md`;
       if (!sources.includes(sourceName)) {
         errors.push(`Missing paired source document: docs/${sourceName}`);
       }
     }
   }
   for (const sourceName of sources) {
-    const translationName = `${sourceName.slice(0, -".zh-CN.md".length)}.en.md`;
+    const translationName = `${sourceName.slice(0, -".zh-CN.md".length)}.md`;
     if (!translations.includes(translationName)) {
       errors.push(`Missing paired translation: docs/${translationName}`);
       continue;
@@ -186,8 +186,8 @@ if (process.argv[1] && path.resolve(process.argv[1]) === scriptPath) {
   } else {
     console.log(
       `Stable docs i18n contract passed: ${readdirSync(docsDirectory).filter((name) => (
-        name.endsWith(".zh-CN.md") || name.endsWith(".en.md")
-      )).length} paired stable documents.`,
+        name.endsWith(".zh-CN.md")
+      )).length} synchronized document pairs.`,
     );
   }
 }
