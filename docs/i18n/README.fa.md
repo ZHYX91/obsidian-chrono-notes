@@ -115,7 +115,7 @@ end: 2026-10-20
 
 ## توسعه
 
-برای توسعه از Node.js 24.19.0 و npm 11.17.0 استفاده کنید. `npm ci` و `npm run check` را اجرا کنید. [معماری](../architecture.en.md) و [راهبرد آزمون](../testing-strategy.en.md) را ببینید.
+برای توسعه از Node.js 24.19.0 و npm 11.17.0 استفاده کنید. `npm ci` و `npm run check` را اجرا کنید. [معماری](../architecture.md) و [راهبرد آزمون](../testing-strategy.md) را ببینید.
 
 ## پشتیبانی
 

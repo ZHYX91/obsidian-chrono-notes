@@ -115,7 +115,7 @@ end: 2026-10-20
 
 ## विकास
 
-Node.js 24.19.0 और npm 11.17.0 इस्तेमाल करें। `npm ci` और `npm run check` चलाएँ। [आर्किटेक्चर](../architecture.en.md) और [टेस्ट रणनीति](../testing-strategy.en.md) देखें।
+Node.js 24.19.0 और npm 11.17.0 इस्तेमाल करें। `npm ci` और `npm run check` चलाएँ। [आर्किटेक्चर](../architecture.md) और [टेस्ट रणनीति](../testing-strategy.md) देखें।
 
 ## सहायता
 

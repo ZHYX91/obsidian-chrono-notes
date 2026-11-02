@@ -105,7 +105,7 @@ Bạn có thể chọn ngôn ngữ, ngày bắt đầu tuần, kiểu hiển th�
 ## Giới hạn
 
 - Nguồn ICS chỉ được đọc trên máy; plugin không tự tải lịch đăng ký từ xa. Mặc định mỗi lần làm mới chỉ đọc tối đa 32 nguồn và thông báo những nguồn bị bỏ qua do vượt giới hạn. Sự kiện lặp có `RRULE` hoặc `RDATE` được bỏ qua và báo số lượng.
-- Múi giờ được định nghĩa trong tệp có thể dùng các ngày chuyển giờ ghi rõ và một số quy tắc theo năm (`FREQ=YEARLY`). Nếu định nghĩa không hợp lệ, không được hỗ trợ hoặc quá phức tạp, các sự kiện dùng múi giờ đó sẽ bị bỏ qua và được báo lại. Xem quy tắc và giới hạn trong [tài liệu về ngày và múi giờ](../calendar-boundaries.en.md) bằng tiếng Anh.
+- Múi giờ được định nghĩa trong tệp có thể dùng các ngày chuyển giờ ghi rõ và một số quy tắc theo năm (`FREQ=YEARLY`). Nếu định nghĩa không hợp lệ, không được hỗ trợ hoặc quá phức tạp, các sự kiện dùng múi giờ đó sẽ bị bỏ qua và được báo lại. Xem quy tắc và giới hạn trong [tài liệu về ngày và múi giờ](../calendar-boundaries.md) bằng tiếng Anh.
 - Không dự đoán lịch nghỉ chưa được công bố chính thức. Lịch bổ sung chỉ thay đổi cách hiển thị; tên ghi chú, điều hướng ngày và ngày của công việc vẫn dùng lịch Gregory. Phần mở rộng mà môi trường không hỗ trợ sẽ được ẩn.
 
 ## Quyền riêng tư và bảo mật
@@ -114,7 +114,7 @@ Plugin đọc ghi chú Markdown cần thiết và các tệp ICS đã chọn đ�
 
 ## Phát triển
 
-Dùng Node.js 24.19.0 và npm 11.17.0; chạy `npm ci` và `npm run check`. Xem [kiến trúc](../architecture.en.md) và [chiến lược kiểm thử](../testing-strategy.en.md).
+Dùng Node.js 24.19.0 và npm 11.17.0; chạy `npm ci` và `npm run check`. Xem [kiến trúc](../architecture.md) và [chiến lược kiểm thử](../testing-strategy.md).
 
 ## Hỗ trợ
 

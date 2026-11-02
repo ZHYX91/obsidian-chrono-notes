@@ -115,7 +115,7 @@ end: 2026-10-20
 
 ## ልማት
 
-Node.js 24.19.0 እና npm 11.17.0 ይጠቀሙ። `npm ci` እና `npm run check` ያሂዱ። [የሥርዓት ንድፍ](../architecture.en.md) እና [የሙከራ መመሪያ](../testing-strategy.en.md) ይመልከቱ።
+Node.js 24.19.0 እና npm 11.17.0 ይጠቀሙ። `npm ci` እና `npm run check` ያሂዱ። [የሥርዓት ንድፍ](../architecture.md) እና [የሙከራ መመሪያ](../testing-strategy.md) ይመልከቱ።
 
 ## ድጋፍ
 

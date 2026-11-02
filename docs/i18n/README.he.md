@@ -115,7 +115,7 @@ end: 2026-10-20
 
 ## פיתוח
 
-לפיתוח נדרשים Node.js 24.19.0 ו־npm 11.17.0. הריצו `npm ci` ולאחר מכן `npm run check`. ראו [ארכיטקטורה](../architecture.en.md) ו[אסטרטגיית בדיקות](../testing-strategy.en.md).
+לפיתוח נדרשים Node.js 24.19.0 ו־npm 11.17.0. הריצו `npm ci` ולאחר מכן `npm run check`. ראו [ארכיטקטורה](../architecture.md) ו[אסטרטגיית בדיקות](../testing-strategy.md).
 
 ## תמיכה
 
