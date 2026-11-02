@@ -2,6 +2,51 @@ const { Plugin, Notice } = require("obsidian");
 
 module.exports = class ChronoAcceptanceProvider extends Plugin {
   onload() {
+    // Explicit synthetic input preparation only; no product actions or verdicts.
+    this.addCommand({
+      id: "prepare-audit-task-link-dates",
+      name: "Prepare audit task link dates",
+      callback: async () => {
+        const folder = "Audit task links";
+        try {
+          if (await this.app.vault.adapter.exists(folder)) {
+            new Notice(`Audit fixture folder already exists: ${folder}. Use a fresh disposable Vault.`);
+            return;
+          }
+          const fixtures = {
+            "Audit task links.md": [
+              "# Audit task link dates",
+              "",
+              "Keep this header and the tail sentinel unchanged.",
+              "",
+              "- [ ] Destination date [[📅 2026-11-02|会议笔记]] 📅 2026-11-05",
+              "- [ ] Markdown label [📅 2026-11-05](<Audit task destination.md> \"📅 2026-11-02\")",
+              "- [ ] Wiki alias [[📅 2026-11-02|📅 2026-11-05]]",
+              "- [ ] Boundary marker 📅 [report](Audit task destination.md) 2026-11-05; deadline 📅 2026-11-07",
+              "- [ ] Shared target only [[📅 2026-11-02]]",
+              "",
+              "Tail audit sentinel.",
+              "",
+            ].join("\n"),
+            "📅 2026-11-02.md": [
+              "This synthetic link destination must remain reachable after task rescheduling.",
+              "",
+            ].join("\n"),
+            "Audit task destination.md": [
+              "This synthetic note is the explicit Markdown link destination.",
+              "",
+            ].join("\n"),
+          };
+          await this.app.vault.createFolder(folder);
+          for (const [name, content] of Object.entries(fixtures)) {
+            await this.app.vault.create(`${folder}/${name}`, content);
+          }
+          new Notice(`Prepared synthetic audit inputs in ${folder}; inspect them through the product UI.`);
+        } catch (error) {
+          new Notice(`Audit fixture preparation failed: ${String(error)}`);
+        }
+      },
+    });
     // Explicit lifecycle setup only. Creation and prompt decisions remain UI actions.
     this.addCommand({
       id: "prepare-lifecycle-reload",

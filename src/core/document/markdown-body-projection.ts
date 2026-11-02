@@ -12,6 +12,8 @@ export interface MarkdownBodyLineProjection {
   readonly visibleText: string;
   /** Visible body text with inline code spans masked for syntax consumers. */
   readonly semanticText: string;
+  /** Writable task metadata, with protected syntax blocked at the same offsets. */
+  readonly taskText: string;
   /** Semantic text with escaped syntax and link metadata masked for tags. */
   readonly tagText: string;
   readonly taskMarker: MarkdownTaskMarker | null;
@@ -34,6 +36,7 @@ interface ContainerMark extends MaskRange {
 interface MarkdownLink extends MaskRange {
   readonly reference: string | null;
   readonly label: MaskRange | null;
+  readonly taskContent: MaskRange | null;
 }
 
 /**
@@ -53,6 +56,7 @@ export function projectMarkdownBody(
   const inline: MaskRange[] = [];
   const markers: MaskRange[] = [];
   const tagMasks: MaskRange[] = [];
+  const taskMasks: MaskRange[] = [];
   const references: { label: string; from: number }[] = [];
   const links: MarkdownLink[] = [];
   parser.parse(syntax).iterate({
@@ -69,6 +73,7 @@ export function projectMarkdownBody(
       if (node.name === "URL" || node.name === "LinkTitle" || node.name === "Escape") {
         tagMasks.push({ from: node.from, to: node.to });
       }
+      if (node.name === "HTMLTag") taskMasks.push({ from: node.from, to: node.to });
       if (node.name === "LinkReference") {
         const label = node.node.getChild("LinkLabel");
         if (label !== null) {
@@ -93,6 +98,10 @@ export function projectMarkdownBody(
             explicitLabel || syntax.slice(opening.to, closing.from),
           ),
           label: label === null ? null : { from: label.from, to: label.to },
+          // Explicit display labels do not identify their target. Shortcut and
+          // collapsed references share that identity, so they stay protected.
+          taskContent: node.name === "Link" && (isInline || explicitLabel.trim() !== "")
+            ? { from: opening.to, to: closing.from } : null,
         });
       }
     },
@@ -109,7 +118,17 @@ export function projectMarkdownBody(
     .map((reference) => reference.label));
   const wikiLinks = Array.from(semantic.matchAll(/!?\[\[[^[\]\n]+\]\]/gu))
     .filter((match) => !isEscaped(semantic, match.index))
-    .map((match) => ({ from: match.index, to: match.index + match[0].length }));
+    .map((match) => {
+      const from = match.index;
+      const to = from + match[0].length;
+      let alias = -1;
+      if (!match[0].startsWith("!")) {
+        for (let index = from + 2; index < to - 2; index += 1) {
+          if (semantic[index] === "|" && !isEscaped(semantic, index)) { alias = index; break; }
+        }
+      }
+      return { from, to, taskContent: alias < 0 ? null : { from: alias + 1, to: to - 2 } };
+    });
   const resolvedLinks = links.filter((link) =>
     (semantic[link.from] === "[" || semantic[link.from] === "!") &&
     !containsOffset(wikiLinks, link.from) &&
@@ -117,6 +136,13 @@ export function projectMarkdownBody(
   const linkLabels = resolvedLinks.flatMap((link) => link.label === null ? [] : [link.label]);
   const tagLines = maskRanges(semantic, [...tagMasks, ...wikiLinks, ...linkLabels]
     .sort((left, right) => left.from - right.from)).split("\n");
+  const protectedLinks = [...wikiLinks, ...resolvedLinks].flatMap((link) => link.taskContent === null
+    ? [{ from: link.from, to: link.to }]
+    : [{ from: link.from, to: link.taskContent.from }, { from: link.taskContent.to, to: link.to }]);
+  // A non-whitespace blocker prevents a date marker from matching across a
+  // hidden link/code/comment and erasing that content from the task summary.
+  const taskLines = maskRanges(body, [...comments, ...codeBlocks, ...inline, ...tagMasks, ...taskMasks, ...protectedLinks]
+    .sort((left, right) => left.from - right.from), "\uFFFC").split("\n");
   let offset = 0;
   let markerCursor = 0;
   const taskCheckboxes = new Set<number>();
@@ -143,7 +169,8 @@ export function projectMarkdownBody(
     offset += rawText.length + 1;
     return Object.freeze({
       sourceLine: bodyStartLine + index,
-      rawText, visibleText, semanticText, tagText: tagLines[index] ?? "", taskMarker,
+      rawText, visibleText, semanticText, taskText: taskLines[index] ?? "",
+      tagText: tagLines[index] ?? "", taskMarker,
     });
   });
   return Object.freeze({
@@ -279,7 +306,7 @@ function containsOffset(ranges: readonly MaskRange[], offset: number): boolean {
   return false;
 }
 
-function maskRanges(body: string, ranges: readonly MaskRange[]): string {
+function maskRanges(body: string, ranges: readonly MaskRange[], replacement = " "): string {
   if (ranges.length === 0) return body;
   const parts: string[] = [];
   let cursor = 0;
@@ -288,7 +315,7 @@ function maskRanges(body: string, ranges: readonly MaskRange[]): string {
     const from = Math.max(cursor, range.from);
     parts.push(body.slice(cursor, from));
     // Replace each UTF-16 code unit, including both halves of an emoji.
-    parts.push(body.slice(from, range.to).replace(/[^\n]/g, " "));
+    parts.push(body.slice(from, range.to).replace(/[^\n]/g, replacement));
     cursor = range.to;
   }
   parts.push(body.slice(cursor));

@@ -1,6 +1,6 @@
 {
   "name": "obsidian-chrono-notes",
-  "version": "0.8.2",
+  "version": "0.8.3",
   "description": "A calendar workspace for periodic notes, calendar extensions, regional holidays, tasks, and time ranges.",
   "type": "module",
   "main": "dist/main.js",
@@ -34,7 +34,9 @@
     "clean:deps": "node scripts/clean.mjs --deps",
     "check": "node scripts/check-runtime.mjs && npm run lint && npm run format:check && npm run check:readme-i18n && npm run check:docs-i18n && npm run typecheck && npm run test:coverage && npm run build:bundle && npm run artifact:check && npm run release:validate",
     "release:check": "npm run check && npm run test:timezones && npm run bench:quick && npm run bench:single-file:large && npm run holiday:check && npm run release:validate-tag",
-    "test:browser": "playwright test --config tests/browser/playwright.config.ts"
+    "test:browser": "playwright test --config tests/browser/playwright.config.ts",
+    "postinstall": "node scripts/prepare-lint-dependencies.mjs",
+    "prelint": "node scripts/prepare-lint-dependencies.mjs && node scripts/check-lint-dependencies.mjs"
   },
   "keywords": [
     "obsidian",
@@ -54,7 +56,31 @@
   "overrides": {
     "brace-expansion": "5.0.12",
     "moment": "2.31.0",
-    "source-map-js": "1.2.2"
+    "source-map-js": "1.2.2",
+    "@eslint/config-array": {
+      "minimatch": "11.0.4"
+    },
+    "@eslint/eslintrc": {
+      "minimatch": "11.0.4"
+    },
+    "@typescript-eslint/typescript-estree": {
+      "minimatch": "11.0.4"
+    },
+    "eslint": {
+      "minimatch": "11.0.4"
+    },
+    "eslint-plugin-json-schema-validator": {
+      "minimatch": "11.0.4"
+    },
+    "eslint-plugin-n": {
+      "minimatch": "11.0.4"
+    },
+    "eslint-plugin-import": {
+      "minimatch": "11.0.4"
+    },
+    "eslint-plugin-react": {
+      "minimatch": "11.0.4"
+    }
   },
   "devDependencies": {
     "@playwright/test": "1.62.1",

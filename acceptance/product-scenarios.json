@@ -406,6 +406,28 @@
       "expected": [
         "Out-of-range daily input and navigation cannot poison calendar state or crash year-picker rendering. Valid boundary dates remain selectable; UI limits do not rewrite legitimate boundary-period file identities or alter the ICS/domain date range."
       ]
+    },
+    {
+      "id": "audit-task-link-dates",
+      "title": "Task date edits preserve link destinations and explicit display labels",
+      "surfaces": [
+        "desktop"
+      ],
+      "requiredCapabilities": {
+        "desktop": []
+      },
+      "steps": [
+        "In a fresh disposable Vault, run Chrono Notes acceptance provider: Prepare audit task link dates. This explicit setup only creates synthetic source files under Audit task links; it invokes no tested product action and produces no verdict. Existing audit folders are never overwritten. Do not prepare these inputs for unrelated scenarios.",
+        "Open Audit task links.md in Source mode and record its complete source. Close the source pane, open the calendar through the product UI, navigate to November 2026 and select the week of November 2–8. No provider calls task parsing or writeback.",
+        "On November 5 verify Destination date, Markdown label and Wiki alias are present. Boundary marker belongs on November 7, not November 5; Shared target only has no task date and must not appear in the week. These are distinct rows, not occurrences of the date embedded in a destination.",
+        "Drag Destination date from November 5 to November 6. Reopen the source: only its trailing due date changes to 2026-11-06. The complete [[📅 2026-11-02|会议笔记]] target and alias remain identical. Open the link normally and verify it still opens the seeded 📅 2026-11-02.md.",
+        "Keep the source editor open and append an audit sentinel. Use the Week due-date selector on Markdown label and Wiki alias to move each from November 5 to November 6. Their explicit visible date labels change; the Markdown target, Markdown title and Wiki target stay byte-identical, and the appended sentinel survives.",
+        "Move Boundary marker from November 7 to November 8. Verify only its final deadline changes: the fragment 📅 [report](Audit task destination.md) 2026-11-05 is unchanged. Compare the complete note with the recorded original plus the intended date and sentinel edits; capture the final Week view and source."
+      ],
+      "expected": [
+        "Only visible, independently writable dates index and reschedule tasks. Link destinations, titles and shared shortcut/Wiki targets never supply a date; protected content cannot join a date marker to later text.",
+        "Real drag and selector interactions write the correct date both with the source closed and with an editor open. Explicit labels remain editable without changing link targets or unrelated note text."
+      ]
     }
   ]
 }
