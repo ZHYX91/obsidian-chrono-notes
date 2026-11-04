@@ -24,9 +24,25 @@ describe("resolvePluginLocale", () => {
     expect(resolvePluginLocale("auto", "zh")).toBe("zh-CN");
   });
 
+  it("honors Chinese script subtags before regions and ignores extensions", () => {
+    const cases = [
+      ["zh-Hans-HK", "zh-CN"], ["zh-Hans-TW", "zh-CN"],
+      ["zh-Hant-CN", "zh-TW"], ["zh-CN-x-tw", "zh-CN"],
+      ["zh-CN-u-ca-chinese-x-hant", "zh-CN"],
+      ["zh-TW-u-ca-chinese", "zh-TW"], ["zh-x-hk", "zh-CN"],
+    ] as const;
+    for (const [host, expected] of cases) {
+      expect(resolvePluginLocale("auto", host)).toBe(expected);
+    }
+  });
+
   it("falls back unknown automatic locales to English", () => {
     expect(resolvePluginLocale("auto", "")).toBe("en");
     expect(resolvePluginLocale("auto", "xx-XX")).toBe("en");
+    for (const host of ["constructor", "__proto__", "toString", "zhx"]) {
+      expect(resolvePluginLocale("auto", host)).toBe("en");
+      expect(createTranslator("auto", host).t("firstUse.dismiss")).toBe("Got it");
+    }
   });
 
   it("maps additional host languages and their regional variants", () => {
@@ -75,6 +91,29 @@ describe("createTranslator", () => {
     expect(createTranslator("zh-TW", "en").t("calendar.previous", {
       period: "一個月",
     })).toBe("上一個月");
+  });
+
+  it("keeps navigation and task actions meaningful after interpolation", () => {
+    const german = createTranslator("de-DE", "en");
+    for (const period of ["Woche", "Monat", "Jahr", "Jahrhundert"]) {
+      expect(german.t("calendar.previous", { period })).toBe(`Vorheriger Zeitraum: ${period}`);
+      expect(german.t("calendar.next", { period })).toBe(`Nächster Zeitraum: ${period}`);
+    }
+    expect(createTranslator("he", "en").t("weekView.toggleTask", {
+      task: "Example", status: "Open",
+    })).toBe("שינוי מצב המשימה: Example. Open.");
+  });
+
+  it("includes period selection in the translated first-use hint", () => {
+    const periodWords = {
+      "de-DE": "Zeitraum", "fr-FR": "période", "es-ES": "período",
+      "pt-BR": "período", "ru-RU": "период", "ja-JP": "期間",
+      "ko-KR": "기간", "vi-VN": "khoảng thời gian",
+    } as const;
+    for (const [locale, period] of Object.entries(periodWords)) {
+      expect(MESSAGE_CATALOGS[locale as keyof MessageCatalogs]["firstUse.selectionHint"])
+        .toContain(period);
+    }
   });
 
   it("selects singular and plural count messages", () => {

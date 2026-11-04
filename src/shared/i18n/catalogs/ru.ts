@@ -87,7 +87,7 @@ export const RU_MESSAGES: MessageCatalog = Object.freeze({
   "calendar.next": "Следующий период: {period}",
   "pluginNotice.periodicNotConfigured": "Сначала настройте и включите {period}.",
   "dateContextMenu.copiedDate": "Дата скопирована: {date}",
-  "firstUse.selectionHint": "Один щелчок выделяет дату, не открывая заметку.",
+  "firstUse.selectionHint": "Один щелчок выделяет дату или период, не открывая заметку.",
   "calendar.noteState.empty": "Пустая заметка",
   "calendar.noteState.yamlOnly": "Заметка только со свойствами",
   "calendar.noteState.hasBody": "Заметка с текстом",

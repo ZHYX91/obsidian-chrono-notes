@@ -87,7 +87,7 @@ export const VI_MESSAGES: MessageCatalog = Object.freeze({
   "calendar.next": "{period} tiếp theo",
   "pluginNotice.periodicNotConfigured": "Hãy cấu hình và bật {period} trước.",
   "dateContextMenu.copiedDate": "Đã sao chép ngày: {date}",
-  "firstUse.selectionHint": "Nhấp một lần chỉ chọn ngày, không mở ghi chú.",
+  "firstUse.selectionHint": "Nhấp một lần chỉ chọn ngày hoặc khoảng thời gian, không mở ghi chú.",
   "calendar.noteState.empty": "Ghi chú trống",
   "calendar.noteState.yamlOnly": "Ghi chú chỉ có thuộc tính",
   "calendar.noteState.hasBody": "Ghi chú có nội dung",
