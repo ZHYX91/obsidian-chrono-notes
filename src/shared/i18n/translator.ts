@@ -20,7 +20,9 @@ export function resolvePluginLocale(
 ): SupportedLocale {
   if (configuredLocale !== "auto") return configuredLocale;
   const normalized = hostLocale.trim().replaceAll("_", "-").toLowerCase();
-  const language = normalized.split("-")[0] ?? "";
+  const [language = "", ...allSubtags] = normalized.split("-");
+  const extensionIndex = allSubtags.findIndex((part) => part.length === 1);
+  const subtags = extensionIndex < 0 ? allSubtags : allSubtags.slice(0, extensionIndex);
   if (language === "ar") return "ar";
   if (language === "fa") return "fa";
   if (language === "he" || language === "iw") return "he";
@@ -31,15 +33,17 @@ export function resolvePluginLocale(
     de: "de-DE", fr: "fr-FR", es: "es-ES", pt: "pt-BR",
     ru: "ru-RU", ja: "ja-JP", ko: "ko-KR", vi: "vi-VN",
   };
-  const matchedLocale = additionalLocales[language];
+  const matchedLocale = Object.prototype.hasOwnProperty.call(additionalLocales, language)
+    ? additionalLocales[language]
+    : undefined;
   if (matchedLocale !== undefined) return matchedLocale;
-  if (!normalized.startsWith("zh")) return "en";
-  const parts = normalized.split("-");
+  if (language !== "zh") return "en";
+  if (subtags.includes("hant")) return "zh-TW";
+  if (subtags.includes("hans")) return "zh-CN";
   if (
-    parts.includes("hant") ||
-    parts.includes("tw") ||
-    parts.includes("hk") ||
-    parts.includes("mo")
+    subtags.includes("tw") ||
+    subtags.includes("hk") ||
+    subtags.includes("mo")
   ) return "zh-TW";
   return "zh-CN";
 }

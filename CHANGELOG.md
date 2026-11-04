@@ -2,6 +2,11 @@
 
 Notable changes to Chrono Notes are documented in this file. The repository's numeric Git tags are the evidence for released versions; an entry without a corresponding local tag remains unreleased even if the manifests already contain that version.
 
+## Unreleased
+
+- Respect explicit Chinese script subtags and ignore locale extensions when following Obsidian's language; unknown host languages fall back safely to English.
+- Restore period selection in eight translated first-use hints and clarify German period navigation and the Hebrew task-state action.
+
 ## 0.8.3
 
 Date: 2026-11-02
