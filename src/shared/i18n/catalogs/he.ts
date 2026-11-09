@@ -519,7 +519,7 @@ export const HE_MESSAGES = Object.freeze({
   "weekView.overdue.warning": "באיחור",
   "weekView.overdue.severe": "באיחור רציני",
   "weekView.dateKindSeparator": " / ",
-  "weekView.toggleTask": "משימת החלפה: {task}. {status}.",
+  "weekView.toggleTask": "שינוי מצב המשימה: {task}. {status}.",
   "weekView.rescheduleTask": "שנה תאריך יעד למשימה: {task}",
   "weekView.rangeDuration": Object.freeze({
     "one": "יום {count}",

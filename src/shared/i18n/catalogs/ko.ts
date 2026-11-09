@@ -87,7 +87,7 @@ export const KO_MESSAGES: MessageCatalog = Object.freeze({
   "calendar.next": "다음 {period}",
   "pluginNotice.periodicNotConfigured": "먼저 {period}을(를) 설정하고 사용하세요.",
   "dateContextMenu.copiedDate": "날짜 복사됨: {date}",
-  "firstUse.selectionHint": "날짜를 한 번 클릭하면 선택만 되고 노트는 열리지 않습니다.",
+  "firstUse.selectionHint": "날짜나 기간을 한 번 클릭하면 선택만 되고 노트는 열리지 않습니다.",
   "calendar.noteState.empty": "빈 노트",
   "calendar.noteState.yamlOnly": "속성만 있는 노트",
   "calendar.noteState.hasBody": "본문이 있는 노트",

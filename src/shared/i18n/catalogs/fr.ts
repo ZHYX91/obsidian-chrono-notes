@@ -87,7 +87,7 @@ export const FR_MESSAGES: MessageCatalog = Object.freeze({
   "calendar.next": "{period} suivant(e)",
   "pluginNotice.periodicNotConfigured": "Configurez et activez d’abord {period}.",
   "dateContextMenu.copiedDate": "Date copiée : {date}",
-  "firstUse.selectionHint": "Un clic sélectionne une date sans ouvrir de note.",
+  "firstUse.selectionHint": "Un clic sélectionne une date ou une période sans ouvrir de note.",
   "calendar.noteState.empty": "Note vide",
   "calendar.noteState.yamlOnly": "Note avec propriétés uniquement",
   "calendar.noteState.hasBody": "Note contenant du texte",
