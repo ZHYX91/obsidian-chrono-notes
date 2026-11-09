@@ -94,7 +94,7 @@
     "eslint-plugin-obsidianmd": "0.4.2",
     "globals": "^15.15.0",
     "happy-dom": "21.0.4",
-    "obsidian": "1.14.4",
+    "obsidian": "1.13.1",
     "typescript": "^6.0.2",
     "typescript-eslint": "8.70.1",
     "vitest": "4.1.12"
