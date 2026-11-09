@@ -6,6 +6,7 @@ Notable changes to Chrono Notes are documented in this file. The repository's nu
 
 - Respect explicit Chinese script subtags and ignore locale extensions when following Obsidian's language; unknown host languages fall back safely to English.
 - Restore period selection in eight translated first-use hints and clarify German period navigation and the Hebrew task-state action.
+- Check ICS file size and type before reading. Cap desktop local reads at 5 MiB plus one detection byte and reject oversized Vault results before parsing.
 
 ## 0.8.3
 
