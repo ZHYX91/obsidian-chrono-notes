@@ -9,8 +9,13 @@ export interface ObsidianIcsSourceReaderOptions {
   readonly resolveLocal?: (basePath: string, source: string) => string | Promise<string>;
 }
 
+interface VaultFileStat {
+  readonly type: string;
+  readonly size: number;
+}
+
 interface VaultFileAdapter {
-  readonly stat?: (path: string) => Promise<{ type: string; size: number } | null>;
+  readonly stat?: (path: string) => Promise<VaultFileStat | null>;
   readonly read?: (path: string) => Promise<string>;
   readonly getBasePath?: () => string;
 }
@@ -34,18 +39,17 @@ export class ObsidianIcsSourceReader implements IcsSourceReader {
     const vaultEntry = this.vault.getAbstractFileByPath(trimmed);
     const adapter = this.vault.adapter as unknown as VaultFileAdapter;
     if (vaultEntry instanceof TFile) {
-      await checkVaultFile(adapter, trimmed);
+      checkVaultFile(await adapter.stat?.(trimmed));
       return checkContent(await this.vault.cachedRead(vaultEntry));
     }
     if (isAbsoluteLocalPath(trimmed)) return checkContent(await this.readLocal(trimmed));
 
-    if (
-      typeof adapter.stat === "function" &&
-      typeof adapter.read === "function" &&
-      await adapter.stat(trimmed) !== null
-    ) {
-      await checkVaultFile(adapter, trimmed);
-      return checkContent(await adapter.read(trimmed));
+    if (typeof adapter.read === "function") {
+      const stat = await adapter.stat?.(trimmed);
+      if (stat != null) {
+        checkVaultFile(stat);
+        return checkContent(await adapter.read(trimmed));
+      }
     }
     if (typeof adapter.getBasePath !== "function") {
       throw new OperationError(
@@ -77,8 +81,7 @@ function checkContent(content: string): string {
   return content;
 }
 
-async function checkVaultFile(adapter: VaultFileAdapter, source: string): Promise<void> {
-  const stat = await adapter.stat?.(source);
+function checkVaultFile(stat: VaultFileStat | null | undefined): void {
   if (stat?.type !== "file") throw new Error("ICS source must be a regular file");
   checkSize(stat.size);
 }

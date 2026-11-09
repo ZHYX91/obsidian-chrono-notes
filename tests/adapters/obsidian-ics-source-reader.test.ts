@@ -86,6 +86,7 @@ describe("ObsidianIcsSourceReader", () => {
     await expect(reader.read("Fixtures/sample.ics")).resolves.toBe(
       "adapter:Fixtures/sample.ics",
     );
+    expect(adapter.stat).toHaveBeenCalledExactlyOnceWith("Fixtures/sample.ics");
     expect(adapter.read).toHaveBeenCalledWith("Fixtures/sample.ics");
     expect(readLocal).not.toHaveBeenCalled();
   });
