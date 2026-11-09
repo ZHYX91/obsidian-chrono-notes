@@ -8,6 +8,7 @@ Notable changes to Chrono Notes are documented in this file. The repository's nu
 - Restore period selection in eight translated first-use hints and clarify German period navigation and the Hebrew task-state action.
 - Check ICS file size and type before reading. Cap desktop local reads at 5 MiB plus one detection byte and reject oversized Vault results before parsing.
 - Update the Markdown parser to `@lezer/markdown` 1.8.1.
+- Add the official 2027 Mainland China holidays and adjusted workdays.
 
 ## 0.8.3
 

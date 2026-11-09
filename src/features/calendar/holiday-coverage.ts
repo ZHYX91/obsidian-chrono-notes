@@ -41,20 +41,24 @@ const HOLIDAY_PUBLICATION_RECORDS: Readonly<
     2026: publicationVerification(
       "published",
       "https://www.beijing.gov.cn/fuwu/bmfw/sy/jrts/202511/t20251104_4258838.html",
+      "2026-10-18",
     ),
     2027: publicationVerification(
-      "not-published",
-      "https://www.beijing.gov.cn/fuwu/bmfw/sy/jrts/202511/t20251104_4258838.html",
+      "published",
+      "https://www.forestry.gov.cn/lyj/1/szxx/20261105/695102.html",
+      "2026-11-09",
     ),
   }),
   sg: Object.freeze({
     2026: publicationVerification(
       "published",
       "https://www.mom.gov.sg/newsroom/press-releases/2025/0616-public-holidays-for-2026",
+      "2026-10-18",
     ),
     2027: publicationVerification(
       "published",
       "https://www.mom.gov.sg/newsroom/press-releases/2026/0618-public-holidays-for-2027",
+      "2026-10-18",
     ),
   }),
 });
@@ -131,10 +135,11 @@ function findPublicationVerification(
 function publicationVerification(
   status: HolidayPublicationVerification["status"],
   sourceUrl: string,
+  verifiedOn: string,
 ): HolidayPublicationVerification {
   return Object.freeze({
     status,
-    verifiedOn: "2026-10-18",
+    verifiedOn,
     sourceUrl,
   });
 }

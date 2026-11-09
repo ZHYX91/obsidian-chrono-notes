@@ -1,6 +1,6 @@
 import { HolidayUtil } from "lunar-typescript";
 
-import type { LocalDate } from "../periodic/periodic-date";
+import { formatLocalDateKey, type LocalDate } from "../periodic/periodic-date";
 import type {
   HolidayDataCoverage,
   RegionalHoliday,
@@ -16,6 +16,26 @@ export interface ChinaHolidayDay {
 
 const EMPTY_HOLIDAYS: readonly RegionalHoliday[] = Object.freeze([]);
 const yearCoverage = new Map<number, HolidayDataCoverage>();
+
+// State Council General Office notice, 5 November 2026 (国办发明电〔2026〕10号).
+// https://www.forestry.gov.cn/lyj/1/szxx/20261105/695102.html
+const CHINA_2027_HOLIDAYS = [
+  ["2027-01-01", "2027-01-03", "元旦节"],
+  ["2027-02-05", "2027-02-13", "春节"],
+  ["2027-04-03", "2027-04-05", "清明节"],
+  ["2027-05-01", "2027-05-05", "劳动节"],
+  ["2027-06-09", "2027-06-09", "端午节"],
+  ["2027-09-15", "2027-09-15", "中秋节"],
+  ["2027-10-01", "2027-10-07", "国庆节"],
+] as const;
+
+const CHINA_2027_ADJUSTED_WORKDAYS: ReadonlyMap<string, string> = new Map([
+  ["2027-01-31", "春节"],
+  ["2027-02-14", "春节"],
+  ["2027-05-08", "劳动节"],
+  ["2027-09-26", "国庆节"],
+  ["2027-10-09", "国庆节"],
+]);
 
 const TRADITIONAL_CHINESE_HOLIDAY_NAMES: Readonly<Record<string, string>> = Object.freeze({
   元旦节: "元旦節",
@@ -42,34 +62,49 @@ const ENGLISH_HOLIDAY_NAMES: Readonly<Record<string, string>> = Object.freeze({
 });
 
 export function getChinaHolidayDay(date: LocalDate, locale: string): ChinaHolidayDay {
-  const holiday = HolidayUtil.getHoliday(date.year, date.month, date.day);
-  const coverage = holiday === null
-    ? getChinaHolidayYearCoverage(date.year)
-    : "available";
+  const holiday = getChinaHoliday(date);
   if (holiday === null) {
-    return Object.freeze({ coverage, holidays: EMPTY_HOLIDAYS, workday: null });
+    return Object.freeze({
+      coverage: getChinaHolidayYearCoverage(date.year),
+      holidays: EMPTY_HOLIDAYS,
+      workday: null,
+    });
   }
 
-  const name = localizeHolidayName(holiday.getName(), locale);
+  const name = localizeHolidayName(holiday.name, locale);
   const workday = Object.freeze({
     region: "cn" as const,
     name,
-    isWorkday: holiday.isWork(),
+    isWorkday: holiday.isWorkday,
   });
-  const holidays = holiday.isWork()
+  const holidays = holiday.isWorkday
     ? EMPTY_HOLIDAYS
     : Object.freeze([Object.freeze({ region: "cn" as const, name })]);
 
-  return Object.freeze({ coverage, holidays, workday });
+  return Object.freeze({ coverage: "available", holidays, workday });
 }
 
 export function getChinaHolidayYearCoverage(year: number): HolidayDataCoverage {
+  if (year === 2027) return "available";
   const cached = yearCoverage.get(year);
   if (cached !== undefined) return cached;
 
   const coverage = HolidayUtil.getHolidays(year).length > 0 ? "available" : "unavailable";
   yearCoverage.set(year, coverage);
   return coverage;
+}
+
+function getChinaHoliday(date: LocalDate): { name: string; isWorkday: boolean } | null {
+  if (date.year === 2027) {
+    const key = formatLocalDateKey(date);
+    const adjustedWorkday = CHINA_2027_ADJUSTED_WORKDAYS.get(key);
+    if (adjustedWorkday !== undefined) return { name: adjustedWorkday, isWorkday: true };
+    const holiday = CHINA_2027_HOLIDAYS.find(([start, end]) => start <= key && key <= end);
+    return holiday === undefined ? null : { name: holiday[2], isWorkday: false };
+  }
+
+  const holiday = HolidayUtil.getHoliday(date.year, date.month, date.day);
+  return holiday === null ? null : { name: holiday.getName(), isWorkday: holiday.isWork() };
 }
 
 function localizeHolidayName(name: string, locale: string): string {
