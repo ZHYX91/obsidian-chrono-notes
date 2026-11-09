@@ -6,13 +6,8 @@ export function assertRuntimeContract({
   currentNpmVersion,
   packageJson,
 }) {
-  const packageManagerMatch = /^npm@(\d+\.\d+\.\d+)$/u.exec(
-    packageJson.packageManager ?? "",
-  );
-  assert.ok(
-    packageManagerMatch,
-    "package.json packageManager must pin npm to an exact version",
-  );
+  const packageManagerMatch = /^npm@(\d+\.\d+\.\d+)$/u.exec(packageJson.packageManager ?? "");
+  assert.ok(packageManagerMatch, "package.json packageManager must pin npm to an exact version");
 
   assert.match(
     configuredNodeVersion,

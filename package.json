@@ -35,8 +35,12 @@
     "check": "node scripts/check-runtime.mjs && npm run lint && npm run format:check && npm run check:readme-i18n && npm run check:docs-i18n && npm run typecheck && npm run test:coverage && npm run build:bundle && npm run artifact:check && npm run release:validate",
     "release:check": "npm run check && npm run test:timezones && npm run bench:quick && npm run bench:single-file:large && npm run holiday:check && npm run release:validate-tag",
     "test:browser": "playwright test --config tests/browser/playwright.config.ts",
-    "postinstall": "node scripts/prepare-lint-dependencies.mjs",
-    "prelint": "node scripts/prepare-lint-dependencies.mjs && node scripts/check-lint-dependencies.mjs"
+    "postinstall": "node scripts/check-shared-tools.mjs && node scripts/prepare-lint-dependencies.mjs",
+    "prelint": "node scripts/check-shared-tools.mjs && node scripts/prepare-lint-dependencies.mjs && node scripts/check-lint-dependencies.mjs",
+    "check:tools": "node scripts/check-shared-tools.mjs",
+    "test:tools": "vitest run tests/scripts/shared-maintenance-tools.test.ts",
+    "prebuild": "node scripts/check-runtime.mjs",
+    "prebuild:bundle": "node scripts/check-runtime.mjs"
   },
   "keywords": [
     "obsidian",
