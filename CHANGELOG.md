@@ -2,6 +2,10 @@
 
 Notable changes to Chrono Notes are documented in this file. The repository's numeric Git tags are the evidence for released versions; an entry without a corresponding local tag remains unreleased even if the manifests already contain that version.
 
+## Unreleased
+
+- Check ICS file size and type before reading; cap desktop local reads at 5 MiB plus one detection byte and reject oversized Vault results before parsing.
+
 ## 0.8.3
 
 Date: 2026-11-02
