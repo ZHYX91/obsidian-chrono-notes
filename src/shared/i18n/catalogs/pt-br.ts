@@ -87,7 +87,7 @@ export const PT_BR_MESSAGES: MessageCatalog = Object.freeze({
   "calendar.next": "Próximo(a) {period}",
   "pluginNotice.periodicNotConfigured": "Primeiro configure e ative {period}.",
   "dateContextMenu.copiedDate": "Data copiada: {date}",
-  "firstUse.selectionHint": "Um clique seleciona a data sem abrir nenhuma nota.",
+  "firstUse.selectionHint": "Um clique seleciona a data ou o período sem abrir nenhuma nota.",
   "calendar.noteState.empty": "Nota vazia",
   "calendar.noteState.yamlOnly": "Nota só com propriedades",
   "calendar.noteState.hasBody": "Nota com conteúdo",

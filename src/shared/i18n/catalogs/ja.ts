@@ -87,7 +87,7 @@ export const JA_MESSAGES: MessageCatalog = Object.freeze({
   "calendar.next": "次の{period}",
   "pluginNotice.periodicNotConfigured": "先に{period}を設定して有効にしてください。",
   "dateContextMenu.copiedDate": "日付をコピーしました：{date}",
-  "firstUse.selectionHint": "日付をクリックしても選択されるだけで、ノートは開きません。",
+  "firstUse.selectionHint": "日付や期間をクリックしても選択されるだけで、ノートは開きません。",
   "calendar.noteState.empty": "空のノート",
   "calendar.noteState.yamlOnly": "プロパティだけのノート",
   "calendar.noteState.hasBody": "本文があるノート",
