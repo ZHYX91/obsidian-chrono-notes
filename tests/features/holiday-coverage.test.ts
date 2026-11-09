@@ -6,7 +6,7 @@ import {
 } from "../../src/features/calendar/holiday-coverage";
 
 describe("holiday coverage release diagnostics", () => {
-  it("reports current and next year coverage without treating gaps as ordinary days", () => {
+  it("reports the verified schedules for the current and following years", () => {
     const report = createHolidayCoverageReport(2026);
 
     expect(report).toEqual({
@@ -38,13 +38,13 @@ describe("holiday coverage release diagnostics", () => {
         {
           region: "cn",
           year: 2027,
-          coverage: "unavailable",
+          coverage: "available",
           publication: {
-            status: "not-published",
-            verifiedOn: "2026-10-18",
-            sourceUrl: "https://www.beijing.gov.cn/fuwu/bmfw/sy/jrts/202511/t20251104_4258838.html",
+            status: "published",
+            verifiedOn: "2026-11-09",
+            sourceUrl: "https://www.forestry.gov.cn/lyj/1/szxx/20261105/695102.html",
           },
-          disposition: "warning",
+          disposition: "available",
         },
         {
           region: "sg",
@@ -58,10 +58,10 @@ describe("holiday coverage release diagnostics", () => {
           disposition: "available",
         },
       ],
-      missing: [expect.objectContaining({ region: "cn", year: 2027 })],
+      missing: [],
       blocking: [],
-      warnings: [expect.objectContaining({ region: "cn", year: 2027 })],
-      complete: false,
+      warnings: [],
+      complete: true,
       releaseReady: true,
     });
     expect(Object.isFrozen(report)).toBe(true);
@@ -72,8 +72,6 @@ describe("holiday coverage release diagnostics", () => {
     expect(Object.isFrozen(report.missing)).toBe(true);
     expect(Object.isFrozen(report.blocking)).toBe(true);
     expect(Object.isFrozen(report.warnings)).toBe(true);
-    expect(report.missing[0]).toBe(report.entries[2]);
-    expect(report.warnings[0]).toBe(report.entries[2]);
   });
 
   it("derives release severity from year role, coverage, and official publication", () => {
@@ -118,12 +116,12 @@ describe("holiday coverage release diagnostics", () => {
   );
 
   it("still blocks when an unavailable year becomes current", () => {
-    const report = createHolidayCoverageReport(2027);
+    const report = createHolidayCoverageReport(2028);
 
     expect(report.releaseReady).toBe(false);
     expect(report.blocking).toContainEqual(expect.objectContaining({
       region: "cn",
-      year: 2027,
+      year: 2028,
       disposition: "blocking",
     }));
   });

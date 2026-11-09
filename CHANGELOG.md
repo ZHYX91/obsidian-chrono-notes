@@ -2,11 +2,13 @@
 
 Notable changes to Chrono Notes are documented in this file. The repository's numeric Git tags are the evidence for released versions; an entry without a corresponding local tag remains unreleased even if the manifests already contain that version.
 
-## Unreleased
+## 0.8.4
 
 - Respect explicit Chinese script subtags and ignore locale extensions when following Obsidian's language; unknown host languages fall back safely to English.
 - Restore period selection in eight translated first-use hints and clarify German period navigation and the Hebrew task-state action.
 - Check ICS file size and type before reading. Cap desktop local reads at 5 MiB plus one detection byte and reject oversized Vault results before parsing.
+- Update the Markdown parser to `@lezer/markdown` 1.8.1.
+- Add the official 2027 Mainland China holidays and adjusted workdays.
 
 ## 0.8.3
 
