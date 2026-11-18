@@ -151,6 +151,36 @@ describe("imperative settings cleanup", () => {
     mocks.vaultClose.length = 0;
   });
 
+  it("labels each period and links invalid path inputs to their visible example and live feedback", () => {
+    const context = createContext();
+    Object.assign(context.host.settings.periodicNotes.daily, { enabled: true, pattern: "" });
+    const root = document.createElement("div");
+    const cleanup = renderPeriodicSettingsSection(root, context);
+    try {
+      const sections = root.querySelectorAll("section[aria-labelledby]");
+      expect(sections.length).toBe(Object.keys(context.host.settings.periodicNotes).length);
+      for (const section of sections) {
+        const heading = section.querySelector("h3");
+        expect(heading?.id).toBe(section.getAttribute("aria-labelledby"));
+        expect(heading?.textContent).toBeTruthy();
+      }
+      const input = root.querySelector<HTMLInputElement>('input[aria-invalid="true"]')!;
+      expect(input.getAttribute("aria-required")).toBe("true");
+      const [exampleId, feedbackId] = input.getAttribute("aria-describedby")!.split(" ");
+      const example = root.querySelector(`#${exampleId}`);
+      const feedback = root.querySelector(`#${feedbackId}`);
+      expect(example?.textContent).toBeTruthy();
+      expect(example?.closest("details")).toBeNull();
+      expect(feedback?.getAttribute("aria-live")).toBe("polite");
+      expect(feedback?.textContent).toBeTruthy();
+      expect(input.getAttribute("autocapitalize")).toBe("off");
+      expect(input.getAttribute("autocomplete")).toBe("off");
+      expect(input.spellcheck).toBe(false);
+    } finally {
+      cleanup();
+    }
+  });
+
   it("closes every periodic folder and template suggestion exactly once", () => {
     const context = createContext();
     context.host.settings.periodicNotes.daily.enabled = true;
@@ -254,14 +284,17 @@ describe("imperative settings cleanup", () => {
 
     renderRangeSettingsSection(container, createContext());
 
-    const guide = container.querySelector<HTMLElement>(".chrono-notes-settings-guide");
+    const guide = container.querySelector("details");
     expect(guide?.tagName).toBe("DETAILS");
     expect(guide?.open).toBe(false);
     expect(guide?.querySelector("summary")?.textContent).toBe("How range notes are found");
     expect(guide?.textContent).toContain("How range notes are found");
     expect(guide?.textContent).toContain("chrono-notes: interval");
-    expect(container.textContent).toContain("does not modify existing notes automatically");
-    expect(container.querySelectorAll(".chrono-notes-settings-guide-brief")).toHaveLength(2);
+    const visibleAdvice = Array.from(container.querySelectorAll("p"))
+      .filter((paragraph) => paragraph.closest("details") === null)
+      .map((paragraph) => paragraph.textContent);
+    expect(visibleAdvice).toContain("Range notes must contain valid start and end properties.");
+    expect(visibleAdvice.some((text) => text?.includes("does not modify existing notes automatically"))).toBe(true);
     expect(container.firstElementChild).toBe(guide);
   });
 

@@ -71,9 +71,6 @@ describe("settings tab layout CSS", () => {
       /\.chrono-notes-settings-guide-summary\s*\{[^}]*cursor:\s*pointer;[^}]*font-weight:\s*var\(--font-medium\);/s,
     );
     expect(styles).toMatch(
-      /\.chrono-notes-settings-guide-body\s*\{[^}]*max-inline-size:\s*68ch;/s,
-    );
-    expect(styles).toMatch(
       /\.chrono-notes-settings-guide-body ul\s*\{[^}]*padding-inline-start:\s*20px;/s,
     );
     expect(styles).toMatch(

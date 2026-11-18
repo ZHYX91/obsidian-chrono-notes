@@ -25,24 +25,12 @@ const templateSectionSource = readFileSync(
   new URL("../../src/ui/settings/template-settings.ts", import.meta.url),
   "utf8",
 );
-const templateGuideSource = readFileSync(
-  new URL("../../src/ui/settings/template-guide.ts", import.meta.url),
-  "utf8",
-);
-const settingsGuideSource = readFileSync(
-  new URL("../../src/ui/settings/settings-guide.ts", import.meta.url),
-  "utf8",
-);
 const extensionsAndIntegrationsSectionSource = readFileSync(
   new URL("../../src/ui/settings/extensions-and-integrations-settings-section.ts", import.meta.url),
   "utf8",
 );
 const settingsSaveCoordinatorSource = readFileSync(
   new URL("../../src/ui/settings/settings-save-coordinator.ts", import.meta.url),
-  "utf8",
-);
-const pathInputSource = readFileSync(
-  new URL("../../src/ui/settings/path-input.ts", import.meta.url),
   "utf8",
 );
 const suggestSource = readFileSync(
@@ -68,36 +56,6 @@ describe("periodic note settings structure", () => {
     expect(suggestSource).toContain("getMarkdownFiles()");
   });
 
-  it("groups each periodic type under its own level-three heading", () => {
-    expect(periodicSectionSource).toContain('containerEl.createEl("section"');
-    expect(periodicSectionSource).toContain('"chrono-notes-periodic-note-section"');
-    expect(periodicSectionSource).toContain('attr: { "aria-labelledby": headingId }');
-    expect(periodicSectionSource).toContain('sectionEl.createEl("h3"');
-    expect(periodicSectionSource).toContain("text: periodicNoteLabel(noteType, t)");
-    expect(periodicSectionSource).toContain('.setName(t("settings.periodic.enabled"))');
-    expect(periodicSectionSource).not.toContain('createEl("h4"');
-  });
-
-  it("keeps path examples visible and exposes live validation accessibly", () => {
-    expect(periodicSectionSource).toContain("getPeriodicNotePathExample(noteType)");
-    expect(periodicSectionSource).toContain("chrono-notes-periodic-path-example");
-    expect(periodicSectionSource).toContain("pathSetting.controlEl.createDiv");
-    expect(periodicSectionSource).toContain("chrono-notes-periodic-path-feedback");
-    expect(periodicSectionSource).toContain('"aria-live": "polite"');
-    expect(periodicSectionSource).toContain("`${pathExampleId} ${pathFeedbackId}`");
-    expect(periodicSectionSource).toContain('setAttribute("aria-invalid", String(hasError))');
-    expect(periodicSectionSource).toContain('setAttribute("aria-required", "true")');
-    expect(periodicSectionSource.match(/preparePathInput\(text\.inputEl\)/g)).toHaveLength(1);
-    expect(templateSectionSource.match(/preparePathInput\(text\.inputEl\)/g)).toHaveLength(1);
-    expect(rangeSectionSource.match(/preparePathInput\(text\.inputEl\)/g)).toHaveLength(2);
-    expect(
-      extensionsAndIntegrationsSectionSource.match(/preparePathInput\(text\.inputEl\)/g),
-    ).toHaveLength(1);
-    expect(pathInputSource).toContain('setAttribute("autocapitalize", "off")');
-    expect(pathInputSource).toContain('setAttribute("autocomplete", "off")');
-    expect(pathInputSource).toContain("inputEl.spellcheck = false");
-  });
-
   it("keeps template paths with their note types and global syntax under General", () => {
     expect(generalSectionSource).toContain("renderTemplateEngineSettings(containerEl, context)");
     expect(periodicSectionSource).toContain("getPeriodicNoteTemplatePathExample(noteType)");
@@ -107,20 +65,6 @@ describe("periodic note settings structure", () => {
     expect(periodicSectionSource).toContain('renderNoteTemplateGuide(containerEl, context, "periodic")');
     expect(rangeSectionSource).toContain('renderNoteTemplateGuide(containerEl, context, "interval")');
     expect(settingsTabSource).not.toContain('case "templates"');
-  });
-
-  it("uses one accessible settings-guide structure for path and template help", () => {
-    expect(periodicSectionSource).toContain("createSettingsGuide");
-    expect(templateGuideSource).toContain("createSettingsGuide");
-    expect(rangeSectionSource).toContain("createSettingsGuide");
-    expect(rangeSectionSource).toContain("settings.ranges.recognitionGuideTitle");
-    expect(rangeSectionSource).toContain("chrono-notes: interval");
-    expect(rangeSectionSource).toContain("settings.ranges.scanScopeDesc");
-    expect(settingsGuideSource).toContain('createEl("details"');
-    expect(settingsGuideSource).toContain('createEl("summary"');
-    expect(settingsGuideSource).toContain("clearSettingsGuideState");
-    expect(rangeSectionSource).toContain("chrono-notes-settings-guide-brief");
-    expect(settingsGuideSource).toContain("chrono-notes-settings-guide-body");
   });
 
   it("groups independent Obsidian Properties integrations under General", () => {

@@ -47,3 +47,22 @@ for (const locale of ["en", "fa", "ar", "he"] satisfies PluginLocale[]) {
     expect(errors).toEqual([]);
   });
 }
+
+test("the tutorial opens by keyboard and keeps readable line lengths on a wide screen", async ({ page }) => {
+  await page.setViewportSize({ width: 1200, height: 800 });
+  await page.setContent(fixture.html);
+  await page.addScriptTag({ content: fixture.script });
+  await page.evaluate(() => window.mountSettingsGuide());
+  const summary = page.locator("summary");
+  const text = page.getByText("Choose a date to create a range note.");
+  await expect(text).toBeHidden();
+  await summary.focus();
+  await summary.press("Enter");
+  await expect(text).toBeVisible();
+  const widths = await text.evaluate((paragraph) => ({
+    text: paragraph.getBoundingClientRect().width,
+    available: paragraph.closest("details")!.getBoundingClientRect().width,
+  }));
+  expect(widths.text).toBeGreaterThan(200);
+  expect(widths.text).toBeLessThan(widths.available * 0.8);
+});

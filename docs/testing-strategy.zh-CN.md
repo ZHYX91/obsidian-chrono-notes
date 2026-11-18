@@ -26,7 +26,7 @@ translation_status: source
 
 核心逻辑、NoteIndex、任务写回、事件顺序和跨时区测试继续作为主要回归层。语言测试除翻译键外还验证实际日期含义：波斯语的一月按钮必须选择并打开公历一月，无障碍周日期也须使用同一历法。
 
-`npm run test:browser` 运行 Chromium 设置、日历和性能样本。使用 `npm ci` 安装锁定的运行器，再用 `npm exec playwright -- install chromium` 安装浏览器；也可通过 `CHROMIUM_EXECUTABLE_PATH` 指定已有 Chromium。样本打包本仓库真实设置类、扩展设置节、保存协调器、翻译与 CSS，仅模拟 Obsidian 基础控件、不涉及的设置节和明确停用的声明式界面。四种语言均通过实际历法与节日下拉框触发保存和重建，再断言活动页签的可见边界、选中值、保存次数和焦点。JSON 结果、几何附件与失败跟踪保存在 `test-results/`，由 CI 上传。这是浏览器布局证据，不等于 Obsidian 宿主验收。纯导航和轻量 DOM 测试继续独立运行。
+`npm run test:browser` 运行 Chromium 设置、日历和性能样本。使用 `npm ci` 安装锁定的运行器，再用 `npm exec playwright -- install chromium` 安装浏览器；也可通过 `CHROMIUM_EXECUTABLE_PATH` 指定已有 Chromium。样本打包本仓库真实设置类、扩展设置节、保存协调器、翻译与 CSS，仅模拟 Obsidian 基础控件和不涉及的设置节。四种语言均通过实际历法与节日下拉框触发保存和重建，再断言活动页签的可见边界、选中值、保存次数和焦点。JSON 结果、几何附件与失败跟踪保存在 `test-results/`，由 CI 上传。这是浏览器布局证据，不等于 Obsidian 宿主验收。纯导航和轻量 DOM 测试继续独立运行。
 
 日历样本使用实际的 `CalendarApp`、`WeekView`、NoteIndex 和生产 IndexedDB 适配器，配合合成笔记来源及宿主替身。1,000 和 5,000 项同周任务场景记录初始索引、首次与单文件更新后的缓存持久化、查询、首屏与下一页渲染，以及观察到的 Long Tasks；每个场景附五次量测 JSON，不设置绝对耗时门槛。断言包括单文件更新只读一次来源、挂载 100 行任务、页码状态正确、1,000 项场景可到达最后一页，以及实际保存非空缓存。宽窄 CalendarApp 样本核对四个视图标签按钮和所选日期内容，并附截图；按钮计数不代表已操作每个视图。浏览器布局和 IndexedDB 结果不能替代真实 Obsidian 事件、文件系统、移动端、主题、原生输入法或辅助技术验收。
 
