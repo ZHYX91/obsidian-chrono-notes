@@ -74,7 +74,7 @@ test("the tutorial opens by keyboard and keeps readable line lengths on a wide s
   }));
   expect(widths.text).toBeGreaterThan(200);
   expect(widths.text).toBeLessThan(widths.available * 0.8);
-  await page.locator("details").evaluate((guide) => { guide.dir = "rtl"; });
+  await page.locator("details").evaluate((guide) => guide.setAttribute("dir", "rtl"));
   await page.setViewportSize({ width: 360, height: 800 });
   await expect(body).toHaveCSS("border-left-width", "0px");
   await expect(body).toHaveCSS("border-right-width", "2px");
