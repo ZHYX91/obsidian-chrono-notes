@@ -78,7 +78,7 @@ Vorlagen nutzen dieselben Formate: `{{date:DEC[s]}}`, `{{date:[C]CEN}}`, `{{star
 
 ### Zeitraumnotizen
 
-Wählen Sie zuerst unter **Einstellungen → Chrono Notes → Zeitraumnotizen** einen Zielordner. Auf dem Desktop können Sie im Monatskalender vom Anfangsdatum zu einem anderen Enddatum ziehen, um eine Zeitraumnotiz zu erstellen. Alternativ wählen Sie die Aktion zum Erstellen einer Zeitraumnotiz im Datumsmenü oder in der Befehlspalette und geben die Daten ein. Eine neue Zeitraumnotiz muss mindestens zwei Kalendertage umfassen. Vertauschte Anfangs- und Enddaten werden automatisch in die richtige Reihenfolge gebracht.
+Wählen Sie zuerst unter **Einstellungen → Chrono Notes → Zeitraumnotizen** einen Zielordner. Auf dem Desktop können Sie im Monatskalender vom Anfangsdatum zu einem anderen Enddatum ziehen, um eine Zeitraumnotiz zu erstellen. Wählen Sie im Datumsmenü **Zeitraumnotiz erstellen**. In der Befehlspalette wählen Sie zuerst **Liste der Zeitraumnotizen öffnen** und dann **Zeitraumnotiz erstellen**. Eine neue Zeitraumnotiz muss mindestens zwei Kalendertage umfassen. Vertauschte Anfangs- und Enddaten werden automatisch in die richtige Reihenfolge gebracht.
 
 Damit eine vorhandene Notiz im Kalender als Zeitraum erscheint, fügen Sie am Anfang der Markdown-Datei diese Eigenschaften ein:
 
@@ -98,7 +98,7 @@ Ohne die Eigenschaft `chrono-notes` wird eine Notiz nur im konfigurierten Suchbe
 
 ## Einstellungen
 
-Unter Allgemein finden Sie die Anleitung und die Möglichkeit, ein Problem zu melden. Beim Ändern einer Kalender- oder Feiertagserweiterung bleibt der aktuelle Reiter sichtbar und der Tastaturfokus beim gerade verwendeten Steuerelement.
+Unter Allgemein finden Sie die Anleitung und die Möglichkeit, ein Problem zu melden.
 
 Unter Allgemein Sprache, Wochenbeginn, Datumsanzeige und Vorlagen wählen. Unter Periodische Notizen die Dateipfade prüfen, bevor vorhandene Namen durch eine andere Pfadsprache nicht mehr gefunden werden. Darstellung, Aufgaben, Statistiken, Erweiterungen und Zeitraumnotizen haben eigene Einstellungsbereiche.
 

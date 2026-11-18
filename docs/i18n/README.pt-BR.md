@@ -78,7 +78,7 @@ Modelos aceitam `{{date:DEC[s]}}`, `{{date:[C]CEN}}` e `{{start:YYYY}}–{{end:Y
 
 ### Notas de intervalo
 
-Primeiro, escolha uma pasta de destino em **Configurações → Chrono Notes → Notas de intervalo**. No computador, arraste de uma data inicial até outra data final no calendário mensal para criar a nota. Você também pode escolher a ação de criação no menu de uma data ou na paleta de comandos e preencher as datas. A criação exige pelo menos dois dias do calendário. Se as datas estiverem invertidas, elas serão colocadas na ordem correta.
+Primeiro, escolha uma pasta de destino em **Configurações → Chrono Notes → Notas de intervalo**. No computador, arraste de uma data inicial até outra data final no calendário mensal para criar a nota. No menu de uma data, escolha **Criar nota de intervalo**. Na paleta de comandos, escolha **Abrir lista de notas de intervalo** e clique em **Criar nota de intervalo**. A criação exige pelo menos dois dias do calendário. Se as datas estiverem invertidas, elas serão colocadas na ordem correta.
 
 Para mostrar uma nota existente como um intervalo, adicione estas propriedades no início do arquivo Markdown:
 
@@ -98,7 +98,7 @@ Quando `chrono-notes` não existe, a nota só é reconhecida no escopo configura
 
 ## Configurações
 
-Em Geral estão o guia de uso e a opção de relatar um problema. Ao mudar uma extensão de calendário ou feriados, a aba atual continua visível e o foco do teclado permanece no controle usado.
+Em Geral estão o guia de uso e a opção de relatar um problema.
 
 Escolha idioma, início da semana, formatos de data, caminhos e modelos. Alterar o idioma dos nomes de arquivos não renomeia notas existentes: confira a prévia do caminho. Há configurações separadas para aparência, tarefas, estatísticas e notas de intervalo.
 

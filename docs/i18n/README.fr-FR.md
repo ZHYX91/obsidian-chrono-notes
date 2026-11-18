@@ -78,7 +78,7 @@ Les modèles utilisent les mêmes formats : `{{date:DEC[s]}}`, `{{date:[C]CEN}}`
 
 ### Notes de période
 
-Choisissez d’abord un dossier de destination dans **Paramètres → Chrono Notes → Notes de période**. Sur ordinateur, faites glisser la souris d’une date de début à une autre date de fin dans le calendrier mensuel pour créer une note de période. Vous pouvez aussi lancer l’action de création depuis le menu d’une date ou la palette de commandes, puis saisir les dates. La création nécessite au moins deux jours calendaires. Si les dates sont inversées, elles sont automatiquement remises dans l’ordre.
+Choisissez d’abord un dossier de destination dans **Paramètres → Chrono Notes → Notes de période**. Sur ordinateur, faites glisser la souris d’une date de début à une autre date de fin dans le calendrier mensuel pour créer une note de période. Dans le menu d’une date, choisissez **Créer une note de période**. Dans la palette de commandes, choisissez **Ouvrir la liste des notes de période**, puis **Créer une note de période**. La création nécessite au moins deux jours calendaires. Si les dates sont inversées, elles sont automatiquement remises dans l’ordre.
 
 Pour faire apparaître une note existante comme une période, ajoutez ces propriétés au début de son fichier Markdown :
 
@@ -98,7 +98,7 @@ Si la propriété `chrono-notes` est absente, la note n’est reconnue que dans 
 
 ## Paramètres
 
-La section Général propose le guide d’utilisation et le signalement d’un problème. Après le changement d’une extension de calendrier ou de jours fériés, l’onglet actif reste visible et le focus clavier reste sur la commande utilisée.
+La section Général propose le guide d’utilisation et le signalement d’un problème.
 
 Réglez la langue, le premier jour de la semaine, les formats de date, les modèles et les chemins des notes. Un changement de langue pour les noms de fichiers ne renomme pas les notes existantes : vérifiez l'aperçu du chemin. Les vues, tâches, statistiques et notes de période disposent de réglages dédiés.
 
