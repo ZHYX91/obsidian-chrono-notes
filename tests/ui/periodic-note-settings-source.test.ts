@@ -116,9 +116,10 @@ describe("periodic note settings structure", () => {
     expect(rangeSectionSource).toContain("settings.ranges.recognitionGuideTitle");
     expect(rangeSectionSource).toContain("chrono-notes: interval");
     expect(rangeSectionSource).toContain("settings.ranges.scanScopeDesc");
-    expect(settingsGuideSource).toContain('attr: { role: "note" }');
-    expect(settingsGuideSource).toContain('setIcon(iconEl, "info")');
-    expect(settingsGuideSource).toContain("chrono-notes-settings-guide-heading");
+    expect(settingsGuideSource).toContain('createEl("details"');
+    expect(settingsGuideSource).toContain('createEl("summary"');
+    expect(settingsGuideSource).toContain("clearSettingsGuideState");
+    expect(rangeSectionSource).toContain("chrono-notes-settings-guide-brief");
     expect(settingsGuideSource).toContain("chrono-notes-settings-guide-body");
   });
 
