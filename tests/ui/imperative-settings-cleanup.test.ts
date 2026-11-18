@@ -255,10 +255,13 @@ describe("imperative settings cleanup", () => {
     renderRangeSettingsSection(container, createContext());
 
     const guide = container.querySelector<HTMLElement>(".chrono-notes-settings-guide");
-    expect(guide?.getAttribute("role")).toBe("note");
+    expect(guide?.tagName).toBe("DETAILS");
+    expect(guide?.open).toBe(false);
+    expect(guide?.querySelector("summary")?.textContent).toBe("How range notes are found");
     expect(guide?.textContent).toContain("How range notes are found");
     expect(guide?.textContent).toContain("chrono-notes: interval");
-    expect(guide?.textContent).toContain("does not modify existing notes automatically");
+    expect(container.textContent).toContain("does not modify existing notes automatically");
+    expect(container.querySelectorAll(".chrono-notes-settings-guide-brief")).toHaveLength(2);
     expect(container.firstElementChild).toBe(guide);
   });
 
