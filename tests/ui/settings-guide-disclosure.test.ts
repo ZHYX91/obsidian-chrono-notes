@@ -1,6 +1,6 @@
 // @vitest-environment happy-dom
 import { beforeEach, describe, expect, it } from "vitest";
-import { clearSettingsGuideState, createSettingsGuide } from "../../src/ui/settings/settings-guide";
+import { clearSettingsGuideState, createSettingsGuide, rememberSettingsGuides } from "../../src/ui/settings/settings-guide";
 
 import { installObsidianDomFactories } from "../setup/obsidian-dom";
 
@@ -16,11 +16,12 @@ describe("Chrono settings tutorial disclosure", () => {
     const details = panel.querySelector("details")!;
     expect(details.open).toBe(false);
     details.open = true;
-    details.dispatchEvent(new Event("toggle"));
+    rememberSettingsGuides(root); // Redraw immediately, before native toggle delivery.
     panel.replaceChildren();
     createSettingsGuide(panel, "Date format", "periodic-date");
     expect(panel.querySelector("details")?.open).toBe(true);
     clearSettingsGuideState(root);
+    details.dispatchEvent(new Event("toggle"));
     panel.replaceChildren();
     createSettingsGuide(panel, "Date format", "periodic-date");
     expect(panel.querySelector("details")?.open).toBe(false);

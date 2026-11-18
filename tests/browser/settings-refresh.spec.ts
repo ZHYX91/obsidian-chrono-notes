@@ -56,7 +56,12 @@ test("the tutorial opens by keyboard and keeps readable line lengths on a wide s
   const summary = page.locator("summary");
   const text = page.getByText("Choose a date to create a range note.");
   await expect(text).toBeHidden();
-  await summary.focus();
+  await expect(summary).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
+  await expect(summary).toHaveCSS("border-top-style", "none");
+  expect((await summary.boundingBox())!.height).toBeGreaterThanOrEqual(32);
+  await page.keyboard.press("Tab");
+  await expect(summary).toBeFocused();
+  await expect(summary).toHaveCSS("outline-style", "solid");
   await summary.press("Enter");
   await expect(text).toBeVisible();
   const widths = await text.evaluate((paragraph) => ({
@@ -65,4 +70,7 @@ test("the tutorial opens by keyboard and keeps readable line lengths on a wide s
   }));
   expect(widths.text).toBeGreaterThan(200);
   expect(widths.text).toBeLessThan(widths.available * 0.8);
+  await summary.press("Space");
+  await expect(text).toBeHidden();
+  await expect(summary).toBeFocused();
 });

@@ -13,10 +13,10 @@ export function renderTemplateSyntaxGuide(
 ): void {
   const { t } = context.translator;
   const builtin = context.host.settings.templateEngine === "builtin";
-  const guideEl = createSettingsGuide(containerEl, t("settings.templates.syntaxTitle"), "template-syntax");
   containerEl.createEl("p", {
     cls: "chrono-notes-settings-guide-brief", text: t("settings.templates.contentLocation"),
   });
+  const guideEl = createSettingsGuide(containerEl, t("settings.templates.syntaxTitle"), "template-syntax");
   guideEl.createEl("p", { text: t(builtin
     ? "settings.templates.builtinHelp"
     : "settings.templates.templaterHelp") });
@@ -35,13 +35,13 @@ export function renderNoteTemplateGuide(
   const { t } = context.translator;
   const periodic = kind === "periodic";
   const builtin = context.host.settings.templateEngine === "builtin";
-  const guideEl = createSettingsGuide(containerEl, t(periodic
-    ? "settings.templates.periodicHeading"
-    : "settings.templates.intervalHeading"), periodic ? "periodic-template" : "range-template");
   containerEl.createEl("p", {
     cls: "chrono-notes-settings-guide-brief",
     text: t(builtin ? "settings.templates.builtinEngine" : "settings.templates.templaterEngine"),
   });
+  const guideEl = createSettingsGuide(containerEl, t(periodic
+    ? "settings.templates.periodicHeading"
+    : "settings.templates.intervalHeading"), periodic ? "periodic-template" : "range-template");
   guideEl.createEl("p", { text: t(periodic
     ? "settings.templates.periodDates"
     : "settings.templates.intervalDates") });

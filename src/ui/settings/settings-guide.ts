@@ -10,6 +10,16 @@ function session(root: HTMLElement): Set<string> {
   return opened;
 }
 
+export function rememberSettingsGuides(root: HTMLElement): void {
+  const expanded = session(root);
+  for (const guide of Array.from(root.querySelectorAll<HTMLDetailsElement>("details[data-chrono-guide]"))) {
+    const key = guide.dataset.chronoGuide;
+    if (key === undefined) continue;
+    if (guide.open) expanded.add(key);
+    else expanded.delete(key);
+  }
+}
+
 export function clearSettingsGuideState(root: HTMLElement): void {
   openedByRoot.delete(root);
 }
@@ -23,11 +33,8 @@ export function createSettingsGuide(containerEl: HTMLElement, title: string, key
   const root = containerEl.closest<HTMLElement>(".chrono-notes-settings") ?? containerEl;
   const expanded = session(root);
   const details = containerEl.createEl("details", { cls: "chrono-notes-settings-guide" });
+  details.dataset.chronoGuide = key;
   details.open = expanded.has(key);
   details.createEl("summary", { cls: "chrono-notes-settings-guide-summary", text: title });
-  details.addEventListener("toggle", () => {
-    if (details.open) expanded.add(key);
-    else expanded.delete(key);
-  });
   return details.createDiv({ cls: "chrono-notes-settings-guide-body" });
 }

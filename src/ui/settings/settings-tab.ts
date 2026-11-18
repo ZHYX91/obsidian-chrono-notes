@@ -1,4 +1,4 @@
-import { clearSettingsGuideState } from "./settings-guide";
+import { clearSettingsGuideState, rememberSettingsGuides } from "./settings-guide";
 import {
   PluginSettingTab,
   type App,
@@ -95,6 +95,7 @@ export class ChronoNotesSettingTab extends PluginSettingTab {
       ? focused.getAttribute("data-chrono-settings-control")
       : null;
     this.translator = this.host.getTranslator();
+    rememberSettingsGuides(containerEl);
     this.cleanupImperativeSection();
     containerEl.empty();
     this.applySurfaceSemantics();

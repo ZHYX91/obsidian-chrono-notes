@@ -295,7 +295,7 @@ describe("imperative settings cleanup", () => {
       .map((paragraph) => paragraph.textContent);
     expect(visibleAdvice).toContain("Range notes must contain valid start and end properties.");
     expect(visibleAdvice.some((text) => text?.includes("does not modify existing notes automatically"))).toBe(true);
-    expect(container.firstElementChild).toBe(guide);
+    expect(guide?.previousElementSibling?.textContent).toContain("does not modify existing notes automatically");
   });
 
   it("runs every cleanup in reverse order before reporting the first failure", () => {

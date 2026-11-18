@@ -19,15 +19,19 @@ export function renderRangeSettingsSection(
 ): SettingsCleanup {
   const { t } = context.translator;
   const settings = context.host.settings.rangeNotes;
+  containerEl.createEl("p", {
+    cls: "chrono-notes-settings-guide-brief",
+    text: t("settings.ranges.recognitionRequirements"),
+  });
+  containerEl.createEl("p", {
+    cls: "chrono-notes-settings-guide-brief",
+    text: t("settings.ranges.recognitionNoMigration"),
+  });
   const recognitionGuideEl = createSettingsGuide(
     containerEl,
     t("settings.ranges.recognitionGuideTitle"),
     "range-recognition",
   );
-  containerEl.createEl("p", {
-    cls: "chrono-notes-settings-guide-brief",
-    text: t("settings.ranges.recognitionRequirements"),
-  });
   const recognitionRulesEl = recognitionGuideEl.createEl("ul");
   appendRecognitionRule(
     recognitionRulesEl,
@@ -44,10 +48,6 @@ export function renderRangeSettingsSection(
     "chrono-notes",
     t("settings.ranges.recognitionExcluded"),
   );
-  containerEl.createEl("p", {
-    cls: "chrono-notes-settings-guide-brief",
-    text: t("settings.ranges.recognitionNoMigration"),
-  });
   const listSetting = new Setting(containerEl)
     .setName(t("settings.ranges.list"))
     .setDesc(t("settings.ranges.listDesc"));
