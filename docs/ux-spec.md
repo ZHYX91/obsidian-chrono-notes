@@ -145,3 +145,8 @@ Density responds to container width. In summary mode, year view groups a quarter
 When interval lanes overflow, `+N` is a real button with `aria-expanded`, `aria-controls`, and `aria-haspopup="dialog"`, not static tooltip-only text. It opens a current-week-only hidden-item panel. Every item retains its canonical path, title, original boundaries, inclusive duration, and task statistics, uses an independent target of at least `44px`, and keeps the existing open-in-tab action. The desktop panel is anchored to its Gantt; mobile keeps it inside system safe areas. Escape or an outside pointer action closes it, and Escape restores trigger focus.
 
 Vault-path suggestions are capped at 100. An empty query takes the first 100 path-sorted candidates. A fuzzy query preserves Obsidian's all-candidate matching and ranking but retains only the best 100. One catalog is shared while settings are open, rebuilds lazily after create/delete/rename but not modify, and releases its listeners and data when settings close.
+
+
+## Settings tutorial disclosures
+
+The Settings panel renders template syntax, date/path formats and range recognition examples as native collapsed details with one concise topic summary per guide. Essential validity/recognition conditions remain visible. Index/cache/ICS status, connection failures, save errors and operation warnings stay outside the guide and never depend on expanding it. A settings-tab instance remembers guide expansion while categories redraw; hiding/closing settings clears the in-memory map. No settings keys or Vault writes are introduced. Native summaries retain keyboard activation and theme-aware focus cues; live pattern previews remain visible outside help.

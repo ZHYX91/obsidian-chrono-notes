@@ -1,3 +1,4 @@
+import { clearSettingsGuideState } from "./settings-guide";
 import {
   PluginSettingTab,
   type App,
@@ -114,6 +115,7 @@ export class ChronoNotesSettingTab extends PluginSettingTab {
   }
 
   override hide(): void {
+    clearSettingsGuideState(this.containerEl);
     this.surfaceVisible = false;
     this.surfaceRevision += 1;
     this.cleanupImperativeSection();

@@ -22,8 +22,10 @@ export function renderRangeSettingsSection(
   const recognitionGuideEl = createSettingsGuide(
     containerEl,
     t("settings.ranges.recognitionGuideTitle"),
+    "range-recognition",
   );
-  recognitionGuideEl.createEl("p", {
+  containerEl.createEl("p", {
+    cls: "chrono-notes-settings-guide-brief",
     text: t("settings.ranges.recognitionRequirements"),
   });
   const recognitionRulesEl = recognitionGuideEl.createEl("ul");
@@ -42,7 +44,8 @@ export function renderRangeSettingsSection(
     "chrono-notes",
     t("settings.ranges.recognitionExcluded"),
   );
-  recognitionGuideEl.createEl("p", {
+  containerEl.createEl("p", {
+    cls: "chrono-notes-settings-guide-brief",
     text: t("settings.ranges.recognitionNoMigration"),
   });
   const listSetting = new Setting(containerEl)

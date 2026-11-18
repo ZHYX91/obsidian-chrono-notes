@@ -157,7 +157,7 @@
 
 .chrono-notes-settings-guide {
   background: var(--background-secondary);
-  border-inline-start: 3px solid var(--interactive-accent);
+  border: 1px solid var(--background-modifier-border);
   border-radius: var(--radius-s);
   box-shadow: none;
   color: var(--text-muted);
@@ -175,7 +175,7 @@
 }
 
 .chrono-notes-settings-guide-heading strong {
-  font-weight: var(--font-semibold);
+  font-weight: var(--font-medium);
 }
 
 .chrono-notes-settings-guide-icon {
@@ -470,4 +470,25 @@ body.is-mobile .chrono-notes-index-details > summary {
     grid-column: 1 / -1;
     width: auto;
   }
+}
+
+/* Low-emphasis native tutorial disclosure; error and index statuses stay outside. */
+.chrono-notes-settings-guide { padding: 0; margin-block: var(--size-4-2); }
+.chrono-notes-settings-guide-summary {
+  color: var(--text-normal); cursor: pointer; display: list-item;
+  font-size: var(--font-ui-small); font-weight: var(--font-medium);
+  list-style: disclosure-closed inside; padding: var(--size-4-2) var(--size-4-3);
+}
+.chrono-notes-settings-guide[open] > .chrono-notes-settings-guide-summary {
+  list-style: disclosure-open inside;
+}
+.chrono-notes-settings-guide-summary:focus-visible {
+  outline: 2px solid var(--interactive-accent); outline-offset: -2px;
+}
+.chrono-notes-settings-guide > .chrono-notes-settings-guide-body {
+  margin: 0; max-inline-size: 100%; padding: 0 var(--size-4-3) var(--size-4-3);
+}
+.chrono-notes-settings-guide-brief {
+  color: var(--text-muted); font-size: var(--font-ui-small);
+  line-height: 1.45; margin-block: var(--size-4-2);
 }
