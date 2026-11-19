@@ -1,3 +1,4 @@
+import { Window } from "happy-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
@@ -78,6 +79,10 @@ import { createTranslator } from "../../src/shared/i18n";
 import { createDefaultSettings } from "../../src/shared/settings";
 import { renderExtensionsAndIntegrationsSettingsSection } from "../../src/ui/settings/extensions-and-integrations-settings-section";
 import type { SettingsSectionContext } from "../../src/ui/settings/settings-section-context";
+import { installObsidianDomFactories } from "../setup/obsidian-dom";
+
+const testDocument = new Window().document as unknown as Document;
+installObsidianDomFactories(testDocument);
 
 describe("extensions and integrations settings runtime", () => {
   beforeEach(() => {
@@ -105,10 +110,7 @@ describe("extensions and integrations settings runtime", () => {
       flushSettingsSaveOnBlur: vi.fn(),
       display,
     } as unknown as SettingsSectionContext;
-    const containerEl = {
-      createEl: vi.fn(),
-      createDiv: vi.fn(() => ({ empty: vi.fn(), hidden: false })),
-    } as unknown as HTMLElement;
+    const containerEl = testDocument.createElement("div");
 
     renderExtensionsAndIntegrationsSettingsSection(containerEl, context);
     const onToggle = mocks.toggleChange;
@@ -137,11 +139,10 @@ describe("extensions and integrations settings runtime", () => {
       flushSettingsSaveOnBlur: vi.fn(),
       display: vi.fn(),
     } as unknown as SettingsSectionContext;
-    const list = { empty: vi.fn(), createDiv: vi.fn(), hidden: false };
-    const container = { createEl: vi.fn(), createDiv: vi.fn(() => list) };
-    const cleanup = renderExtensionsAndIntegrationsSettingsSection(
-      container as unknown as HTMLElement, context,
-    );
+    const container = testDocument.createElement("div");
+    const cleanup = renderExtensionsAndIntegrationsSettingsSection(container, context);
+    const loaded = container.querySelector<HTMLDetailsElement>('[data-chrono-guide="ics-loaded-sources"]')!;
+    expect(loaded.parentElement?.hidden).toBe(true);
     snapshot = { ...snapshot, enabled: true, state: "refreshing" };
     listener();
     expect(mocks.buttonDisabled).toHaveBeenLastCalledWith(true);
@@ -157,13 +158,30 @@ describe("extensions and integrations settings runtime", () => {
     expect(mocks.buttonDisabled).toHaveBeenLastCalledWith(false);
     expect(mocks.buttonText).toHaveBeenLastCalledWith("Refresh now");
     expect(mocks.descriptions.mock.lastCall?.[0]).toContain("100000");
-    expect(list.createDiv).toHaveBeenCalledWith(expect.objectContaining({
-      text: expect.stringContaining("275 events"),
-    }));
+    expect(loaded.textContent).toContain("Budget.ics · Events: 275");
+    expect(loaded.open).toBe(false);
+    expect(loaded.parentElement?.hidden).toBe(false);
     expect(context.display).not.toHaveBeenCalled();
-    expect(container.createDiv).toHaveBeenCalledOnce();
 
-    snapshot = { ...snapshot, totalSources: 4, sourceLimit: 1 };
+    loaded.open = true;
+    const clean = snapshot.sourceStatuses[0]!;
+    snapshot = { ...snapshot, totalSources: 5, loadedSources: 4, sourceStatuses: [
+      clean,
+      { ...clean, sourceLabel: "Repeat.ics", skippedRecurring: 2 },
+      { ...clean, sourceLabel: "Invalid.ics", skippedInvalid: 1 },
+      { ...clean, sourceLabel: "Zone.ics", skippedUnsupportedTimezone: 3 },
+      { ...clean, sourceLabel: "Error.ics", error: "read failed" },
+    ] };
+    listener();
+    expect(container.querySelector("details")).toBe(loaded);
+    expect(loaded.open).toBe(true);
+    const issues = container.querySelector(".chrono-notes-ics-status")!.firstElementChild!;
+    for (const name of ["Repeat.ics", "Invalid.ics", "Zone.ics", "Error.ics"]) {
+      expect(issues.textContent).toContain(name);
+      expect(loaded.textContent).not.toContain(name);
+    }
+
+    snapshot = { ...snapshot, totalSources: 8, sourceLimit: 5 };
     listener();
     expect(mocks.descriptions.mock.lastCall?.[0]).toContain("3 sources were omitted");
     expect(mocks.descriptions.mock.lastCall?.[0]).toContain("100000");

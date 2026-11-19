@@ -1,3 +1,5 @@
+import { createRequire } from "node:module";
+
 import { Window } from "happy-dom";
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -8,6 +10,7 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock("obsidian", () => ({
+  moment: createRequire(createRequire(import.meta.url).resolve("obsidian/package.json"))("moment"),
   setIcon: vi.fn(),
   Setting: class {
     readonly settingEl = document.createElement("div");
@@ -23,7 +26,8 @@ vi.mock("obsidian", () => ({
       return this;
     }
 
-    setDesc(): this {
+    setDesc(text: string): this {
+      this.descEl.textContent = text;
       return this;
     }
 
@@ -67,6 +71,11 @@ vi.mock("obsidian", () => ({
       const inputEl = document.createElement("input");
       this.controlEl.append(inputEl);
       const text = createChainableControl({ inputEl });
+      text.setValue = (value: string) => { inputEl.value = value; return text; };
+      text.onChange = (callback: (value: string) => void) => {
+        inputEl.addEventListener("input", () => callback(inputEl.value));
+        return text;
+      };
       configure(text);
       return this;
     }
@@ -97,10 +106,11 @@ vi.mock("../../src/ui/settings/vault-path-suggest", () => ({
   },
 }));
 
-import type { App } from "obsidian";
+import { type App, Setting } from "obsidian";
 
 import { createTranslator } from "../../src/shared/i18n";
 import { createDefaultSettings } from "../../src/shared/settings";
+import { configurePropertyFormatSetting } from "../../src/ui/settings/general-settings-section";
 import { renderPeriodicSettingsSection } from "../../src/ui/settings/periodic-settings-section";
 import { renderTemplateSyntaxGuide } from "../../src/ui/settings/template-guide";
 import { renderRangeSettingsSection } from "../../src/ui/settings/range-settings-section";
@@ -123,6 +133,12 @@ describe("imperative settings cleanup", () => {
         configurable: true,
         value(this: HTMLElement, ...classes: string[]): void {
           this.classList.add(...classes);
+        },
+      },
+      toggleClass: {
+        configurable: true,
+        value(this: HTMLElement, name: string, enabled: boolean): void {
+          this.classList.toggle(name, enabled);
         },
       },
       empty: {
@@ -179,6 +195,33 @@ describe("imperative settings cleanup", () => {
     } finally {
       cleanup();
     }
+  });
+
+  it.each([
+    ["date", "YYYY-MM-DD", "2026-07-31"],
+    ["time", "HH:mm", "14:05"],
+  ] as const)("keeps the %s format example and live feedback outside its token reference", (kind, format, preview) => {
+    const context = createContext();
+    const root = document.createElement("div");
+    const setting = new Setting(root);
+    configurePropertyFormatSetting(setting, context, kind);
+    const input = root.querySelector("input")!;
+    const guide = root.querySelector("details")!;
+    const feedback = setting.descEl.querySelector('[aria-live="polite"]')!;
+    expect(guide.dataset.chronoGuide).toBe(`property-${kind}-tokens`);
+    expect(guide.open).toBe(false);
+    expect(setting.descEl.textContent).toContain("Example");
+    expect(setting.descEl.closest("details")).toBeNull();
+    expect(input.getAttribute("aria-describedby")).toBe(setting.descEl.id);
+    input.value = "!";
+    input.dispatchEvent(new window.Event("input"));
+    expect(input.getAttribute("aria-invalid")).toBe("true");
+    expect(feedback.textContent).toBe(context.translator.t("settings.general.propertyFormatInvalid"));
+    input.value = format;
+    input.dispatchEvent(new window.Event("input"));
+    expect(input.getAttribute("aria-invalid")).toBe("false");
+    expect(feedback.textContent).toContain(preview);
+    expect(guide.open).toBe(false);
   });
 
   it("closes every periodic folder and template suggestion exactly once", () => {
@@ -240,7 +283,16 @@ describe("imperative settings cleanup", () => {
     renderTemplateSyntaxGuide(templates, context);
     expect(paths.querySelectorAll(".chrono-notes-periodic-note-section")).toHaveLength(7);
     expect(templates.querySelectorAll(".chrono-notes-settings-guide")).toHaveLength(1);
-    expect(paths.querySelectorAll(".chrono-notes-settings-guide")).toHaveLength(2);
+    expect(paths.querySelectorAll(".chrono-notes-settings-guide")).toHaveLength(3);
+    const placeholders = paths.querySelector('[data-chrono-guide="periodic-template"]')!;
+    const dates = paths.querySelector('[data-chrono-guide="periodic-date-ranges"]')!;
+    expect(placeholders.querySelectorAll("table")).toHaveLength(1);
+    expect(dates.querySelectorAll("table")).toHaveLength(1);
+    expect(dates.textContent).toContain("2001-01-01");
+    expect(placeholders.textContent).not.toContain("2001-01-01");
+    expect(placeholders.textContent).toContain("vault root");
+    expect(paths.querySelector(".chrono-notes-periodic-note-section")?.textContent)
+      .not.toContain("vault root");
     expect(ranges.querySelectorAll(".chrono-notes-settings-guide")).toHaveLength(2);
     expect(paths.textContent).toContain("2001-01-01");
     expect(paths.textContent).toContain("2100-12-31");

@@ -19,6 +19,7 @@ import {
   formatIcsSourceStatus,
   formatIcsStatus,
 } from "./settings-presentation";
+import { createSettingsGuide } from "./settings-guide";
 import { preparePathInput } from "./path-input";
 import type { SettingsSectionContext } from "./settings-section-context";
 import type { SettingsCleanup } from "./settings-cleanup";
@@ -87,6 +88,9 @@ export function renderExtensionsAndIntegrationsSettingsSection(
       });
     });
   const statusList = containerEl.createDiv({ cls: "chrono-notes-ics-status" });
+  const issues = statusList.createDiv();
+  const loaded = statusList.createDiv();
+  const loadedBody = createSettingsGuide(loaded, t("settings.ics.loadedSourceDetails"), "ics-loaded-sources");
   let closed = false;
   const renderStatus = (): void => {
     if (closed) return;
@@ -97,16 +101,24 @@ export function renderExtensionsAndIntegrationsSettingsSection(
         ? t("settings.ics.refreshingButton")
         : t("settings.ics.refreshNow"))
       .setDisabled(context.host.isSettingsReadOnly() || snapshot?.state === "refreshing");
-    statusList.empty();
+    issues.replaceChildren();
+    loadedBody.replaceChildren();
     statusList.hidden = snapshot === null || snapshot.sourceStatuses.length === 0;
     for (const status of snapshot?.sourceStatuses ?? []) {
-      statusList.createDiv({
+      const hasIssue = status.error !== null || status.skippedRecurring > 0 ||
+        status.skippedInvalid > 0 || (status.skippedUnsupportedTimezone ?? 0) > 0;
+      const group = hasIssue ? issues : loadedBody;
+      group.createDiv({
         cls: status.error === null
           ? "chrono-notes-ics-source"
           : "chrono-notes-ics-source is-error",
-        text: formatIcsSourceStatus(status, t),
+        text: hasIssue ? formatIcsSourceStatus(status, t) : t("settings.ics.sourceEvents", {
+          source: status.sourceLabel, events: status.eventCount,
+        }),
       });
     }
+    issues.hidden = issues.childElementCount === 0;
+    loaded.hidden = loadedBody.childElementCount === 0;
   };
   const unsubscribe = context.host.subscribeIcs(renderStatus);
   renderStatus();

@@ -389,6 +389,10 @@ details.chrono-notes-settings-guide[open] > .chrono-notes-settings-guide-body {
   width: 100%;
 }
 
+.chrono-notes-property-custom-format-setting > .chrono-notes-settings-guide {
+  margin: 0;
+}
+
 .setting-item.chrono-notes-property-format-settings,
 .chrono-notes-property-format-settings .setting-item {
   align-items: stretch;
@@ -419,16 +423,13 @@ details.chrono-notes-settings-guide[open] > .chrono-notes-settings-guide-body {
   max-inline-size: 100%;
 }
 
-.chrono-notes-template-path-example,
 .chrono-notes-range-path-example {
   margin-top: 4px;
   max-width: 100%;
   overflow-wrap: anywhere;
 }
 
-.chrono-notes-template-path-example code,
 .chrono-notes-range-path-example code,
-
 .chrono-notes-settings-guide code {
   white-space: normal;
 }
@@ -466,6 +467,20 @@ details.chrono-notes-settings-guide[open] > .chrono-notes-settings-guide-body {
   gap: 4px;
   margin-top: 10px;
   padding-top: 10px;
+}
+
+.chrono-notes-ics-status[hidden] {
+  display: none;
+}
+
+.chrono-notes-ics-status .chrono-notes-settings-guide[open] > .chrono-notes-settings-guide-body {
+  border: 0;
+  margin-inline-start: 18px;
+  padding-inline-start: 0;
+}
+
+.chrono-notes-ics-status .chrono-notes-ics-source + .chrono-notes-ics-source {
+  margin-block-start: 4px;
 }
 
 .chrono-notes-ics-source {
