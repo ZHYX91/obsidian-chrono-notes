@@ -38,6 +38,23 @@ describe("periodic path locale", () => {
     pathLocale: "en",
   };
 
+  it.each(["ja", "fa"] as const)("round-trips localized month names for %s daily and monthly paths", (locale) => {
+    const options = { locale: "en", weekStartDay: "monday" } as const;
+    const dailyRule = { noteType: "daily" as const, pattern: "YYYY-MMMM-DD", pathLocale: locale };
+    const monthlyRule = { noteType: "monthly" as const, pattern: "YYYY-MMMM", pathLocale: locale };
+    const dailyPath = formatPeriodicNotePath(date, dailyRule, options);
+    const monthlyPath = formatPeriodicNotePath(date, monthlyRule, options);
+
+    expect(dailyPath).not.toBeNull();
+    expect(monthlyPath).not.toBeNull();
+    expect(parsePeriodicNotePath(dailyPath!, dailyRule, options))
+      .toEqual(getPeriodAnchor(date, "daily", "monday"));
+    expect(parsePeriodicNotePath(monthlyPath!, monthlyRule, options))
+      .toEqual(getPeriodAnchor(date, "monthly", "monday"));
+  });
+
+
+
   it("keeps localized filenames stable when the interface locale changes", () => {
     const englishUi = formatPeriodicNotePath(date, rule, {
       locale: "en",
