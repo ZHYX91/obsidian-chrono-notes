@@ -40,6 +40,12 @@ Sao lưu và giữ lại `data.json`; chỉ thay các tệp của plugin. Chỉ 
 
 ## Cách sử dụng
 
+### Tạo ghi chú định kỳ còn thiếu từ liên kết
+
+Bật **Tạo ghi chú định kỳ còn thiếu từ liên kết** trong **Settings → Chrono Notes → Periodic notes**. Nếu tệp đích của liên kết không tồn tại, ghi chú chỉ được tạo khi các đoạn đường dẫn liên tiếp ở cuối khớp chính xác với duy nhất một mẫu ghi chú định kỳ đang bật. Bí danh được giữ nguyên. Tệp đã tồn tại, loại ghi chú đã tắt, đích chưa đầy đủ hoặc mơ hồ và đường dẫn tương đối được ghi rõ vẫn dùng hành vi mặc định của Obsidian.
+
+
+
 Lịch chính, bộ chọn tháng và hộp thoại ngày luôn dùng lịch Gregory. Đổi ngôn ngữ sẽ đổi tên tháng và cách hiển thị chữ số, không đổi hệ lịch. Hãy chọn tiện ích lịch riêng nếu cần hiển thị thêm thông tin từ lịch khác.
 
 **Trước khi thêm ICS:** Chrono Notes chỉ đọc tệp cục bộ, không tải lịch đăng ký từ xa và không mở rộng các sự kiện lặp có `RRULE` hoặc `RDATE`. Số sự kiện bỏ qua được báo lại; vì thế lịch phụ thuộc vào lặp lại có thể hiển thị thiếu. Đường dẫn ngoài Vault chỉ dùng được trên máy tính.
