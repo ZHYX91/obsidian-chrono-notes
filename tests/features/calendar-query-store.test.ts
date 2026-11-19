@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 
 import type { IcsEventOccurrence } from "../../src/core/calendar/ics-calendar";
+import * as periodicPaths from "../../src/core/periodic/periodic-note-path";
 import { parseNote } from "../../src/core/note/parsed-note";
 import {
   CalendarQueryStore,
@@ -53,6 +54,7 @@ describe("CalendarQueryStore", () => {
     const first = store.getSnapshot();
     const listener = vi.fn();
     const unsubscribe = store.subscribe(listener);
+    expect(icsSource.listenerCount).toBe(0);
     noteSource.publish(createNoteIndexSnapshot({ ...initial.notes,
       ...createParsedNoteIndexSnapshot({ "other.md": "irrelevant" }, 2).notes,
     }, 2));
@@ -267,6 +269,54 @@ describe("CalendarQueryStore", () => {
     expect(second.days).toBe(firstDays);
   });
 
+  it("reuses week tasks without visiting occurrences when a visible event or daily note changes", () => {
+    const dateKey = "2026-07-08";
+    const ref = taskRef(dateKey, "Tasks/example.md");
+    const completed = vi.fn(() => false);
+    const bucket = [{ ...ref, task: { ...ref.task, get completed() { return completed(); } } }];
+    const initial: NoteIndexSnapshot = {
+      ...createNoteIndexSnapshot({}, 1),
+      taskDates: { revision: 1, byDate: { [dateKey]: bucket } },
+    };
+    const notes = new MutableSnapshotSource(initial);
+    const ics = new MutableSnapshotSource(disabledIcs());
+    const store = new CalendarQueryStore(notes, ics, weekRequest());
+    const first = expectWeek(store.getSnapshot());
+    expect(completed).toHaveBeenCalledOnce();
+    store.subscribe(() => undefined);
+    completed.mockClear();
+
+    ics.publish(icsSnapshot(2, "ready", { [dateKey]: [event("meeting")] }));
+    const withEvent = expectWeek(store.getSnapshot());
+    expect(withEvent.days).not.toBe(first.days);
+    expect(withEvent.tasks).toBe(first.tasks);
+    const path = "Daily/2026-07-08.md";
+    notes.publish({ ...initial, version: 2, notes: { [path]: parsedEntry(path, "updated", 2) } });
+    const withNote = expectWeek(store.getSnapshot());
+    expect(withNote.days).not.toBe(withEvent.days);
+    expect(withNote.tasks).toBe(first.tasks);
+    expect(completed).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    { date: { year: 2024, month: 3, day: 1 }, dateKey: "2024-03-01", due: "2024-02-28" },
+    { date: { year: 2026, month: 1, day: 1 }, dateKey: "2026-01-01", due: "2025-12-30" },
+  ])("updates overdue severity across the two-to-three-day cutoff on $dateKey", ({ date, dateKey, due }) => {
+    const source = new MutableSnapshotSource(createParsedNoteIndexSnapshot({
+      "Projects/project.md": `- [ ] Milestone 📅 ${due} ⏳ ${dateKey}`,
+    }, 1));
+    const ics = new MutableSnapshotSource(disabledIcs());
+    const request = weekRequest(date);
+    const overdue = (today: typeof date) => {
+      const store = new CalendarQueryStore(source, ics, {
+        ...request, options: { ...request.options, today },
+      });
+      return expectWeek(store.getSnapshot()).tasks.find((task) => task.dateKey === dateKey)?.overdue;
+    };
+    expect(overdue(date)).toBe("warning");
+    expect(overdue({ ...date, day: date.day + 1 })).toBe("severe");
+  });
+
   it("ignores intervals outside the visible window and shares unaffected month data", () => {
     const initial = createNoteIndexSnapshot({}, 1);
     const noteSource = new MutableSnapshotSource(initial);
@@ -429,6 +479,39 @@ describe("CalendarQueryStore", () => {
     expect(secondWeek.intervals.items.find((item) => item.path === "Ranges/ongoing.md")?.lane)
       .toBe(0);
   });
+
+  it.each([[2026, true, 381], [2024, true, 382], [2026, false, 16]] as const)(
+    "formats each configured path once for year %i with heatmap %s",
+    (year, heatmap, expectedPaths) => {
+      const format = vi.spyOn(periodicPaths, "formatPeriodicNotePath");
+      try {
+        const notes = new MutableSnapshotSource(createNoteIndexSnapshot({}, 1));
+        const ics = new MutableSnapshotSource(disabledIcs());
+        const store = new CalendarQueryStore(notes, ics, { ...yearRequest(), year, heatmap });
+        const first = store.getSnapshot();
+        expect(format).toHaveBeenCalledTimes(expectedPaths);
+        format.mockClear();
+        // A change between React's initial read and its subscription must still be observed.
+        const path = `Monthly/${year}-01.md`;
+        const updated = createParsedNoteIndexSnapshot({ [path]: "January" }, 2);
+        notes.publish(updated);
+        const listener = vi.fn();
+        store.subscribe(listener);
+        const next = expectYear(store.getSnapshot());
+        expect(next).not.toBe(first.query);
+        expect(next.quarters[0]?.months[0]?.summary.preview).toBe("January");
+        expect(ics.listenerCount).toBe(0);
+        ics.publish(icsSnapshot(2, "ready", {}));
+        notes.publish(createNoteIndexSnapshot({ ...updated.notes, "other.md": parsedEntry("other.md", "unrelated", 3) }, 3));
+        expect(store.getSnapshot().query).toBe(next);
+        expect(format).not.toHaveBeenCalled();
+        expect(listener).not.toHaveBeenCalled();
+        store.dispose();
+      } finally {
+        format.mockRestore();
+      }
+    },
+  );
 
   it("shares unaffected months and quarters in a year heatmap", () => {
     const initial = createParsedNoteIndexSnapshot({

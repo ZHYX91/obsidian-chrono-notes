@@ -1,10 +1,10 @@
 import { normalizeIntervalNoteFolder } from "../../core/note/interval-note-spec";
 import { getCalendarWeekIdentity } from "../../core/periodic/calendar-week";
 import {
+  compareLocalDate,
   formatLocalDateKey,
   getPeriodAnchor,
   shiftPeriod,
-  toDateTime,
   type LocalDate,
   type WeekStartDay,
 } from "../../core/periodic/periodic-date";
@@ -72,6 +72,7 @@ export function selectWeekCalendar(
   noteSnapshot: NoteIndexSnapshot,
   icsSnapshot: IcsEventIndexSnapshot,
   options: WeekCalendarQueryOptions,
+  previousTasks?: WeekCalendarQuery["tasks"],
 ): WeekCalendarQuery {
   const weekStart = getPeriodAnchor(
     selectedDate,
@@ -113,7 +114,7 @@ export function selectWeekCalendar(
     weekYear: weekIdentity.weekYear,
     days,
     weeklyNote,
-    tasks: selectWeekTasks(noteSnapshot, weekStart, options.today),
+    tasks: previousTasks ?? selectWeekTasks(noteSnapshot, weekStart, options.today),
     rangeNotesVisible: options.rangeNotes.showInCalendar,
     rangeCreationConfigured:
       normalizeIntervalNoteFolder(options.rangeNotes.folder).length > 0,
@@ -127,6 +128,7 @@ function selectWeekTasks(
   today: LocalDate,
 ): readonly WeekTaskOccurrence[] {
   const occurrences: WeekTaskOccurrence[] = [];
+  const severeCutoff = shiftPeriod(today, "daily", -3, "monday");
   for (let index = 0; index < 7; index += 1) {
     const dateKey = formatLocalDateKey(
       shiftPeriod(weekStart, "daily", index, "monday"),
@@ -138,7 +140,7 @@ function selectWeekTasks(
           dateKey,
           dateKinds: ref.dateKinds,
           task: ref.task,
-          overdue: getTaskOverdue(ref.task.completed, ref.dueDate, today),
+          overdue: getTaskOverdue(ref.task.completed, ref.dueDate, today, severeCutoff),
         }),
       );
     }
@@ -150,11 +152,8 @@ function getTaskOverdue(
   completed: boolean,
   dueDate: LocalDate | null,
   today: LocalDate,
+  severeCutoff: LocalDate,
 ): WeekTaskOverdue {
-  if (completed || dueDate === null) return "none";
-  const days = Math.floor(
-    toDateTime(today).diff(toDateTime(dueDate), "days").days,
-  );
-  if (days <= 0) return "none";
-  return days >= 3 ? "severe" : "warning";
+  if (completed || dueDate === null || compareLocalDate(dueDate, today) >= 0) return "none";
+  return compareLocalDate(dueDate, severeCutoff) <= 0 ? "severe" : "warning";
 }
