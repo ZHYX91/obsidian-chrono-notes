@@ -40,6 +40,12 @@ Conservez et sauvegardez `data.json` ; remplacez uniquement les fichiers du modu
 
 ## Utilisation
 
+### Créer les notes périodiques manquantes à partir des liens
+
+Activez **Créer les notes périodiques manquantes à partir des liens** dans **Settings → Chrono Notes → Periodic notes**. Si le fichier cible d’un lien n’existe pas, une note est créée uniquement lorsque les derniers segments consécutifs du chemin correspondent exactement à un seul modèle de note périodique activé. Les alias sont conservés. Les fichiers existants, types de notes désactivés, cibles incomplètes ou ambiguës et chemins relatifs explicites gardent le comportement habituel d’Obsidian.
+
+
+
 Le calendrier principal, les sélecteurs de mois et les boîtes de dialogue de date utilisent toujours le calendrier grégorien. La langue change les noms des mois et les chiffres, pas le calendrier. Les extensions ajoutent séparément les informations d’autres calendriers.
 
 **Avant d’ajouter une source ICS :** Chrono Notes lit les fichiers locaux mais ne récupère pas d’abonnements distants et ne développe pas les répétitions `RRULE` ou `RDATE`. Les événements ignorés sont comptés ; un calendrier qui dépend de ces répétitions peut donc sembler incomplet. Les chemins hors du Vault ne sont utilisables que sur ordinateur.
