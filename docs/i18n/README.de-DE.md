@@ -40,6 +40,12 @@ Eine vorhandene `data.json` sichern und behalten; nur die drei Programmdateien e
 
 ## Verwendung
 
+### Fehlende periodische Notizen über Links erstellen
+
+Aktiviere **Fehlende periodische Notizen über Links erstellen** unter **Settings → Chrono Notes → Periodic notes**. Wenn die Zieldatei eines Links nicht existiert, wird nur dann eine Notiz erstellt, wenn die zusammenhängenden letzten Pfadsegmente genau einem aktivierten Muster für periodische Notizen entsprechen. Aliase bleiben erhalten. Vorhandene Dateien, deaktivierte Notiztypen, unvollständige oder mehrdeutige Ziele und explizite relative Pfade behalten das normale Obsidian-Verhalten.
+
+
+
 Hauptkalender, Monatsauswahl und Datumsdialoge verwenden immer den gregorianischen Kalender. Die Oberflächensprache ändert Monatsnamen und Ziffern, nicht das Kalendersystem. Zusätzliche Datumsinformationen wählen Sie über Kalendererweiterungen.
 
 **Vor dem Hinzufügen einer ICS-Datei:** Chrono Notes liest lokale Kalenderdateien, ruft aber keine Online-Abonnements ab und erweitert keine wiederkehrenden Ereignisse mit `RRULE` oder `RDATE`. Übersprungene Termine werden gezählt; Kalender mit Wiederholungsregeln können daher unvollständig aussehen. Pfade außerhalb des Vaults sind nur am Desktop verfügbar.
