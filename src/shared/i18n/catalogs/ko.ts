@@ -471,6 +471,8 @@ export const KO_MESSAGES: MessageCatalog = Object.freeze({
   "settings.extensions.calendarExtensionUnavailable": "현재 Obsidian 실행 환경에서 {calendar}을(를) 사용할 수 없습니다.",
   "settings.extensions.holidayExtensionsDesc": "표시 순서대로 지역 공휴일 자료를 최대 3개 선택하세요. 표시가 겹치면 이 순서를 적용하되 대체 근무일 표시가 우선합니다.",
   "settings.periodic.confirmBeforeCreatingDesc": "아직 노트가 없는 날짜나 기간의 노트를 만들기 전에 확인합니다.",
+  "settings.periodic.createFromLinks": "링크에서 누락된 주기 노트 만들기",
+  "settings.periodic.createFromLinksDesc": "대상 파일이 없는 링크를 열 때 경로 끝의 연속된 세그먼트가 활성화된 주기 노트 패턴 하나와 정확히 일치하는 경우에만 노트를 만듭니다. 기존 파일, 별칭, 명시적 상대 경로 및 모호한 대상은 Obsidian의 기본 동작을 따릅니다.",
   "settings.periodic.createLargerDesc": "예를 들어 일간 노트를 만들 때 해당 주, 월, 연도의 노트도 만들 수 있습니다. 활성화된 유형만 포함되며 기존 노트는 유지됩니다.",
   "settings.periodic.pathsDesc": "경로에는 폴더와 파일 이름이 포함됩니다. 폴더는 /로 구분하고 고정 문자열은 [diary]/YYYY/YYYY-MM-DD처럼 대괄호로 감싸세요. Vault 루트에는 파일 이름 형식만 입력합니다. {{…}} 없이 날짜 형식 코드를 직접 사용하세요.",
   "settings.periodic.pathPatternInvalid": "이 경로 형식은 잘못되었거나 노트의 날짜 또는 기간을 식별할 수 없습니다. 형식 기호, 대소문자, 예시를 확인하세요.",
