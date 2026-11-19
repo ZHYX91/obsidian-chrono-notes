@@ -40,6 +40,12 @@ Faça backup de `data.json` e preserve o arquivo. Substitua apenas os arquivos d
 
 ## Como usar
 
+### Criar notas periódicas ausentes a partir de links
+
+Ative **Criar notas periódicas ausentes a partir de links** em **Settings → Chrono Notes → Periodic notes**. Se o arquivo de destino de um link não existir, uma nota só será criada quando os segmentos finais e consecutivos do caminho corresponderem exatamente a um único padrão de nota periódica ativado. Os aliases são preservados. Arquivos existentes, tipos de nota desativados, destinos incompletos ou ambíguos e caminhos relativos explícitos mantêm o comportamento normal do Obsidian.
+
+
+
 O calendário principal, os seletores de mês e as janelas de data sempre usam o calendário gregoriano. Mudar o idioma traduz os meses e os dígitos, sem trocar o calendário. Use as extensões para adicionar informações de outros calendários.
 
 **Antes de adicionar ICS:** o Chrono Notes lê arquivos locais, mas não busca assinaturas remotas nem expande eventos recorrentes com `RRULE` ou `RDATE`. Os eventos ignorados são contados; assim, um calendário que depende de recorrências pode parecer incompleto. Caminhos fora do Vault funcionam apenas no desktop.
