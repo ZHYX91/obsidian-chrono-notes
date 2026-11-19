@@ -420,6 +420,8 @@ export const AR_MESSAGES = Object.freeze({
   "settings.periodic.behavior": "سلوك الملاحظة الدورية",
   "settings.periodic.confirmBeforeCreating": "تأكيد إنشاء الملاحظة الدورية",
   "settings.periodic.confirmBeforeCreatingDesc": "اطلب التأكيد قبل إنشاء ملاحظة لتاريخ أو فترة ليس لها ملاحظة بعد.",
+  "settings.periodic.createFromLinks": "إنشاء الملاحظات الدورية المفقودة من الروابط",
+  "settings.periodic.createFromLinksDesc": "عند فتح رابط لا يشير إلى ملف موجود، لا تُنشأ ملاحظة إلا إذا طابقت نهايته المتصلة نمطًا واحدًا مفعّلًا من أنماط الملاحظات الدورية. تبقى الروابط الموجودة والأسماء البديلة والمسارات النسبية الصريحة والروابط الملتبسة ضمن سلوك Obsidian المعتاد.",
   "settings.periodic.createFromLinks": "إنشاء الملاحظات الدورية المفقودة عند فتح الروابط",
   "settings.periodic.createFromLinksDesc": "إذا كان اسم الملف أو الجزء الأخير من المسار يشير إلى ملاحظة واحدة من نوع مفعّل، يؤدي فتح الرابط إلى إنشائها باستخدام المسار والقالب المحددين.",
   "settings.periodic.createLarger": "إنشاء ملاحظات الفترات الأكبر أيضًا",
