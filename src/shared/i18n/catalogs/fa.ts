@@ -388,8 +388,6 @@ export const FA_MESSAGES = Object.freeze({
   "settings.periodic.behavior": "رفتار یادداشت دوره ای",
   "settings.periodic.confirmBeforeCreating": "ایجاد یادداشت دوره ای را تأیید کنید",
   "settings.periodic.confirmBeforeCreatingDesc": "پیش از ساخت یادداشت برای تاریخ یا دوره‌ای که هنوز یادداشت ندارد، تأیید بگیرید.",
-  "settings.periodic.createFromLinks": "ساخت یادداشت‌های دوره‌ایِ موجودنبود‌ه از پیوندها",
-  "settings.periodic.createFromLinksDesc": "وقتی پیوندی را باز می‌کنید که فایل مقصد آن وجود ندارد، فقط زمانی یادداشت ساخته می‌شود که بخش‌های پیوستهٔ انتهایی مسیر دقیقاً با یک الگوی فعال یادداشت دوره‌ای مطابقت داشته باشد. فایل‌های موجود، نام‌های مستعار، مسیرهای نسبی صریح و مقصدهای مبهم همچنان با رفتار معمول Obsidian باز می‌شوند.",
   "settings.periodic.createFromLinks": "ساخت یادداشت دوره‌ای هنگام باز کردن پیوند آن",
   "settings.periodic.createFromLinksDesc": "اگر نام فایل یا بخش پایانی مسیر فقط یک یادداشت از نوع فعال را مشخص کند و آن یادداشت هنوز وجود نداشته باشد، با باز کردن پیوند، یادداشت با مسیر و الگوی تعیین‌شده ساخته می‌شود.",
   "settings.periodic.createLarger": "یادداشت دوره‌های بزرگ‌تر را هم بساز",

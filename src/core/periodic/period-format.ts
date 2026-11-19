@@ -1,4 +1,4 @@
-import { DateTime } from "luxon";
+import { DateTime, type DateTimeOptions } from "luxon";
 
 import {
   compileMomentParts,
@@ -44,12 +44,7 @@ export function parsePeriodDate(text: string, format: string, locale: string): D
   const numberingSystem = DateTime.fromMillis(0, { locale, zone: "UTC" })
     .resolvedLocaleOptions().numberingSystem;
   const options = { locale, numberingSystem, zone: "UTC" };
-  if (!parts.some(isExtended)) {
-    const localized = parseLocalizedMonthName(text, parts, options, locale);
-    if (localized !== null) return localized;
-    const parsed = DateTime.fromFormat(text, compileMomentParts(parts), options);
-    return parsed.isValid ? parsed : null;
-  }
+  if (!parts.some(isExtended)) return parseCivilFields(text, parts, options);
   let expression = "";
   const fields: { name: string; token: string }[] = [];
   for (const part of parts) {
@@ -60,7 +55,13 @@ export function parsePeriodDate(text: string, format: string, locale: string): D
     } else {
       const explained = DateTime.fromFormatExplain("", compileMomentParts([part]), options);
       if (explained.regex === undefined) return null;
-      expression += explained.regex.source.replace(/^\^|\$$/g, "");
+      const field = explained.regex.source.slice(1, -1);
+      if (isMonthName(part)) {
+        // Some locales format named months as bare numbers, including Japanese.
+        const numeric = DateTime.fromFormatExplain("", "M", options).regex;
+        if (numeric === undefined) return null;
+        expression += `(?:${field}|${numeric.source.slice(1, -1)})`;
+      } else expression += field;
     }
   }
   const match = new RegExp(`^${expression}$`, "i").exec(text);
@@ -75,46 +76,40 @@ export function parsePeriodDate(text: string, format: string, locale: string): D
     ? { token: null, value: match.groups?.[fields[fieldIndex++]?.name ?? ""] ?? "" }
     : part);
   const hasYear = parts.some((part) => ["YYYY", "YY", "GGGG", "GG"].includes(part.token ?? ""));
-  const nativeFormat = compileMomentParts(nativeParts);
+  if (hasYear) return parseCivilFields(text, nativeParts, options);
   const yearText = DateTime.utc(year).setLocale(locale).toFormat("yyyy");
-  const parseText = hasYear ? text : text + " " + yearText;
-  const parseFormat = hasYear ? nativeFormat : nativeFormat + " yyyy";
-  const parseParts = hasYear ? nativeParts : [...nativeParts, { token: "raw", value: " yyyy" }];
-  const localized = parseLocalizedMonthName(parseText, parseParts, options, locale);
-  if (localized !== null) return localized;
-  const parsed = DateTime.fromFormat(parseText, parseFormat, options);
-  return parsed.isValid ? parsed : null;
+  return parseCivilFields(`${text} ${yearText}`, [
+    ...nativeParts, { token: null, value: " " }, { token: "YYYY", value: "yyyy" },
+  ], options);
 }
 
-function parseLocalizedMonthName(
+function isMonthName(part: MomentFormatPart): boolean {
+  return part.token === "MMM" || part.token === "MMMM";
+}
+
+function parseCivilFields(
   text: string,
   parts: readonly MomentFormatPart[],
-  options: { locale: string; numberingSystem: string; zone: string },
-  locale: string,
+  options: DateTimeOptions,
 ): DateTime<true> | null {
-  const monthParts = parts.filter((part) => part.token === "MMM" || part.token === "MMMM");
-  if (monthParts.length !== 1) return null;
-  const monthPart = monthParts[0];
-  if (monthPart === undefined) return null;
-  const names = Array.from({ length: 12 }, (_, index) => {
-    const month = index + 1;
-    return { month, name: DateTime.utc(2000, month, 1).setLocale(locale).toFormat(monthPart.token ?? "MMMM") };
-  }).sort((left, right) => right.name.length - left.name.length);
-  const expression = new RegExp(names.map(({ name }) => escapeRegExp(name)).join("|"), "iu");
-  const match = expression.exec(text);
-  if (match === null) return null;
-  const matchedName = match[0].toLowerCase();
-  const entry = names.find(({ name }) => name.toLowerCase() === matchedName);
-  if (entry === undefined) return null;
-  const normalizedText = text.slice(0, match.index) + String(entry.month).padStart(2, "0")
-    + text.slice(match.index + match[0].length);
-  const normalizedParts = parts.map((part) =>
-    part.token === "MMM" || part.token === "MMMM" ? { token: "MM", value: "MM" } : part);
-  const parsed = DateTime.fromFormat(normalizedText, compileMomentParts(normalizedParts), options);
-  return parsed.isValid ? parsed : null;
-}
+  const format = compileMomentParts(parts);
+  const parsed = DateTime.fromFormat(text, format, options);
+  if (!parts.some(isMonthName)) return parsed.isValid ? parsed : null;
+  if (parsed.isValid && parsed.toFormat(format) === text) return parsed;
 
-function escapeRegExp(value: string): string {
-  return Array.from(value).map((character) =>
-    "^$.*+?()[]{}|\\".includes(character) ? "\\" + character : character).join("");
+  // Only replace month tokens; year digits and quoted literals may contain the same number.
+  const numericFormat = compileMomentParts(parts.map((part) =>
+    isMonthName(part) ? { token: "M", value: "M" } : part));
+  const numeric = DateTime.fromFormat(text, numericFormat, options);
+  if (numeric.isValid && numeric.toFormat(format) === text) return numeric;
+
+  // A locale's display calendar can change month partway through a Gregorian month.
+  // Preserve the filename emitted for the actual civil day, including localized digits.
+  const { result } = DateTime.fromFormatExplain(text, format, options);
+  if (typeof result?.month !== "number") return null;
+  for (let month = 1; month <= 12; month += 1) {
+    const candidate = DateTime.fromObject({ ...result, month }, options);
+    if (candidate.isValid && candidate.toFormat(format) === text) return candidate;
+  }
+  return null;
 }

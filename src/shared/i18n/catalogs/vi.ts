@@ -471,8 +471,6 @@ export const VI_MESSAGES: MessageCatalog = Object.freeze({
   "settings.extensions.calendarExtensionUnavailable": "{calendar} không có sẵn trong môi trường Obsidian hiện tại.",
   "settings.extensions.holidayExtensionsDesc": "Bật tối đa ba bộ dữ liệu ngày lễ theo thứ tự hiển thị. Khi các ký hiệu trùng nhau, thứ tự này được áp dụng và ngày làm bù được ưu tiên.",
   "settings.periodic.confirmBeforeCreatingDesc": "Hỏi trước khi tạo ghi chú cho một ngày hoặc khoảng thời gian chưa có ghi chú.",
-  "settings.periodic.createFromLinks": "Tạo ghi chú định kỳ còn thiếu từ liên kết",
-  "settings.periodic.createFromLinksDesc": "Khi mở liên kết không có tệp đích, ghi chú chỉ được tạo nếu các đoạn đường dẫn liên tiếp ở cuối khớp chính xác với duy nhất một mẫu ghi chú định kỳ đang bật. Tệp đã tồn tại, bí danh, đường dẫn tương đối được ghi rõ và đích mơ hồ vẫn dùng hành vi mặc định của Obsidian.",
   "settings.periodic.createLargerDesc": "Ví dụ, khi tạo ghi chú hằng ngày, bạn cũng có thể tạo ghi chú cho tuần, tháng và năm tương ứng. Chỉ áp dụng cho các loại đã bật và giữ nguyên ghi chú đã có.",
   "settings.periodic.pathsDesc": "Đường dẫn gồm thư mục và tên tệp. Phân cách thư mục bằng /, đặt văn bản cố định trong ngoặc vuông, chẳng hạn [diary]/YYYY/YYYY-MM-DD. Nếu lưu ngay gốc Vault, chỉ nhập định dạng tên tệp. Dùng trực tiếp mã ngày, không dùng {{…}}.",
   "settings.periodic.pathPatternInvalid": "Định dạng đường dẫn này không hợp lệ hoặc không xác định được ngày hay khoảng thời gian của ghi chú. Hãy kiểm tra mã định dạng, chữ hoa chữ thường và các ví dụ.",

@@ -40,12 +40,6 @@ Faça backup de `data.json` e preserve o arquivo. Substitua apenas os arquivos d
 
 ## Como usar
 
-### Criar notas periódicas ausentes a partir de links
-
-Ative **Criar notas periódicas ausentes a partir de links** em **Settings → Chrono Notes → Periodic notes**. Se o arquivo de destino de um link não existir, uma nota só será criada quando os segmentos finais e consecutivos do caminho corresponderem exatamente a um único padrão de nota periódica ativado. Os aliases são preservados. Arquivos existentes, tipos de nota desativados, destinos incompletos ou ambíguos e caminhos relativos explícitos mantêm o comportamento normal do Obsidian.
-
-
-
 O calendário principal, os seletores de mês e as janelas de data sempre usam o calendário gregoriano. Mudar o idioma traduz os meses e os dígitos, sem trocar o calendário. Use as extensões para adicionar informações de outros calendários.
 
 **Antes de adicionar ICS:** o Chrono Notes lê arquivos locais, mas não busca assinaturas remotas nem expande eventos recorrentes com `RRULE` ou `RDATE`. Os eventos ignorados são contados; assim, um calendário que depende de recorrências pode parecer incompleto. Caminhos fora do Vault funcionam apenas no desktop.
@@ -55,6 +49,10 @@ Configure os tipos de notas, os caminhos e os modelos; depois abra o calendário
 Em uma tela sensível ao toque, mantenha uma data pressionada para abrir o menu e escolha a ação para abrir ou criar a nota diária. Se nenhum menu aparecer, a nota será aberta ou criada quando você soltar o dedo. Um toque prolongado em uma entrada de semana, mês ou outro período abre diretamente a nota correspondente.
 
 Selecione uma data na visão mensal para ver abaixo da grade o estado da nota, detalhes do calendário, feriados e todos os eventos ICS com suas fontes. Se a confirmação de criação estiver ativada, a janela mostra o caminho de destino e as notas de períodos maiores que serão criadas ou mantidas.
+
+Em **Chrono Notes → Notas periódicas**, você pode ativar **Criar notas periódicas que faltam ao abrir um link**. A opção vem desativada. Arquivos existentes abrem normalmente. Se o arquivo não existe, a nota só é criada quando o nome ou os últimos segmentos completos do caminho correspondem a um único padrão ativo. O alias continua visível. Tipos desativados, destinos incompletos ou ambíguos e caminhos explicitamente relativos continuam a cargo do Obsidian.
+
+Com o padrão diário `[Journal]/YYYY-MM-DD/YYYY-MM-DD`, tanto `[[2026-11-19|Hoje]]` quanto `[[2026-11-19/2026-11-19]]` podem criar a nota diária. `[[Meetings/2026-11-19]]` continua sendo um link comum. `[[2026-11-19#Plan]]` e `[[2026-11-19#^todo]]` criam a nota correspondente e passam a referência do título ou do bloco ao Obsidian. `[[#Plan]]` aponta para a nota atual.
 
 ### Tarefas no calendário
 
@@ -84,7 +82,7 @@ Modelos aceitam `{{date:DEC[s]}}`, `{{date:[C]CEN}}` e `{{start:YYYY}}–{{end:Y
 
 ### Notas de intervalo
 
-Primeiro, escolha uma pasta de destino em **Configurações → Chrono Notes → Notas de intervalo**. No computador, arraste de uma data inicial até outra data final no calendário mensal para criar a nota. Você também pode escolher a ação de criação no menu de uma data ou na paleta de comandos e preencher as datas. A criação exige pelo menos dois dias do calendário. Se as datas estiverem invertidas, elas serão colocadas na ordem correta.
+Primeiro, escolha uma pasta de destino em **Configurações → Chrono Notes → Notas de intervalo**. No computador, arraste de uma data inicial até outra data final no calendário mensal para criar a nota. No menu de uma data, escolha **Criar nota de intervalo**. Na paleta de comandos, escolha **Abrir lista de notas de intervalo** e clique em **Criar nota de intervalo**. A criação exige pelo menos dois dias do calendário. Se as datas estiverem invertidas, elas serão colocadas na ordem correta.
 
 Para mostrar uma nota existente como um intervalo, adicione estas propriedades no início do arquivo Markdown:
 
@@ -104,7 +102,7 @@ Quando `chrono-notes` não existe, a nota só é reconhecida no escopo configura
 
 ## Configurações
 
-Em Geral estão o guia de uso e a opção de relatar um problema. Ao mudar uma extensão de calendário ou feriados, a aba atual continua visível e o foco do teclado permanece no controle usado.
+Em Geral estão o guia de uso e a opção de relatar um problema.
 
 Escolha idioma, início da semana, formatos de data, caminhos e modelos. Alterar o idioma dos nomes de arquivos não renomeia notas existentes: confira a prévia do caminho. Há configurações separadas para aparência, tarefas, estatísticas e notas de intervalo.
 

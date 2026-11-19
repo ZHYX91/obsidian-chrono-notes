@@ -396,8 +396,6 @@ export const HE_MESSAGES = Object.freeze({
   "settings.periodic.behavior": "התנהגות הערה תקופתית",
   "settings.periodic.confirmBeforeCreating": "אשר את יצירת הערה תקופתית",
   "settings.periodic.confirmBeforeCreatingDesc": "בקשת אישור לפני יצירת הערה לתאריך או לתקופה שעדיין אין להם הערה.",
-  "settings.periodic.createFromLinks": "יצירת הערות תקופתיות חסרות מקישורים",
-  "settings.periodic.createFromLinksDesc": "בעת פתיחת קישור שאין לו קובץ יעד, תיווצר הערה רק אם מקטעי הנתיב הרציפים שבסופו תואמים בדיוק לתבנית אחת של הערה תקופתית שמופעלת. קבצים קיימים, כינויים, נתיבים יחסיים מפורשים ויעדים עמומים ימשיכו להשתמש בהתנהגות הרגילה של Obsidian.",
   "settings.periodic.createFromLinks": "יצירת הערות תקופתיות חסרות בעת פתיחת קישור",
   "settings.periodic.createFromLinksDesc": "אם שם הקובץ או סוף הנתיב מצביעים על הערה אחת מסוג פעיל, פתיחת הקישור תיצור אותה לפי הנתיב והתבנית שהוגדרו.",
   "settings.periodic.createLarger": "יצירת הערות גם לתקופות גדולות יותר",

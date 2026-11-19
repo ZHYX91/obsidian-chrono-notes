@@ -40,12 +40,6 @@ Eine vorhandene `data.json` sichern und behalten; nur die drei Programmdateien e
 
 ## Verwendung
 
-### Fehlende periodische Notizen über Links erstellen
-
-Aktiviere **Fehlende periodische Notizen über Links erstellen** unter **Settings → Chrono Notes → Periodic notes**. Wenn die Zieldatei eines Links nicht existiert, wird nur dann eine Notiz erstellt, wenn die zusammenhängenden letzten Pfadsegmente genau einem aktivierten Muster für periodische Notizen entsprechen. Aliase bleiben erhalten. Vorhandene Dateien, deaktivierte Notiztypen, unvollständige oder mehrdeutige Ziele und explizite relative Pfade behalten das normale Obsidian-Verhalten.
-
-
-
 Hauptkalender, Monatsauswahl und Datumsdialoge verwenden immer den gregorianischen Kalender. Die Oberflächensprache ändert Monatsnamen und Ziffern, nicht das Kalendersystem. Zusätzliche Datumsinformationen wählen Sie über Kalendererweiterungen.
 
 **Vor dem Hinzufügen einer ICS-Datei:** Chrono Notes liest lokale Kalenderdateien, ruft aber keine Online-Abonnements ab und erweitert keine wiederkehrenden Ereignisse mit `RRULE` oder `RDATE`. Übersprungene Termine werden gezählt; Kalender mit Wiederholungsregeln können daher unvollständig aussehen. Pfade außerhalb des Vaults sind nur am Desktop verfügbar.
@@ -55,6 +49,10 @@ Stellen Sie in Chrono Notes die gewünschten Notizarten, Pfade und Vorlagen ein 
 Auf einem Touchscreen öffnet langes Drücken auf ein Datum dessen Menü. Wählen Sie dort die Aktion zum Öffnen oder Erstellen der Tagesnotiz. Erscheint kein Menü, wird die Tagesnotiz beim Loslassen geöffnet oder erstellt. Langes Drücken auf einen Wochen-, Monats- oder anderen Periodeneintrag öffnet die zugehörige Notiz direkt.
 
 Wählen Sie in der Monatsansicht ein Datum, um darunter Notizstatus, Kalenderdetails, Feiertage und die vollständige ICS-Terminliste mit Quellen zu lesen. Bei aktivierter Erstellungsbestätigung zeigt der Dialog den Zielpfad sowie größere Periodennotizen, die erstellt oder beibehalten werden.
+
+Unter **Chrono Notes → Periodische Notizen** können Sie **Fehlende periodische Notizen über Links erstellen** einschalten. Die Option ist standardmäßig aus. Vorhandene Dateien öffnen sich wie gewohnt. Fehlt die Datei, wird eine Notiz angelegt, wenn der Dateiname oder mehrere vollständige Pfadsegmente am Ende genau einem aktiven Muster entsprechen. Der angezeigte Alias bleibt erhalten. Deaktivierte Typen, unvollständige oder mehrdeutige Ziele und ausdrücklich relative Pfade behandelt Obsidian wie gewohnt.
+
+Beim Tagesmuster `[Journal]/YYYY-MM-DD/YYYY-MM-DD` können `[[2026-11-19|Heute]]` und `[[2026-11-19/2026-11-19]]` die Tagesnotiz anlegen. `[[Meetings/2026-11-19]]` bleibt ein gewöhnlicher Link. Bei `[[2026-11-19#Plan]]` und `[[2026-11-19#^todo]]` wird die passende Notiz angelegt und Obsidian öffnet die angegebene Überschrift oder Blockreferenz. `[[#Plan]]` verweist in die aktuelle Notiz.
 
 ### Aufgaben im Kalender
 
@@ -84,7 +82,7 @@ Vorlagen nutzen dieselben Formate: `{{date:DEC[s]}}`, `{{date:[C]CEN}}`, `{{star
 
 ### Zeitraumnotizen
 
-Wählen Sie zuerst unter **Einstellungen → Chrono Notes → Zeitraumnotizen** einen Zielordner. Auf dem Desktop können Sie im Monatskalender vom Anfangsdatum zu einem anderen Enddatum ziehen, um eine Zeitraumnotiz zu erstellen. Alternativ wählen Sie die Aktion zum Erstellen einer Zeitraumnotiz im Datumsmenü oder in der Befehlspalette und geben die Daten ein. Eine neue Zeitraumnotiz muss mindestens zwei Kalendertage umfassen. Vertauschte Anfangs- und Enddaten werden automatisch in die richtige Reihenfolge gebracht.
+Wählen Sie zuerst unter **Einstellungen → Chrono Notes → Zeitraumnotizen** einen Zielordner. Auf dem Desktop können Sie im Monatskalender vom Anfangsdatum zu einem anderen Enddatum ziehen, um eine Zeitraumnotiz zu erstellen. Wählen Sie im Datumsmenü **Zeitraumnotiz erstellen**. In der Befehlspalette wählen Sie zuerst **Liste der Zeitraumnotizen öffnen** und dann **Zeitraumnotiz erstellen**. Eine neue Zeitraumnotiz muss mindestens zwei Kalendertage umfassen. Vertauschte Anfangs- und Enddaten werden automatisch in die richtige Reihenfolge gebracht.
 
 Damit eine vorhandene Notiz im Kalender als Zeitraum erscheint, fügen Sie am Anfang der Markdown-Datei diese Eigenschaften ein:
 
@@ -104,7 +102,7 @@ Ohne die Eigenschaft `chrono-notes` wird eine Notiz nur im konfigurierten Suchbe
 
 ## Einstellungen
 
-Unter Allgemein finden Sie die Anleitung und die Möglichkeit, ein Problem zu melden. Beim Ändern einer Kalender- oder Feiertagserweiterung bleibt der aktuelle Reiter sichtbar und der Tastaturfokus beim gerade verwendeten Steuerelement.
+Unter Allgemein finden Sie die Anleitung und die Möglichkeit, ein Problem zu melden.
 
 Unter Allgemein Sprache, Wochenbeginn, Datumsanzeige und Vorlagen wählen. Unter Periodische Notizen die Dateipfade prüfen, bevor vorhandene Namen durch eine andere Pfadsprache nicht mehr gefunden werden. Darstellung, Aufgaben, Statistiken, Erweiterungen und Zeitraumnotizen haben eigene Einstellungsbereiche.
 

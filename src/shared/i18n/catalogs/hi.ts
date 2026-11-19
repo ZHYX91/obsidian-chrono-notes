@@ -388,8 +388,6 @@ export const HI_MESSAGES = Object.freeze({
   "settings.periodic.behavior": "आवधिक नोट व्यवहार",
   "settings.periodic.confirmBeforeCreating": "आवधिक-नोट निर्माण की पुष्टि करें",
   "settings.periodic.confirmBeforeCreatingDesc": "जिस तारीख़ या अवधि का नोट अभी नहीं है, उसका नोट बनाने से पहले पुष्टि माँगें।",
-  "settings.periodic.createFromLinks": "लिंक से छूटे हुए आवधिक नोट बनाएँ",
-  "settings.periodic.createFromLinksDesc": "ऐसा लिंक खोलने पर जिसका लक्ष्य फ़ाइल मौजूद नहीं है, नोट तभी बनेगा जब पथ के लगातार अंतिम खंड किसी एक सक्षम आवधिक-नोट पैटर्न से ठीक-ठीक मेल खाते हों। मौजूदा फ़ाइलें, उपनाम, स्पष्ट सापेक्ष पथ और अस्पष्ट लक्ष्य Obsidian के सामान्य व्यवहार का उपयोग करते हैं।",
   "settings.periodic.createFromLinks": "लिंक से अनुपलब्ध आवधिक नोट बनाएँ",
   "settings.periodic.createFromLinksDesc": "अगर फ़ाइल के नाम या पथ के अंतिम हिस्सों से किसी चालू प्रकार के एक ही नोट की पहचान होती है और वह अभी मौजूद नहीं है, तो लिंक खोलने पर तय पथ और टेम्पलेट से वह नोट बनता है।",
   "settings.periodic.createLarger": "बड़ी अवधियों के नोट भी बनाएँ",

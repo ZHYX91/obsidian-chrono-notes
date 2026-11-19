@@ -472,8 +472,6 @@ export const FR_MESSAGES: MessageCatalog = Object.freeze({
   "settings.extensions.calendarExtensionUnavailable": "{calendar} n’est pas disponible dans cette version d’Obsidian.",
   "settings.extensions.holidayExtensionsDesc": "Activez au plus trois listes régionales de jours fériés dans l’ordre d’affichage. En cas de chevauchement, cet ordre s’applique et les jours travaillés exceptionnels sont prioritaires.",
   "settings.periodic.confirmBeforeCreatingDesc": "Demander confirmation avant de créer une note pour une date ou une période qui n’en a pas encore.",
-  "settings.periodic.createFromLinks": "Créer les notes périodiques manquantes à partir des liens",
-  "settings.periodic.createFromLinksDesc": "Lorsqu’un lien ne mène à aucun fichier existant, une note est créée uniquement si les derniers segments consécutifs du chemin correspondent exactement à un seul modèle de note périodique activé. Les fichiers existants, alias, chemins relatifs explicites et cibles ambiguës conservent le comportement habituel d’Obsidian.",
   "settings.periodic.createLargerDesc": "Par exemple, créer une note quotidienne peut aussi créer ses notes hebdomadaire, mensuelle et annuelle. Seuls les types activés sont inclus ; les notes existantes sont conservées.",
   "settings.periodic.pathsDesc": "Un chemin comprend des dossiers et un nom de fichier. Séparez les dossiers par / et entourez le texte fixe de crochets, par exemple [diary]/YYYY/YYYY-MM-DD. À la racine du coffre, indiquez seulement le format du nom. Utilisez directement les codes de date, sans {{…}}.",
   "settings.periodic.pathPatternInvalid": "Ce format de chemin est invalide ou ne permet pas d’identifier la date ou la période de la note. Vérifiez les codes de format, les majuscules et les exemples.",

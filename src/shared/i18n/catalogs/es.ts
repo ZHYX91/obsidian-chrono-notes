@@ -472,8 +472,6 @@ export const ES_MESSAGES: MessageCatalog = Object.freeze({
   "settings.extensions.calendarExtensionUnavailable": "{calendar} no está disponible en este entorno de Obsidian.",
   "settings.extensions.holidayExtensionsDesc": "Activa hasta tres conjuntos regionales de festivos en el orden en que se mostrarán. Si hay marcadores superpuestos, se respeta el orden, dando prioridad a los días laborables excepcionales.",
   "settings.periodic.confirmBeforeCreatingDesc": "Pedir confirmación antes de crear una nota para una fecha o un período que aún no tiene nota.",
-  "settings.periodic.createFromLinks": "Crear notas periódicas que faltan desde enlaces",
-  "settings.periodic.createFromLinksDesc": "Al abrir un enlace cuyo archivo de destino no existe, solo se crea una nota si los segmentos finales y consecutivos de la ruta coinciden con un único patrón de nota periódica habilitado. Los archivos existentes, alias, rutas relativas explícitas y destinos ambiguos mantienen el comportamiento normal de Obsidian.",
   "settings.periodic.createLargerDesc": "Por ejemplo, al crear una nota diaria también se pueden crear sus notas semanal, mensual y anual. Solo se incluyen los tipos activados y se conservan las notas existentes.",
   "settings.periodic.pathsDesc": "Las rutas contienen carpetas y nombre de archivo. Separa las carpetas con / y encierra el texto fijo entre corchetes, por ejemplo [diary]/YYYY/YYYY-MM-DD. En la raíz del Vault, indica solo el formato del nombre. Usa directamente los códigos de fecha, sin {{…}}.",
   "settings.periodic.pathPatternInvalid": "Este formato de ruta no es válido o no permite identificar la fecha o el período de la nota. Comprueba los códigos de formato, las mayúsculas y los ejemplos.",

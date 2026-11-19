@@ -379,8 +379,6 @@ export const ZH_CN_MESSAGES = {
   "settings.periodic.behavior": "周期笔记行为",
   "settings.periodic.confirmBeforeCreating": "创建周期笔记前确认",
   "settings.periodic.confirmBeforeCreatingDesc": "首次创建某个日期或周期的笔记前，先询问是否创建。",
-  "settings.periodic.createFromLinks": "通过链接创建缺失的周期笔记",
-  "settings.periodic.createFromLinksDesc": "点击目标文件不存在的链接时，只有路径末尾连续的完整路径段恰好匹配一种已启用的周期笔记格式，才会创建笔记。已有文件、别名、明确的相对路径和无法唯一判断的目标仍交给 Obsidian 正常处理。",
   "settings.periodic.createFromLinks": "点击链接时创建缺失的周期笔记",
   "settings.periodic.createFromLinksDesc": "如果链接中的文件名或路径末尾能唯一确定一篇周期笔记，点击即可按配置的路径和模板创建。只匹配已启用的笔记类型。",
   "settings.periodic.createLarger": "同时创建所属周期的笔记",

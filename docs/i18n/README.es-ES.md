@@ -40,12 +40,6 @@ Conserva una copia de `data.json` y reemplaza solo los archivos del plugin. Borr
 
 ## Uso
 
-### Crear notas periódicas que faltan desde enlaces
-
-Activa **Crear notas periódicas que faltan desde enlaces** en **Settings → Chrono Notes → Periodic notes**. Si el archivo de destino de un enlace no existe, solo se crea una nota cuando los segmentos finales y consecutivos de la ruta coinciden con un único patrón de nota periódica habilitado. Los alias se conservan. Los archivos existentes, los tipos de nota desactivados, los destinos incompletos o ambiguos y las rutas relativas explícitas mantienen el comportamiento normal de Obsidian.
-
-
-
 El calendario principal, los selectores de mes y los diálogos de fecha siempre usan el calendario gregoriano. Cambiar el idioma traduce los meses y los dígitos, pero no cambia el calendario. Las extensiones permiten añadir información de otros calendarios por separado.
 
 **Antes de añadir ICS:** Chrono Notes lee archivos locales, pero no descarga suscripciones remotas ni desarrolla los eventos repetidos con `RRULE` o `RDATE`. Cuenta los eventos omitidos; por eso un calendario basado en recurrencias puede parecer incompleto. Las rutas fuera del Vault solo funcionan en escritorio.
@@ -55,6 +49,10 @@ Configura los tipos de notas, sus rutas y plantillas, y abre el calendario desde
 En una pantalla táctil, mantén pulsada una fecha para abrir su menú y elige la acción para abrir o crear la nota diaria. Si no aparece ningún menú, la nota se abre o se crea al levantar el dedo. Mantener pulsada una entrada de semana, mes u otro periodo abre directamente su nota.
 
 Selecciona una fecha en la vista mensual para leer debajo de la cuadrícula el estado de la nota, los detalles del calendario, los festivos y todos los eventos ICS con sus fuentes. Si está activada la confirmación de creación, el diálogo muestra la ruta de destino y las notas de períodos mayores que se crearán o conservarán.
+
+En **Chrono Notes → Notas periódicas** puedes activar **Crear notas periódicas que falten al abrir un enlace**. La opción está desactivada de forma predeterminada. Los archivos existentes se abren como siempre. Si falta el archivo, solo se crea una nota si el nombre o los últimos segmentos completos de su ruta coinciden con un único patrón habilitado. Se conserva el alias. Obsidian sigue gestionando los tipos desactivados, los destinos incompletos o ambiguos y las rutas explícitamente relativas.
+
+Con el patrón diario `[Journal]/YYYY-MM-DD/YYYY-MM-DD`, tanto `[[2026-11-19|Hoy]]` como `[[2026-11-19/2026-11-19]]` pueden crear la nota diaria. `[[Meetings/2026-11-19]]` sigue siendo un enlace normal. `[[2026-11-19#Plan]]` y `[[2026-11-19#^todo]]` crean la nota correspondiente y pasan a Obsidian la referencia al encabezado o al bloque. `[[#Plan]]` apunta dentro de la nota actual.
 
 ### Tareas en el calendario
 
@@ -84,7 +82,7 @@ Las plantillas admiten los formatos `{{date:DEC[s]}}`, `{{date:[C]CEN}}` y `{{st
 
 ### Notas de intervalo
 
-Primero elige una carpeta de destino en **Ajustes → Chrono Notes → Notas de intervalo**. En el ordenador, arrastra desde una fecha de inicio hasta otra fecha de fin en el calendario mensual para crear una nota de intervalo. También puedes elegir la acción de creación en el menú de una fecha o en la paleta de comandos y escribir las fechas. Para crear una nota se necesitan al menos dos días del calendario. Si las fechas están invertidas, se ordenan automáticamente.
+Primero elige una carpeta de destino en **Ajustes → Chrono Notes → Notas de intervalo**. En el ordenador, arrastra desde una fecha de inicio hasta otra fecha de fin en el calendario mensual para crear una nota de intervalo. En el menú de una fecha, elige **Crear nota de intervalo**. Desde la paleta de comandos, elige **Abrir lista de notas de intervalo** y pulsa **Crear nota de intervalo**. Para crear una nota se necesitan al menos dos días del calendario. Si las fechas están invertidas, se ordenan automáticamente.
 
 Para que una nota existente aparezca como un intervalo, añade estas propiedades al principio de su archivo Markdown:
 
@@ -104,7 +102,7 @@ Si falta la propiedad `chrono-notes`, la nota solo se reconoce dentro del ámbit
 
 ## Configuración
 
-En General encontrarás la guía de uso y la opción de informar de un problema. Al cambiar una extensión de calendario o festivos, la pestaña actual sigue visible y el foco del teclado permanece en el control utilizado.
+En General encontrarás la guía de uso y la opción de informar de un problema.
 
 Elige idioma, inicio de semana, formato de fecha, rutas y plantillas. Cambiar el idioma usado en las rutas no cambia los nombres de los archivos existentes: comprueba primero la vista previa. Hay ajustes específicos para apariencia, tareas, estadísticas y notas de intervalo.
 

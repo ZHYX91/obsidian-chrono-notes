@@ -49,24 +49,22 @@ Back up and preserve `Vault/.obsidian/plugins/chrono-notes/data.json` when it ex
 
 ## Usage
 
-### Create missing periodic notes from links
-
-Enable **Create missing periodic notes from links** under **Settings → Chrono Notes → Periodic notes**. When a link has no existing target, Chrono Notes creates a note only if the target uniquely matches the consecutive trailing path segments of an enabled periodic-note pattern. Aliases stay intact. Existing files, disabled note types, incomplete or ambiguous targets, and explicit relative links keep Obsidian’s normal behavior. For example, `[[2026-11-19|Today]]` can create the configured daily note, while `[[Meetings/2026-11-19]]` remains a normal link.
-
-
-
-The main calendar, month selectors, and date dialogs always use the Gregorian calendar. Changing the interface language translates month names and digits; it does not select a different calendar. Choose calendar extensions separately to show additional date information.
-
-**Before adding ICS events:** Chrono Notes reads local calendar files, not remote subscriptions, and does not expand `RRULE` or `RDATE` recurring events. Skipped events are counted, so a calendar relying on recurrence may look incomplete. A source path outside the Vault is desktop-only.
-
-**First time:** Choose your periodic-note types and note paths under Chrono Notes settings, then open the calendar from the ribbon. Click a date to select it; double-click or press Enter to open or create its note. On a touch screen, long-press a date and choose the note action from its menu. Selecting a date alone never creates a note.
+**Open your first note**
 
 1. Enable the periodic-note types you use and confirm their path patterns in Chrono Notes settings.
 2. Open the calendar from the ribbon or command palette.
 3. Optionally enable calendar and holiday extensions or add local ICS sources.
 4. Click a date to select it; double-click or press Enter to open or create its periodic note. Right-click opens date actions; when ICS events exist, **View calendar events** shows the complete event list. On a touch screen, long-press a date to open its menu. If no menu appears, releasing your finger opens or creates the daily note. Long-pressing a week, month, or other period entry opens its note directly.
 
+The main calendar, month selectors, and date dialogs always use the Gregorian calendar. Changing the interface language translates month names and digits; it does not select a different calendar. Choose calendar extensions separately to show additional date information.
+
+**Before adding ICS events:** Chrono Notes reads local calendar files, not remote subscriptions, and does not expand `RRULE` or `RDATE` recurring events. Skipped events are counted, so a calendar relying on recurrence may look incomplete. A source path outside the Vault is desktop-only.
+
 Select a date in Month view to read its note status, calendar details, holidays, and complete ICS event list with sources below the grid. When creation confirmation is enabled, the dialog shows the target path and any larger-period notes that will be created or kept.
+
+In **Chrono Notes → Periodic notes**, turn on **Create missing periodic notes from links** (off by default). Existing files open normally. A link to a missing file creates a periodic note only when its name or its final, consecutive path segments identify exactly one enabled pattern. Aliases keep their display text. Disabled types, incomplete or ambiguous paths and explicit relative paths follow Obsidian’s normal behavior.
+
+With the daily pattern `[Journal]/YYYY-MM-DD/YYYY-MM-DD`, `[[2026-11-19|Today]]` and `[[2026-11-19/2026-11-19]]` can create the daily note. `[[Meetings/2026-11-19]]` stays a regular link. `[[2026-11-19#Plan]]` and `[[2026-11-19#^todo]]` create the matching note and pass the heading or block reference to Obsidian. `[[#Plan]]` points inside the current note.
 
 ### Tasks on the calendar
 
@@ -95,7 +93,7 @@ Templates use the same formats: `{{date:DEC[s]}}`, `{{date:[C]CEN}}`, and `{{sta
 
 ### Range notes
 
-First choose a destination folder under **Settings → Chrono Notes → Range notes**. On desktop, drag from a start date to a different end date in the month calendar to create a range note. You can also choose **Create range note** from a date menu or the command palette, then enter the dates. Creation requires at least two calendar days; reversed dates are put in chronological order.
+First choose a destination folder under **Settings → Chrono Notes → Range notes**. On desktop, drag from a start date to a different end date in the month calendar to create a range note. In a date menu, choose **Create range note**. From the command palette, choose **Open range note list**, then **Create range note**. Creation requires at least two calendar days; reversed dates are put in chronological order.
 
 To make an existing note appear as a range, add these properties at the top of its Markdown file:
 
@@ -117,13 +115,13 @@ not modified automatically.
 
 ## Settings
 
-General settings includes the User guide and Report an issue. Changing a calendar or holiday extension keeps the current settings tab visible and keyboard focus on the control you just used.
+General settings includes the User guide and Report an issue.
 
 Settings cover periodic-note paths and templates, calendar and holiday extensions, task and statistics display, local ICS sources, time-range notes, and Obsidian Date and Date & time property display. Plugin settings are stored in `data.json`; note content and properties remain in the Vault.
 
 ## Limitations
 
-- ICS sources are local read-only files; remote calendar subscriptions are not fetched directly. One refresh reads at most 32 configured sources by default and reports any excess sources as omitted. Recurring `RRULE`/`RDATE` events are currently skipped and counted instead of being expanded. Events with invalid or unsupported time-zone definitions are also skipped and reported.
+- ICS sources are local read-only files; remote calendar subscriptions are not fetched directly. One refresh reads at most 32 configured sources by default and reports any excess sources as omitted. Recurring `RRULE`/`RDATE` events are currently skipped and counted instead of being expanded. Events with invalid or unsupported time-zone definitions are also skipped and reported. [Supported ICS time zones](https://github.com/ZHYX91/obsidian-chrono-notes/blob/main/docs/calendar-boundaries.md)
 - Holiday availability depends on verified official data. Unpublished future schedules are shown as unavailable rather than predicted.
 - Calendar extensions change the display only. Note names, date navigation, and task dates still use the Gregorian calendar. Extensions that Obsidian's runtime cannot provide are hidden.
 - Mobile interactions and layouts can vary with the Obsidian app, device, and input method.

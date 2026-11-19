@@ -31,6 +31,14 @@ describe("missing periodic link targets", () => {
     expect(matchMissingPeriodicLink(link, [daily], options)).toBeNull();
   });
 
+  it("resolves the daily path and partial path printed in the guides", () => {
+    const rule = { ...daily, pattern: "[Journal]/YYYY-MM-DD/YYYY-MM-DD" };
+    const expected = { noteType: "daily", date, path: "Journal/2026-11-19/2026-11-19.md" };
+    expect(matchMissingPeriodicLink("2026-11-19", [rule], options)).toEqual(expected);
+    expect(matchMissingPeriodicLink("2026-11-19/2026-11-19", [rule], options)).toEqual(expected);
+    expect(matchMissingPeriodicLink("Meetings/2026-11-19", [rule], options)).toBeNull();
+  });
+
   it("requires enough identity in the supplied segments themselves", () => {
     const rule = { ...daily, pattern: "[Journal]/YYYY/YYYY-MM/DD" };
     expect(matchMissingPeriodicLink("19", [rule], options)).toBeNull();

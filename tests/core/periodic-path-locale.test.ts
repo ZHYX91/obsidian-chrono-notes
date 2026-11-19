@@ -53,7 +53,17 @@ describe("periodic path locale", () => {
       .toEqual(getPeriodAnchor(date, "monthly", "monday"));
   });
 
-
+  it.each([
+    ["ja", "[2]/[C]CEN/YYYY-MMMM-DD", { year: 2026, month: 2, day: 2 }],
+    ["fa", "[C]CEN/YYYY-MMM-DD", { year: 2026, month: 9, day: 29 }],
+    ["fa", "YYYY-MMMM-DD", { year: 2026, month: 1, day: 31 }],
+  ] as const)("round-trips %s calendar boundaries and repeated digits in %s", (locale, pattern, selected) => {
+    const options = { locale: "en", weekStartDay: "monday" } as const;
+    const rule = { noteType: "daily" as const, pattern, pathLocale: locale };
+    const path = formatPeriodicNotePath(selected, rule, options);
+    expect(path).not.toBeNull();
+    expect(parsePeriodicNotePath(path!, rule, options)).toEqual(selected);
+  });
 
   it("keeps localized filenames stable when the interface locale changes", () => {
     const englishUi = formatPeriodicNotePath(date, rule, {
