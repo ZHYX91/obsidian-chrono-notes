@@ -43,6 +43,17 @@ export function renderPeriodicSettingsSection(
         });
     });
   new Setting(containerEl)
+    .setName(t("settings.periodic.createFromLinks"))
+    .setDesc(t("settings.periodic.createFromLinksDesc"))
+    .addToggle((toggle) => {
+      toggle
+        .setValue(context.host.settings.createMissingPeriodicNotesFromLinks)
+        .onChange(async (enabled) => {
+          context.host.settings.createMissingPeriodicNotesFromLinks = enabled;
+          await context.persistSettings();
+        });
+    });
+  new Setting(containerEl)
     .setName(t("settings.periodic.createLarger"))
     .setDesc(t("settings.periodic.createLargerDesc"))
     .addToggle((toggle) => {

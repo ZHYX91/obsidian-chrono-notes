@@ -2,6 +2,10 @@
 
 Notable changes to Chrono Notes are documented in this file. The repository's numeric Git tags are the evidence for released versions; an entry without a corresponding local tag remains unreleased even if the manifests already contain that version.
 
+## Unreleased
+
+- Optionally create a missing periodic note from a link in a note or its Properties. Short links can match the last segments of a configured path, including a filename alone when it identifies one period.
+
 ## 0.8.4
 
 - Respect explicit Chinese script subtags and ignore locale extensions when following Obsidian's language; unknown host languages fall back safely to English.

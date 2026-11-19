@@ -19,7 +19,8 @@ vi.mock("obsidian", () => ({
       containerEl.append(this.settingEl);
     }
 
-    setName(): this {
+    setName(name: string): this {
+      this.settingEl.createDiv({ cls: "setting-item-name", text: name });
       return this;
     }
 
@@ -33,6 +34,14 @@ vi.mock("obsidian", () => ({
 
     addToggle(configure: (toggle: unknown) => void): this {
       const toggle = createChainableControl();
+      const checkbox = document.createElement("input");
+      checkbox.type = "checkbox";
+      this.controlEl.append(checkbox);
+      toggle.setValue = (value: boolean) => { checkbox.checked = value; return toggle; };
+      toggle.onChange = (callback: (value: boolean) => void) => {
+        checkbox.addEventListener("change", () => callback(checkbox.checked));
+        return toggle;
+      };
       configure(toggle);
       return this;
     }
@@ -167,6 +176,33 @@ describe("imperative settings cleanup", () => {
     expect([...mocks.periodicClose, ...mocks.markdownClose].every(
       (close) => close.mock.calls.length === 1,
     )).toBe(true);
+  });
+
+  it("saves the missing-link switch beside creation confirmation independently of date properties", () => {
+    const context = createContext();
+    const saved: boolean[] = [];
+    vi.mocked(context.persistSettings).mockImplementation(async () => {
+      saved.push(context.host.settings.createMissingPeriodicNotesFromLinks);
+    });
+    const root = document.body.appendChild(document.createElement("div"));
+    const cleanup = renderPeriodicSettingsSection(root, context);
+    try {
+      const labels = Array.from(root.querySelectorAll(".setting-item-name"));
+      const label = labels.find((item) => item.textContent === "Create missing periodic notes from links")!;
+      const row = label.parentElement!;
+      expect(row.previousElementSibling?.querySelector(".setting-item-name")?.textContent)
+        .toBe("Confirm periodic-note creation");
+      const checkbox = row.querySelector<HTMLInputElement>('input[type="checkbox"]')!;
+      expect(checkbox.checked).toBe(false);
+      checkbox.click();
+      expect(context.host.settings.interceptPropertyDateClicks).toBe(true);
+      checkbox.click();
+      expect(saved).toEqual([true, false]);
+      expect(context.host.settings.interceptPropertyDateClicks).toBe(true);
+    } finally {
+      cleanup();
+      root.remove();
+    }
   });
 
   it("shows and edits each period's own filename language without changing another period", async () => {
