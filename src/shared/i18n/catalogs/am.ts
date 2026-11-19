@@ -388,6 +388,8 @@ export const AM_MESSAGES = Object.freeze({
   "settings.periodic.behavior": "ወቅታዊ ማስታወሻ ባህሪ",
   "settings.periodic.confirmBeforeCreating": "ወቅታዊ-ማስታወሻ መፍጠርን ያረጋግጡ",
   "settings.periodic.confirmBeforeCreatingDesc": "ማስታወሻ ለሌለው ቀን ወይም ጊዜ ክፍል ማስታወሻ ከመፍጠር በፊት ማረጋገጫ ይጠይቁ።",
+  "settings.periodic.createFromLinks": "የጎደሉ ወቅታዊ ማስታወሻዎችን ከአገናኞች ፍጠር",
+  "settings.periodic.createFromLinksDesc": "ነባር ፋይል የሌለውን አገናኝ ክፈት፤ ዒላማው በነቃ የወቅታዊ ማስታወሻ ቅርጸት የመጨረሻ ተከታታይ የመንገድ ክፍሎችን በትክክል አንድ ጊዜ ከለየ ብቻ ይፈጠራል።",
   "settings.periodic.createFromLinks": "ከአገናኞች የጎደሉ ወቅታዊ ማስታወሻዎችን መፍጠር",
   "settings.periodic.createFromLinksDesc": "የፋይሉ ስም ወይም የዱካው የመጨረሻ ክፍሎች ከነቁት አይነቶች አንድ ማስታወሻ ብቻ ከለዩ፣ አገናኙን ሲከፍቱ ማስታወሻው በተዋቀረው ዱካ እና አብነት ይፈጠራል።",
   "settings.periodic.createLarger": "ለትላልቅ ጊዜ ክፍሎችም ማስታወሻ ፍጠር",
