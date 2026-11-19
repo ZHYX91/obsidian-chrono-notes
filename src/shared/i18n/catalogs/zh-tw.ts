@@ -380,6 +380,8 @@ export const ZH_TW_MESSAGES = {
   "settings.periodic.behavior": "週期筆記行為",
   "settings.periodic.confirmBeforeCreating": "建立週期筆記前確認",
   "settings.periodic.confirmBeforeCreatingDesc": "首次建立某個日期或週期的筆記前，先詢問是否建立。",
+  "settings.periodic.createFromLinks": "透過連結建立缺少的週期筆記",
+  "settings.periodic.createFromLinksDesc": "點擊目標檔案不存在的連結時，只有路徑結尾連續的完整路徑段恰好符合一種已啟用的週期筆記格式，才會建立筆記。既有檔案、別名、明確的相對路徑及無法唯一判斷的目標仍交由 Obsidian 正常處理。",
   "settings.periodic.createFromLinks": "點擊連結時建立缺少的週期筆記",
   "settings.periodic.createFromLinksDesc": "如果連結中的檔名或路徑末尾能唯一確定一篇週期筆記，點擊即可依設定的路徑和範本建立。只比對已啟用的筆記類型。",
   "settings.periodic.createLarger": "同時建立所屬週期的筆記",
