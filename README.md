@@ -49,6 +49,12 @@ Back up and preserve `Vault/.obsidian/plugins/chrono-notes/data.json` when it ex
 
 ## Usage
 
+### Create missing periodic notes from links
+
+Enable **Create missing periodic notes from links** under **Settings → Chrono Notes → Periodic notes**. When a link has no existing target, Chrono Notes creates a note only if the target uniquely matches the consecutive trailing path segments of an enabled periodic-note pattern. Aliases stay intact. Existing files, disabled note types, incomplete or ambiguous targets, and explicit relative links keep Obsidian’s normal behavior. For example, `[[2026-11-19|Today]]` can create the configured daily note, while `[[Meetings/2026-11-19]]` remains a normal link.
+
+
+
 The main calendar, month selectors, and date dialogs always use the Gregorian calendar. Changing the interface language translates month names and digits; it does not select a different calendar. Choose calendar extensions separately to show additional date information.
 
 **Before adding ICS events:** Chrono Notes reads local calendar files, not remote subscriptions, and does not expand `RRULE` or `RDATE` recurring events. Skipped events are counted, so a calendar relying on recurrence may look incomplete. A source path outside the Vault is desktop-only.
