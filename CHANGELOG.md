@@ -2,6 +2,12 @@
 
 Notable changes to Chrono Notes are documented in this file. The repository's numeric Git tags are the evidence for released versions; an entry without a corresponding local tag remains unreleased even if the manifests already contain that version.
 
+## Unreleased
+
+- Persist only changed note-index entries after a single-file edit and skip cache writes on an unchanged restart.
+- Reuse year heatmap paths when notes change and reuse the week's task list when selecting another day. Year and Century views skip ICS updates.
+- Limit date-format updates in Obsidian Properties to controls affected by a DOM change.
+
 ## 0.8.4
 
 - Respect explicit Chinese script subtags and ignore locale extensions when following Obsidian's language; unknown host languages fall back safely to English.
