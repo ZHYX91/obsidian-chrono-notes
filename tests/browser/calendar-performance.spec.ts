@@ -16,7 +16,10 @@ for (const count of [1000, 5000]) {
       samples.push(await page.evaluate((size) => window.runChronoBrowserBenchmark(size), count));
     }
     const metrics = samples[0]!;
-    expect(metrics.updateReads).toBe(1);
+    for (const sample of samples) {
+      expect(sample.updateReads).toBe(1);
+      expect(sample.updateListings).toBe(0);
+    }
     expect(metrics.rowCount).toBe(100);
     await expect(page.getByRole("status")).toHaveText(`101–200 of ${count}`);
     await expect(page.locator(".chrono-notes-week-task")).toHaveCount(100);

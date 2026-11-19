@@ -16,7 +16,7 @@ import {
   type IndexedNote,
 } from "./indexed-note";
 import {
-  createPersistedNoteIndexSnapshot,
+  type NoteIndexCacheChanges,
   parsePersistedNoteIndexSnapshotIncrementally,
   type NoteIndexCache,
   type PersistedNoteIndexEntry,
@@ -96,6 +96,7 @@ interface InFlightRead {
 }
 
 interface InitialStaging {
+  files?: ReadonlyMap<string, NoteSourceFile>;
   readonly lifecycle: number;
   readonly entries: Map<string, PresentNoteIndexEntry>;
   readonly documentFingerprints: Map<string, bigint>;
@@ -205,6 +206,7 @@ interface PendingLiveCommit {
 }
 
 interface LiveReadBatch {
+  files?: ReadonlyMap<string, NoteSourceFile>;
   readonly lifecycle: number;
   pendingReads: number;
   readonly commits: PendingLiveCommit[];
@@ -269,6 +271,7 @@ export class NoteIndex {
   private readonly scheduleLiveCommitCheckpoint: (callback: () => void) => () => void;
   private readonly scheduleReadinessCheckpoint: (callback: () => void) => () => void;
   private readonly cache: NoteIndexCache | null;
+  private readonly fileMetadata = new WeakMap<IndexedNote, NoteSourceFile | null>();
   private readonly cacheWriter: NoteIndexCacheWriter;
   private diagnosticsEnabled: boolean;
   private scheduledEventFlush: ScheduledFlush | null = null;
@@ -308,7 +311,7 @@ export class NoteIndex {
         ?? ((callback) => scheduleTimeout(callback, DEFAULT_CACHE_SAVE_DELAY_MS)),
       canSchedule: () => this.active && this.source.listFiles !== undefined,
       canSave: () => this.active && this.snapshot.readiness === "ready" && this.isLiveWorkIdle(),
-      snapshot: () => this.createCacheSnapshot(),
+      collect: (paths) => this.collectCacheChanges(paths),
       onError: (error) => reportCacheFailure("save", error),
     });
     this.diagnosticsEnabled = this.diagnostics !== null;
@@ -343,6 +346,7 @@ export class NoteIndex {
         ? null
         : await this.loadCacheSnapshot(startLifecycle);
       if (!this.isCurrentLifecycle(startLifecycle)) return;
+      this.cacheWriter.reset(cachedSnapshot === null || this.cache?.needsFullSave === true);
       const listPathsStarted = this.startDiagnosticTiming();
       let initialPaths: string[];
       let listedFiles: readonly NoteSourceFile[] | null = null;
@@ -356,15 +360,18 @@ export class NoteIndex {
       } finally {
         this.finishDiagnosticTiming("listPathsMs", listPathsStarted);
       }
+      if (this.cache !== null && listedFiles !== null) {
+        staging.files = new Map(listedFiles.map((file) => [file.path, file]));
+      }
       const bufferedEvents = this.bufferedStartupEvents;
       this.bufferedStartupEvents = null;
       const knownPaths = reconcileStartupPaths(initialPaths, bufferedEvents ?? []);
       this.initialKnownPaths = knownPaths;
-      const cachedPaths = cachedSnapshot === null || listedFiles === null
+      const cachedPaths = cachedSnapshot === null || staging.files === undefined
         ? EMPTY_PATH_SET
         : this.restoreCachedEntries(
           cachedSnapshot.entries,
-          listedFiles,
+          staging.files,
           knownPaths,
           bufferedEvents ?? [],
           staging,
@@ -409,7 +416,7 @@ export class NoteIndex {
     this.scheduledEventFlush = null;
     this.cancelReadinessCheckpoint?.();
     this.cancelReadinessCheckpoint = null;
-    this.cacheWriter.cancel();
+    this.cacheWriter.reset(false);
     this.cancelLiveReadBatches();
     this.cancelQueuedReads();
     this.releaseRunningReadSlots();
@@ -463,12 +470,7 @@ export class NoteIndex {
     if (this.cache === null) {
       throw new Error("NoteIndex cache is not configured");
     }
-    const clearLifecycle = this.lifecycle;
-    await this.cacheWriter.settled();
-    if (this.active || this.lifecycle !== clearLifecycle) {
-      throw new Error("NoteIndex lifecycle changed before clearing its cache");
-    }
-    await this.cache.clear();
+    await this.cacheWriter.clear();
   }
 
   async persistCacheNow(): Promise<void> {
@@ -483,7 +485,7 @@ export class NoteIndex {
       throw new Error("NoteIndex cache is not configured");
     }
     this.cacheWriter.cancel();
-    await this.cacheWriter.save(this.createCacheSnapshot());
+    await this.cacheWriter.save();
   }
 
   get(path: string): NoteIndexEntry {
@@ -519,7 +521,7 @@ export class NoteIndex {
       });
       if (!this.isCurrentLifecycle(lifecycle)) return null;
       if (parsed !== null) return parsed;
-      await this.cache.clear();
+      await this.cacheWriter.clear();
       if (!this.isCurrentLifecycle(lifecycle)) return null;
     } catch (error) {
       reportCacheFailure("load", error);
@@ -529,12 +531,11 @@ export class NoteIndex {
 
   private restoreCachedEntries(
     cachedEntries: readonly PersistedNoteIndexEntry[],
-    listedFiles: readonly NoteSourceFile[],
+    files: ReadonlyMap<string, NoteSourceFile>,
     knownPaths: ReadonlySet<string>,
     startupEvents: readonly NoteSourceEvent[],
     staging: InitialStaging,
   ): ReadonlySet<string> {
-    const files = new Map(listedFiles.map((file) => [file.path, file]));
     const dirtyPaths = collectStartupDirtyPaths(startupEvents);
     const restored = new Set<string>();
     for (const cached of cachedEntries) {
@@ -546,8 +547,10 @@ export class NoteIndex {
         current.mtime !== cached.file.mtime ||
         current.size !== cached.file.size
       ) {
+        this.cacheWriter.changed(cached.file.path);
         continue;
       }
+      this.fileMetadata.set(cached.note, current);
       const revision = this.advanceRevision(cached.file.path);
       staging.entries.set(cached.file.path, Object.freeze({
         kind: "parsed",
@@ -677,6 +680,7 @@ export class NoteIndex {
     path: string,
     readiness: NoteIndexReadiness = this.snapshot.readiness,
   ): boolean {
+    this.cacheWriter.changed(path);
     if (this.entries.delete(path)) {
       this.documentFingerprints.delete(path);
       this.projections.replace(path, null);
@@ -939,6 +943,7 @@ export class NoteIndex {
     try {
       this.incrementDiagnostic("reads");
       const readStarted = this.startDiagnosticTiming();
+      const file = this.getReadMetadata(path, publication);
       let content: string;
       try {
         content = await this.source.read(path);
@@ -962,6 +967,15 @@ export class NoteIndex {
         !publication.forceParse &&
         this.isSamePublishedDocument(path, fingerprint)
       ) {
+        const previous = this.entries.get(path);
+        if (previous?.kind === "parsed") {
+          const priorFile = this.fileMetadata.get(previous.note);
+          if (priorFile?.mtime !== file?.mtime || priorFile?.size !== file?.size) {
+            this.fileMetadata.set(previous.note, file);
+            this.cacheWriter.changed(path);
+            this.cacheWriter.schedule();
+          }
+        }
         return this.finishRead(publication, null);
       }
       this.incrementDiagnostic("parses");
@@ -972,6 +986,7 @@ export class NoteIndex {
       } finally {
         this.finishDiagnosticTiming("noteParsesMs", noteParseStarted);
       }
+      if (file !== null) this.fileMetadata.set(note, file);
       entry = Object.freeze({
         kind: "parsed",
         revision,
@@ -1002,6 +1017,7 @@ export class NoteIndex {
     }
 
     if (this.initialStaging === publication.staging) {
+      this.cacheWriter.changed(path);
       publication.staging.entries.set(path, entry);
       if (documentFingerprint === null) {
         publication.staging.documentFingerprints.delete(path);
@@ -1010,6 +1026,20 @@ export class NoteIndex {
       }
     }
     return { publication: Promise.resolve() };
+  }
+
+  private getReadMetadata(path: string, publication: ReadPublication): NoteSourceFile | null {
+    if (this.cache === null || this.source.listFiles === undefined) return null;
+    try {
+      if (publication.kind === "initial") return publication.staging.files?.get(path) ?? null;
+      if (this.source.getFileMetadata !== undefined) return this.source.getFileMetadata(path);
+      // Compatibility for sources that expose only a full metadata inventory.
+      publication.batch.files ??= new Map(this.source.listFiles().map((file) => [file.path, file]));
+      return publication.batch.files.get(path) ?? null;
+    } catch {
+      // A failed stat makes this revision uncacheable. The note is still readable.
+      return null;
+    }
   }
 
   private isSamePublishedDocument(path: string, fingerprint: bigint): boolean {
@@ -1092,6 +1122,7 @@ export class NoteIndex {
         const projectionChanges: Array<readonly [string, IndexedNote | null]> = [];
         for (const commit of commits) {
           if (!this.canCommit(commit.path, commit.revision, commit.lifecycle)) continue;
+          this.cacheWriter.changed(commit.path);
           this.entries.set(commit.path, commit.entry);
           if (commit.documentFingerprint === null) {
             this.documentFingerprints.delete(commit.path);
@@ -1200,7 +1231,7 @@ export class NoteIndex {
     this.scheduledEventFlush = null;
     this.cancelReadinessCheckpoint?.();
     this.cancelReadinessCheckpoint = null;
-    this.cacheWriter.cancel();
+    this.cacheWriter.reset(false);
     this.cancelLiveReadBatches();
     this.cancelQueuedReads();
     this.releaseRunningReadSlots();
@@ -1301,26 +1332,21 @@ export class NoteIndex {
     if (readiness === "ready") this.cacheWriter.schedule();
   }
 
-  private createCacheSnapshot(): PersistedNoteIndexSnapshot {
-    const files = new Map(
-      (this.source.listFiles?.() ?? []).map((file) => [file.path, file]),
-    );
-    const persisted: PersistedNoteIndexEntry[] = [];
-    for (const [path, entry] of this.entries) {
-      if (entry.kind !== "parsed") continue;
-      const file = files.get(path);
-      if (file === undefined) continue;
-      persisted.push(Object.freeze({
-        file: Object.freeze({
-          path,
-          mtime: file.mtime,
-          size: file.size,
-        }),
-        note: entry.note,
-      }));
+  private collectCacheChanges(paths?: Iterable<string>): NoteIndexCacheChanges {
+    const upserts: PersistedNoteIndexEntry[] = [];
+    const deletes: string[] = [];
+    for (const path of paths ?? this.entries.keys()) {
+      const entry = this.entries.get(path);
+      if (entry?.kind === "parsed") {
+        const file = this.fileMetadata.get(entry.note);
+        if (file != null) {
+          upserts.push({ file, note: entry.note });
+          continue;
+        }
+      }
+      if (paths !== undefined) deletes.push(path);
     }
-    persisted.sort((left, right) => left.file.path.localeCompare(right.file.path));
-    return createPersistedNoteIndexSnapshot(persisted);
+    return { upserts, deletes };
   }
 
   private incrementDiagnostic(counter: NoteIndexDiagnosticCounter): void {

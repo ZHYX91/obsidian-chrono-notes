@@ -18,6 +18,7 @@ interface BrowserMetrics {
   readonly singleUpdateCacheWriteMs: number;
   readonly cacheBytes: number;
   readonly updateReads: number;
+  readonly updateListings: number;
   readonly taskQueryMs: number;
   readonly renderMs: number;
   readonly rowCount: number;
@@ -58,20 +59,32 @@ function sourceFixture(count: number) {
   const contents = new Map(Array.from({ length: count }, (_, index) => [
     `Tasks/Task-${index}.md`, `# Task ${index}\n- [ ] Review item ${index} 📅 2026-10-20\n`,
   ]));
-  let revision = 1;
+  let listings = 0;
+  const mtimes = new Map<string, number>();
+  const metadata = (path: string, content: string) => ({
+    path, mtime: mtimes.get(path) ?? 1, size: content.length,
+  });
   return {
     source: {
       listPaths: () => [...contents.keys()],
-      listFiles: () => [...contents].map(([path, content]) => ({ path, mtime: revision, size: content.length })),
+      listFiles: () => {
+        listings += 1;
+        return [...contents].map(([path, content]) => metadata(path, content));
+      },
+      getFileMetadata: (path: string) => {
+        const content = contents.get(path);
+        return content === undefined ? null : metadata(path, content);
+      },
       read: async (path: string) => { reads += 1; return contents.get(path) ?? ""; },
       subscribe: (next: NoteSourceListener) => { listener = next; return () => { listener = () => undefined; }; },
     },
     getReads: () => reads,
+    getListings: () => listings,
     add: (path: string, content: string) => { contents.set(path, content); },
     update: () => {
       const path = "Tasks/Task-0.md";
       contents.set(path, (contents.get(path) ?? "").replace("[ ]", "[x]"));
-      revision += 1;
+      mtimes.set(path, (mtimes.get(path) ?? 1) + 1);
       listener({ type: "modify", path });
     },
   };
@@ -105,12 +118,14 @@ window.runChronoBrowserBenchmark = async (count) => {
   const stored = await cache.load();
   const cacheBytes = new TextEncoder().encode(JSON.stringify(stored)).length;
   const beforeReads = fixture.getReads();
+  const beforeListings = fixture.getListings();
   fixture.update();
   await index.start();
   const updateReads = fixture.getReads() - beforeReads;
   started = performance.now();
   await index.persistCacheNow();
   const singleUpdateCacheWriteMs = performance.now() - started;
+  const updateListings = fixture.getListings() - beforeListings;
   const settings = createDefaultSettings();
   const ics = new IcsEventIndex({ read: async () => "" });
   started = performance.now();
@@ -144,7 +159,7 @@ window.runChronoBrowserBenchmark = async (count) => {
   observer.disconnect();
   await cache.clear();
   index.stop();
-  return { count, indexMs, initialCacheWriteMs, singleUpdateCacheWriteMs, cacheBytes, updateReads, taskQueryMs, renderMs, rowCount,
+  return { count, indexMs, initialCacheWriteMs, singleUpdateCacheWriteMs, cacheBytes, updateReads, updateListings, taskQueryMs, renderMs, rowCount,
     nextPageRenderMs, longTaskCount: longTasks.length, maxLongTaskMs: Math.max(0, ...longTasks) };
 
 };

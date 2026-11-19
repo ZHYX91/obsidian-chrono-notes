@@ -9,6 +9,7 @@ import type {
 import { parseNote } from "../../src/core/note/parsed-note";
 import { createIndexedNote } from "../../src/features/notes/indexed-note";
 import { NoteIndex } from "../../src/features/notes/note-index";
+import { NoteIndexCacheWriter } from "../../src/features/notes/note-index-cache-writer";
 import {
   createPersistedNoteIndexStorageMetadata,
   createPersistedNoteIndexSnapshot,
@@ -16,6 +17,7 @@ import {
   parsePersistedNoteIndexSnapshotIncrementally,
   summarizePersistedNoteIndexStorage,
   type NoteIndexCache,
+  type NoteIndexCacheChanges,
   type PersistedNoteIndexSnapshot,
 } from "../../src/features/notes/note-index-cache";
 
@@ -423,6 +425,134 @@ describe("persistent NoteIndex cache", () => {
     });
     expect(source.read).toHaveBeenCalledTimes(1);
     index.stop();
+  });
+
+  it("skips clean warm writes and checkpoints only stale, renamed and deleted paths", async () => {
+    const source = new MetadataNoteSource();
+    const keep = { ...FILE, path: "keep.md" };
+    const gone = { ...FILE, path: "gone.md" };
+    source.files = [FILE, keep, gone];
+    const snapshot = createPersistedNoteIndexSnapshot(source.files.flatMap((file) => cached("old", file).entries));
+    const cache = Object.assign(new MemoryNoteIndexCache(snapshot), {
+      applyChanges: vi.fn<(changes: NoteIndexCacheChanges) => Promise<void>>().mockResolvedValue(undefined),
+    });
+    const lookup = vi.fn((path: string) => source.files.find((file) => file.path === path) ?? null);
+    const listing = vi.spyOn(source, "listFiles");
+    const schedule = vi.fn(() => () => undefined);
+    const index = new NoteIndex(Object.assign(source, { getFileMetadata: lookup }), { cache, scheduleCacheSave: schedule });
+    await index.start();
+    await index.persistCacheNow();
+    expect(schedule).not.toHaveBeenCalled();
+    expect(cache.save).not.toHaveBeenCalled();
+    expect(cache.applyChanges).not.toHaveBeenCalled();
+    expect(source.read).not.toHaveBeenCalled();
+
+    const moved = { path: "moved.md", mtime: 2, size: 5 };
+    source.files = [keep, moved];
+    source.read.mockResolvedValue("moved");
+    source.emit({ type: "rename", oldPath: FILE.path, path: moved.path });
+    source.emit({ type: "delete", path: gone.path });
+    await index.start();
+    await vi.waitFor(() => expect(index.getSnapshot().readiness).toBe("ready"));
+    await index.persistCacheNow();
+    expect(listing).toHaveBeenCalledOnce();
+    expect(lookup.mock.calls).toEqual([[moved.path]]);
+    expect(cache.applyChanges.mock.calls).toEqual([[{
+      upserts: cached("moved", moved).entries, deletes: [FILE.path, gone.path],
+    }]]);
+    index.stop();
+  });
+
+  it("persists the stats of the accepted revision and drops a row if a later stat fails", async () => {
+    const source = new MetadataNoteSource();
+    const edited = { ...FILE, mtime: FILE.mtime + 1 };
+    const lookup = vi.fn(() => edited);
+    const cache = Object.assign(new MemoryNoteIndexCache(null), {
+      applyChanges: vi.fn<(changes: NoteIndexCacheChanges) => Promise<void>>().mockResolvedValue(undefined),
+    });
+    source.files = [FILE];
+    source.read.mockResolvedValue("unchanged");
+    const index = new NoteIndex(Object.assign(source, { getFileMetadata: lookup }), { cache });
+    await index.start();
+    source.files = [edited];
+    await index.persistCacheNow();
+    expect(cache.save.mock.calls[0]?.[0].entries[0]?.file).toEqual(FILE);
+    await index.refresh(FILE.path);
+    await vi.waitFor(() => index.persistCacheNow());
+    expect(cache.applyChanges).toHaveBeenLastCalledWith({ upserts: cached("unchanged", edited).entries, deletes: [] });
+
+    lookup.mockImplementationOnce(() => { throw new Error("stat unavailable"); });
+    await index.refresh(FILE.path);
+    await vi.waitFor(() => index.persistCacheNow());
+    expect(source.read).toHaveBeenCalledTimes(3);
+    expect(index.get(FILE.path).kind).toBe("parsed");
+    expect(cache.applyChanges).toHaveBeenLastCalledWith({ upserts: [], deletes: [FILE.path] });
+    index.stop();
+  });
+
+  it("waits for a stopped cache clear before starting a new warm load", async () => {
+    const source = new MetadataNoteSource();
+    source.files = [FILE];
+    source.read.mockResolvedValue("new");
+    const cache = new MemoryNoteIndexCache(cached("old"));
+    const clearing = new Deferred<void>();
+    cache.clear.mockImplementationOnce(async () => { await clearing.promise; cache.value = null; });
+    const index = new NoteIndex(source, { cache });
+    const clear = index.clearCacheWhileStopped();
+    await vi.waitFor(() => expect(cache.clear).toHaveBeenCalledOnce());
+    const start = index.start();
+    expect(cache.load).not.toHaveBeenCalled();
+    clearing.resolve();
+    await Promise.all([clear, start]);
+    await index.persistCacheNow();
+    expect(cache.value).toEqual(cached("new"));
+    index.stop();
+  });
+
+  it("coalesces edits during a slow baseline and retries a failed collection or transaction", async () => {
+    const callbacks: Array<() => void> = [];
+    const baseline = new Deferred<void>();
+    const cache = Object.assign(new MemoryNoteIndexCache(null), {
+      applyChanges: vi.fn<(changes: NoteIndexCacheChanges) => Promise<void>>().mockResolvedValue(undefined),
+    });
+    cache.save.mockReturnValueOnce(baseline.promise);
+    const collect = vi.fn<(paths?: Iterable<string>) => NoteIndexCacheChanges>(() => ({
+      upserts: cached("latest").entries, deletes: [],
+    }));
+    const onError = vi.fn();
+    const writer = new NoteIndexCacheWriter({
+      cache, collect, onError, canSchedule: () => true, canSave: () => true,
+      schedule: (callback) => { callbacks.push(callback); return () => undefined; },
+    });
+    writer.reset(true);
+    writer.changed(FILE.path);
+    const initial = writer.save();
+    for (let i = 0; i < 8; i++) {
+      writer.changed(FILE.path);
+      writer.schedule();
+    }
+    expect(collect).toHaveBeenCalledOnce();
+    expect(callbacks).toHaveLength(0);
+    baseline.resolve();
+    await initial;
+    expect(callbacks).toHaveLength(1);
+
+    collect.mockImplementationOnce(() => { throw Error("unavailable"); });
+    expect(() => callbacks.shift()?.()).not.toThrow();
+    expect(onError).toHaveBeenCalledOnce();
+    callbacks.shift()?.();
+    await writer.settled();
+    expect(cache.save).toHaveBeenCalledOnce();
+    expect(cache.applyChanges).toHaveBeenCalledOnce();
+    expect(callbacks).toHaveLength(0);
+
+    writer.changed(FILE.path);
+    cache.applyChanges.mockRejectedValueOnce(new Error("transaction aborted"));
+    await expect(writer.save()).rejects.toThrow("transaction aborted");
+    callbacks.shift()?.();
+    await writer.settled();
+    expect(cache.applyChanges).toHaveBeenCalledTimes(3);
+    expect(callbacks).toHaveLength(0);
   });
 
   it("rejects duplicate or non-finite persisted metadata", () => {
