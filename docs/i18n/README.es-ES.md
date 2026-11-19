@@ -40,6 +40,12 @@ Conserva una copia de `data.json` y reemplaza solo los archivos del plugin. Borr
 
 ## Uso
 
+### Crear notas periódicas que faltan desde enlaces
+
+Activa **Crear notas periódicas que faltan desde enlaces** en **Settings → Chrono Notes → Periodic notes**. Si el archivo de destino de un enlace no existe, solo se crea una nota cuando los segmentos finales y consecutivos de la ruta coinciden con un único patrón de nota periódica habilitado. Los alias se conservan. Los archivos existentes, los tipos de nota desactivados, los destinos incompletos o ambiguos y las rutas relativas explícitas mantienen el comportamiento normal de Obsidian.
+
+
+
 El calendario principal, los selectores de mes y los diálogos de fecha siempre usan el calendario gregoriano. Cambiar el idioma traduce los meses y los dígitos, pero no cambia el calendario. Las extensiones permiten añadir información de otros calendarios por separado.
 
 **Antes de añadir ICS:** Chrono Notes lee archivos locales, pero no descarga suscripciones remotas ni desarrolla los eventos repetidos con `RRULE` o `RDATE`. Cuenta los eventos omitidos; por eso un calendario basado en recurrencias puede parecer incompleto. Las rutas fuera del Vault solo funcionan en escritorio.
