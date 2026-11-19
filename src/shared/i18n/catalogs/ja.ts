@@ -471,6 +471,8 @@ export const JA_MESSAGES: MessageCatalog = Object.freeze({
   "settings.extensions.calendarExtensionUnavailable": "この Obsidian 実行環境では {calendar} を利用できません。",
   "settings.extensions.holidayExtensionsDesc": "地域の祝日データを表示順に最大3つ選べます。複数の印が重なる場合は指定順で表示し、振替出勤日を優先します。",
   "settings.periodic.confirmBeforeCreatingDesc": "ノートがまだない日付や期間にノートを作成するとき、確認します。",
+  "settings.periodic.createFromLinks": "リンクから存在しない定期ノートを作成",
+  "settings.periodic.createFromLinksDesc": "リンク先のファイルが存在しない場合でも、パス末尾の連続したセグメントが有効な定期ノートのパターン一つだけに一致するときに限りノートを作成します。既存ファイル、エイリアス、明示的な相対パス、曖昧なリンク先は Obsidian の通常の動作に任せます。",
   "settings.periodic.createLargerDesc": "例えばデイリーノートの作成時に、その週・月・年のノートも作成できます。有効な種別のみが対象で、既存のノートは保持されます。",
   "settings.periodic.pathsDesc": "パスにはフォルダーとファイル名を指定します。フォルダーは / で区切り、固定文字列は [diary]/YYYY/YYYY-MM-DD のように角括弧で囲みます。Vault 直下ならファイル名の書式だけを入力します。{{…}} ではなく日付書式コードを直接使用してください。",
   "settings.periodic.pathPatternInvalid": "このパス形式は無効か、ノートの日付や期間を特定できません。書式記号、大文字と小文字、入力例を確認してください。",
