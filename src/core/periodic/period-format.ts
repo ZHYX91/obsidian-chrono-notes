@@ -45,8 +45,10 @@ export function parsePeriodDate(text: string, format: string, locale: string): D
     .resolvedLocaleOptions().numberingSystem;
   const options = { locale, numberingSystem, zone: "UTC" };
   if (!parts.some(isExtended)) {
+    const localized = parseLocalizedMonthName(text, parts, options, locale);
+    if (localized !== null) return localized;
     const parsed = DateTime.fromFormat(text, compileMomentParts(parts), options);
-    return parsed.isValid ? parsed : parseLocalizedMonthName(text, parts, options, locale);
+    return parsed.isValid ? parsed : null;
   }
   let expression = "";
   const fields: { name: string; token: string }[] = [];
@@ -78,8 +80,10 @@ export function parsePeriodDate(text: string, format: string, locale: string): D
   const parseText = hasYear ? text : text + " " + yearText;
   const parseFormat = hasYear ? nativeFormat : nativeFormat + " yyyy";
   const parseParts = hasYear ? nativeParts : [...nativeParts, { token: "raw", value: " yyyy" }];
+  const localized = parseLocalizedMonthName(parseText, parseParts, options, locale);
+  if (localized !== null) return localized;
   const parsed = DateTime.fromFormat(parseText, parseFormat, options);
-  return parsed.isValid ? parsed : parseLocalizedMonthName(parseText, parseParts, options, locale);
+  return parsed.isValid ? parsed : null;
 }
 
 function parseLocalizedMonthName(
@@ -99,8 +103,8 @@ function parseLocalizedMonthName(
   const expression = new RegExp(names.map(({ name }) => escapeRegExp(name)).join("|"), "iu");
   const match = expression.exec(text);
   if (match === null) return null;
-  const matchedName = match[0].toLocaleLowerCase(locale);
-  const entry = names.find(({ name }) => name.toLocaleLowerCase(locale) === matchedName);
+  const matchedName = match[0].toLowerCase();
+  const entry = names.find(({ name }) => name.toLowerCase() === matchedName);
   if (entry === undefined) return null;
   const normalizedText = text.slice(0, match.index) + String(entry.month).padStart(2, "0")
     + text.slice(match.index + match[0].length);
