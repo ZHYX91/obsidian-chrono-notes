@@ -46,7 +46,7 @@ export function parsePeriodDate(text: string, format: string, locale: string): D
   const options = { locale, numberingSystem, zone: "UTC" };
   if (!parts.some(isExtended)) {
     const parsed = DateTime.fromFormat(text, compileMomentParts(parts), options);
-    return parsed.isValid ? parsed : null;
+    return parsed.isValid ? parsed : parseLocalizedMonthName(text, parts, options, locale);
   }
   let expression = "";
   const fields: { name: string; token: string }[] = [];
@@ -74,11 +74,43 @@ export function parsePeriodDate(text: string, format: string, locale: string): D
     : part);
   const hasYear = parts.some((part) => ["YYYY", "YY", "GGGG", "GG"].includes(part.token ?? ""));
   const nativeFormat = compileMomentParts(nativeParts);
-  const parsed = DateTime.fromFormat(
-    hasYear ? text : `${text} ${DateTime.utc(year).setLocale(locale).toFormat("yyyy")}`,
-    hasYear ? nativeFormat : `${nativeFormat} yyyy`,
-    options,
-  );
-  if (!parsed.isValid) return null;
-  return parsed;
+  const yearText = DateTime.utc(year).setLocale(locale).toFormat("yyyy");
+  const parseText = hasYear ? text : text + " " + yearText;
+  const parseFormat = hasYear ? nativeFormat : nativeFormat + " yyyy";
+  const parseParts = hasYear ? nativeParts : [...nativeParts, { token: "raw", value: " yyyy" }];
+  const parsed = DateTime.fromFormat(parseText, parseFormat, options);
+  return parsed.isValid ? parsed : parseLocalizedMonthName(parseText, parseParts, options, locale);
+}
+
+function parseLocalizedMonthName(
+  text: string,
+  parts: readonly MomentFormatPart[],
+  options: { locale: string; numberingSystem: string; zone: string },
+  locale: string,
+): DateTime<true> | null {
+  const monthParts = parts.filter((part) => part.token === "MMM" || part.token === "MMMM");
+  if (monthParts.length !== 1) return null;
+  const monthPart = monthParts[0];
+  if (monthPart === undefined) return null;
+  const names = Array.from({ length: 12 }, (_, index) => {
+    const month = index + 1;
+    return { month, name: DateTime.utc(2000, month, 1).setLocale(locale).toFormat(monthPart.token ?? "MMMM") };
+  }).sort((left, right) => right.name.length - left.name.length);
+  const expression = new RegExp(names.map(({ name }) => escapeRegExp(name)).join("|"), "iu");
+  const match = expression.exec(text);
+  if (match === null) return null;
+  const matchedName = match[0].toLocaleLowerCase(locale);
+  const entry = names.find(({ name }) => name.toLocaleLowerCase(locale) === matchedName);
+  if (entry === undefined) return null;
+  const normalizedText = text.slice(0, match.index) + String(entry.month).padStart(2, "0")
+    + text.slice(match.index + match[0].length);
+  const normalizedParts = parts.map((part) =>
+    part.token === "MMM" || part.token === "MMMM" ? { token: "MM", value: "MM" } : part);
+  const parsed = DateTime.fromFormat(normalizedText, compileMomentParts(normalizedParts), options);
+  return parsed.isValid ? parsed : null;
+}
+
+function escapeRegExp(value: string): string {
+  return Array.from(value).map((character) =>
+    "^$.*+?()[]{}|\\".includes(character) ? "\\" + character : character).join("");
 }
