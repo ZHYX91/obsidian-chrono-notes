@@ -177,6 +177,9 @@ test("rejects corrupt manifests, mismatched overlay keys, and a missing baseline
       } finally { db.close(); }
     };
     await cache.save({ schema: 7, entries: [a] });
+    await edit((tx) => { tx.objectStore("note-index-entries").put(b, [key, b.file.path]); });
+    const undeclaredRow = await cache.load();
+    await cache.save({ schema: 7, entries: [a] });
     await cache.applyChanges({ upserts: [b], deletes: [] });
     await edit((tx) => { tx.objectStore("note-index-entries").put(a, [key, b.file.path]); });
     const wrongKey = await cache.load();
@@ -190,9 +193,9 @@ test("rejects corrupt manifests, mismatched overlay keys, and a missing baseline
     await cache.save({ schema: 7, entries: [a] });
     await edit((tx) => { tx.objectStore("note-index-snapshots").delete(key); });
     const missing = await cache.getStatus();
-    return { wrongKey, unknown, unknownStatus, orphanRows, missing };
+    return { undeclaredRow, wrongKey, unknown, unknownStatus, orphanRows, missing };
   }, { a, b });
   expect(report).toEqual({
-    wrongKey: {}, unknown: {}, unknownStatus: { state: "invalid" }, orphanRows: {}, missing: { state: "invalid" },
+    undeclaredRow: {}, wrongKey: {}, unknown: {}, unknownStatus: { state: "invalid" }, orphanRows: {}, missing: { state: "invalid" },
   });
 });

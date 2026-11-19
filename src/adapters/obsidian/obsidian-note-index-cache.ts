@@ -43,9 +43,12 @@ export class ObsidianNoteIndexCache implements NoteIndexCache {
       if (!validManifest(header) || !baseline) return {};
       this.baseline = { generation: header.generation, paths: baseline.paths };
       this.needsFullSave = header.overlayCount >= Math.max(256, baseline.paths.size / 2);
-      if (header.overlayCount === 0) return baseline.paths.size === header.entryCount ? snapshot : {};
-
       const range = this.rowRange();
+      if (header.overlayCount === 0) {
+        const firstOverride = await requestResult(rows.getKey(range));
+        return firstOverride === undefined && baseline.paths.size === header.entryCount ? snapshot : {};
+      }
+
       const [overrides, keys] = await Promise.all([
         requestResult<unknown[]>(rows.getAll(range)), requestResult(rows.getAllKeys(range)),
       ]);
@@ -66,12 +69,14 @@ export class ObsidianNoteIndexCache implements NoteIndexCache {
   }
 
   async save(snapshot: PersistedNoteIndexSnapshot): Promise<void> {
-    const generation = crypto.getRandomValues(new Uint32Array(4)).join("-");
-    await this.withStores("readwrite", (headers, rows) => {
+    const generation = await this.withStores("readwrite", (headers, rows) => {
+      const id = crypto.getRandomValues(new Uint32Array(4)).join("-");
       rows.delete(this.rowRange());
       headers.put(snapshot, this.key);
-      headers.put(rowHeader(generation, snapshot.entries.length, 0), this.metadataKey);
-    }, undefined);
+      headers.put(rowHeader(id, snapshot.entries.length, 0), this.metadataKey);
+      return id;
+    }, null);
+    if (generation === null) return;
     this.baseline = { generation, paths: new Set(snapshot.entries.map(({ file }) => file.path)) };
     this.needsFullSave = false;
   }
