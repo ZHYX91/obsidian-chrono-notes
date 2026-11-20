@@ -9,6 +9,7 @@ import { createTranslator } from "../../src/shared/i18n";
 import { CalendarApp } from "../../src/ui/calendar/calendar-app";
 import { WeekView } from "../../src/ui/calendar/week-view";
 import { LongPressGesture } from "../../src/ui/calendar/long-press";
+import { IntervalNoteListModal } from "../../src/ui/modals/interval-note-list-modal";
 import type { NoteSourceListener } from "../../src/core/note/note-source";
 
 interface BrowserMetrics {
@@ -33,6 +34,8 @@ declare global {
     mountChronoCalendar: (locale: PluginLocale, width: number, eventTitles?: readonly string[], eventCount?: number) => Promise<void>;
     mountChronoTaskLayout: (width: number, locale: PluginLocale) => Promise<void>;
     chronoTaskActions: string[];
+    mountChronoIntervalList: (locale: PluginLocale) => Promise<void>;
+    chronoOpenedPath: string;
   }
 }
 
@@ -91,6 +94,28 @@ function sourceFixture(count: number) {
 }
 
 const frame = () => new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+
+window.mountChronoIntervalList = async (locale) => {
+  const fixture = sourceFixture(0);
+  const folder = "Projects/MonthlyReviewsOfAllOngoingProjectsAndLongTermActivities";
+  for (let day = 10; day < 23; day++) {
+    const path = day === 10 ? "Projects/Explicit range.md" : `${folder}/Plan-${day}.md`;
+    fixture.add(path, `---\nstart: 2026-11-${day}\nend: 2026-12-01\n---\n- [x] One\n- [ ] Two`);
+  }
+  const noteIndex = new NoteIndex(fixture.source);
+  await noteIndex.start();
+  const settings = createDefaultSettings();
+  settings.rangeNotes.folder = "Projects";
+  settings.rangeNotes.scanScope = "entire-vault";
+  const modal = new IntervalNoteListModal({} as never, {
+    noteIndex, getSettings: () => settings, getSettingsRevision: () => 0,
+    subscribeSettings: () => () => undefined, folderExists: () => true,
+    openPath: async (path) => { window.chronoOpenedPath = path; },
+    createRange: () => undefined, openRangeSettings: () => undefined,
+  }, createTranslator(locale, "en-US"));
+  document.body.appendChild(modal.modalEl);
+  modal.onOpen();
+};
 
 window.runChronoBrowserBenchmark = async (count) => {
   const container = rootContainer(840);

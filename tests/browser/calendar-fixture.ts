@@ -8,6 +8,7 @@ export async function createCalendarBrowserFixture(): Promise<{ html: string; sc
   const [bundle, styles] = await Promise.all([
     build({
       entryPoints: [resolve(here, "calendar-entry.tsx")], bundle: true, write: false,
+      alias: { obsidian: resolve(here, "obsidian-host.ts") },
       format: "iife", platform: "browser", define: { "process.env.NODE_ENV": '"production"' },
     }),
     build({ entryPoints: [resolve(here, "../../src/ui/styles/index.css")], bundle: true, write: false }),

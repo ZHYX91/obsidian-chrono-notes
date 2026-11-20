@@ -1,5 +1,20 @@
-// Only the Obsidian primitives used by the settings fixture are simulated.
-// Product tab routing, settings controls, saving, translations and CSS stay real.
+// Product components render into these minimal host elements in Chromium.
+export class Modal {
+  readonly modalEl = document.createElement("div");
+  readonly titleEl = document.createElement("div");
+  readonly contentEl = document.createElement("div");
+
+  constructor() {
+    this.modalEl.append(this.titleEl, this.contentEl);
+    this.titleEl.setText = (text: string) => { this.titleEl.textContent = text; };
+    for (const element of [this.modalEl, this.contentEl]) {
+      element.addClass = (...names: string[]) => element.classList.add(...names);
+    }
+    this.contentEl.empty = () => this.contentEl.replaceChildren();
+    this.contentEl.createDiv = () => this.contentEl.appendChild(document.createElement("div"));
+  }
+}
+
 export class PluginSettingTab {
   readonly containerEl = document.createElement("div");
   constructor(readonly app: unknown) {}
