@@ -33,6 +33,7 @@ export class ObsidianPeriodicLinkNavigation {
     private readonly getSettings: () => Readonly<ChronoNotesSettings>,
     private readonly getLocale: () => string,
     private readonly openPeriodic: (date: LocalDate, type: PeriodicNoteType, navigate: Navigate) => Promise<void>,
+    private readonly reportError: (error: unknown) => void,
   ) {}
 
   setEnabled(enabled: boolean): void {
@@ -41,11 +42,14 @@ export class ObsidianPeriodicLinkNavigation {
       this.remove = null;
     } else if (this.remove === null) {
       const workspace = this.app.workspace;
-      const restore = interceptWorkspaceLinks(workspace, (...args) => this.handleOpen(...args));
+      // The host does not await every UI gesture. Report an owned failure once
+      // while leaving the return value of ordinary native navigation untouched.
+      const intercept: Intercept = (...args) => this.handleOpen(...args)?.catch(this.reportError) ?? null;
+      const restore = interceptWorkspaceLinks(workspace, intercept);
       // Another link creator can offer Chrono the target before creating a file.
       // Claim synchronously, including when confirmation or template loading is pending.
       const listener = workspace.on("chrono-notes:claim-missing-periodic-link-v1", (request) => {
-        const navigation = this.handleOpen(request.linkText, request.sourcePath, request.newLeaf, request.viewState);
+        const navigation = intercept(request.linkText, request.sourcePath, request.newLeaf, request.viewState);
         if (navigation) request.claim(navigation);
       });
       this.remove = () => {
@@ -59,7 +63,7 @@ export class ObsidianPeriodicLinkNavigation {
     const settings = this.getSettings();
     if (
       !settings.createMissingPeriodicNotesFromLinks || source.startsWith("file:") ||
-      !source.endsWith(".md") || this.app.vault.getFileByPath(source) === null
+      !/\.md$/iu.test(source) || this.app.vault.getFileByPath(source) === null
     ) return null;
     // Reading view, editors and Properties pass the destination, independent of
     // the displayed alias. A pipe inside a Markdown target or heading is literal.
@@ -96,7 +100,7 @@ export class ObsidianPeriodicLinkNavigation {
 
     // A file already in the Vault may not have entered the metadata index yet.
     // Check exact destinations before prompting or writing to the periodic path.
-    const markdownPath = path.endsWith(".md") ? path : path + ".md";
+    const markdownPath = /\.md$/iu.test(path) ? path : path + ".md";
     const sourceFolder = source.slice(0, source.lastIndexOf("/") + 1);
     const existing = this.app.vault.getFileByPath(sourceFolder + markdownPath)
       ?? this.app.vault.getFileByPath(markdownPath);

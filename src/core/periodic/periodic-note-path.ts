@@ -134,7 +134,7 @@ export function matchMissingPeriodicLink(
   rules: readonly (PeriodicNotePathRule & { readonly enabled: boolean })[],
   options: PeriodicNotePathOptions,
 ): (PeriodicNotePathMatch & { readonly path: string }) | null {
-  const stem = linkPath.endsWith(".md") ? linkPath.slice(0, -3) : linkPath;
+  const stem = /\.md$/iu.test(linkPath) ? linkPath.slice(0, -3) : linkPath;
   const segments = stem.split("/");
   if (segments.some((segment) => !segment || segment === "." || segment === "..")) return null;
 

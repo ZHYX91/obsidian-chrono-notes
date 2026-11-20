@@ -1,9 +1,11 @@
+import { formatPluginErrorNotice } from "./plugin-presentation";
 import type { TaskUiFeedback } from "../features/tasks/task-write-feedback";
-import type {
-  App,
-  EventRef,
-  Vault,
-  Workspace,
+import {
+  Notice,
+  type App,
+  type EventRef,
+  type Vault,
+  type Workspace,
 } from "obsidian";
 
 import { ObsidianIcsSourceReader } from "../adapters/obsidian/obsidian-ics-source-reader";
@@ -123,6 +125,7 @@ export function createChronoRuntime(host: ChronoRuntimeHost): ChronoRuntime {
       () => host.getSettings(),
       () => host.getTranslator().locale,
       (date, type, navigate) => host.openPeriodicNote(date, type, navigate),
+      (error) => { new Notice(formatPluginErrorNotice(error, host.getTranslator().t)); },
     );
     registerDisposer(() => periodicLinkNavigation.setEnabled(false));
     periodicLinkNavigation.setEnabled(settings.createMissingPeriodicNotesFromLinks);

@@ -45,7 +45,7 @@ function fixture() {
   const app = {
     metadataCache: { getFirstLinkpathDest }, workspace,
     vault: { getFileByPath: (path: string) =>
-      path === source || path === "file:/outside-vault.md" ? { path, body: "" } : notes.get(path) ?? null },
+      path.toLowerCase() === source.toLowerCase() || path === "file:/outside-vault.md" ? { path, body: "" } : notes.get(path) ?? null },
   };
   const confirm = vi.fn(async () => true);
   const prepare = vi.fn(async () => ({ initialContent: "# Journal template" }));
@@ -59,13 +59,14 @@ function fixture() {
     finalize: vi.fn(),
   };
   const commands = new PeriodicNoteCommands(files, { prepare }, { open: vi.fn() });
+  const reportError = vi.fn();
   const router = new ObsidianPeriodicLinkNavigation(app as unknown as App, () => settings, () => "en",
     async (date, noteType, navigate) => {
       await commands.openOrCreate({ date, noteType, target: navigate, confirmCreate: confirm }, {
         ...settings, locale: "en",
       });
-    });
-  return { listeners, settings, notes, native, openFile, workspace, getFirstLinkpathDest, app, router, prepare, confirm };
+    }, reportError);
+  return { reportError, listeners, settings, notes, native, openFile, workspace, getFirstLinkpathDest, app, router, prepare, confirm };
 }
 
 describe("workspace link navigation for missing periodic notes", () => {
@@ -113,6 +114,14 @@ describe("workspace link navigation for missing periodic notes", () => {
       expect(workspace.getLeaf).toHaveBeenCalledWith("tab");
       expect(openFile).toHaveBeenCalledWith(notes.get(journal), undefined);
     }
+  });
+
+  it.each(["MD", "Md"])("recognizes Markdown sources and explicit link extensions with %s casing", async (extension) => {
+    const { router, workspace, notes, native } = fixture();
+    router.setEnabled(true);
+    await workspace.openLinkText(day + "." + extension, "Projects/Meeting." + extension);
+    expect([...notes.keys()]).toEqual([journal]);
+    expect(native).not.toHaveBeenCalled();
   });
 
   it.each(["", "Projects/"])("opens an existing exact %s path while the metadata index catches up", async (folder) => {
@@ -164,7 +173,7 @@ describe("workspace link navigation for missing periodic notes", () => {
   });
 
   it("delegates calls without a source note and never creates after cancellation or template failure", async () => {
-    const { native, workspace, notes, confirm, router, prepare } = fixture();
+    const { native, workspace, notes, confirm, router, prepare, reportError } = fixture();
     router.setEnabled(true);
     for (const from of ["", "file:/outside-vault.md"]) {
       await workspace.openLinkText(day, from);
@@ -174,22 +183,24 @@ describe("workspace link navigation for missing periodic notes", () => {
     confirm.mockResolvedValueOnce(false);
     await workspace.openLinkText(day, source);
     prepare.mockRejectedValueOnce(new Error("template missing"));
-    await expect(workspace.openLinkText(day, source)).rejects.toThrow("template missing");
+    await workspace.openLinkText(day, source);
+    expect(reportError).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({ message: expect.stringContaining("template missing") }));
     expect(native).not.toHaveBeenCalled();
     expect(notes.size).toBe(0);
   });
 
   it("does not retry native creation after the confirmed file vanishes", async () => {
-    const { app, workspace, native, openFile, router } = fixture();
+    const { app, workspace, native, openFile, router, reportError } = fixture();
     app.vault.getFileByPath = (path) => path === source ? { path, body: "" } : null;
     router.setEnabled(true);
-    await expect(workspace.openLinkText(day, source)).rejects.toThrow("Markdown note not found");
+    await workspace.openLinkText(day, source);
+    expect(reportError).toHaveBeenCalledExactlyOnceWith(new Error(`Markdown note not found: ${journal}`));
     expect(native).not.toHaveBeenCalled();
     expect(openFile).not.toHaveBeenCalled();
   });
 
   it.each(["before", "after"] as const)("claims the matching link exactly once with a fallback installed %s Chrono", async (order) => {
-    const { workspace, router, listeners, native, notes, confirm, prepare, openFile } = fixture();
+    const { workspace, router, listeners, native, notes, confirm, prepare, openFile, reportError } = fixture();
     const fallback = vi.fn(async () => {});
     if (order === "after") router.setEnabled(true);
     const next = workspace.openLinkText;
@@ -205,7 +216,8 @@ describe("workspace link navigation for missing periodic notes", () => {
     confirm.mockResolvedValueOnce(false);
     await workspace.openLinkText(day, source);
     prepare.mockRejectedValueOnce(new Error("template unavailable"));
-    await expect(workspace.openLinkText(day, source)).rejects.toThrow("template unavailable");
+    await workspace.openLinkText(day, source);
+    expect(reportError).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({ message: expect.stringContaining("template unavailable") }));
     expect(notes.size).toBe(0);
     await workspace.openLinkText(day + "#Plan", source, "tab");
     expect(notes.size).toBe(1);
