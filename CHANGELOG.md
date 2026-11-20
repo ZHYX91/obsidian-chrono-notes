@@ -9,6 +9,12 @@ Notable changes to Chrono Notes are documented in this file. The repository's nu
 
 - Optionally create a missing periodic note from a link in a note or its Properties. Short links can match the last segments of a configured path, including a filename alone when it identifies one period.
 
+## Unreleased
+
+- Persist only changed note-index entries after a single-file edit and skip cache writes on an unchanged restart.
+- Reuse year heatmap paths when notes change and reuse the week's task list when selecting another day. Year and Century views skip ICS updates.
+- Limit date-format updates in Obsidian Properties to controls affected by a DOM change.
+
 ## 0.8.4
 
 - Respect explicit Chinese script subtags and ignore locale extensions when following Obsidian's language; unknown host languages fall back safely to English.

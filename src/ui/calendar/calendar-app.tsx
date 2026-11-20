@@ -278,10 +278,18 @@ export function CalendarApp({
       visibleMonth,
     ],
   );
+  const { weekYear, weekNumber } = useMemo(
+    () => getCalendarWeekIdentity(selected, settings.weekStartDay),
+    [selected, settings.weekStartDay],
+  );
+  const selectedWeek = useMemo(
+    () => getCalendarWeek(weekYear, weekNumber, settings.weekStartDay),
+    [weekYear, weekNumber, settings.weekStartDay],
+  );
   const weekQueryRequest = useMemo<WeekCalendarQueryRequest>(() =>
     Object.freeze({
       kind: "week",
-      selectedDate: Object.freeze({ ...selected }),
+      selectedDate: selectedWeek.start,
       options: Object.freeze({
         locale,
         weekStartDay: settings.weekStartDay,
@@ -298,7 +306,7 @@ export function CalendarApp({
       decorationCache,
       calendarExtensionKey,
       holidayRegionKey,
-      selected,
+      selectedWeek,
       settings.periodicNotes.daily.enabled,
       settings.periodicNotes.daily.pattern,
       settings.periodicNotes.daily.pathLocale,
@@ -380,10 +388,6 @@ export function CalendarApp({
   const weekQuery = querySnapshot.kind === "week" ? querySnapshot.query : null;
   const yearQuery = querySnapshot.kind === "year" ? querySnapshot.query : null;
   const centuryQuery = querySnapshot.kind === "century" ? querySnapshot.query : null;
-  const selectedWeekIdentity = useMemo(
-    () => getCalendarWeekIdentity(selected, settings.weekStartDay),
-    [selected, settings.weekStartDay],
-  );
   const headerWeek = useMemo(
     () => {
       if (weekQuery !== null) {
@@ -394,13 +398,9 @@ export function CalendarApp({
           weekYear: weekQuery.weekYear,
         });
       }
-      return getCalendarWeek(
-        selectedWeekIdentity.weekYear,
-        selectedWeekIdentity.weekNumber,
-        settings.weekStartDay,
-      );
+      return selectedWeek;
     },
-    [selectedWeekIdentity, settings.weekStartDay, weekQuery],
+    [selectedWeek, weekQuery],
   );
   const formatWeekPickerLabels = useMemo(
     () => createWeekPickerLabelFormatter(translator),

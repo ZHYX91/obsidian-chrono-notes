@@ -80,11 +80,18 @@ export function selectIndexedPeriodicNote(
   context: PeriodicNotePathContext,
   rule: PeriodicNoteRule,
 ): IndexedPeriodicNote {
-  if (!rule.enabled || rule.pattern.trim().length === 0) {
-    return emptyIndexedPeriodicNote(date, null, "not-configured");
-  }
+  return selectIndexedPeriodicNoteAtPath(
+    date,
+    resolveIndexedPeriodicNotePath(date, noteType, context, rule),
+    snapshot,
+  );
+}
 
-  const notePath = resolveIndexedPeriodicNotePath(date, noteType, context, rule);
+export function selectIndexedPeriodicNoteAtPath(
+  date: LocalDate,
+  notePath: string | null,
+  snapshot: NoteIndexSnapshot,
+): IndexedPeriodicNote {
   if (notePath === null) {
     return emptyIndexedPeriodicNote(date, null, "not-configured");
   }

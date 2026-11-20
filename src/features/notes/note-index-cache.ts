@@ -11,7 +11,7 @@ import {
 } from "../../core/note/note-interval";
 import type { IndexedNote } from "./indexed-note";
 
-const NOTE_INDEX_CACHE_SCHEMA = 7;
+export const NOTE_INDEX_CACHE_SCHEMA = 7;
 const NOTE_INDEX_CACHE_METADATA_SCHEMA = 1;
 
 export type NoteIndexCacheStorageStatus =
@@ -37,7 +37,17 @@ export interface PersistedNoteIndexSnapshot {
   readonly entries: readonly PersistedNoteIndexEntry[];
 }
 
+export interface NoteIndexCacheChanges {
+  readonly upserts: readonly PersistedNoteIndexEntry[];
+  readonly deletes: readonly string[];
+}
+
+export class MissingNoteIndexCacheBaseline extends Error {}
+
 export interface NoteIndexCache {
+  /** A readable previous layout needs one full write before accepting deltas. */
+  readonly needsFullSave?: boolean;
+  applyChanges?(changes: NoteIndexCacheChanges): Promise<void>;
   load(): Promise<unknown>;
   save(snapshot: PersistedNoteIndexSnapshot): Promise<void>;
   clear(): Promise<void>;

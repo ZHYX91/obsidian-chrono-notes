@@ -5,10 +5,13 @@ import {
   type PropertyTimeDisplayFormat,
 } from "../../core/properties/property-date-display";
 
-const PROPERTY_INPUT_SELECTOR = [
-  '.metadata-properties input.metadata-input.mod-date[type="date"]',
-  '.metadata-properties input.metadata-input.mod-datetime[type="datetime-local"]',
-].join(", ");
+const DATE_INPUT_SELECTORS = [
+  'input.metadata-input.mod-date[type="date"]',
+  'input.metadata-input.mod-datetime[type="datetime-local"]',
+];
+const DATE_INPUT_SELECTOR = DATE_INPUT_SELECTORS.join(", ");
+const PROPERTY_INPUT_SELECTOR = DATE_INPUT_SELECTORS
+  .map((selector) => `.metadata-properties ${selector}`).join(", ");
 
 const DISPLAY_INLINE_SIZE_PROPERTY =
   "--chrono-notes-property-date-display-inline-size";
@@ -73,7 +76,7 @@ export class ObsidianPropertiesDateDisplay {
     const observer = MutationObserverConstructor === undefined
       ? null
       : new MutationObserverConstructor((records) => {
-        if (this.shouldScanMutations(document, records)) this.scanDocument(document);
+        this.applyMutations(document, records);
       });
     this.documents.set(document, { observer, inputs, observing: false });
     this.updateDocumentObservation(document);
@@ -84,7 +87,7 @@ export class ObsidianPropertiesDateDisplay {
     const managed = this.documents.get(document);
     if (managed === undefined) return;
     managed.observer?.disconnect();
-    for (const input of managed.inputs.values()) this.unmanageInput(input);
+    for (const input of managed.inputs.values()) input.dispose();
     managed.inputs.clear();
     this.documents.delete(document);
   }
@@ -111,17 +114,44 @@ export class ObsidianPropertiesDateDisplay {
   private scanDocument(document: Document): void {
     const managed = this.documents.get(document);
     if (managed === undefined) return;
-    for (const [input, item] of managed.inputs) {
-      if (this.shouldRetainInput(document, input, item)) continue;
-      this.unmanageInput(item);
-      managed.inputs.delete(input);
+    const inputs = new Set(managed.inputs.keys());
+    if (this.hasAnyCustomDisplay()) {
+      for (const input of document.querySelectorAll<HTMLInputElement>(PROPERTY_INPUT_SELECTOR)) {
+        inputs.add(input);
+      }
     }
-    if (!this.hasAnyCustomDisplay()) return;
-    for (const element of document.querySelectorAll<HTMLInputElement>(PROPERTY_INPUT_SELECTOR)) {
-      if (managed.inputs.has(element) || !this.shouldManageInput(element)) continue;
-      managed.inputs.set(element, this.manageInput(element));
+    this.reconcileInputs(document, managed, inputs);
+  }
+
+  private reconcileInputs(
+    document: Document,
+    managed: ManagedDocument,
+    inputs: ReadonlySet<HTMLInputElement>,
+  ): void {
+    const added: HTMLInputElement[] = [];
+    for (const input of inputs) {
+      const eligible = input.isConnected && input.ownerDocument === document &&
+        input.matches(DATE_INPUT_SELECTOR) && input.closest(".metadata-properties") !== null &&
+        this.shouldManageInput(input);
+      const previous = managed.inputs.get(input);
+      if (previous !== undefined) {
+        if (eligible && input.parentElement === previous.host) continue;
+        previous.dispose();
+        managed.inputs.delete(input);
+      }
+      if (eligible) added.push(input);
     }
-    for (const item of managed.inputs.values()) item.syncLayoutObservation();
+    // A host can replace its input in one delivery. Release the old presentation
+    // before a new binding writes classes and layout to the same host.
+    for (const input of added) {
+      for (const other of this.documents.values()) {
+        if (other === managed) continue;
+        // A popout can adopt a subtree before the old document receives its removal.
+        other.inputs.get(input)?.dispose();
+        other.inputs.delete(input);
+      }
+      managed.inputs.set(input, this.manageInput(input));
+    }
   }
 
   private updateDocumentObservation(document: Document): void {
@@ -135,45 +165,61 @@ export class ObsidianPropertiesDateDisplay {
     managed.observer.observe(document.documentElement, {
       attributes: true,
       attributeFilter: ["class", "type"],
+      attributeOldValue: true,
       childList: true,
       subtree: true,
     });
   }
 
-  private shouldScanMutations(
-    document: Document,
-    records: readonly MutationRecord[],
-  ): boolean {
+  private applyMutations(document: Document, records: readonly MutationRecord[]): void {
     const managed = this.documents.get(document);
-    if (managed === undefined) return false;
-    return records.some((record) => {
-      const target = record.target;
+    if (!managed?.observing) return;
+    const roots = new Set<Element>();
+    const changedHosts = new Set<Element>();
+    const changedTypes = new Set<HTMLInputElement>();
+    for (const record of records) {
+      if (record.target.nodeType !== 1) continue;
+      const target = record.target as Element;
       if (record.type === "childList") {
-        if (target.nodeType !== 1) return true;
-        const element = target as Element;
-        return element.closest(".chrono-notes-property-date-display-value") === null;
+        for (const node of record.addedNodes) if (node.nodeType === 1) roots.add(node as Element);
+        for (const node of record.removedNodes) if (node.nodeType === 1) roots.add(node as Element);
+        if (target.classList.contains("chrono-notes-property-date-display-host")) {
+          changedHosts.add(target);
+        }
+      } else if (target.tagName === "INPUT") {
+        roots.add(target);
+        if (record.attributeName === "type" && record.oldValue !== target.getAttribute("type")) {
+          changedTypes.add(target as HTMLInputElement);
+        }
+      } else if (record.attributeName === "class" &&
+        target.classList.contains("metadata-properties") !==
+          /(?:^|\s)metadata-properties(?:\s|$)/.test(record.oldValue ?? "")) {
+        roots.add(target);
       }
-      if (target.nodeType !== 1) return false;
-      const element = target as Element;
-      if (element.tagName === "INPUT") {
-        const input = element as HTMLInputElement;
-        return managed.inputs.has(input) || input.closest(".metadata-properties") !== null;
-      }
-      if (element.matches(".metadata-properties")) return true;
-      return [...managed.inputs.keys()].some((input) => element.contains(input));
-    });
-  }
+    }
 
-  private shouldRetainInput(
-    document: Document,
-    input: HTMLInputElement,
-    managed: ManagedInput,
-  ): boolean {
-    return input.isConnected &&
-      input.ownerDocument === document &&
-      input.parentElement === managed.host &&
-      input.matches(PROPERTY_INPUT_SELECTOR) &&
-      this.shouldManageInput(input);
+    const inputs = new Set<HTMLInputElement>();
+    for (const root of roots) {
+      if (root.tagName === "INPUT") {
+        inputs.add(root as HTMLInputElement);
+      } else if (root.firstElementChild) {
+        // Obsidian can insert a panel and update its children in the same batch.
+        let ancestor = root.parentElement;
+        while (ancestor && !roots.has(ancestor)) ancestor = ancestor.parentElement;
+        if (ancestor === null) {
+          for (const input of root.querySelectorAll("input")) inputs.add(input);
+        }
+      }
+    }
+    this.reconcileInputs(document, managed, inputs);
+    for (const input of changedTypes) managed.inputs.get(input)?.refresh();
+    for (const host of changedHosts) {
+      for (const child of host.children) {
+        if (child.tagName === "INPUT") {
+          managed.inputs.get(child as HTMLInputElement)?.syncLayoutObservation();
+        }
+      }
+    }
   }
 
   private hasAnyCustomDisplay(): boolean {
@@ -312,10 +358,6 @@ export class ObsidianPropertiesDateDisplay {
     forcedColorsQuery?.addEventListener("change", refresh);
     refresh();
     return { input, host, refresh, syncLayoutObservation, dispose };
-  }
-
-  private unmanageInput(managed: ManagedInput): void {
-    managed.dispose();
   }
 
   private formatInput(input: HTMLInputElement): string | null {

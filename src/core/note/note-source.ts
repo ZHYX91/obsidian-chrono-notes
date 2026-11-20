@@ -20,6 +20,8 @@ export interface NoteSource {
   listPaths(): readonly string[];
   /** Optional fast metadata inventory used by the persistent startup cache. */
   listFiles?(): readonly NoteSourceFile[];
+  /** Current metadata for one path, without enumerating the Vault. */
+  getFileMetadata?(path: string): NoteSourceFile | null;
   read(path: string): Promise<string>;
   subscribe(listener: NoteSourceListener): () => void;
 }

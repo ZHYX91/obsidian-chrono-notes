@@ -569,6 +569,65 @@ describe("ObsidianPropertiesDateDisplay", () => {
     display.dispose();
   });
 
+  it("discovers and releases changed subtrees without rescanning the document or unchanged Properties", async () => {
+    const existing = appendInput("date", "mod-date", "2026-07-31");
+    const originalSection = existing.closest<HTMLElement>(".metadata-properties")!;
+    const editor = document.createElement("article");
+    const section = document.createElement("section");
+    document.body.append(editor, section);
+    const display = new ObsidianPropertiesDateDisplay(DEFAULT_SETTINGS, formatter);
+    display.addDocument(document);
+    const scanDocument = vi.spyOn(document, "querySelectorAll");
+    const scanExisting = vi.spyOn(originalSection, "querySelectorAll");
+
+    for (let i = 0; i < 10; i++) editor.replaceChildren(document.createElement("span"));
+    const wrapper = document.createElement("div");
+    const host = document.createElement("label");
+    const input = document.createElement("input");
+    input.type = "date";
+    input.className = "metadata-input mod-date";
+    input.value = "2026-07-31";
+    host.append(input);
+    wrapper.append(host);
+    section.append(wrapper);
+    section.classList.add("metadata-properties");
+    await vi.waitFor(() => expect(getOverlay(input).textContent).toBe("2026-07-31"));
+
+    editor.append(wrapper);
+    await vi.waitFor(() => expect(host.querySelector(".chrono-notes-property-date-display-value")).toBeNull());
+    expect(getOverlay(existing).textContent).toBe("2026-07-31");
+    expect(scanDocument).not.toHaveBeenCalledWith(expect.stringContaining("input"));
+    expect(scanExisting).not.toHaveBeenCalled();
+    display.dispose();
+  });
+
+  it("observes layout siblings added to a bound host and releases removed siblings", async () => {
+    const originalObserver = window.ResizeObserver;
+    const observe = vi.fn();
+    const unobserve = vi.fn();
+    Object.defineProperty(window, "ResizeObserver", {
+      configurable: true,
+      value: class {
+        observe = observe;
+        unobserve = unobserve;
+        disconnect = vi.fn();
+      },
+    });
+    const display = new ObsidianPropertiesDateDisplay(DEFAULT_SETTINGS, formatter);
+    try {
+      const input = appendInput("date", "mod-date", "2026-07-31");
+      display.addDocument(document);
+      const action = document.createElement("button");
+      input.parentElement!.append(action);
+      await vi.waitFor(() => expect(observe).toHaveBeenCalledWith(action));
+      action.remove();
+      await vi.waitFor(() => expect(unobserve).toHaveBeenCalledWith(action));
+    } finally {
+      display.dispose();
+      Object.defineProperty(window, "ResizeObserver", { configurable: true, value: originalObserver });
+    }
+  });
+
   it("rebinds moved inputs and releases inputs that stop matching Properties", async () => {
     const input = appendInput("date", "mod-date", "2026-07-31");
     const originalHost = input.parentElement;
