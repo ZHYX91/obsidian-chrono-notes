@@ -4,9 +4,9 @@ import { createCalendarBrowserFixture } from "./calendar-fixture";
 const fixture = createCalendarBrowserFixture();
 
 for (const [width, fontSize, locale] of [
-  [356, 16, "en"], [320, 24, "de-DE"], [840, 16, "en"],
+  [356, 16, "en"], [320, 24, "de-DE"], [320, 24, "ru-RU"], [840, 16, "en"],
 ] as const) {
-  test(`range note rows fit their contents at ${width}px, ${fontSize}px font`, async ({ page }) => {
+  test(`range note rows fit their contents at ${width}px, ${fontSize}px ${locale} font`, async ({ page }) => {
     const { html, script } = await fixture;
     await page.setContent(html);
     // Host controls have a fixed input height and reserve space for the select arrow.
