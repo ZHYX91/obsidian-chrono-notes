@@ -18,17 +18,14 @@ export async function createSettingsBrowserFixture(): Promise<{ html: string; sc
         builder.onResolve({ filter: /^obsidian$/ }, () => ({
           path: resolve(here, "obsidian-host.ts"),
         }));
-        // These sections are outside this contract. Keep real routing and the
-        // complete extensions panel, including its actual async event handlers.
-        builder.onResolve({ filter: /^\.\/(general|appearance|periodic|range)-settings-section$/ }, (args) => ({
+        // The tested panels use the product controls, routing and save handlers.
+        builder.onResolve({ filter: /^\.\/(general|appearance)-settings-section$/ }, (args) => ({
           path: args.path, namespace: "unused-panel",
         }));
         builder.onLoad({ filter: /.*/, namespace: "unused-panel" }, (args) => {
           const renderers: Record<string, string> = {
             "./general-settings-section": "renderGeneralSettingsSection",
             "./appearance-settings-section": "renderAppearanceSettingsSection",
-            "./periodic-settings-section": "renderPeriodicSettingsSection",
-            "./range-settings-section": "renderRangeSettingsSection",
           };
           const renderer = renderers[args.path];
           if (renderer === undefined) throw new Error(`Unexpected settings panel: ${args.path}`);

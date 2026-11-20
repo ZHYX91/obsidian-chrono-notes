@@ -1,16 +1,49 @@
-// @vitest-environment happy-dom
-
+import { Window } from "happy-dom";
 import { act, createElement } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { parseLocalDateKey, type LocalDate, type WeekStartDay } from "../../src/core/periodic/periodic-date";
 import type { IcsEventIndexSnapshot } from "../../src/features/calendar/ics-event-index";
 import { selectWeekCalendar } from "../../src/features/calendar/week-calendar-query";
 import { createTranslator } from "../../src/shared/i18n";
 import { createDefaultSettings } from "../../src/shared/settings";
 import { LongPressGesture } from "../../src/ui/calendar/long-press";
 import { WeekView, type WeekViewProps } from "../../src/ui/calendar/week-view";
+import { CreateIntervalNoteModal } from "../../src/ui/modals/create-interval-note-modal";
+import { installObsidianDomFactories } from "../setup/obsidian-dom";
 import { createParsedNoteIndexSnapshot } from "../support/note-index-snapshot";
+
+vi.mock("obsidian", () => ({
+  Modal: class {
+    readonly titleEl = { setText: vi.fn() };
+    readonly contentEl = Object.assign(document.createElement("div"), { empty: () => this.contentEl.replaceChildren() });
+    onClose(): void {}
+    close(): void { this.onClose(); }
+  },
+  Setting: class {
+    constructor(private readonly container: HTMLElement) {}
+    setName(): this { return this; }
+    addText(configure: (text: unknown) => void): this {
+      const input = this.container.createEl("input");
+      configure({
+        setPlaceholder: vi.fn().mockReturnThis(),
+        setValue(value: string) { input.value = value; return this; },
+        onChange(callback: (value: string) => void) { input.oninput = () => callback(input.value); },
+      });
+      return this;
+    }
+    addButton(configure: (button: unknown) => void): this {
+      const button = this.container.createEl("button");
+      configure({
+        setButtonText(value: string) { button.textContent = value; return this; },
+        setCta: vi.fn().mockReturnThis(),
+        onClick(callback: () => void) { button.onclick = callback; },
+      });
+      return this;
+    }
+  },
+}));
 
 const DISABLED_ICS: IcsEventIndexSnapshot = Object.freeze({
   version: 0,
@@ -29,20 +62,26 @@ const DISABLED_ICS: IcsEventIndexSnapshot = Object.freeze({
   eventsByDate: Object.freeze({}),
 });
 
-describe("WeekView weekly-note opening", () => {
+describe("WeekView note actions", () => {
   let container: HTMLDivElement;
   let root: Root;
   let longPress: LongPressGesture;
 
   beforeEach(() => {
+    const testWindow = new Window();
+    installObsidianDomFactories(testWindow.document as unknown as Document);
+    vi.stubGlobal("window", testWindow);
+    vi.stubGlobal("document", testWindow.document);
+    vi.stubGlobal("Event", testWindow.Event);
+    vi.stubGlobal("MouseEvent", testWindow.MouseEvent);
     setReactActEnvironment(true);
     vi.useFakeTimers();
     container = document.createElement("div");
     document.body.append(container);
     root = createRoot(container);
     longPress = new LongPressGesture({
-      setTimeout: (callback, delay) => window.setTimeout(callback, delay),
-      clearTimeout: (handle) => window.clearTimeout(handle),
+      setTimeout: (callback, delay) => Number(setTimeout(callback, delay)),
+      clearTimeout: (handle) => clearTimeout(handle),
     });
   });
 
@@ -52,6 +91,7 @@ describe("WeekView weekly-note opening", () => {
     container.remove();
     vi.useRealTimers();
     setReactActEnvironment(false);
+    vi.unstubAllGlobals();
   });
 
   it.each([
@@ -87,16 +127,64 @@ describe("WeekView weekly-note opening", () => {
     expect(onOpenPeriodic).toHaveBeenLastCalledWith(query.weekStart, "weekly", "tab");
   });
 
-  async function renderWeeklyNote() {
+  it.each([
+    { selected: { year: 2026, month: 11, day: 20 }, weekStartDay: "monday", start: "2026-11-16", end: "2026-11-22" },
+    { selected: { year: 2026, month: 12, day: 1 }, weekStartDay: "monday", start: "2026-11-30", end: "2026-12-06" },
+    { selected: { year: 2027, month: 1, day: 1 }, weekStartDay: "sunday", start: "2026-12-27", end: "2027-01-02" },
+  ] as const)("prefills the range dialog with the displayed week $start through $end", async ({ selected, weekStartDay, start, end }) => {
+    const { inputs, submit, click } = await openWeekRange(selected, weekStartDay);
+    expect(inputs.map((input) => input.value)).toEqual([start, end]);
+    click("Continue");
+    expect(submit).toHaveBeenCalledExactlyOnceWith(parseLocalDateKey(start), parseLocalDateKey(end));
+  });
+
+  it("lets the user change the week's endpoints or cancel without submitting", async () => {
+    const selected = { year: 2026, month: 11, day: 20 };
+    const dialog = await openWeekRange(selected, "monday");
+    for (const [index, value] of ["2026-11-18", "2026-11-24"].entries()) {
+      dialog.inputs[index]!.value = value;
+      dialog.inputs[index]!.dispatchEvent(new Event("input"));
+    }
+    dialog.click("Continue");
+    expect(dialog.submit).toHaveBeenCalledExactlyOnceWith(
+      { year: 2026, month: 11, day: 18 }, { year: 2026, month: 11, day: 24 },
+    );
+    const cancelled = await openWeekRange(selected, "monday");
+    cancelled.click("Cancel");
+    expect(cancelled.cancel).toHaveBeenCalledOnce();
+    expect(cancelled.submit).not.toHaveBeenCalled();
+  });
+
+  async function openWeekRange(selected: LocalDate, weekStartDay: WeekStartDay) {
+    const submit = vi.fn();
+    const cancel = vi.fn();
+    const dialog = document.createElement("div");
+    await renderWeeklyNote(selected, weekStartDay, (start: LocalDate, end?: LocalDate) => {
+      const modal = new CreateIntervalNoteModal({} as never, start, createTranslator("en", "en-US"), submit, cancel, end);
+      dialog.append(modal.contentEl);
+      modal.onOpen();
+    });
+    await act(async () => container.querySelector<HTMLButtonElement>(".chrono-notes-week-create-range")!.click());
+    return {
+      submit, cancel, inputs: Array.from(dialog.querySelectorAll("input")),
+      click: (label: string) => Array.from(dialog.querySelectorAll("button")).find((button) => button.textContent === label)!.click(),
+    };
+  }
+
+  async function renderWeeklyNote(
+    selected = { year: 2026, month: 10, day: 23 },
+    weekStartDay: WeekStartDay = "monday",
+    onCreateRange: WeekViewProps["onCreateRange"] = () => undefined,
+  ) {
     const settings = createDefaultSettings();
     const query = selectWeekCalendar(
-      { year: 2026, month: 10, day: 23 },
+      selected,
       createParsedNoteIndexSnapshot({}, 1),
       DISABLED_ICS,
       {
         locale: "en-US",
-        weekStartDay: "monday",
-        today: { year: 2026, month: 10, day: 23 },
+        weekStartDay,
+        today: selected,
         calendarExtensions: [],
         holidayRegions: [],
         daily: { enabled: true, pattern: "[Daily]/YYYY-MM-DD" },
@@ -109,9 +197,9 @@ describe("WeekView weekly-note opening", () => {
       query,
       translator: createTranslator("en", "en-US"),
       selectionKind: "day",
-      selectedDate: query.weekStart,
-      today: query.weekStart,
-      weekStartDay: "monday",
+      selectedDate: selected,
+      today: selected,
+      weekStartDay,
       showNoteIndicators: true,
       showTaskProgress: true,
       activePreviewKey: null,
@@ -120,7 +208,7 @@ describe("WeekView weekly-note opening", () => {
       onSelectDate: () => undefined,
       onOpenPeriodic,
       onOpenPath: async () => undefined,
-      onCreateRange: () => undefined,
+      onCreateRange,
       onToggleTask: async () => undefined,
       onRescheduleTask: async () => undefined,
       onOpenTaskSource: async () => undefined,

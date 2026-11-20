@@ -72,19 +72,15 @@ export function renderPeriodicSettingsSection(
 
   renderNoteTemplateGuide(containerEl, context, "periodic");
 
-  const cleanups: SettingsCleanup[] = [];
-  for (const noteType of PERIODIC_NOTE_TYPES) {
-    const cleanup = renderPeriodicNoteType(containerEl, noteType, context);
-    if (cleanup !== null) cleanups.push(cleanup);
-  }
-  return combineSettingsCleanups(cleanups);
+  return combineSettingsCleanups(PERIODIC_NOTE_TYPES.map((noteType) =>
+    renderPeriodicNoteType(containerEl, noteType, context)));
 }
 
 function renderPeriodicNoteType(
   containerEl: HTMLElement,
   noteType: PeriodicNoteType,
   context: SettingsSectionContext,
-): SettingsCleanup | null {
+): SettingsCleanup {
   const { t } = context.translator;
   const config = context.host.settings.periodicNotes[noteType];
   const headingId = `chrono-notes-${noteType}-settings-heading`;
@@ -96,20 +92,32 @@ function renderPeriodicNoteType(
     text: periodicNoteLabel(noteType, t),
     attr: { id: headingId },
   });
-  new Setting(sectionEl)
-    .setName(t("settings.periodic.enabled"))
-    .addToggle((toggle) => {
-      toggle.setValue(config.enabled).onChange(async (value) => {
-        config.enabled = value;
-        await context.persistSettings();
-        context.display();
-      });
+  const enabledSetting = new Setting(sectionEl).setName(t("settings.periodic.enabled"));
+  const fields = sectionEl.createDiv();
+  let cleanup = renderPeriodicNoteFields(fields, noteType, context);
+  enabledSetting.addToggle((toggle) => {
+    toggle.setValue(config.enabled).onChange(async (value) => {
+      config.enabled = value;
+      cleanup?.();
+      fields.empty();
+      cleanup = renderPeriodicNoteFields(fields, noteType, context);
+      await context.persistSettings();
     });
-  if (!config.enabled) return null;
+  });
+  return () => cleanup?.();
+}
 
-  const pathSetting = new Setting(sectionEl);
+function renderPeriodicNoteFields(
+  fields: HTMLElement,
+  noteType: PeriodicNoteType,
+  context: SettingsSectionContext,
+): SettingsCleanup | null {
+  const { t } = context.translator;
+  const config = context.host.settings.periodicNotes[noteType];
+  if (!config.enabled) return null;
+  const pathSetting = new Setting(fields);
   const pathControls = createPeriodicPathSetting(pathSetting, noteType, context);
-  new Setting(sectionEl)
+  new Setting(fields)
     .setName(t("settings.periodic.pathLanguage"))
     .setDesc(t("settings.periodic.pathLanguageDesc"))
     .addDropdown((dropdown) => {
@@ -124,7 +132,7 @@ function renderPeriodicNoteType(
       });
     });
   const templateCleanup = renderTemplatePathSetting(
-    sectionEl,
+    fields,
     t("settings.templates.path"),
     getPeriodicNoteTemplatePathExample(noteType),
     config.templatePath,
