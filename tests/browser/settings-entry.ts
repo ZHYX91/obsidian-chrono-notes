@@ -21,6 +21,7 @@ interface SettingsBrowserSnapshot {
 declare global {
   interface Window {
     chronoSettingsPending: Promise<unknown>;
+    beforeChronoSettingsSave?: () => Promise<void>;
     mountSettingsGuide: () => void;
     mountChronoSettings: (locale: PluginLocale, width: number) => void;
     captureChronoSettings: () => SettingsBrowserSnapshot;
@@ -31,6 +32,7 @@ installObsidianDomFactories(document);
 Object.defineProperties(HTMLElement.prototype, {
   empty: { configurable: true, value(this: HTMLElement) { this.replaceChildren(); } },
   addClass: { configurable: true, value(this: HTMLElement, ...names: string[]) { this.classList.add(...names); } },
+  setText: { configurable: true, value(this: HTMLElement, text: string) { this.textContent = text; } },
 });
 
 window.mountSettingsGuide = () => {
@@ -58,7 +60,10 @@ window.mountChronoSettings = (locale, width) => {
     settings,
     isSettingsReadOnly: () => false,
     getTranslator: () => createTranslator(settings.locale, "en"),
-    saveSettings: async () => { saves += 1; },
+    saveSettings: async () => {
+      saves += 1;
+      await window.beforeChronoSettingsSave?.();
+    },
     getIcsSnapshot: () => null,
     subscribeIcs: () => () => undefined,
     refreshIcs: async () => undefined,

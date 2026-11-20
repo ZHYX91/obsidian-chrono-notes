@@ -72,7 +72,7 @@ export interface WeekViewProps {
     target: NoteOpenTarget,
   ) => Promise<void>;
   readonly onOpenPath: (path: string, target: NoteOpenTarget) => Promise<void>;
-  readonly onCreateRange: (initialDate: LocalDate) => void;
+  readonly onCreateRange: (initialDate: LocalDate, initialEndDate: LocalDate) => void;
   readonly onToggleTask: (task: NoteTask) => Promise<TaskUiFeedback | void>;
   readonly onRescheduleTask: (
     task: NoteTask,
@@ -341,7 +341,7 @@ export function WeekView({
                   className="chrono-notes-week-create-range"
                   aria-label={messages.createRange}
                   title={messages.createRange}
-                  onClick={() => onCreateRange(query.weekStart)}
+                  onClick={() => onCreateRange(query.weekStart, query.weekEnd)}
                 >
                   <CalendarPlus size={15} aria-hidden="true" />
                 </button>

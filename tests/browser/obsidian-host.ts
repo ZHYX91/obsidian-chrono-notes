@@ -6,7 +6,7 @@ export class PluginSettingTab {
   hide(): void {}
 }
 
-export class AbstractInputSuggest {}
+export class AbstractInputSuggest { close(): void {} }
 export function prepareFuzzySearch(): () => null { return () => null; }
 export function renderResults(): void {}
 
@@ -37,8 +37,8 @@ class Toggle {
   }
 }
 
-class TextArea {
-  readonly inputEl = document.createElement("textarea");
+class TextControl<T extends HTMLInputElement | HTMLTextAreaElement> {
+  constructor(readonly inputEl: T) {}
   setPlaceholder(value: string): this { this.inputEl.placeholder = value; return this; }
   setValue(value: string): this { this.inputEl.value = value; return this; }
   onChange(callback: (value: string) => unknown): this {
@@ -71,6 +71,12 @@ export class Setting {
   }
   setName(value: string): this { this.nameEl.textContent = value; return this; }
   setDesc(value: string): this { this.descEl.textContent = value; return this; }
+  setDisabled(value: boolean): this {
+    for (const control of this.controlEl.querySelectorAll<HTMLInputElement>("input, select, textarea, button")) {
+      control.disabled = value;
+    }
+    return this;
+  }
   addDropdown(configure: (component: Dropdown) => void): this {
     const component = new Dropdown();
     this.controlEl.appendChild(component.selectEl);
@@ -83,8 +89,14 @@ export class Setting {
     configure(component);
     return this;
   }
-  addTextArea(configure: (component: TextArea) => void): this {
-    const component = new TextArea();
+  addText(configure: (component: TextControl<HTMLInputElement>) => void): this {
+    const component = new TextControl(document.createElement("input"));
+    this.controlEl.appendChild(component.inputEl);
+    configure(component);
+    return this;
+  }
+  addTextArea(configure: (component: TextControl<HTMLTextAreaElement>) => void): this {
+    const component = new TextControl(document.createElement("textarea"));
     this.controlEl.appendChild(component.inputEl);
     configure(component);
     return this;

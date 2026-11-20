@@ -10,6 +10,72 @@ test.beforeAll(async () => {
   fixture = await createSettingsBrowserFixture();
 });
 
+for (const tab of ["periodic", "ranges"] as const) {
+  test(`${tab}: keeps focus and scroll beside the newly enabled field`, async ({ page }, testInfo) => {
+    await page.setContent(fixture.html);
+    await page.addScriptTag({ content: fixture.script });
+    await page.evaluate(() => window.mountChronoSettings("en", 420));
+    await page.addStyleTag({ content: "#settings-fixture { height: 360px; overflow-y: auto; }" });
+    await page.locator(`[role="tab"][data-tab-id="${tab}"]`).click();
+    const weeklySection = '[aria-labelledby="chrono-notes-weekly-settings-heading"]';
+    const control = tab === "periodic"
+      ? page.locator(`${weeklySection} input[type=checkbox]`)
+      : page.locator('[role="tabpanel"] select');
+    const dependent = tab === "periodic"
+      ? page.locator(`${weeklySection} .chrono-notes-periodic-path-setting input`)
+      : page.getByPlaceholder("Projects");
+    await control.evaluate((field) => field.scrollIntoView({ block: "center" }));
+    await control.focus();
+    const scroller = page.locator("#settings-fixture");
+    const before = await scroller.evaluate((el) => el.scrollTop);
+    expect(before).toBeGreaterThan(0);
+    if (tab === "periodic") await control.press("Space");
+    else await control.selectOption("custom-folder");
+    await page.evaluate(async () => { await window.chronoSettingsPending; });
+    const after = await scroller.evaluate((el) => el.scrollTop);
+    const rect = await dependent.boundingBox();
+    const viewport = (await scroller.boundingBox())!;
+    await testInfo.attach("dependent-setting-viewport", { contentType: "application/json", body: JSON.stringify({
+      before, after, focused: await control.evaluate((el) => el === document.activeElement), rect, viewport,
+    }) });
+    expect(after).toBeCloseTo(before, 0);
+    await expect(control).toBeFocused();
+    await expect(dependent).toBeEnabled();
+    expect(rect!.y).toBeGreaterThanOrEqual(viewport.y);
+    expect(rect!.y + rect!.height).toBeLessThanOrEqual(viewport.y + viewport.height);
+    await control.press("Tab");
+    await expect(dependent).toBeFocused();
+    const value = tab === "periodic" ? "[Weeks]/GGGG-[W]WW" : "Projects/Current";
+    await dependent.fill(value);
+    if (tab === "periodic") {
+      await control.press("Space");
+      await expect(dependent).toHaveCount(0);
+      await control.press("Space");
+    } else {
+      await control.selectOption("entire-vault");
+      await expect(dependent).toBeDisabled();
+      await control.selectOption("custom-folder");
+    }
+    await expect(dependent).toBeEnabled();
+    await expect(dependent).toHaveValue(value);
+    await page.evaluate(async () => { await window.chronoSettingsPending; });
+    await page.evaluate(() => {
+      window.beforeChronoSettingsSave = () => new Promise<void>((resolve) =>
+        window.addEventListener("release-test-save", () => resolve(), { once: true }));
+    });
+    if (tab === "periodic") await control.press("Space");
+    else await control.selectOption("range-folder");
+    const otherTab = page.locator('[role="tab"][data-tab-id="general"]');
+    await otherTab.click();
+    await page.evaluate(async () => {
+      window.dispatchEvent(new Event("release-test-save"));
+      await window.chronoSettingsPending;
+    });
+    await expect(otherTab).toHaveAttribute("aria-selected", "true");
+    await expect(otherTab).toBeFocused();
+  });
+}
+
 for (const locale of ["en", "fa", "ar", "he"] satisfies PluginLocale[]) {
   test(`${locale}: keeps the active tab and dropdown focus through saving and refresh`, async ({ page }, testInfo) => {
     const errors: string[] = [];

@@ -101,8 +101,8 @@ export function renderRangeSettingsSection(
         .onChange(async (value) => {
           if (!isRangeNoteScanScope(value)) return;
           settings.scanScope = value;
+          customFolder.setDisabled(value !== "custom-folder");
           await context.persistSettings();
-          context.display();
         });
     });
   const customFolder = new Setting(containerEl);
