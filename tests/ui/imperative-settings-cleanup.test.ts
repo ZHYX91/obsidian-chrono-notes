@@ -1,3 +1,5 @@
+import { createRequire } from "node:module";
+
 import { Window } from "happy-dom";
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -8,6 +10,7 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock("obsidian", () => ({
+  moment: createRequire(createRequire(import.meta.url).resolve("obsidian/package.json"))("moment"),
   setIcon: vi.fn(),
   Setting: class {
     readonly settingEl = document.createElement("div");
@@ -23,7 +26,8 @@ vi.mock("obsidian", () => ({
       return this;
     }
 
-    setDesc(): this {
+    setDesc(text: string): this {
+      this.descEl.textContent = text;
       return this;
     }
 
@@ -67,6 +71,11 @@ vi.mock("obsidian", () => ({
       const inputEl = document.createElement("input");
       this.controlEl.append(inputEl);
       const text = createChainableControl({ inputEl });
+      text.setValue = (value: string) => { inputEl.value = value; return text; };
+      text.onChange = (callback: (value: string) => void) => {
+        inputEl.addEventListener("input", () => callback(inputEl.value));
+        return text;
+      };
       configure(text);
       return this;
     }
@@ -97,10 +106,11 @@ vi.mock("../../src/ui/settings/vault-path-suggest", () => ({
   },
 }));
 
-import type { App } from "obsidian";
+import { type App, Setting } from "obsidian";
 
 import { createTranslator } from "../../src/shared/i18n";
 import { createDefaultSettings } from "../../src/shared/settings";
+import { configurePropertyFormatSetting } from "../../src/ui/settings/general-settings-section";
 import { renderPeriodicSettingsSection } from "../../src/ui/settings/periodic-settings-section";
 import { renderTemplateSyntaxGuide } from "../../src/ui/settings/template-guide";
 import { renderRangeSettingsSection } from "../../src/ui/settings/range-settings-section";
@@ -123,6 +133,12 @@ describe("imperative settings cleanup", () => {
         configurable: true,
         value(this: HTMLElement, ...classes: string[]): void {
           this.classList.add(...classes);
+        },
+      },
+      toggleClass: {
+        configurable: true,
+        value(this: HTMLElement, name: string, enabled: boolean): void {
+          this.classList.toggle(name, enabled);
         },
       },
       empty: {
@@ -149,6 +165,63 @@ describe("imperative settings cleanup", () => {
     mocks.markdownClose.length = 0;
     mocks.periodicClose.length = 0;
     mocks.vaultClose.length = 0;
+  });
+
+  it("labels each period and links invalid path inputs to their visible example and live feedback", () => {
+    const context = createContext();
+    Object.assign(context.host.settings.periodicNotes.daily, { enabled: true, pattern: "" });
+    const root = document.createElement("div");
+    const cleanup = renderPeriodicSettingsSection(root, context);
+    try {
+      const sections = root.querySelectorAll("section[aria-labelledby]");
+      expect(sections.length).toBe(Object.keys(context.host.settings.periodicNotes).length);
+      for (const section of sections) {
+        const heading = section.querySelector("h3");
+        expect(heading?.id).toBe(section.getAttribute("aria-labelledby"));
+        expect(heading?.textContent).toBeTruthy();
+      }
+      const input = root.querySelector<HTMLInputElement>('input[aria-invalid="true"]')!;
+      expect(input.getAttribute("aria-required")).toBe("true");
+      const [exampleId, feedbackId] = input.getAttribute("aria-describedby")!.split(" ");
+      const example = root.querySelector(`#${exampleId}`);
+      const feedback = root.querySelector(`#${feedbackId}`);
+      expect(example?.textContent).toBeTruthy();
+      expect(example?.closest("details")).toBeNull();
+      expect(feedback?.getAttribute("aria-live")).toBe("polite");
+      expect(feedback?.textContent).toBeTruthy();
+      expect(input.getAttribute("autocapitalize")).toBe("off");
+      expect(input.getAttribute("autocomplete")).toBe("off");
+      expect(input.spellcheck).toBe(false);
+    } finally {
+      cleanup();
+    }
+  });
+
+  it.each([
+    ["date", "YYYY-MM-DD", "2026-07-31"],
+    ["time", "HH:mm", "14:05"],
+  ] as const)("keeps the %s format example and live feedback outside its token reference", (kind, format, preview) => {
+    const context = createContext();
+    const root = document.createElement("div");
+    const setting = new Setting(root);
+    configurePropertyFormatSetting(setting, context, kind);
+    const input = root.querySelector("input")!;
+    const guide = root.querySelector("details")!;
+    const feedback = setting.descEl.querySelector('[aria-live="polite"]')!;
+    expect(guide.dataset.chronoGuide).toBe(`property-${kind}-tokens`);
+    expect(guide.open).toBe(false);
+    expect(setting.descEl.textContent).toContain("Example");
+    expect(setting.descEl.closest("details")).toBeNull();
+    expect(input.getAttribute("aria-describedby")).toBe(setting.descEl.id);
+    input.value = "!";
+    input.dispatchEvent(new window.Event("input"));
+    expect(input.getAttribute("aria-invalid")).toBe("true");
+    expect(feedback.textContent).toBe(context.translator.t("settings.general.propertyFormatInvalid"));
+    input.value = format;
+    input.dispatchEvent(new window.Event("input"));
+    expect(input.getAttribute("aria-invalid")).toBe("false");
+    expect(feedback.textContent).toContain(preview);
+    expect(guide.open).toBe(false);
   });
 
   it("closes every periodic folder and template suggestion exactly once", () => {
@@ -210,7 +283,16 @@ describe("imperative settings cleanup", () => {
     renderTemplateSyntaxGuide(templates, context);
     expect(paths.querySelectorAll(".chrono-notes-periodic-note-section")).toHaveLength(7);
     expect(templates.querySelectorAll(".chrono-notes-settings-guide")).toHaveLength(1);
-    expect(paths.querySelectorAll(".chrono-notes-settings-guide")).toHaveLength(2);
+    expect(paths.querySelectorAll(".chrono-notes-settings-guide")).toHaveLength(3);
+    const placeholders = paths.querySelector('[data-chrono-guide="periodic-template"]')!;
+    const dates = paths.querySelector('[data-chrono-guide="periodic-date-ranges"]')!;
+    expect(placeholders.querySelectorAll("table")).toHaveLength(1);
+    expect(dates.querySelectorAll("table")).toHaveLength(1);
+    expect(dates.textContent).toContain("2001-01-01");
+    expect(placeholders.textContent).not.toContain("2001-01-01");
+    expect(placeholders.textContent).toContain("vault root");
+    expect(paths.querySelector(".chrono-notes-periodic-note-section")?.textContent)
+      .not.toContain("vault root");
     expect(ranges.querySelectorAll(".chrono-notes-settings-guide")).toHaveLength(2);
     expect(paths.textContent).toContain("2001-01-01");
     expect(paths.textContent).toContain("2100-12-31");
@@ -254,12 +336,18 @@ describe("imperative settings cleanup", () => {
 
     renderRangeSettingsSection(container, createContext());
 
-    const guide = container.querySelector<HTMLElement>(".chrono-notes-settings-guide");
-    expect(guide?.getAttribute("role")).toBe("note");
+    const guide = container.querySelector("details");
+    expect(guide?.tagName).toBe("DETAILS");
+    expect(guide?.open).toBe(false);
+    expect(guide?.querySelector("summary")?.textContent).toBe("How range notes are found");
     expect(guide?.textContent).toContain("How range notes are found");
     expect(guide?.textContent).toContain("chrono-notes: interval");
-    expect(guide?.textContent).toContain("does not modify existing notes automatically");
-    expect(container.firstElementChild).toBe(guide);
+    const visibleAdvice = Array.from(container.querySelectorAll("p"))
+      .filter((paragraph) => paragraph.closest("details") === null)
+      .map((paragraph) => paragraph.textContent);
+    expect(visibleAdvice).toContain("Range notes must contain valid start and end properties.");
+    expect(visibleAdvice.some((text) => text?.includes("does not modify existing notes automatically"))).toBe(true);
+    expect(guide?.previousElementSibling?.textContent).toContain("does not modify existing notes automatically");
   });
 
   it("runs every cleanup in reverse order before reporting the first failure", () => {

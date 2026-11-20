@@ -1,6 +1,9 @@
 # Changelog
 
 Notable changes to Chrono Notes are documented in this file. The repository's numeric Git tags are the evidence for released versions; an entry without a corresponding local tag remains unreleased even if the manifests already contain that version.
+> **Unreleased settings changes**
+>
+> - Shorten template file instructions, separate periodic date ranges from template placeholders, and keep custom date and time format references beside their inputs. ICS refresh summaries and warnings stay visible with successful source details available on demand.
 
 ## 0.8.4
 

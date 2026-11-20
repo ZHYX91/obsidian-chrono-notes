@@ -246,7 +246,7 @@ describe("ChronoNotesSettingTab save orchestration", () => {
     });
   });
 
-  it("shows a localized future-schema warning and disables only settings controls", async () => {
+  it("shows a localized future-schema warning and disables only settings controls", () => {
     mocks.renderGeneral.mockImplementationOnce((containerEl: HTMLElement) => {
       containerEl.append(document.createElement("input"));
       containerEl.append(document.createElement("select"));
@@ -278,24 +278,8 @@ describe("ChronoNotesSettingTab save orchestration", () => {
     ].every((control) => !control.disabled)).toBe(true);
     expect(tab.getSettingDefinitions()).toEqual([]);
 
-    await tab.setControlValue("locale", "en");
     expect(host.settings.locale).toBe("zh-CN");
     expect(saveSettings).not.toHaveBeenCalled();
-  });
-
-  it("applies locale direction to the declarative 1.13 surface", () => {
-    const { tab, host } = createTab();
-    host.settings.locale = "ar";
-
-    expect(tab.getSettingDefinitions()).toEqual([]);
-    tab.getDeclarativeSettingDefinitions();
-
-    expect(tab.containerEl.dir).toBe("rtl");
-    expect(tab.containerEl.classList.contains("chrono-notes-settings")).toBe(true);
-
-    host.settings.locale = "hi";
-    tab.getDeclarativeSettingDefinitions();
-    expect(tab.containerEl.dir).toBe("ltr");
   });
 
   it("saves a scheduled section edit after the 300 ms debounce", async () => {
@@ -323,7 +307,7 @@ describe("ChronoNotesSettingTab save orchestration", () => {
     expect(saveSettings).toHaveBeenCalledOnce();
   });
 
-  it("flushes a pending declarative edit when its rendered row is cleaned up", async () => {
+  it("flushes a pending section edit when its rendered row is cleaned up", async () => {
     const { context, saveSettings } = displayAndGetGeneralContext();
     context.scheduleSettingsSave();
 
@@ -425,82 +409,10 @@ describe("ChronoNotesSettingTab save orchestration", () => {
     expect(saveSettings).toHaveBeenCalledOnce();
   });
 
-  it("builds declarative pages without starting Vault suggestion listeners", () => {
+  it("leaves host-generated settings empty without subscribing to the Vault", () => {
     const { tab, vaultOn } = createTab();
-
-    const definitions = tab.getDeclarativeSettingDefinitions();
-
-    expect(definitions).toHaveLength(5);
+    expect(tab.getSettingDefinitions()).toEqual([]);
     expect(vaultOn).not.toHaveBeenCalled();
-  });
-
-  it("persists declarative controls and selects the guarded 1.13 refresh path", async () => {
-    const { tab, host, saveSettings } = createTab();
-    const update = vi.fn();
-    const refreshDomState = vi.fn();
-    Object.defineProperty(tab, "update", { configurable: true, value: update });
-    Object.defineProperty(tab, "refreshDomState", {
-      configurable: true,
-      value: refreshDomState,
-    });
-    tab.getDeclarativeSettingDefinitions();
-
-    await tab.setControlValue("locale", "zh-CN");
-
-    expect(host.settings.locale).toBe("zh-CN");
-    expect(saveSettings).toHaveBeenCalledOnce();
-    expect(update).toHaveBeenCalledOnce();
-    expect(refreshDomState).not.toHaveBeenCalled();
-
-    await tab.setControlValue("propertyDateDisplayFormat", "custom");
-    expect(host.settings.propertyDateDisplayFormat).toBe("custom");
-    expect(saveSettings).toHaveBeenCalledTimes(2);
-    expect(update).toHaveBeenCalledOnce();
-    expect(refreshDomState).toHaveBeenCalledOnce();
-
-    await tab.setControlValue("periodicNotes.daily.enabled", true);
-    expect(host.settings.periodicNotes.daily.enabled).toBe(true);
-    expect(saveSettings).toHaveBeenCalledTimes(3);
-    expect(update).toHaveBeenCalledOnce();
-    expect(refreshDomState).toHaveBeenCalledTimes(2);
-
-    expect(update).toHaveBeenCalledOnce();
-    expect(refreshDomState).toHaveBeenCalledTimes(2);
-    expect(mocks.renderRanges).not.toHaveBeenCalled();
-    tab.hide();
-  });
-
-  it("does not refresh a reopened declarative surface from an older pending save", async () => {
-    let resolveSave!: () => void;
-    const save = new Promise<void>((resolve) => {
-      resolveSave = resolve;
-    });
-    const { tab, host, saveSettings } = createTab();
-    const update = vi.fn();
-    Object.defineProperty(tab, "update", { configurable: true, value: update });
-    tab.getDeclarativeSettingDefinitions();
-    saveSettings.mockReturnValueOnce(save);
-
-    const pendingMutation = tab.setControlValue("locale", "zh-CN");
-    tab.hide();
-    const reopenedDefinitions = tab.getDeclarativeSettingDefinitions();
-    resolveSave();
-    await pendingMutation;
-
-    expect(host.settings.locale).toBe("zh-CN");
-    expect(reopenedDefinitions).toHaveLength(5);
-    expect(update).not.toHaveBeenCalled();
-  });
-
-  it("retains debounced persistence for declarative text controls", async () => {
-    const { tab, host, saveSettings } = createTab();
-
-    await tab.setControlValue("ics.sources", " a.ics\na.ics\nb.ics ");
-    expect(host.settings.ics.sources).toEqual(["a.ics", "b.ics"]);
-    expect(saveSettings).not.toHaveBeenCalled();
-
-    await vi.advanceTimersByTimeAsync(300);
-    expect(saveSettings).toHaveBeenCalledOnce();
   });
 });
 

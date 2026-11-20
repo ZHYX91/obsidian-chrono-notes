@@ -14,6 +14,7 @@ import {
 } from "../../shared/settings";
 import { PLUGIN_LANGUAGE_OPTIONS } from "../../shared/plugin-languages";
 import type { SettingsCleanup } from "./settings-cleanup";
+import { createSettingsGuide } from "./settings-guide";
 import { renderIndexCacheSettingsSection } from "./index-cache-settings";
 import type { SettingsSectionContext } from "./settings-section-context";
 import { renderTemplateEngineSettings } from "./template-settings";
@@ -172,16 +173,17 @@ export function configurePropertyFormatSetting(
 ): void {
   const { t } = context.translator;
   const isDate = kind === "date";
+  const label = t(isDate
+    ? "settings.general.propertyDateCustomFormat"
+    : "settings.general.propertyTimeCustomFormat");
   setting.settingEl.addClass("chrono-notes-property-custom-format-setting");
   setting
-    .setName(t(isDate
-      ? "settings.general.propertyDateCustomFormat"
-      : "settings.general.propertyTimeCustomFormat"))
-    .setDesc(t(isDate
-      ? "settings.general.propertyDateCustomFormatDesc"
-      : "settings.general.propertyTimeCustomFormatDesc"));
+    .setName(label)
+    .setDesc(t("settings.general.formatExample", { format: isDate ? "YYYY-MM-DD dddd" : "HH:mm" }));
+  setting.descEl.id ||= `chrono-notes-property-${kind}-format-description`;
   const feedback = setting.descEl.createDiv({
     cls: "chrono-notes-property-format-feedback",
+    attr: { "aria-live": "polite" },
   });
   const renderFeedback = (format: string, inputEl: HTMLInputElement): void => {
     const valid = isDate
@@ -211,8 +213,17 @@ export function configurePropertyFormatSetting(
         renderFeedback(normalized, text.inputEl);
         context.scheduleSettingsSave();
       });
+    text.inputEl.setAttribute("aria-label", label);
+    text.inputEl.setAttribute("aria-describedby", setting.descEl.id);
     text.inputEl.maxLength = MAX_PROPERTY_DATE_FORMAT_LENGTH;
     context.flushSettingsSaveOnBlur(text.inputEl);
     renderFeedback(current, text.inputEl);
   });
+  const guide = createSettingsGuide(
+    setting.settingEl, t(isDate ? "settings.general.dateTokens" : "settings.general.timeTokens"),
+    isDate ? "property-date-tokens" : "property-time-tokens",
+  );
+  guide.createEl("p", { text: t(isDate
+    ? "settings.general.propertyDateCustomFormatDesc"
+    : "settings.general.propertyTimeCustomFormatDesc") });
 }

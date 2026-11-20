@@ -47,3 +47,41 @@ for (const locale of ["en", "fa", "ar", "he"] satisfies PluginLocale[]) {
     expect(errors).toEqual([]);
   });
 }
+
+test("the tutorial opens by keyboard and keeps readable line lengths on a wide screen", async ({ page }) => {
+  await page.setViewportSize({ width: 1200, height: 800 });
+  await page.setContent(fixture.html);
+  await page.addScriptTag({ content: fixture.script });
+  await page.evaluate(() => window.mountSettingsGuide());
+  const summary = page.locator("summary");
+  const body = page.locator(".chrono-notes-settings-guide-body");
+  const text = page.getByText("Choose a date to create a range note.");
+  await expect(text).toBeHidden();
+  await expect(summary).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
+  await expect(summary).toHaveCSS("border-top-style", "none");
+  expect((await summary.boundingBox())!.height).toBeGreaterThanOrEqual(32);
+  await page.keyboard.press("Tab");
+  await expect(summary).toBeFocused();
+  await expect(summary).toHaveCSS("outline-style", "solid");
+  await summary.press("Enter");
+  await expect(text).toBeVisible();
+  await expect(body).toHaveCSS("border-left-width", "2px");
+  await expect(body).toHaveCSS("border-right-width", "0px");
+  await expect(body).toHaveCSS("margin-inline-start", "6px");
+  const widths = await text.evaluate((paragraph) => ({
+    text: paragraph.getBoundingClientRect().width,
+    available: paragraph.closest("details")!.getBoundingClientRect().width,
+  }));
+  expect(widths.text).toBeGreaterThan(200);
+  expect(widths.text).toBeLessThan(widths.available * 0.8);
+  await page.locator("details").evaluate((guide) => guide.setAttribute("dir", "rtl"));
+  await page.setViewportSize({ width: 360, height: 800 });
+  await expect(body).toHaveCSS("border-left-width", "0px");
+  await expect(body).toHaveCSS("border-right-width", "2px");
+  await expect(body).toHaveCSS("margin-inline-start", "0px");
+  await expect(body).toHaveCSS("padding-inline-start", "10px");
+  await summary.press("Space");
+  await expect(text).toBeHidden();
+  await expect(body).toHaveCSS("border-inline-start-width", "0px");
+  await expect(summary).toBeFocused();
+});

@@ -1,3 +1,4 @@
+import { clearSettingsGuideState, rememberSettingsGuides } from "./settings-guide";
 import {
   PluginSettingTab,
   type App,
@@ -26,17 +27,6 @@ import { createSettingsTabLayout } from "./settings-tab-layout";
 import type { SettingsTabId } from "./settings-tab-navigation";
 import { getSettingsTabLabels } from "./settings-presentation";
 import { VaultPathSuggestionCatalog } from "./vault-path-suggest";
-import {
-  applyDeclarativeControlValue,
-  getDeclarativeControlValue,
-  getDeclarativeSettingDefinitions,
-} from "./declarative-settings";
-
-// Declarative settings are intentionally inactive. Obsidian 1.13 renders
-// non-empty definitions as navigable pages and bypasses display(), which removes
-// this plugin's top tab bar and degrades the established settings experience.
-// Dormant definitions remain covered by tests but must not become active by default.
-const ENABLE_DECLARATIVE_SETTINGS = false;
 
 export class ChronoNotesSettingTab extends PluginSettingTab {
   private static readonly TEXT_SAVE_DELAY_MS = 300;
@@ -74,52 +64,16 @@ export class ChronoNotesSettingTab extends PluginSettingTab {
   }
 
   override getSettingDefinitions(): SettingDefinitionItem[] {
-    if (!ENABLE_DECLARATIVE_SETTINGS) return [];
-    return this.getDeclarativeSettingDefinitions();
-  }
-
-  getDeclarativeSettingDefinitions(): SettingDefinitionItem[] {
-    this.surfaceVisible = true;
-    const surfaceRevision = ++this.surfaceRevision;
-    this.translator = this.host.getTranslator();
-    this.applySurfaceSemantics();
-    return getDeclarativeSettingDefinitions(
-      this.createSectionContext(
-        () => updateDeclarativeSettingTab(this),
-        surfaceRevision,
-      ),
-    );
-  }
-
-  override getControlValue(key: string): unknown {
-    return getDeclarativeControlValue(this.host.settings, key);
-  }
-
-  override async setControlValue(key: string, value: unknown): Promise<void> {
-    if (this.host.isSettingsReadOnly()) return;
-    const surfaceRevision = this.surfaceRevision;
-    const mutation = applyDeclarativeControlValue(this.host.settings, key, value);
-    if (mutation.persistence === "scheduled") {
-      this.settingsSave.schedule();
-    } else {
-      await this.settingsSave.saveNow();
-    }
-    if (!this.isSurfaceCurrent(surfaceRevision)) return;
-    if (mutation.refresh === "update") {
-      this.surfaceRevision += 1;
-      updateDeclarativeSettingTab(this);
-    } else if (mutation.refresh === "refresh-dom-state") {
-      refreshDeclarativeSettingTabState(this);
-    }
+    // Empty definitions let Obsidian open the five-tab display() surface.
+    return [];
   }
 
   override hide(): void {
+    clearSettingsGuideState(this.containerEl);
     this.surfaceVisible = false;
     this.surfaceRevision += 1;
     this.cleanupImperativeSection();
     try {
-      // Obsidian 1.13 owns declarative control cleanup in the base lifecycle,
-      // so let it release those resources while their DOM is still attached.
       super.hide();
     } finally {
       this.containerEl.empty();
@@ -141,6 +95,7 @@ export class ChronoNotesSettingTab extends PluginSettingTab {
       ? focused.getAttribute("data-chrono-settings-control")
       : null;
     this.translator = this.host.getTranslator();
+    rememberSettingsGuides(containerEl);
     this.cleanupImperativeSection();
     containerEl.empty();
     this.applySurfaceSemantics();
@@ -158,7 +113,7 @@ export class ChronoNotesSettingTab extends PluginSettingTab {
     const settingsReadOnly = this.host.isSettingsReadOnly();
     if (settingsReadOnly) this.renderReadOnlyStatus(panelEl);
     this.imperativeSaveStatusCleanup = this.renderSaveStatus(panelEl);
-    const sectionContext = this.createSectionContext(undefined, surfaceRevision);
+    const sectionContext = this.createSectionContext(surfaceRevision);
 
     let cleanup: SettingsCleanup | void;
     switch (this.activeTab) {
@@ -282,10 +237,7 @@ export class ChronoNotesSettingTab extends PluginSettingTab {
     this.containerEl.dir = this.translator.direction;
   }
 
-  private createSectionContext(
-    display: () => void = () => this.render(null),
-    surfaceRevision = this.surfaceRevision,
-  ): SettingsSectionContext {
+  private createSectionContext(surfaceRevision: number): SettingsSectionContext {
     return {
       app: this.app,
       host: this.host,
@@ -300,24 +252,12 @@ export class ChronoNotesSettingTab extends PluginSettingTab {
         });
       },
       display: () => {
-        if (this.isSurfaceCurrent(surfaceRevision)) display();
+        if (this.isSurfaceCurrent(surfaceRevision)) this.render(null);
       },
     };
   }
 
   private isSurfaceCurrent(surfaceRevision: number): boolean {
     return this.surfaceVisible && this.surfaceRevision === surfaceRevision;
-  }
-}
-
-function updateDeclarativeSettingTab(settingTab: object): void {
-  const update: unknown = Reflect.get(settingTab, "update");
-  if (typeof update === "function") Reflect.apply(update, settingTab, []);
-}
-
-function refreshDeclarativeSettingTabState(settingTab: object): void {
-  const refreshDomState: unknown = Reflect.get(settingTab, "refreshDomState");
-  if (typeof refreshDomState === "function") {
-    Reflect.apply(refreshDomState, settingTab, []);
   }
 }

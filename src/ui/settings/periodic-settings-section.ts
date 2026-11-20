@@ -51,8 +51,10 @@ export function renderPeriodicSettingsSection(
         await context.persistSettings();
       });
     });
-  containerEl.createEl("h3", { text: t("settings.periodic.paths") });
-  const pathGuideEl = createSettingsGuide(containerEl, t("settings.periodic.paths"));
+  containerEl.createEl("p", {
+    cls: "chrono-notes-settings-guide-brief", text: t("settings.periodic.pathIntro"),
+  });
+  const pathGuideEl = createSettingsGuide(containerEl, t("settings.periodic.paths"), "periodic-paths");
   pathGuideEl.createEl("p", { text: t("settings.periodic.pathsDesc") });
   renderDateFormatGuide(pathGuideEl, context.translator, false);
   pathGuideEl.createEl("p", { text: t("settings.periodic.longGrouping") });

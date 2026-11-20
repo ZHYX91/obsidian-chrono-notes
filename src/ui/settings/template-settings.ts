@@ -58,13 +58,8 @@ export function configureTemplatePathSetting(
   context: SettingsSectionContext,
 ): SettingsCleanup {
   const { t } = context.translator;
-  setting.setName(name).setDesc(t("settings.templates.pathDesc"));
+  setting.setName(name).setDesc(t("settings.templates.pathBrief"));
   setting.settingEl.addClass("chrono-notes-template-path-setting");
-  const exampleEl = setting.descEl.createDiv({
-    cls: "chrono-notes-template-path-example",
-  });
-  exampleEl.append(`${t("settings.templates.pathExample")}: `);
-  exampleEl.createEl("code", { text: example });
   let suggest: MarkdownFileSuggest | null = null;
   setting.addText((text) => {
     text
