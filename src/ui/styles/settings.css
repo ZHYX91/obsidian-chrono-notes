@@ -70,13 +70,6 @@
   margin-top: 8px;
 }
 
-.chrono-notes-index-details > summary {
-  min-height: 34px;
-  cursor: var(--cursor, default);
-  color: var(--text-muted);
-  font-size: var(--font-ui-small);
-}
-
 .chrono-notes-index-metrics {
   display: grid;
   gap: var(--size-2-1);

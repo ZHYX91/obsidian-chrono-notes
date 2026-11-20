@@ -172,17 +172,17 @@ describe("settings", () => {
       .toBe(true);
   });
 
-  it("opts in to missing periodic links independently of Properties date clicks", () => {
-    expect(createDefaultSettings().createMissingPeriodicNotesFromLinks).toBe(false);
+  it("enables missing periodic links by default independently of Properties date clicks", () => {
+    expect(createDefaultSettings().createMissingPeriodicNotesFromLinks).toBe(true);
     expect(migrateSettings({ schemaVersion: 19, interceptPropertyDateClicks: true }))
-      .toMatchObject({ createMissingPeriodicNotesFromLinks: false, interceptPropertyDateClicks: true });
+      .toMatchObject({ createMissingPeriodicNotesFromLinks: true, interceptPropertyDateClicks: true });
     expect(normalizeSettings({
       schemaVersion: SETTINGS_SCHEMA_VERSION,
       interceptPropertyDateClicks: false,
-      createMissingPeriodicNotesFromLinks: true,
-    })).toMatchObject({ createMissingPeriodicNotesFromLinks: true, interceptPropertyDateClicks: false });
+      createMissingPeriodicNotesFromLinks: false,
+    })).toMatchObject({ createMissingPeriodicNotesFromLinks: false, interceptPropertyDateClicks: false });
     expect(normalizeSettings({ createMissingPeriodicNotesFromLinks: "true" })
-      .createMissingPeriodicNotesFromLinks).toBe(false);
+      .createMissingPeriodicNotesFromLinks).toBe(true);
   });
 
   it("normalizes the Properties date display format independently of YAML", () => {

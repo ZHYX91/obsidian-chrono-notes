@@ -715,7 +715,7 @@ describe("ChronoNotesPlugin lifecycle composition", () => {
     expect(mocks.state.saveData).toHaveBeenCalledOnce();
     expect(mocks.state.saveData).toHaveBeenCalledWith(expect.objectContaining({
       schemaVersion: SETTINGS_SCHEMA_VERSION,
-      createMissingPeriodicNotesFromLinks: false,
+      createMissingPeriodicNotesFromLinks: true,
       calendarExtensions: ["persian", "islamic-umalqura"],
       showTaskProgress: true,
       periodicNotes: expect.objectContaining({
@@ -1450,6 +1450,8 @@ function createApp(): Record<string, unknown> {
   };
 
   const workspace = {
+    openLinkText: vi.fn(async () => {}),
+    offref: (ref: { off(): void }) => ref.off(),
     onLayoutReady: (callback: () => void) => {
       mocks.state.layoutReadyCallbacks.push(callback);
     },

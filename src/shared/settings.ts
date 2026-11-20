@@ -132,7 +132,7 @@ const DEFAULT_SETTINGS: Readonly<ChronoNotesSettings> = {
   statisticValueStep: 200,
   yearViewHeatmap: false,
   confirmPeriodicNoteCreation: true,
-  createMissingPeriodicNotesFromLinks: false,
+  createMissingPeriodicNotesFromLinks: true,
   confirmIntervalNoteCreation: true,
   cascadeLargerNotes: true,
   templateEngine: "builtin",

@@ -428,6 +428,27 @@
         "Only visible, independently writable dates index and reschedule tasks. Link destinations, titles and shared shortcut/Wiki targets never supply a date; protected content cannot join a date marker to later text.",
         "Real drag and selector interactions write the correct date both with the source closed and with an editor open. Explicit labels remain editable without changing link targets or unrelated note text."
       ]
+    },
+    {
+      "id": "periodic-link-navigation",
+      "title": "Follow missing periodic links in Reading view and Live Preview",
+      "surfaces": [
+        "desktop",
+        "android-emulator"
+      ],
+      "requiredCapabilities": {
+        "desktop": [],
+        "android-emulator": []
+      },
+      "steps": [
+        "Open Projects/Periodic link navigation.md. Keep the provided daily pattern, built-in template and creation confirmation. Confirm that the missing periodic link setting starts enabled. When testing alongside a second missing-link handler, enable its handling as well.",
+        "In Reading view follow Periodic reading, confirm, and inspect Daily/2029-01-20.md. Return to the source. In Live Preview place the caret in the Periodic editing link text without following it, then use the normal platform open-link gesture, confirm, and inspect Daily/2029-01-21.md. On desktop also exercise a native new-tab open.",
+        "Follow Cancel creation and cancel the confirmation. Follow Existing note and check its original content. Return and follow Ordinary target to check native navigation or the other enabled handler. Turn off the Chrono link option and follow Cancel creation again to verify fallback."
+      ],
+      "expected": [
+        "Only the two confirmed links create daily notes in Daily with the acceptance-template property. Editing the link text does not create a file; the native new-tab gesture preserves the source pane. Cancellation creates no file or folder anywhere for 2029-01-22, even with a second creator enabled.",
+        "The existing note opens without a creation prompt. The ordinary target and the link followed after switching Chrono off are handled by Obsidian or the other enabled creator. The source keeps its original links and aliases."
+      ]
     }
   ]
 }

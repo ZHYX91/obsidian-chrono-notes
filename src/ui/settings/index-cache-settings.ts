@@ -28,10 +28,10 @@ export function configureNoteIndexStatusSetting(
   const { t } = context.translator;
   setting.settingEl.classList.add("chrono-notes-index-status-setting");
   const details = setting.settingEl.createEl("details", {
-    cls: "chrono-notes-index-details",
+    cls: "chrono-notes-index-details chrono-notes-settings-guide",
   });
-  details.createEl("summary", { text: t("settings.index.details.title") });
-  const metrics = details.createEl("dl", { cls: "chrono-notes-index-metrics" });
+  details.createEl("summary", { cls: "chrono-notes-settings-guide-summary", text: t("settings.index.details.title") });
+  const metrics = details.createEl("dl", { cls: "chrono-notes-index-metrics chrono-notes-settings-guide-body" });
   const values = {
     notes: appendMetric(metrics, t("settings.index.details.notes")),
     errors: appendMetric(metrics, t("settings.index.details.errors")),

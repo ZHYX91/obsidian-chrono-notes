@@ -18,15 +18,25 @@ const journal = `日记/2026/2026-11/${day}/${day}.md`;
 
 function fixture() {
   const settings = createDefaultSettings();
-  settings.createMissingPeriodicNotesFromLinks = true;
   settings.periodicNotes.daily = {
     enabled: true, pattern: "日记/YYYY/YYYY-MM/YYYY-MM-DD/YYYY-MM-DD", templatePath: "Templates/Daily.md",
   };
   settings.periodicNotes.monthly = { enabled: false, pattern: "[Monthly]/YYYY-MM", templatePath: "" };
   const native = vi.fn<Workspace["openLinkText"]>(async () => {});
   const openFile = vi.fn(async () => {});
+  type Claim = (request: {
+    linkText: string; sourcePath: string; newLeaf?: Parameters<Workspace["openLinkText"]>[2];
+    viewState?: Parameters<Workspace["openLinkText"]>[3]; claim: (navigation: Promise<void>) => void;
+  }) => void;
+  const listeners = new Set<Claim>();
   const workspace = {
-    openLinkText: native,
+    on: (name: string, listener: Claim) => {
+      expect(name).toBe("chrono-notes:claim-missing-periodic-link-v1");
+      listeners.add(listener);
+      return listener;
+    },
+    offref: (listener: Claim) => listeners.delete(listener),
+    openLinkText: native as Workspace["openLinkText"],
     getLeaf: vi.fn(() => ({ openFile })),
     getActiveViewOfType: vi.fn<() => unknown>(() => null),
   };
@@ -55,7 +65,7 @@ function fixture() {
         ...settings, locale: "en",
       });
     });
-  return { settings, notes, native, openFile, workspace, getFirstLinkpathDest, app, router, prepare, confirm };
+  return { listeners, settings, notes, native, openFile, workspace, getFirstLinkpathDest, app, router, prepare, confirm };
 }
 
 describe("workspace link navigation for missing periodic notes", () => {
@@ -103,6 +113,19 @@ describe("workspace link navigation for missing periodic notes", () => {
       expect(workspace.getLeaf).toHaveBeenCalledWith("tab");
       expect(openFile).toHaveBeenCalledWith(notes.get(journal), undefined);
     }
+  });
+
+  it.each(["", "Projects/"])("opens an existing exact %s path while the metadata index catches up", async (folder) => {
+    const { router, workspace, notes, openFile, prepare, confirm } = fixture();
+    const existing = { path: folder + day + ".md", body: "original file" };
+    notes.set(existing.path, existing);
+    router.setEnabled(true);
+    await workspace.openLinkText(day + "#Plan", source, "window");
+    expect(workspace.getLeaf).toHaveBeenCalledWith("window");
+    expect(openFile).toHaveBeenCalledExactlyOnceWith(existing, { eState: { subpath: "#Plan" } });
+    expect(prepare).not.toHaveBeenCalled();
+    expect(confirm).not.toHaveBeenCalled();
+    expect([...notes.keys()]).toEqual([existing.path]);
   });
 
   it("preserves literal pipes in Markdown headings instead of treating part of the target as an alias", async () => {
@@ -163,6 +186,43 @@ describe("workspace link navigation for missing periodic notes", () => {
     await expect(workspace.openLinkText(day, source)).rejects.toThrow("Markdown note not found");
     expect(native).not.toHaveBeenCalled();
     expect(openFile).not.toHaveBeenCalled();
+  });
+
+  it.each(["before", "after"] as const)("claims the matching link exactly once with a fallback installed %s Chrono", async (order) => {
+    const { workspace, router, listeners, native, notes, confirm, prepare, openFile } = fixture();
+    const fallback = vi.fn(async () => {});
+    if (order === "after") router.setEnabled(true);
+    const next = workspace.openLinkText;
+    workspace.openLinkText = (linkText, sourcePath, newLeaf, viewState) => {
+      let claimed: Promise<void> | undefined;
+      for (const listener of listeners) {
+        listener({ linkText, sourcePath, newLeaf, viewState, claim: (navigation) => { claimed = navigation; } });
+      }
+      return claimed ?? (linkText === "other" ? next(linkText, sourcePath, newLeaf, viewState) : fallback());
+    };
+    if (order === "before") router.setEnabled(true);
+
+    confirm.mockResolvedValueOnce(false);
+    await workspace.openLinkText(day, source);
+    prepare.mockRejectedValueOnce(new Error("template unavailable"));
+    await expect(workspace.openLinkText(day, source)).rejects.toThrow("template unavailable");
+    expect(notes.size).toBe(0);
+    await workspace.openLinkText(day + "#Plan", source, "tab");
+    expect(notes.size).toBe(1);
+    expect(openFile).toHaveBeenCalledExactlyOnceWith(notes.get(journal), { eState: { subpath: "#Plan" } });
+    expect(workspace.getLeaf).toHaveBeenCalledWith("tab");
+    expect(confirm).toHaveBeenCalledTimes(3);
+    expect(fallback).not.toHaveBeenCalled();
+    expect(native).not.toHaveBeenCalled();
+
+    await workspace.openLinkText("folder", source);
+    expect(fallback).toHaveBeenCalledOnce();
+    router.setEnabled(false);
+    expect(listeners.size).toBe(0);
+    await workspace.openLinkText("2026-11-21", source);
+    expect(fallback).toHaveBeenCalledTimes(2);
+    await workspace.openLinkText("other", source);
+    expect(native).toHaveBeenCalledOnce();
   });
 
   it("restores native navigation and leaves a later plugin's wrapper intact on disable or unload", async () => {

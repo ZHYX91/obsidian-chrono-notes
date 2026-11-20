@@ -1,4 +1,4 @@
-import { MarkdownView, parseLinktext, type App, type Workspace } from "obsidian";
+import { MarkdownView, parseLinktext, type App, type EventRef as WorkspaceEventRef, type Workspace } from "obsidian";
 import {
   PERIODIC_NOTE_TYPES,
   type LocalDate,
@@ -10,6 +10,20 @@ import type { ChronoNotesSettings } from "../../shared/settings";
 type Navigate = (path: string) => Promise<void>;
 type OpenLinkArgs = Parameters<Workspace["openLinkText"]>;
 type Intercept = (...args: OpenLinkArgs) => Promise<void> | null;
+
+interface MissingPeriodicLinkRequest {
+  linkText: string;
+  sourcePath: string;
+  newLeaf?: OpenLinkArgs[2];
+  viewState?: OpenLinkArgs[3];
+  claim(navigation: Promise<void>): void;
+}
+
+declare module "obsidian" {
+  interface Workspace {
+    on(name: "chrono-notes:claim-missing-periodic-link-v1", callback: (request: MissingPeriodicLinkRequest) => void): WorkspaceEventRef;
+  }
+}
 
 export class ObsidianPeriodicLinkNavigation {
   private remove: (() => void) | null = null;
@@ -26,7 +40,18 @@ export class ObsidianPeriodicLinkNavigation {
       this.remove?.();
       this.remove = null;
     } else if (this.remove === null) {
-      this.remove = interceptWorkspaceLinks(this.app.workspace, (...args) => this.handleOpen(...args));
+      const workspace = this.app.workspace;
+      const restore = interceptWorkspaceLinks(workspace, (...args) => this.handleOpen(...args));
+      // Another link creator can offer Chrono the target before creating a file.
+      // Claim synchronously, including when confirmation or template loading is pending.
+      const listener = workspace.on("chrono-notes:claim-missing-periodic-link-v1", (request) => {
+        const navigation = this.handleOpen(request.linkText, request.sourcePath, request.newLeaf, request.viewState);
+        if (navigation) request.claim(navigation);
+      });
+      this.remove = () => {
+        workspace.offref(listener);
+        restore();
+      };
     }
   }
 
@@ -55,9 +80,9 @@ export class ObsidianPeriodicLinkNavigation {
 
     // Only the command's success path navigates. Cancellation or a failed template
     // must never fall through to Obsidian's ordinary empty-file creation.
-    return this.openPeriodic(match.date, match.noteType, (canonicalPath) => {
-      const file = this.app.vault.getFileByPath(canonicalPath);
-      if (file === null) throw new Error(`Markdown note not found: ${canonicalPath}`);
+    const navigate: Navigate = async (target) => {
+      const file = this.app.vault.getFileByPath(target);
+      if (file === null) throw new Error(`Markdown note not found: ${target}`);
       const state = subpath
         ? { ...viewState, eState: { ...viewState?.eState, subpath } }
         : viewState;
@@ -66,8 +91,17 @@ export class ObsidianPeriodicLinkNavigation {
       const reusable = origin && origin.containerEl.isConnected && origin.leaf.view === origin &&
         origin.file === sourceFile && !origin.leaf.getViewState().pinned;
       const leaf = reusable ? origin.leaf : workspace.getLeaf(origin ? "tab" : newLeaf);
-      return leaf.openFile(file, state);
-    });
+      await leaf.openFile(file, state);
+    };
+
+    // A file already in the Vault may not have entered the metadata index yet.
+    // Check exact destinations before prompting or writing to the periodic path.
+    const markdownPath = path.endsWith(".md") ? path : path + ".md";
+    const sourceFolder = source.slice(0, source.lastIndexOf("/") + 1);
+    const existing = this.app.vault.getFileByPath(sourceFolder + markdownPath)
+      ?? this.app.vault.getFileByPath(markdownPath);
+    if (existing !== null) return navigate(existing.path);
+    return this.openPeriodic(match.date, match.noteType, navigate);
   }
 }
 
