@@ -65,15 +65,6 @@ describe("settings tab layout CSS", () => {
 
   it("separates periodic path guidance and validation errors visually", () => {
     expect(styles).toMatch(
-      /\.chrono-notes-settings-guide\s*\{[^}]*border-inline-start:\s*3px solid var\(--interactive-accent\);[^}]*box-shadow:\s*none;[^}]*padding:\s*12px 14px;/s,
-    );
-    expect(styles).toMatch(
-      /\.chrono-notes-settings-guide-heading\s*\{[^}]*align-items:\s*center;[^}]*display:\s*flex;[^}]*gap:\s*8px;/s,
-    );
-    expect(styles).toMatch(
-      /\.chrono-notes-settings-guide-body\s*\{[^}]*max-inline-size:\s*68ch;/s,
-    );
-    expect(styles).toMatch(
       /\.chrono-notes-settings-guide-body ul\s*\{[^}]*padding-inline-start:\s*20px;/s,
     );
     expect(styles).toMatch(

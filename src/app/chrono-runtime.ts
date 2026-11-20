@@ -1,14 +1,17 @@
+import { formatPluginErrorNotice } from "./plugin-presentation";
 import type { TaskUiFeedback } from "../features/tasks/task-write-feedback";
-import type {
-  App,
-  EventRef,
-  Vault,
-  Workspace,
+import {
+  Notice,
+  type App,
+  type EventRef,
+  type Vault,
+  type Workspace,
 } from "obsidian";
 
 import { ObsidianIcsSourceReader } from "../adapters/obsidian/obsidian-ics-source-reader";
 import { ObsidianNoteIndexCache } from "../adapters/obsidian/obsidian-note-index-cache";
 import { ObsidianNoteSource } from "../adapters/obsidian/obsidian-note-source";
+import { ObsidianPeriodicLinkNavigation } from "../adapters/obsidian/obsidian-periodic-link-navigation";
 import { ObsidianPropertiesDateInterceptor } from "../adapters/obsidian/obsidian-properties-date-interceptor";
 import { ObsidianPropertiesDateDocuments } from "../adapters/obsidian/obsidian-properties-date-documents";
 import { ObsidianPropertiesDateDisplay } from "../adapters/obsidian/obsidian-properties-date-display";
@@ -26,7 +29,7 @@ import type { NoteTask } from "../core/note/note-tasks";
 import { IcsEventIndex } from "../features/calendar/ics-event-index";
 import { IntervalNoteCommands } from "../features/intervals/interval-note-commands";
 import { NoteIndex } from "../features/notes/note-index";
-import { PeriodicNoteCommands } from "../features/periodic/periodic-note-commands";
+import { PeriodicNoteCommands, type PeriodicNoteDestination } from "../features/periodic/periodic-note-commands";
 import { TaskCommands } from "../features/tasks/task-commands";
 import type { Translator } from "../shared/i18n";
 import type { ChronoNotesSettings } from "../shared/settings";
@@ -41,7 +44,7 @@ export interface ChronoRuntimeHost {
   openPeriodicNote(
     date: LocalDate,
     noteType: PeriodicNoteType,
-    target: "default" | "tab",
+    target: PeriodicNoteDestination,
   ): Promise<void>;
   activateCalendarView(date?: LocalDate): Promise<void>;
   openIndexedNote(path: string, target: "default" | "tab"): Promise<void>;
@@ -71,6 +74,7 @@ export interface ChronoRuntime {
   readonly taskCommands: TaskCommands;
   readonly noteWorkspace: ObsidianPeriodicNoteWorkspacePort;
   readonly noteNavbar: NoteNavbarManager;
+  readonly periodicLinkNavigation: ObsidianPeriodicLinkNavigation;
   readonly propertiesDateDisplay: ObsidianPropertiesDateDisplay;
   readonly noteIndexCache: ObsidianNoteIndexCache;
   dispose(): void;
@@ -116,6 +120,15 @@ export function createChronoRuntime(host: ChronoRuntimeHost): ChronoRuntime {
       noteWorkspace,
       noteCreation.signal,
     );
+    const periodicLinkNavigation = new ObsidianPeriodicLinkNavigation(
+      host.app,
+      () => host.getSettings(),
+      () => host.getTranslator().locale,
+      (date, type, navigate) => host.openPeriodicNote(date, type, navigate),
+      (error) => { new Notice(formatPluginErrorNotice(error, host.getTranslator().t)); },
+    );
+    registerDisposer(() => periodicLinkNavigation.setEnabled(false));
+    periodicLinkNavigation.setEnabled(settings.createMissingPeriodicNotesFromLinks);
     const propertiesDateInterceptor = new ObsidianPropertiesDateInterceptor({
       getEnabled: () => host.getSettings().interceptPropertyDateClicks,
       isDailyConfigured: () => {
@@ -178,6 +191,7 @@ export function createChronoRuntime(host: ChronoRuntimeHost): ChronoRuntime {
       noteWorkspace,
       noteNavbar,
       propertiesDateDisplay,
+      periodicLinkNavigation,
       noteIndexCache,
       dispose: () => {
         noteCreation.abort();

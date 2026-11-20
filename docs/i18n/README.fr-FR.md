@@ -50,6 +50,10 @@ Sur un écran tactile, un appui long sur une date ouvre son menu. Choisissez ens
 
 Sélectionnez une date dans la vue mensuelle pour lire sous la grille l’état de la note, les détails du calendrier, les jours fériés et tous les événements ICS avec leurs sources. Si la confirmation de création est activée, la boîte de dialogue indique le chemin cible et les notes des périodes supérieures à créer ou à conserver.
 
+Dans **Chrono Notes → Notes périodiques**, vous pouvez désactiver **Créer les notes périodiques manquantes depuis les liens**. Cette option est activée par défaut. Suivez le lien comme d’habitude en mode lecture ou en aperçu en direct. Modifier le texte du lien ne crée aucune note. Si Folder Nodes gère aussi les liens sans cible, Chrono Notes a priorité pour les notes périodiques correspondantes. Les fichiers existants s’ouvrent normalement. Si le fichier manque, une note est créée seulement lorsque son nom ou les derniers segments entiers de son chemin correspondent à un seul modèle activé. L’alias reste affiché. Obsidian conserve son comportement habituel pour les types désactivés, les cibles incomplètes ou ambiguës et les chemins explicitement relatifs.
+
+Avec le modèle quotidien `[Journal]/YYYY-MM-DD/YYYY-MM-DD`, `[[2026-11-19|Aujourd’hui]]` et `[[2026-11-19/2026-11-19]]` peuvent créer la note du jour. `[[Meetings/2026-11-19]]` reste un lien ordinaire. Avec `[[2026-11-19#Plan]]` ou `[[2026-11-19#^todo]]`, la note correspondante est créée, puis Obsidian reçoit la référence au titre ou au bloc. `[[#Plan]]` pointe dans la note en cours.
+
 ### Afficher les tâches dans le calendrier
 
 Ajoutez une tâche avec case à cocher dans une note, puis indiquez une date :
@@ -78,7 +82,7 @@ Les modèles utilisent les mêmes formats : `{{date:DEC[s]}}`, `{{date:[C]CEN}}`
 
 ### Notes de période
 
-Choisissez d’abord un dossier de destination dans **Paramètres → Chrono Notes → Notes de période**. Sur ordinateur, faites glisser la souris d’une date de début à une autre date de fin dans le calendrier mensuel pour créer une note de période. Vous pouvez aussi lancer l’action de création depuis le menu d’une date ou la palette de commandes, puis saisir les dates. La création nécessite au moins deux jours calendaires. Si les dates sont inversées, elles sont automatiquement remises dans l’ordre.
+Choisissez d’abord un dossier de destination dans **Paramètres → Chrono Notes → Notes de période**. Sur ordinateur, faites glisser la souris d’une date de début à une autre date de fin dans le calendrier mensuel pour créer une note de période. Dans le menu d’une date, choisissez **Créer une note de période**. Dans la palette de commandes, choisissez **Ouvrir la liste des notes de période**, puis **Créer une note de période**. La création nécessite au moins deux jours calendaires. Si les dates sont inversées, elles sont automatiquement remises dans l’ordre.
 
 Pour faire apparaître une note existante comme une période, ajoutez ces propriétés au début de son fichier Markdown :
 
@@ -98,7 +102,7 @@ Si la propriété `chrono-notes` est absente, la note n’est reconnue que dans 
 
 ## Paramètres
 
-La section Général propose le guide d’utilisation et le signalement d’un problème. Après le changement d’une extension de calendrier ou de jours fériés, l’onglet actif reste visible et le focus clavier reste sur la commande utilisée.
+La section Général propose le guide d’utilisation et le signalement d’un problème.
 
 Réglez la langue, le premier jour de la semaine, les formats de date, les modèles et les chemins des notes. Un changement de langue pour les noms de fichiers ne renomme pas les notes existantes : vérifiez l'aperçu du chemin. Les vues, tâches, statistiques et notes de période disposent de réglages dédiés.
 

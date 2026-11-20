@@ -78,14 +78,13 @@ vi.mock("../../src/features/calendar/month-calendar-query", () => ({
 vi.mock("../../src/features/calendar/week-calendar-query", () => ({
   selectWeekCalendar: selectors.week,
 }));
-vi.mock("../../src/features/calendar/year-calendar-query", () => ({
+vi.mock("../../src/features/calendar/year-calendar-query", async (importOriginal) => ({
+  ...await importOriginal<typeof import("../../src/features/calendar/year-calendar-query")>(),
   selectYearCalendarOverview: selectors.year,
   selectYearCalendarHeatmap: selectors.year,
 }));
-vi.mock("../../src/ui/use-local-today", () => {
-  const today = Object.freeze({ year: 2026, month: 1, day: 3 });
-  return { useLocalToday: () => today };
-});
+const clock = vi.hoisted(() => ({ today: { year: 2026, month: 1, day: 3 } }));
+vi.mock("../../src/ui/use-local-today", () => ({ useLocalToday: () => clock.today }));
 vi.mock("../../src/shared/local-date-clock", () => ({
   getCurrentLocalDate: () => Object.freeze({ year: 2026, month: 1, day: 3 }),
 }));
@@ -137,6 +136,7 @@ const icsSnapshot = Object.freeze({
 
 describe("CalendarApp active query", () => {
   beforeEach(() => {
+    clock.today = { year: 2026, month: 1, day: 3 };
     selectors.month.mockClear();
     selectors.week.mockClear();
     selectors.year.mockClear();
@@ -313,15 +313,15 @@ describe("CalendarApp active query", () => {
     expect(selectors.year).toHaveBeenCalledOnce();
     expect(container.querySelector(".chrono-notes-month-grid")).not.toBeNull();
     expect(noteSubscribe).toHaveBeenCalledTimes(4);
-    expect(icsSubscribe).toHaveBeenCalledTimes(4);
+    expect(icsSubscribe).toHaveBeenCalledTimes(3);
     expect(noteUnsubscribe).toHaveBeenCalledTimes(3);
-    expect(icsUnsubscribe).toHaveBeenCalledTimes(3);
+    expect(icsUnsubscribe).toHaveBeenCalledTimes(2);
 
     await act(async () => {
       root.unmount();
     });
     expect(noteUnsubscribe).toHaveBeenCalledTimes(4);
-    expect(icsUnsubscribe).toHaveBeenCalledTimes(4);
+    expect(icsUnsubscribe).toHaveBeenCalledTimes(3);
   });
 
   it("labels the calendar without exposing a host tooltip trigger", async () => {
@@ -398,6 +398,41 @@ describe("CalendarApp active query", () => {
     });
   });
 
+  it.each(["monday", "sunday"] as const)(
+    "reuses the %s-first week across year-end selections and refreshes on week or today changes",
+    async (weekStartDay) => {
+      const props = createProps(() => () => undefined, () => () => undefined);
+      props.getSettings().weekStartDay = weekStartDay;
+      const container = document.createElement("div");
+      document.body.append(container);
+      const root = createRoot(container);
+      const sync = (year: number, month: number, day: number, revision: number) =>
+        act(async () => root.render(createElement(CalendarApp, {
+          ...props, navigationRequest: {
+            date: { year, month, day }, revision, noteType: "daily", mode: "sync",
+          },
+        })));
+      try {
+        await act(async () => root.render(createElement(CalendarApp, props)));
+        await act(async () => container.querySelector<HTMLButtonElement>(".chrono-notes-view-mode button")?.click());
+        expect(selectors.week).toHaveBeenCalledOnce();
+        await sync(2025, 12, 31, 1);
+        await sync(2026, 1, 1, 2);
+        expect(selectors.week).toHaveBeenCalledOnce();
+
+        const firstDay = weekStartDay === "monday" ? 5 : 4;
+        await sync(2026, 1, firstDay, 3);
+        expect(selectors.week).toHaveBeenCalledTimes(2);
+        expect(selectors.week.mock.calls.at(-1)?.[0]).toEqual({ year: 2026, month: 1, day: firstDay });
+        clock.today = { year: 2026, month: 1, day: 4 };
+        await sync(2026, 1, firstDay, 4);
+        expect(selectors.week).toHaveBeenCalledTimes(3);
+      } finally {
+        await act(async () => root.unmount());
+      }
+    },
+  );
+
   it("selects weeks from the week picker without leaving the week view", async () => {
     const props = createProps(() => () => undefined, () => () => undefined);
     const container = document.createElement("div");
@@ -427,7 +462,7 @@ describe("CalendarApp active query", () => {
     expect(selectors.week.mock.calls.at(-1)?.[0]).toEqual({
       year: 2026,
       month: 1,
-      day: 10,
+      day: 5,
     });
     expect(container.querySelector(".chrono-notes-week-view")).not.toBeNull();
     expect(container.querySelector(".chrono-notes-week-picker")).toBeNull();
@@ -460,8 +495,8 @@ describe("CalendarApp active query", () => {
     expect(container.querySelector(".chrono-notes-week-view")).not.toBeNull();
     expect(selectors.week.mock.calls.at(-1)?.[0]).toEqual({
       year: 2026,
-      month: 4,
-      day: 1,
+      month: 3,
+      day: 30,
     });
 
     await act(async () => root.unmount());

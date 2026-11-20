@@ -34,13 +34,6 @@ export async function createSettingsBrowserFixture(): Promise<{ html: string; sc
           if (renderer === undefined) throw new Error(`Unexpected settings panel: ${args.path}`);
           return { contents: `export function ${renderer}() {}`, loader: "js" };
         });
-        builder.onResolve({ filter: /^\.\/declarative-settings$/ }, () => ({
-          path: "declarative", namespace: "inactive-surface",
-        }));
-        builder.onLoad({ filter: /.*/, namespace: "inactive-surface" }, () => ({
-          contents: "export const applyDeclarativeControlValue=()=>{throw Error('inactive surface')};export const getDeclarativeControlValue=()=>undefined;export const getDeclarativeSettingDefinitions=()=>[];",
-          loader: "js",
-        }));
       },
     }],
   });

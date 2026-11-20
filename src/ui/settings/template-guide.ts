@@ -13,8 +13,10 @@ export function renderTemplateSyntaxGuide(
 ): void {
   const { t } = context.translator;
   const builtin = context.host.settings.templateEngine === "builtin";
-  const guideEl = createSettingsGuide(containerEl, t("settings.templates.syntaxTitle"));
-  guideEl.createEl("p", { text: t("settings.templates.contentLocation") });
+  containerEl.createEl("p", {
+    cls: "chrono-notes-settings-guide-brief", text: t("settings.templates.contentLocation"),
+  });
+  const guideEl = createSettingsGuide(containerEl, t("settings.templates.syntaxTitle"), "template-syntax");
   guideEl.createEl("p", { text: t(builtin
     ? "settings.templates.builtinHelp"
     : "settings.templates.templaterHelp") });
@@ -33,15 +35,21 @@ export function renderNoteTemplateGuide(
   const { t } = context.translator;
   const periodic = kind === "periodic";
   const builtin = context.host.settings.templateEngine === "builtin";
+  containerEl.createEl("p", {
+    cls: "chrono-notes-settings-guide-brief",
+    text: t("settings.templates.engineInUse", {
+      engine: t(builtin ? "settings.templates.builtinEngine" : "settings.templates.templaterEngine"),
+    }),
+  });
   const guideEl = createSettingsGuide(containerEl, t(periodic
     ? "settings.templates.periodicHeading"
-    : "settings.templates.intervalHeading"));
-  guideEl.createEl("p", { text: t(builtin
-    ? "settings.templates.builtinEngine"
-    : "settings.templates.templaterEngine") });
+    : "settings.templates.intervalHeading"), periodic ? "periodic-template" : "range-template");
   guideEl.createEl("p", { text: t(periodic
     ? "settings.templates.periodDates"
     : "settings.templates.intervalDates") });
+  guideEl.createEl("p", { text: t("settings.templates.pathDesc", {
+    general: t("settings.tab.general"), templates: t("settings.templates.settingsHeading"),
+  }) });
   const syntax = (key: string, formatted = false): string => builtin
     ? `{{${key}}}${formatted ? `\n{{${key}:FORMAT}}` : ""}`
     : `<% tp_calendar.${key}${formatted ? "()" : ""} %>`
@@ -70,18 +78,6 @@ export function renderNoteTemplateGuide(
     ? "settings.templates.periodicExample"
     : "settings.templates.intervalExample") });
   renderGuideTable(guideEl, context.translator, rows);
-  if (periodic) {
-    guideEl.createEl("p", { text: t("settings.templates.rangeExamples") });
-    renderGuideTable(guideEl, context.translator, [
-      [periodicNoteLabel("daily", t), "2026-09-08", "2026-09-08"],
-      [periodicNoteLabel("weekly", t), "2026-09-07", "2026-09-13"],
-      [periodicNoteLabel("monthly", t), "2026-09-01", "2026-09-30"],
-      [periodicNoteLabel("quarterly", t), "2026-07-01", "2026-09-30"],
-      [periodicNoteLabel("yearly", t), "2026-01-01", "2026-12-31"],
-      [periodicNoteLabel("decadal", t), "2020-01-01", "2029-12-31"],
-      [periodicNoteLabel("century", t), "2001-01-01", "2100-12-31"],
-    ], [t("settings.templates.meaningType"), t("settings.templates.meaningStart"), t("settings.templates.meaningEnd")], [1, 2]);
-  }
   const examples = periodic ? [
     [builtin ? "{{date:DEC[s]}}" : '<% tp_calendar.date("DEC[s]") %>', "2020s"],
     [builtin ? "{{date:[C]CEN}}" : '<% tp_calendar.date("[C]CEN") %>', "C21"],
@@ -96,6 +92,21 @@ export function renderNoteTemplateGuide(
     row.createEl("code", { text: result });
   }
   guideEl.createEl("p", { text: t("settings.templates.syntaxReference") });
+  if (periodic) {
+    const datesEl = createSettingsGuide(
+      containerEl, t("settings.templates.dateRangesHeading"), "periodic-date-ranges",
+    );
+    datesEl.createEl("p", { text: t("settings.templates.rangeExamples") });
+    renderGuideTable(datesEl, context.translator, [
+      [periodicNoteLabel("daily", t), "2026-09-08", "2026-09-08"],
+      [periodicNoteLabel("weekly", t), "2026-09-07", "2026-09-13"],
+      [periodicNoteLabel("monthly", t), "2026-09-01", "2026-09-30"],
+      [periodicNoteLabel("quarterly", t), "2026-07-01", "2026-09-30"],
+      [periodicNoteLabel("yearly", t), "2026-01-01", "2026-12-31"],
+      [periodicNoteLabel("decadal", t), "2020-01-01", "2029-12-31"],
+      [periodicNoteLabel("century", t), "2001-01-01", "2100-12-31"],
+    ], [t("settings.templates.meaningType"), t("settings.templates.meaningStart"), t("settings.templates.meaningEnd")], [1, 2]);
+  }
 }
 
 function renderGuideTable(

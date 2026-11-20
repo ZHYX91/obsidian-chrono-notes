@@ -14,11 +14,12 @@ export class ObsidianNoteSource implements NoteSource {
   }
 
   listFiles(): readonly NoteSourceFile[] {
-    return this.vault.getMarkdownFiles().map((file) => Object.freeze({
-      path: file.path,
-      mtime: file.stat?.mtime ?? 0,
-      size: file.stat?.size ?? 0,
-    }));
+    return this.vault.getMarkdownFiles().map(fileMetadata);
+  }
+
+  getFileMetadata(path: string): NoteSourceFile | null {
+    const file = this.vault.getAbstractFileByPath(path);
+    return isMarkdownFile(file) ? fileMetadata(file) : null;
   }
 
   async read(path: string): Promise<string> {
@@ -57,6 +58,10 @@ export class ObsidianNoteSource implements NoteSource {
       for (const ref of refs) this.vault.offref(ref);
     };
   }
+}
+
+function fileMetadata(file: TFile): NoteSourceFile {
+  return Object.freeze({ path: file.path, mtime: file.stat?.mtime ?? 0, size: file.stat?.size ?? 0 });
 }
 
 function isMarkdownFile(file: TAbstractFile | null): file is TFile {

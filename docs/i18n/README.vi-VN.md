@@ -50,6 +50,10 @@ Trên màn hình cảm ứng, nhấn giữ một ngày để mở menu, rồi ch
 
 Chọn một ngày trong chế độ xem tháng để đọc trạng thái ghi chú, thông tin lịch, ngày lễ và toàn bộ sự kiện ICS kèm nguồn bên dưới lưới. Khi bật xác nhận tạo, hộp thoại cho biết đường dẫn đích và các ghi chú chu kỳ lớn hơn sẽ được tạo hoặc giữ lại.
 
+Trong **Chrono Notes → Ghi chú định kỳ**, bạn có thể tắt **Tạo ghi chú định kỳ còn thiếu khi mở liên kết**. Tùy chọn này mặc định bật. Trong chế độ đọc hoặc xem trước trực tiếp, hãy mở liên kết như bình thường. Sửa văn bản liên kết không tạo ghi chú. Nếu Folder Nodes cũng xử lý liên kết chưa có đích, Chrono Notes được ưu tiên với các ghi chú định kỳ khớp mẫu. Tệp đã có vẫn mở như thường. Nếu tệp chưa tồn tại, ghi chú chỉ được tạo khi tên tệp hoặc các phần liên tiếp ở cuối đường dẫn khớp trọn vẹn với đúng một mẫu đang bật. Bí danh vẫn hiển thị như cũ. Obsidian xử lý như thường các loại đã tắt, đường dẫn chưa đủ hoặc không rõ đích và đường dẫn tương đối được ghi rõ.
+
+Với mẫu ghi chú ngày `[Journal]/YYYY-MM-DD/YYYY-MM-DD`, cả `[[2026-11-19|Hôm nay]]` và `[[2026-11-19/2026-11-19]]` đều có thể tạo ghi chú ngày đó. `[[Meetings/2026-11-19]]` vẫn là liên kết thường. `[[2026-11-19#Plan]]` và `[[2026-11-19#^todo]]` tạo ghi chú phù hợp rồi chuyển phần tham chiếu đến tiêu đề hoặc khối cho Obsidian. `[[#Plan]]` trỏ vào ghi chú hiện tại.
+
 ### Hiển thị công việc trên lịch
 
 Thêm công việc có ô đánh dấu vào ghi chú và ghi ngày kèm ký hiệu:
@@ -78,7 +82,7 @@ Các mẫu hỗ trợ `{{date:DEC[s]}}`, `{{date:[C]CEN}}` và `{{start:YYYY}}�
 
 ### Ghi chú khoảng thời gian
 
-Trước tiên, chọn thư mục lưu trong **Cài đặt → Chrono Notes → Ghi chú khoảng thời gian**. Trên máy tính, kéo từ ngày bắt đầu đến một ngày kết thúc khác trong lịch tháng để tạo ghi chú. Bạn cũng có thể chọn thao tác tạo ghi chú khoảng thời gian từ menu của ngày hoặc bảng lệnh, rồi nhập ngày. Khi tạo mới, khoảng thời gian phải gồm ít nhất hai ngày trên lịch. Nếu ngày đầu và ngày cuối bị đảo ngược, plugin sẽ tự xếp lại đúng thứ tự.
+Trước tiên, chọn thư mục lưu trong **Cài đặt → Chrono Notes → Ghi chú khoảng thời gian**. Trên máy tính, kéo từ ngày bắt đầu đến một ngày kết thúc khác trong lịch tháng để tạo ghi chú. Trong menu của ngày, chọn **Tạo ghi chú khoảng thời gian**. Nếu dùng bảng lệnh, hãy chọn **Mở danh sách ghi chú khoảng thời gian**, rồi nhấn **Tạo ghi chú khoảng thời gian**. Khi tạo mới, khoảng thời gian phải gồm ít nhất hai ngày trên lịch. Nếu ngày đầu và ngày cuối bị đảo ngược, plugin sẽ tự xếp lại đúng thứ tự.
 
 Để một ghi chú có sẵn xuất hiện trên lịch như một khoảng thời gian, thêm các thuộc tính sau vào đầu tệp Markdown:
 
@@ -98,7 +102,7 @@ Nếu thiếu thuộc tính `chrono-notes`, ghi chú chỉ được nhận diệ
 
 ## Thiết lập
 
-Phần cài đặt chung có hướng dẫn sử dụng và mục báo lỗi. Khi đổi tiện ích lịch hoặc ngày lễ, thẻ cài đặt hiện tại vẫn nhìn thấy và tiêu điểm bàn phím vẫn ở điều khiển vừa dùng.
+Phần cài đặt chung có hướng dẫn sử dụng và mục báo lỗi.
 
 Bạn có thể chọn ngôn ngữ, ngày bắt đầu tuần, kiểu hiển thị ngày, đường dẫn và mẫu. Đổi ngôn ngữ dùng trong tên tệp không đổi tên ghi chú đã có; hãy kiểm tra bản xem trước đường dẫn. Có các mục riêng cho giao diện, công việc, thống kê, ghi chú khoảng thời gian và phần mở rộng.
 

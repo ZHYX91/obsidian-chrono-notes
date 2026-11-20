@@ -23,7 +23,7 @@ export type {
   PropertyTimeDisplayFormat,
 } from "../core/properties/property-date-display";
 
-export const SETTINGS_SCHEMA_VERSION = 19;
+export const SETTINGS_SCHEMA_VERSION = 20;
 
 export type PluginLocale =
   | "auto"
@@ -99,6 +99,7 @@ export interface ChronoNotesSettings {
   statisticValueStep: number;
   yearViewHeatmap: boolean;
   confirmPeriodicNoteCreation: boolean;
+  createMissingPeriodicNotesFromLinks: boolean;
   confirmIntervalNoteCreation: boolean;
   cascadeLargerNotes: boolean;
   templateEngine: TemplateEngine;
@@ -131,6 +132,7 @@ const DEFAULT_SETTINGS: Readonly<ChronoNotesSettings> = {
   statisticValueStep: 200,
   yearViewHeatmap: false,
   confirmPeriodicNoteCreation: true,
+  createMissingPeriodicNotesFromLinks: true,
   confirmIntervalNoteCreation: true,
   cascadeLargerNotes: true,
   templateEngine: "builtin",
@@ -233,6 +235,9 @@ const SETTINGS_MIGRATIONS: Readonly<Record<number, SettingsMigration>> = {
     propertyTimeCustomFormat: DEFAULT_SETTINGS.propertyTimeCustomFormat,
   }),
   18: (settings) => addSettingsFields(settings, 19, {}),
+  19: (settings) => addSettingsFields(settings, 20, {
+    createMissingPeriodicNotesFromLinks: DEFAULT_SETTINGS.createMissingPeriodicNotesFromLinks,
+  }),
 };
 
 export function migrateSettings(
@@ -362,6 +367,10 @@ export function normalizeSettings(value: unknown): ChronoNotesSettings {
       typeof value.confirmPeriodicNoteCreation === "boolean"
         ? value.confirmPeriodicNoteCreation
         : defaults.confirmPeriodicNoteCreation,
+    createMissingPeriodicNotesFromLinks:
+      typeof value.createMissingPeriodicNotesFromLinks === "boolean"
+        ? value.createMissingPeriodicNotesFromLinks
+        : defaults.createMissingPeriodicNotesFromLinks,
     confirmIntervalNoteCreation:
       typeof value.confirmIntervalNoteCreation === "boolean"
         ? value.confirmIntervalNoteCreation

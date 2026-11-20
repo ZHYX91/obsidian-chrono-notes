@@ -21,6 +21,11 @@ describe("getSettingsChangeImpact", () => {
     const candidates = [
       (() => {
         const next = createDefaultSettings();
+        next.createMissingPeriodicNotesFromLinks = false;
+        return next;
+      })(),
+      (() => {
+        const next = createDefaultSettings();
         next.firstUseGuideSeen = true;
         next.confirmPeriodicNoteCreation = false;
         return next;

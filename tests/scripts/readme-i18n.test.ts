@@ -8,6 +8,9 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 // @ts-expect-error The README checker is an executable JavaScript module.
 import { checkReadmeI18n } from "../../scripts/check-readme-i18n.mjs";
 
+import { createTranslator } from "../../src/shared/i18n";
+import { PLUGIN_LANGUAGE_OPTIONS } from "../../src/shared/plugin-languages";
+
 const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 const temporaryDirectories: string[] = [];
 let fixtureRoot = "";
@@ -142,3 +145,27 @@ async function replaceInReadme(filePath: string, search: string, replacement: st
   expect(source).toContain(search);
   await writeFile(absolutePath, source.replace(search, replacement));
 }
+
+it("names the actual range list command and creation action in every user guide", async () => {
+  for (const { value: locale } of PLUGIN_LANGUAGE_OPTIONS) {
+    const file = locale === "en" ? "README.md" : `docs/i18n/README.${locale}.md`;
+    const guide = await readFile(path.join(projectRoot, file), "utf8");
+    const { t } = createTranslator(locale, locale);
+    const section = guide.split(/^#{2,3} /mu).find((text) => text.includes("chrono-notes: interval"));
+    expect(section, file).toContain(t("pluginCommand.openRangeList"));
+    expect(section, file).toContain(t("intervalList.createRange"));
+  }
+});
+
+it("documents the periodic-link switch and distinguishes file, heading and block links in every guide", async () => {
+  for (const { value: locale } of PLUGIN_LANGUAGE_OPTIONS) {
+    const file = locale === "en" ? "README.md" : `docs/i18n/README.${locale}.md`;
+    const guide = await readFile(path.join(projectRoot, file), "utf8");
+    const { t } = createTranslator(locale, locale);
+    expect(guide, file).toContain(t("settings.periodic.createFromLinks"));
+    expect(guide, file).toMatch(/\[\[2026-11-19\|[^\]]+\]\]/u);
+    for (const link of ["[Journal]/YYYY-MM-DD/YYYY-MM-DD", "[[2026-11-19/2026-11-19]]", "[[Meetings/2026-11-19]]", "[[2026-11-19#Plan]]", "[[2026-11-19#^todo]]", "[[#Plan]]"]) {
+      expect(guide, file).toContain(link);
+    }
+  }
+});

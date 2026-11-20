@@ -45,8 +45,10 @@ import {
   type WeekCalendarQueryOptions,
 } from "./week-calendar-query";
 import {
+  buildYearCalendarLayout,
   selectYearCalendarHeatmap,
   selectYearCalendarOverview,
+  type YearCalendarLayout,
   type YearCalendarQuery,
   type YearCalendarQueryOptions,
 } from "./year-calendar-query";
@@ -81,6 +83,9 @@ export type CalendarQueryRequest =
   | MonthCalendarQueryRequest
   | WeekCalendarQueryRequest
   | YearCalendarQueryRequest;
+
+type PreparedYearRequest = YearCalendarQueryRequest & { readonly layout: YearCalendarLayout };
+type PreparedRequest = Exclude<CalendarQueryRequest, YearCalendarQueryRequest> | PreparedYearRequest;
 
 export type CalendarQuerySnapshot =
   | Readonly<{ kind: "century"; query: CenturyCalendarQuery }>
@@ -165,7 +170,6 @@ interface EvaluatedQuery {
   readonly snapshot: CalendarQuerySnapshot;
 }
 
-const EMPTY_REFERENCES = Object.freeze([]) as readonly NoteEntryReference[];
 const EMPTY_ICS_EVENTS = Object.freeze([]) as readonly IcsEventOccurrence[];
 const EMPTY_INTERVAL_ITEMS = Object.freeze([]) as readonly IntervalNoteRef[];
 const EMPTY_TASK_BUCKET = Object.freeze([]) as readonly TaskDateRef[];
@@ -186,12 +190,23 @@ export class CalendarQueryStore {
   private unsubscribeNotes: (() => void) | null = null;
   private unsubscribeIcs: (() => void) | null = null;
   private disposed = false;
+  private readonly request: PreparedRequest;
 
   constructor(
     private readonly noteSource: SnapshotSource<NoteIndexSnapshot>,
     private readonly icsSource: SnapshotSource<IcsEventIndexSnapshot>,
-    private readonly request: CalendarQueryRequest,
+    request: CalendarQueryRequest,
   ) {
+    this.request = request.kind === "year"
+      ? {
+          ...request,
+          layout: buildYearCalendarLayout(
+            request.year,
+            request.options,
+            request.heatmap ? request.options.daily : undefined,
+          ),
+        }
+      : request;
     this.noteSnapshot = noteSource.getSnapshot();
     this.icsSnapshot = icsSource.getSnapshot();
   }
@@ -229,9 +244,10 @@ export class CalendarQueryStore {
 
   private startSourceSubscriptions(): void {
     this.unsubscribeNotes = this.noteSource.subscribe(this.handleSourceChange);
-    this.unsubscribeIcs = this.icsSource.subscribe(this.handleSourceChange);
-    this.readLatestSourceSnapshots();
-    if (this.current !== null) this.evaluate();
+    if (this.request.kind === "month" || this.request.kind === "week") {
+      this.unsubscribeIcs = this.icsSource.subscribe(this.handleSourceChange);
+    }
+    if (this.readLatestSourceSnapshots() && this.current !== null) this.evaluate();
   }
 
   private stopSourceSubscriptions(): void {
@@ -251,7 +267,9 @@ export class CalendarQueryStore {
 
   private readLatestSourceSnapshots(): boolean {
     const noteSnapshot = this.noteSource.getSnapshot();
-    const icsSnapshot = this.icsSource.getSnapshot();
+    const icsSnapshot = this.request.kind === "month" || this.request.kind === "week"
+      ? this.icsSource.getSnapshot()
+      : this.icsSnapshot;
     const changed = noteSnapshot !== this.noteSnapshot || icsSnapshot !== this.icsSnapshot;
     this.noteSnapshot = noteSnapshot;
     this.icsSnapshot = icsSnapshot;
@@ -275,6 +293,8 @@ export class CalendarQueryStore {
       this.request,
       this.noteSnapshot,
       this.icsSnapshot,
+      dependencies,
+      this.current,
     );
     const snapshot = this.current === null
       ? selected
@@ -294,9 +314,11 @@ export class CalendarQueryStore {
 }
 
 function selectQuery(
-  request: CalendarQueryRequest,
+  request: PreparedRequest,
   noteSnapshot: NoteIndexSnapshot,
   icsSnapshot: IcsEventIndexSnapshot,
+  dependencies: CalendarQueryDependencies,
+  previous: EvaluatedQuery | null,
 ): CalendarQuerySnapshot {
   switch (request.kind) {
     case "century":
@@ -314,7 +336,15 @@ function selectQuery(
           request.options,
         ),
       });
-    case "week":
+    case "week": {
+      const previousWeek = previous?.dependencies;
+      const tasks = previous?.snapshot.kind === "week" &&
+        previousWeek?.kind === "week" && dependencies.kind === "week" &&
+        previousWeek.geometryKey === dependencies.geometryKey &&
+        previousWeek.taskOptionsKey === dependencies.taskOptionsKey &&
+        equalReferences(previousWeek.taskBuckets, dependencies.taskBuckets)
+        ? previous.snapshot.query.tasks
+        : undefined;
       return Object.freeze({
         kind: "week",
         query: selectWeekCalendar(
@@ -322,19 +352,21 @@ function selectQuery(
           noteSnapshot,
           icsSnapshot,
           request.options,
+          tasks,
         ),
       });
+    }
     case "year": {
       const query = request.heatmap
-        ? selectYearCalendarHeatmap(request.year, noteSnapshot, request.options)
-        : selectYearCalendarOverview(request.year, noteSnapshot, request.options);
+        ? selectYearCalendarHeatmap(request.year, noteSnapshot, request.options, request.layout)
+        : selectYearCalendarOverview(request.year, noteSnapshot, request.options, request.layout);
       return Object.freeze({ kind: "year", query });
     }
   }
 }
 
 function collectDependencies(
-  request: CalendarQueryRequest,
+  request: PreparedRequest,
   noteSnapshot: NoteIndexSnapshot,
   icsSnapshot: IcsEventIndexSnapshot,
 ): CalendarQueryDependencies {
@@ -476,52 +508,19 @@ function collectWeekDependencies(
 }
 
 function collectYearDependencies(
-  request: YearCalendarQueryRequest,
+  request: PreparedYearRequest,
   noteSnapshot: NoteIndexSnapshot,
 ): YearDependencies {
   const { options, year } = request;
-  const quarters = Array.from({ length: 4 }, (_, quarterIndex) => {
-    const firstMonth = quarterIndex * 3 + 1;
-    const quarterDate = Object.freeze({ year, month: firstMonth, day: 1 });
-    const months = Array.from({ length: 3 }, (_, monthIndex) => {
-      const month = firstMonth + monthIndex;
-      const monthDate = Object.freeze({ year, month, day: 1 });
-      const dailyEntries = request.heatmap
-        ? buildMonthGrid(year, month, options.weekStartDay).days.flatMap((day) =>
-            day.inCurrentMonth
-              ? [getPeriodicEntry(
-                  noteSnapshot,
-                  day.date,
-                  "daily",
-                  options,
-                  options.daily,
-                )]
-              : [])
-        : EMPTY_REFERENCES;
-      return Object.freeze({
-        summaryEntry: getPeriodicEntry(
-          noteSnapshot,
-          monthDate,
-          "monthly",
-          options,
-          options.monthly,
-        ),
-        dailyEntries: dailyEntries === EMPTY_REFERENCES
-          ? dailyEntries
-          : Object.freeze(dailyEntries),
-      });
-    });
-    return Object.freeze({
-      summaryEntry: getPeriodicEntry(
-        noteSnapshot,
-        quarterDate,
-        "quarterly",
-        options,
-        options.quarterly,
-      ),
-      months: Object.freeze(months),
-    });
-  });
+  const entry = (path: string | null): NoteEntryReference =>
+    path === null ? undefined : noteSnapshot.notes[path];
+  const quarters = request.layout.quarters.map((quarter) => ({
+    summaryEntry: entry(quarter.summary.path),
+    months: quarter.months.map((month) => ({
+      summaryEntry: entry(month.summary.path),
+      dailyEntries: month.cells.map((cell) => cell === null ? undefined : entry(cell.path)),
+    })),
+  }));
   return Object.freeze({
     kind: "year",
     noteReadiness: noteSnapshot.readiness,
@@ -912,11 +911,6 @@ function shareWeekQuery(
     previousDependencies.weeklyEntry === nextDependencies.weeklyEntry
       ? previous.weeklyNote
       : next.weeklyNote;
-  const tasks =
-    previousDependencies.taskOptionsKey === nextDependencies.taskOptionsKey &&
-    equalReferences(previousDependencies.taskBuckets, nextDependencies.taskBuckets)
-      ? previous.tasks
-      : next.tasks;
   const intervals =
     previousDependencies.intervalOptionsKey === nextDependencies.intervalOptionsKey &&
     equalReferences(previousDependencies.intervalItems, nextDependencies.intervalItems)
@@ -928,7 +922,6 @@ function shareWeekQuery(
       ? previous.days
       : Object.freeze(days),
     weeklyNote,
-    tasks,
     intervals,
   });
 }

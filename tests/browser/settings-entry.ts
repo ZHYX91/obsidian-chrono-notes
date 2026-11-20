@@ -1,6 +1,7 @@
 import type { App } from "obsidian";
 
 import { installObsidianDomFactories } from "../setup/obsidian-dom";
+import { createSettingsGuide } from "../../src/ui/settings/settings-guide";
 import { ChronoNotesSettingTab } from "../../src/ui/settings/settings-tab";
 import type { SettingsHost } from "../../src/ui/settings/settings-section-context";
 import { createDefaultSettings, type PluginLocale } from "../../src/shared/settings";
@@ -20,6 +21,7 @@ interface SettingsBrowserSnapshot {
 declare global {
   interface Window {
     chronoSettingsPending: Promise<unknown>;
+    mountSettingsGuide: () => void;
     mountChronoSettings: (locale: PluginLocale, width: number) => void;
     captureChronoSettings: () => SettingsBrowserSnapshot;
   }
@@ -30,6 +32,12 @@ Object.defineProperties(HTMLElement.prototype, {
   empty: { configurable: true, value(this: HTMLElement) { this.replaceChildren(); } },
   addClass: { configurable: true, value(this: HTMLElement, ...names: string[]) { this.classList.add(...names); } },
 });
+
+window.mountSettingsGuide = () => {
+  const root = document.getElementById("settings-fixture")!;
+  const body = createSettingsGuide(root, "Range notes", "range");
+  body.createEl("p", { text: "Choose a date to create a range note." });
+};
 
 let tab: ChronoNotesSettingTab | null = null;
 let saves = 0;

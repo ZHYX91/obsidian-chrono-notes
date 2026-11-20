@@ -21,6 +21,7 @@ import {
   type NoteIndexStatus,
 } from "../features/notes/note-index";
 import type { NoteIndexCacheStorageStatus } from "../features/notes/note-index-cache";
+import type { PeriodicNoteDestination } from "../features/periodic/periodic-note-commands";
 import { getSettingsChangeImpact } from "../features/settings/settings-change-impact";
 import type { TaskCommandResult } from "../features/tasks/task-commands";
 import { TaskWriteError, type TaskUiFeedback } from "../features/tasks/task-write-feedback";
@@ -185,6 +186,7 @@ export default class ChronoNotesPlugin extends Plugin {
         this.refreshLocalizedChrome(snapshot.locale);
       }
 
+      this.runtime?.periodicLinkNavigation.setEnabled(snapshot.createMissingPeriodicNotesFromLinks);
       if (impact.propertiesDateDisplay) {
         this.runtime?.propertiesDateDisplay.setSettings(getPropertyDateDisplaySettings(
           snapshot,
@@ -395,7 +397,7 @@ export default class ChronoNotesPlugin extends Plugin {
   private async openPeriodicNote(
     date: LocalDate,
     noteType: PeriodicNoteType,
-    target: "default" | "tab",
+    target: PeriodicNoteDestination,
   ): Promise<void> {
     const runtime = this.runtime;
     if (runtime === null) return;
