@@ -266,11 +266,11 @@ describe("imperative settings cleanup", () => {
       expect(row.previousElementSibling?.querySelector(".setting-item-name")?.textContent)
         .toBe("Confirm periodic-note creation");
       const checkbox = row.querySelector<HTMLInputElement>('input[type="checkbox"]')!;
-      expect(checkbox.checked).toBe(false);
+      expect(checkbox.checked).toBe(true);
       checkbox.click();
       expect(context.host.settings.interceptPropertyDateClicks).toBe(true);
       checkbox.click();
-      expect(saved).toEqual([true, false]);
+      expect(saved).toEqual([false, true]);
       expect(context.host.settings.interceptPropertyDateClicks).toBe(true);
     } finally {
       cleanup();
