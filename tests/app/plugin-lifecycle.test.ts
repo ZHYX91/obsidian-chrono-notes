@@ -396,7 +396,7 @@ import type { App, PluginManifest } from "obsidian";
 import { openObsidianPluginSettings } from "../../src/adapters/obsidian/obsidian-plugin-settings";
 import type { ChronoRuntime } from "../../src/app/chrono-runtime";
 import ChronoNotesPlugin from "../../src/app/plugin";
-import { createDefaultSettings } from "../../src/shared/settings";
+import { createDefaultSettings, SETTINGS_SCHEMA_VERSION } from "../../src/shared/settings";
 import { createTemplaterLifecycle } from "../support/templater-lifecycle";
 
 describe("ChronoNotesPlugin lifecycle composition", () => {
@@ -714,7 +714,8 @@ describe("ChronoNotesPlugin lifecycle composition", () => {
 
     expect(mocks.state.saveData).toHaveBeenCalledOnce();
     expect(mocks.state.saveData).toHaveBeenCalledWith(expect.objectContaining({
-      schemaVersion: 19,
+      schemaVersion: SETTINGS_SCHEMA_VERSION,
+      createMissingPeriodicNotesFromLinks: false,
       calendarExtensions: ["persian", "islamic-umalqura"],
       showTaskProgress: true,
       periodicNotes: expect.objectContaining({
@@ -744,7 +745,7 @@ describe("ChronoNotesPlugin lifecycle composition", () => {
 
     await expect(plugin.onload()).resolves.toBeUndefined();
 
-    expect(plugin.settings.schemaVersion).toBe(19);
+    expect(plugin.settings.schemaVersion).toBe(SETTINGS_SCHEMA_VERSION);
     expect(plugin.settings.periodicNotes.weekly.pattern).toBe("[Weekly]/GGGG-[W]WW");
     expect(error).toHaveBeenCalledWith(
       "Chrono Notes: failed to persist migrated settings",

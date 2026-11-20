@@ -7,7 +7,7 @@ import {
   type WeekStartDay,
 } from "./periodic-date";
 import { formatPeriodDate, parsePeriodDate } from "./period-format";
-import { parseMomentFormat } from "./moment-format";
+import { parseMomentFormat, quoteMomentLiteral, splitMomentFormat } from "./moment-format";
 
 export interface PeriodicNotePathRule {
   readonly noteType: PeriodicNoteType;
@@ -126,4 +126,41 @@ export function findPeriodicNotePathMatch(
     }
   }
   return null;
+}
+
+/** Match an unresolved link only when its complete trailing segments identify one enabled period. */
+export function matchMissingPeriodicLink(
+  linkPath: string,
+  rules: readonly (PeriodicNotePathRule & { readonly enabled: boolean })[],
+  options: PeriodicNotePathOptions,
+): (PeriodicNotePathMatch & { readonly path: string }) | null {
+  const stem = linkPath.endsWith(".md") ? linkPath.slice(0, -3) : linkPath;
+  const segments = stem.split("/");
+  if (segments.some((segment) => !segment || segment === "." || segment === "..")) return null;
+
+  const suffixPath = `${stem}.md`;
+  let match: (PeriodicNotePathMatch & { readonly path: string }) | null = null;
+  for (const rule of rules) {
+    if (!rule.enabled) continue;
+    const pattern = getTrailingPathPattern(rule.pattern, segments.length);
+    if (pattern === null) continue;
+    const date = parsePeriodicNotePath(suffixPath, { ...rule, pattern }, options);
+    if (date === null) continue;
+    const path = formatPeriodicNotePath(date, rule, options);
+    if (path === null || (path !== suffixPath && !path.endsWith(`/${suffixPath}`))) continue;
+    if (match !== null) return null;
+    match = Object.freeze({ noteType: rule.noteType, date, path });
+  }
+  return match;
+}
+
+function getTrailingPathPattern(pattern: string, segmentCount: number): string | null {
+  const parts = splitMomentFormat(pattern);
+  if (parts === null) return null;
+  // A folder suggestion can quote several segments together, e.g. [Projects/Journal].
+  // Preserve their literal meaning even if the requested suffix starts inside the brackets.
+  const segments = parts.map((part) => part.token === null
+    ? part.value.split("/").map(quoteMomentLiteral).join("/")
+    : part.value).join("").split("/");
+  return segments.length < segmentCount ? null : segments.slice(-segmentCount).join("/");
 }

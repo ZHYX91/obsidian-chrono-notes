@@ -50,6 +50,10 @@ Auf einem Touchscreen öffnet langes Drücken auf ein Datum dessen Menü. Wähle
 
 Wählen Sie in der Monatsansicht ein Datum, um darunter Notizstatus, Kalenderdetails, Feiertage und die vollständige ICS-Terminliste mit Quellen zu lesen. Bei aktivierter Erstellungsbestätigung zeigt der Dialog den Zielpfad sowie größere Periodennotizen, die erstellt oder beibehalten werden.
 
+Unter **Chrono Notes → Periodische Notizen** können Sie **Fehlende periodische Notizen über Links erstellen** einschalten. Die Option ist standardmäßig aus. Vorhandene Dateien öffnen sich wie gewohnt. Fehlt die Datei, wird eine Notiz angelegt, wenn der Dateiname oder mehrere vollständige Pfadsegmente am Ende genau einem aktiven Muster entsprechen. Der angezeigte Alias bleibt erhalten. Deaktivierte Typen, unvollständige oder mehrdeutige Ziele und ausdrücklich relative Pfade behandelt Obsidian wie gewohnt.
+
+Beim Tagesmuster `[Journal]/YYYY-MM-DD/YYYY-MM-DD` können `[[2026-11-19|Heute]]` und `[[2026-11-19/2026-11-19]]` die Tagesnotiz anlegen. `[[Meetings/2026-11-19]]` bleibt ein gewöhnlicher Link. Bei `[[2026-11-19#Plan]]` und `[[2026-11-19#^todo]]` wird die passende Notiz angelegt und Obsidian öffnet die angegebene Überschrift oder Blockreferenz. `[[#Plan]]` verweist in die aktuelle Notiz.
+
 ### Aufgaben im Kalender
 
 Ergänzen Sie eine Aufgabe in einer Notiz um ein Datumszeichen:

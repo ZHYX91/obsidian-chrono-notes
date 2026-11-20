@@ -5,6 +5,10 @@ Notable changes to Chrono Notes are documented in this file. The repository's nu
 >
 > - Shorten template file instructions, separate periodic date ranges from template placeholders, and keep custom date and time format references beside their inputs. ICS refresh summaries and warnings stay visible with successful source details available on demand.
 
+## Unreleased
+
+- Optionally create a missing periodic note from a link in a note or its Properties. Short links can match the last segments of a configured path, including a filename alone when it identifies one period.
+
 ## 0.8.4
 
 - Respect explicit Chinese script subtags and ignore locale extensions when following Obsidian's language; unknown host languages fall back safely to English.

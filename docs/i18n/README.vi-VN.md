@@ -50,6 +50,10 @@ Trên màn hình cảm ứng, nhấn giữ một ngày để mở menu, rồi ch
 
 Chọn một ngày trong chế độ xem tháng để đọc trạng thái ghi chú, thông tin lịch, ngày lễ và toàn bộ sự kiện ICS kèm nguồn bên dưới lưới. Khi bật xác nhận tạo, hộp thoại cho biết đường dẫn đích và các ghi chú chu kỳ lớn hơn sẽ được tạo hoặc giữ lại.
 
+Trong **Chrono Notes → Ghi chú định kỳ**, bạn có thể bật **Tạo ghi chú định kỳ còn thiếu khi mở liên kết**. Tùy chọn này mặc định tắt. Tệp đã có vẫn mở như thường. Nếu tệp chưa tồn tại, ghi chú chỉ được tạo khi tên tệp hoặc các phần liên tiếp ở cuối đường dẫn khớp trọn vẹn với đúng một mẫu đang bật. Bí danh vẫn hiển thị như cũ. Obsidian xử lý như thường các loại đã tắt, đường dẫn chưa đủ hoặc không rõ đích và đường dẫn tương đối được ghi rõ.
+
+Với mẫu ghi chú ngày `[Journal]/YYYY-MM-DD/YYYY-MM-DD`, cả `[[2026-11-19|Hôm nay]]` và `[[2026-11-19/2026-11-19]]` đều có thể tạo ghi chú ngày đó. `[[Meetings/2026-11-19]]` vẫn là liên kết thường. `[[2026-11-19#Plan]]` và `[[2026-11-19#^todo]]` tạo ghi chú phù hợp rồi chuyển phần tham chiếu đến tiêu đề hoặc khối cho Obsidian. `[[#Plan]]` trỏ vào ghi chú hiện tại.
+
 ### Hiển thị công việc trên lịch
 
 Thêm công việc có ô đánh dấu vào ghi chú và ghi ngày kèm ký hiệu:

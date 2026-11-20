@@ -21,6 +21,7 @@ import type { CreatedNoteFilePort } from "../templates/created-note-file-port";
 import { assertNoteCreationActive } from "../notes/note-creation-lifecycle";
 
 export type NoteOpenTarget = "default" | "tab";
+export type PeriodicNoteDestination = NoteOpenTarget | ((path: string) => Promise<void>);
 
 export type PeriodicNoteFilePort = CreatedNoteFilePort;
 
@@ -38,7 +39,7 @@ export interface PeriodicNoteCommandSettings {
 export interface OpenOrCreatePeriodicNoteRequest {
   readonly date: LocalDate;
   readonly noteType: PeriodicNoteType;
-  readonly target?: NoteOpenTarget;
+  readonly target?: PeriodicNoteDestination;
   readonly cascade?: boolean;
   readonly confirmCreate?: (context: PeriodicNoteCreateConfirmation) => Promise<boolean>;
 }
@@ -121,9 +122,10 @@ export class PeriodicNoteCommands {
     }
 
     const target = request.target ?? "default";
+    const open = () => typeof target === "function" ? target(path) : this.workspace.open(path, target);
     const pendingCreation = this.creationsByPath.get(path);
     if (pendingCreation === undefined && this.files.exists(path)) {
-      await this.workspace.open(path, target);
+      await open();
       assertNoteCreationActive(this.signal);
       return Object.freeze({ status: "opened", path, created: false, cascade: [] });
     }
@@ -135,7 +137,7 @@ export class PeriodicNoteCommands {
     if (pendingCreation !== undefined) {
       await pendingCreation;
       assertNoteCreationActive(this.signal);
-      await this.workspace.open(path, target);
+      await open();
       assertNoteCreationActive(this.signal);
       const cascade = await this.createLargerNotes(cascadePlan);
       return Object.freeze({
@@ -166,7 +168,7 @@ export class PeriodicNoteCommands {
 
     const created = await this.createPopulatedOnce(primary);
     assertNoteCreationActive(this.signal);
-    await this.workspace.open(path, target);
+    await open();
     assertNoteCreationActive(this.signal);
     const cascade = await this.createLargerNotes(cascadePlan);
     return Object.freeze({

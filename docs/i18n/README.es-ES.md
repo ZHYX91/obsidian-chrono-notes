@@ -50,6 +50,10 @@ En una pantalla táctil, mantén pulsada una fecha para abrir su menú y elige l
 
 Selecciona una fecha en la vista mensual para leer debajo de la cuadrícula el estado de la nota, los detalles del calendario, los festivos y todos los eventos ICS con sus fuentes. Si está activada la confirmación de creación, el diálogo muestra la ruta de destino y las notas de períodos mayores que se crearán o conservarán.
 
+En **Chrono Notes → Notas periódicas** puedes activar **Crear notas periódicas que falten al abrir un enlace**. La opción está desactivada de forma predeterminada. Los archivos existentes se abren como siempre. Si falta el archivo, solo se crea una nota si el nombre o los últimos segmentos completos de su ruta coinciden con un único patrón habilitado. Se conserva el alias. Obsidian sigue gestionando los tipos desactivados, los destinos incompletos o ambiguos y las rutas explícitamente relativas.
+
+Con el patrón diario `[Journal]/YYYY-MM-DD/YYYY-MM-DD`, tanto `[[2026-11-19|Hoy]]` como `[[2026-11-19/2026-11-19]]` pueden crear la nota diaria. `[[Meetings/2026-11-19]]` sigue siendo un enlace normal. `[[2026-11-19#Plan]]` y `[[2026-11-19#^todo]]` crean la nota correspondiente y pasan a Obsidian la referencia al encabezado o al bloque. `[[#Plan]]` apunta dentro de la nota actual.
+
 ### Tareas en el calendario
 
 Añade una tarea con casilla a una nota e incluye un marcador de fecha:

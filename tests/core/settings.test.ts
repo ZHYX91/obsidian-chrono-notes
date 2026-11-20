@@ -172,6 +172,19 @@ describe("settings", () => {
       .toBe(true);
   });
 
+  it("opts in to missing periodic links independently of Properties date clicks", () => {
+    expect(createDefaultSettings().createMissingPeriodicNotesFromLinks).toBe(false);
+    expect(migrateSettings({ schemaVersion: 19, interceptPropertyDateClicks: true }))
+      .toMatchObject({ createMissingPeriodicNotesFromLinks: false, interceptPropertyDateClicks: true });
+    expect(normalizeSettings({
+      schemaVersion: SETTINGS_SCHEMA_VERSION,
+      interceptPropertyDateClicks: false,
+      createMissingPeriodicNotesFromLinks: true,
+    })).toMatchObject({ createMissingPeriodicNotesFromLinks: true, interceptPropertyDateClicks: false });
+    expect(normalizeSettings({ createMissingPeriodicNotesFromLinks: "true" })
+      .createMissingPeriodicNotesFromLinks).toBe(false);
+  });
+
   it("normalizes the Properties date display format independently of YAML", () => {
     expect(createDefaultSettings()).toMatchObject({
       propertyDateDisplayFormat: "system",

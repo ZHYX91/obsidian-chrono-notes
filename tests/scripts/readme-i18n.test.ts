@@ -156,3 +156,16 @@ it("names the actual range list command and creation action in every user guide"
     expect(section, file).toContain(t("intervalList.createRange"));
   }
 });
+
+it("documents the periodic-link switch and distinguishes file, heading and block links in every guide", async () => {
+  for (const { value: locale } of PLUGIN_LANGUAGE_OPTIONS) {
+    const file = locale === "en" ? "README.md" : `docs/i18n/README.${locale}.md`;
+    const guide = await readFile(path.join(projectRoot, file), "utf8");
+    const { t } = createTranslator(locale, locale);
+    expect(guide, file).toContain(t("settings.periodic.createFromLinks"));
+    expect(guide, file).toMatch(/\[\[2026-11-19\|[^\]]+\]\]/u);
+    for (const link of ["[Journal]/YYYY-MM-DD/YYYY-MM-DD", "[[2026-11-19/2026-11-19]]", "[[Meetings/2026-11-19]]", "[[2026-11-19#Plan]]", "[[2026-11-19#^todo]]", "[[#Plan]]"]) {
+      expect(guide, file).toContain(link);
+    }
+  }
+});

@@ -94,6 +94,7 @@ function sameSettings(
     left.statisticValueStep === right.statisticValueStep &&
     left.yearViewHeatmap === right.yearViewHeatmap &&
     left.confirmPeriodicNoteCreation === right.confirmPeriodicNoteCreation &&
+    left.createMissingPeriodicNotesFromLinks === right.createMissingPeriodicNotesFromLinks &&
     left.confirmIntervalNoteCreation === right.confirmIntervalNoteCreation &&
     left.cascadeLargerNotes === right.cascadeLargerNotes &&
     left.templateEngine === right.templateEngine &&

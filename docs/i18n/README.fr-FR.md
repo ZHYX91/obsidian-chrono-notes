@@ -50,6 +50,10 @@ Sur un écran tactile, un appui long sur une date ouvre son menu. Choisissez ens
 
 Sélectionnez une date dans la vue mensuelle pour lire sous la grille l’état de la note, les détails du calendrier, les jours fériés et tous les événements ICS avec leurs sources. Si la confirmation de création est activée, la boîte de dialogue indique le chemin cible et les notes des périodes supérieures à créer ou à conserver.
 
+Dans **Chrono Notes → Notes périodiques**, vous pouvez activer **Créer les notes périodiques manquantes depuis les liens**. Cette option est désactivée par défaut. Les fichiers existants s’ouvrent normalement. Si le fichier manque, une note est créée seulement lorsque son nom ou les derniers segments entiers de son chemin correspondent à un seul modèle activé. L’alias reste affiché. Obsidian conserve son comportement habituel pour les types désactivés, les cibles incomplètes ou ambiguës et les chemins explicitement relatifs.
+
+Avec le modèle quotidien `[Journal]/YYYY-MM-DD/YYYY-MM-DD`, `[[2026-11-19|Aujourd’hui]]` et `[[2026-11-19/2026-11-19]]` peuvent créer la note du jour. `[[Meetings/2026-11-19]]` reste un lien ordinaire. Avec `[[2026-11-19#Plan]]` ou `[[2026-11-19#^todo]]`, la note correspondante est créée, puis Obsidian reçoit la référence au titre ou au bloc. `[[#Plan]]` pointe dans la note en cours.
+
 ### Afficher les tâches dans le calendrier
 
 Ajoutez une tâche avec case à cocher dans une note, puis indiquez une date :
