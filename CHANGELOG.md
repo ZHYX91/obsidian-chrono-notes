@@ -4,6 +4,7 @@ Notable changes to Chrono Notes are documented in this file. The repository's nu
 
 ## 0.9.0
 
+- Range note list rows expand to fit their contents. Narrow dialogs wrap dates, paths and task summaries, and give filter and sort menus room for their labels. The full path is available on hover and to screen readers.
 - Creating a range note from the week view now prefills the displayed week's first and last dates. Enabling a periodic note or changing the range scan scope keeps keyboard focus and scroll position beside the affected fields.
 - Open matching missing periodic notes from links in Reading view, Live Preview and Properties using the configured template. This starts enabled and can be turned off in Periodic notes. Following a matched link takes priority over Folder Nodes. Short links may match the final whole path segments, including a unique filename.
 - Group optional settings tutorials under compact, keyboard-accessible disclosures. Keep template requirements, live path previews and ICS warnings visible. Clarify first-note and range-note instructions in all 16 guides.

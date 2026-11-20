@@ -1,6 +1,6 @@
 import { CalendarPlus, FileText, Search, Settings2 } from "lucide-react";
 import { Modal, type App } from "obsidian";
-import { useCallback, useMemo, useState, useSyncExternalStore } from "react";
+import { useCallback, useId, useMemo, useState, useSyncExternalStore } from "react";
 import { createRoot, type Root } from "react-dom/client";
 
 import type { LocalDate } from "../../core/periodic/periodic-date";
@@ -233,6 +233,7 @@ function IntervalNoteListContent({
 }>) {
   const { t } = translator;
   const messages = getIntervalListMessages(t);
+  const listId = useId();
   const [query, setQuery] = useState("");
   const [scope, setScope] = useState<IntervalListScope>("all");
   const [sort, setSort] = useState<IntervalListSort>("start-asc");
@@ -369,7 +370,8 @@ function IntervalNoteListContent({
         </div>
       ) : (
         <div className="chrono-notes-interval-list-results">
-          {items.map((item) => {
+          {items.map((item, index) => {
+            const id = `${listId}-${index}`;
             const duration = formatIntervalListDuration(item.dayCount, t);
             const progress = getNoteTaskProgressPresentation(item.statistics);
             const progressLabel = formatNoteTaskProgress(item.statistics, t);
@@ -382,16 +384,17 @@ function IntervalNoteListContent({
                 data-task-state={progress.state}
                 key={item.path}
                 aria-label={`${openLabel}. ${progressLabel}`}
-                title={`${item.title}\n${formatRange(item.start.value, item.end.value)}\n${duration}\n${progressLabel}`}
+                aria-describedby={`${id}-dates ${id}-path ${id}-summary`}
+                title={`${item.title}\n${item.path}\n${formatRange(item.start.value, item.end.value)}\n${duration}\n${progressLabel}`}
                 onClick={() => void host.openPath(item.path, "tab")}
               >
                 <FileText size={16} aria-hidden="true" />
                 <span className="chrono-notes-interval-list-main">
                   <strong>{item.title}</strong>
-                  <span>{formatRange(item.start.value, item.end.value)}</span>
-                  <small>{item.path}</small>
+                  <span id={`${id}-dates`}>{formatRange(item.start.value, item.end.value)}</span>
+                  <small id={`${id}-path`}>{item.path}</small>
                 </span>
-                <span className="chrono-notes-interval-list-duration">
+                <span className="chrono-notes-interval-list-duration" id={`${id}-summary`}>
                   {duration} · {compactProgress}
                 </span>
               </button>
