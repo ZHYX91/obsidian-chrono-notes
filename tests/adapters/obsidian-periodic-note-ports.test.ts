@@ -11,9 +11,8 @@ import { createTemplaterDateNow } from "../support/templater-date";
 
 import {
   ObsidianBuiltinTemplatePort,
-  ObsidianIntervalNoteFilePort,
   ObsidianNoteTemplatePort,
-  ObsidianPeriodicNoteFilePort,
+  ObsidianCreatedNoteFilePort,
   ObsidianPeriodicNoteWorkspacePort,
   ObsidianTaskFilePort,
   ObsidianTaskWorkspacePort,
@@ -122,7 +121,7 @@ describe("Obsidian periodic note ports", () => {
   it("creates interval note content after ensuring parent folders", async () => {
     const vault = new FakeVault();
     const workspace = closedWorkspace();
-    const files = new ObsidianIntervalNoteFilePort(
+    const files = new ObsidianCreatedNoteFilePort(
       vault as never,
       workspace as never,
     );
@@ -145,7 +144,7 @@ describe("Obsidian periodic note ports", () => {
 
   it("creates missing parent folders and conditionally finalizes the same Markdown note", async () => {
     const vault = new FakeVault();
-    const files = new ObsidianPeriodicNoteFilePort(
+    const files = new ObsidianCreatedNoteFilePort(
       vault as never,
       closedWorkspace() as never,
     );
@@ -161,7 +160,7 @@ describe("Obsidian periodic note ports", () => {
 
   it("preserves a created note changed before deferred template finalization", async () => {
     const vault = new FakeVault();
-    const files = new ObsidianPeriodicNoteFilePort(
+    const files = new ObsidianCreatedNoteFilePort(
       vault as never,
       closedWorkspace() as never,
     );
@@ -175,7 +174,7 @@ describe("Obsidian periodic note ports", () => {
 
   it("rejects a same-path replacement even when its content is unchanged", async () => {
     const vault = new FakeVault();
-    const files = new ObsidianPeriodicNoteFilePort(
+    const files = new ObsidianCreatedNoteFilePort(
       vault as never,
       closedWorkspace() as never,
     );
@@ -190,7 +189,7 @@ describe("Obsidian periodic note ports", () => {
 
   it("rejects a renamed target before deferred template finalization", async () => {
     const vault = new FakeVault();
-    const files = new ObsidianPeriodicNoteFilePort(
+    const files = new ObsidianCreatedNoteFilePort(
       vault as never,
       closedWorkspace() as never,
     );
@@ -208,7 +207,7 @@ describe("Obsidian periodic note ports", () => {
   it("refuses to finalize a note that opened in a Markdown editor", async () => {
     const vault = new FakeVault();
     const workspace = closedWorkspace();
-    const files = new ObsidianPeriodicNoteFilePort(vault as never, workspace as never);
+    const files = new ObsidianCreatedNoteFilePort(vault as never, workspace as never);
     const created = await files.create("Daily/open.md", "");
     workspace.getLeavesOfType.mockReturnValue([{
       view: {
@@ -226,8 +225,8 @@ describe("Obsidian periodic note ports", () => {
   it("shares an in-flight parent-folder creation across different note ports", async () => {
     const vault = new FakeVault();
     const workspace = closedWorkspace();
-    const periodic = new ObsidianPeriodicNoteFilePort(vault as never, workspace as never);
-    const intervals = new ObsidianIntervalNoteFilePort(vault as never, workspace as never);
+    const periodic = new ObsidianCreatedNoteFilePort(vault as never, workspace as never);
+    const intervals = new ObsidianCreatedNoteFilePort(vault as never, workspace as never);
     let releaseSharedFolder: (() => void) | undefined;
     let signalSharedFolderStarted: (() => void) | undefined;
     const sharedFolderStarted = new Promise<void>((resolve) => {
@@ -263,7 +262,7 @@ describe("Obsidian periodic note ports", () => {
 
   it("retries a folder after the shared creation promise rejects", async () => {
     const vault = new FakeVault();
-    const files = new ObsidianPeriodicNoteFilePort(
+    const files = new ObsidianCreatedNoteFilePort(
       vault as never,
       closedWorkspace() as never,
     );
@@ -280,7 +279,7 @@ describe("Obsidian periodic note ports", () => {
 
   it("accepts a parent folder completed by another actor during creation", async () => {
     const vault = new FakeVault();
-    const files = new ObsidianPeriodicNoteFilePort(
+    const files = new ObsidianCreatedNoteFilePort(
       vault as never,
       closedWorkspace() as never,
     );

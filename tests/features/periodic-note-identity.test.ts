@@ -1,3 +1,4 @@
+import { TemplatedNoteCreator } from "../../src/features/templates/templated-note-creator";
 import { describe, expect, it, vi } from "vitest";
 
 import { PeriodicNoteCommands } from "../../src/features/periodic/periodic-note-commands";
@@ -12,7 +13,10 @@ describe("periodic note command identity boundary", () => {
     };
     const templates = { prepare: vi.fn(async () => ({ initialContent: "" })) };
     const workspace = { open: vi.fn(async () => undefined) };
-    const commands = new PeriodicNoteCommands(files, templates, workspace);
+    const commands = new PeriodicNoteCommands(
+      new TemplatedNoteCreator(files, templates),
+      workspace,
+    );
     const settings = createDefaultSettings();
     settings.periodicNotes.daily = {
       enabled: true, pattern: "[Daily]/YYYY-MM", templatePath: "",
@@ -49,7 +53,10 @@ describe("periodic note command identity boundary", () => {
     const workspace = { open: vi.fn(async () => undefined) };
     const settings = createDefaultSettings();
     settings.periodicNotes.daily = { enabled: true, pattern, templatePath: "" };
-    const result = await new PeriodicNoteCommands(files, templates, workspace).openOrCreate({
+    const result = await new PeriodicNoteCommands(
+      new TemplatedNoteCreator(files, templates),
+      workspace,
+    ).openOrCreate({
       date, noteType: "daily",
     }, {
       locale: "en", weekStartDay: "monday",

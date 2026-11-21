@@ -1,4 +1,4 @@
-import { TemplatedNoteCreator } from "../templates/templated-note-creator";
+import type { TemplatedNoteCreator } from "../templates/templated-note-creator";
 import {
   PERIODIC_NOTE_TYPES,
   getPeriodAnchor,
@@ -14,7 +14,6 @@ import {
 } from "../../shared/operation-error";
 import type { PeriodicNoteSettings, TemplateEngine } from "../../shared/settings";
 import type {
-  NoteTemplatePort,
   PeriodicNoteTemplateContext,
 } from "../templates/note-template-port";
 import type { CreatedNoteFilePort } from "../templates/created-note-file-port";
@@ -105,22 +104,16 @@ export class PeriodicNoteCreationError extends Error {
 
 /** Command-side periodic note workflow. Query state changes only through Vault events. */
 export class PeriodicNoteCommands {
-  private readonly creator: TemplatedNoteCreator;
-
   constructor(
-    private readonly files: PeriodicNoteFilePort,
-    templates: NoteTemplatePort,
+    private readonly creator: TemplatedNoteCreator,
     private readonly workspace: PeriodicNoteWorkspacePort,
-    private readonly signal?: AbortSignal,
-  ) {
-    this.creator = new TemplatedNoteCreator(files, templates, signal);
-  }
+  ) {}
 
   async openOrCreate(
     request: OpenOrCreatePeriodicNoteRequest,
     settings: PeriodicNoteCommandSettings,
   ): Promise<OpenOrCreatePeriodicNoteResult> {
-    assertNoteCreationActive(this.signal);
+    assertNoteCreationActive(this.creator.signal);
     const snapshot = snapshotSettings(settings);
     const date = Object.freeze({ ...request.date });
     const noteType = request.noteType;
@@ -132,9 +125,9 @@ export class PeriodicNoteCommands {
     const target = request.target ?? "default";
     const open = () => typeof target === "function" ? target(path) : this.workspace.open(path, target);
     const pendingCreation = this.creator.pending(path);
-    if (pendingCreation === undefined && this.files.exists(path)) {
+    if (pendingCreation === undefined && this.creator.exists(path)) {
       await open();
-      assertNoteCreationActive(this.signal);
+      assertNoteCreationActive(this.creator.signal);
       return Object.freeze({ status: "opened", path, created: false, cascade: [] });
     }
 
@@ -144,10 +137,10 @@ export class PeriodicNoteCommands {
     const cascadePlan = request.cascade ? this.largerNotePlan(date, noteType, snapshot) : [];
     if (pendingCreation !== undefined) {
       await pendingCreation;
-      assertNoteCreationActive(this.signal);
+      assertNoteCreationActive(this.creator.signal);
     }
     const cascadeTargets = cascadePlan.map((context): NoteCreationTarget => {
-      if (request.confirmCreate !== undefined && this.files.exists(context.path)) {
+      if (request.confirmCreate !== undefined && this.creator.exists(context.path)) {
         // An existing path may still hold a template's initial content.
         return { context, createIfMissing: false, pendingAtConfirmation: this.creator.pending(context.path) };
       }
@@ -167,7 +160,7 @@ export class PeriodicNoteCommands {
           }))),
         }),
       );
-      assertNoteCreationActive(this.signal);
+      assertNoteCreationActive(this.creator.signal);
       if (!confirmed) {
         return Object.freeze({ status: "cancelled", noteType, path });
       }
@@ -175,9 +168,9 @@ export class PeriodicNoteCommands {
 
     const created = pendingCreation === undefined &&
       await this.ensurePopulated({ context: primary, createIfMissing: true }) === "created";
-    assertNoteCreationActive(this.signal);
+    assertNoteCreationActive(this.creator.signal);
     await open();
-    assertNoteCreationActive(this.signal);
+    assertNoteCreationActive(this.creator.signal);
     const cascade = await this.createLargerNotes(cascadeTargets);
     return Object.freeze({
       status: "opened",
@@ -193,13 +186,13 @@ export class PeriodicNoteCommands {
     const results: CascadeResult[] = [];
     for (const target of plan) {
       const { noteType, path } = target.context;
-      assertNoteCreationActive(this.signal);
+      assertNoteCreationActive(this.creator.signal);
       try {
         const status = await this.ensurePopulated(target);
-        assertNoteCreationActive(this.signal);
+        assertNoteCreationActive(this.creator.signal);
         if (status !== "missing") results.push(Object.freeze({ noteType, path, status }));
       } catch (error) {
-        if (this.signal?.aborted) throw error;
+        if (this.creator.signal?.aborted) throw error;
         const cause = error instanceof PeriodicNoteCreationError ? error.cause : error;
         const details = getOperationErrorDetails(error);
         results.push(Object.freeze({
@@ -234,13 +227,13 @@ export class PeriodicNoteCommands {
     { context, createIfMissing, pendingAtConfirmation }: NoteCreationTarget,
   ): Promise<"created" | "existing" | "missing"> {
     const { path } = context;
-    assertNoteCreationActive(this.signal);
+    assertNoteCreationActive(this.creator.signal);
     const pending = this.creator.pending(path) ?? pendingAtConfirmation;
     if (pending !== undefined) {
       await pending;
-      assertNoteCreationActive(this.signal);
+      assertNoteCreationActive(this.creator.signal);
     }
-    if (this.files.exists(path)) return "existing";
+    if (this.creator.exists(path)) return "existing";
     if (!createIfMissing || pending !== undefined) return "missing";
 
     await this.creator.create(

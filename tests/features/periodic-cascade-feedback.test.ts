@@ -1,3 +1,4 @@
+import { TemplatedNoteCreator } from "../../src/features/templates/templated-note-creator";
 import { describe, expect, it, vi } from "vitest";
 
 import {
@@ -36,8 +37,7 @@ describe("periodic cascade feedback", () => {
     };
     const workspace = { open: vi.fn(async () => undefined) };
     const commands = new PeriodicNoteCommands(
-      files,
-      templates as never,
+      new TemplatedNoteCreator(files, templates as never),
       workspace,
     );
     const settings = createDefaultSettings();

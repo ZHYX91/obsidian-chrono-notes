@@ -1,6 +1,5 @@
 export {
-  ObsidianIntervalNoteFilePort,
-  ObsidianPeriodicNoteFilePort,
+  ObsidianCreatedNoteFilePort,
   ObsidianTaskFilePort,
 } from "./obsidian-note-file-ports";
 export {

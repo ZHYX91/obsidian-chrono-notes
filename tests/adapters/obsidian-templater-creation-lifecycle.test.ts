@@ -1,9 +1,7 @@
+import { TemplatedNoteCreator } from "../../src/features/templates/templated-note-creator";
 import { describe, expect, it, vi } from "vitest";
 
-import {
-  ObsidianIntervalNoteFilePort,
-  ObsidianPeriodicNoteFilePort,
-} from "../../src/adapters/obsidian/obsidian-note-file-ports";
+import { ObsidianCreatedNoteFilePort } from "../../src/adapters/obsidian/obsidian-note-file-ports";
 import { ObsidianNoteTemplatePort } from "../../src/adapters/obsidian/obsidian-note-template-ports";
 import { IntervalNoteCommands } from "../../src/features/intervals/interval-note-commands";
 import { PeriodicNoteCommands } from "../../src/features/periodic/periodic-note-commands";
@@ -81,15 +79,12 @@ function createFixture() {
     const templates = new ObsidianNoteTemplatePort(
       app as never, vault as never, undefined, undefined, signal,
     );
+    const creator = new TemplatedNoteCreator(
+      new ObsidianCreatedNoteFilePort(vault as never, workspace as never, signal), templates, signal,
+    );
     return {
-      periodic: new PeriodicNoteCommands(
-        new ObsidianPeriodicNoteFilePort(vault as never, workspace as never, signal),
-        templates, noteWorkspace, signal,
-      ),
-      intervals: new IntervalNoteCommands(
-        new ObsidianIntervalNoteFilePort(vault as never, workspace as never, signal),
-        templates, noteWorkspace, signal,
-      ),
+      periodic: new PeriodicNoteCommands(creator, noteWorkspace),
+      intervals: new IntervalNoteCommands(creator, noteWorkspace),
     };
   }
   const { periodic, intervals } = createCommands(controller.signal);
@@ -119,6 +114,26 @@ function createFixture() {
 }
 
 describe("Templater creation lifecycle", () => {
+  it.each(["periodic", "interval"] as const)("waits for the %s owner when both commands resolve to the same path", async (first) => {
+    const fixture = createFixture();
+    fixture.settings.periodicNotes.daily.pattern = "[Ranges]/YYYY-MM-DD[ - 2026-05-20]";
+    const render = deferred<string>();
+    fixture.templater.parse_template.mockReturnValueOnce(render.promise);
+    const owner = first === "periodic" ? fixture.createDaily() : fixture.createInterval();
+    await vi.waitFor(() => expect(fixture.templater.parse_template).toHaveBeenCalledOnce());
+    const waiter = first === "periodic" ? fixture.createInterval() : fixture.createDaily();
+    await Promise.resolve();
+    expect(fixture.noteWorkspace.open).not.toHaveBeenCalled();
+    render.resolve(RENDERED);
+    await expect(owner).resolves.toMatchObject({ path: INTERVAL_PATH, created: true });
+    await expect(waiter).resolves.toMatchObject({ path: INTERVAL_PATH, created: false });
+    expect(fixture.vault.create).toHaveBeenCalledOnce();
+    expect(fixture.vault.process).toHaveBeenCalledOnce();
+    expect(fixture.noteWorkspace.open).toHaveBeenCalledTimes(2);
+    expect(fixture.contents.get(INTERVAL_PATH)).toContain(RENDERED);
+    await fixture.finishAutomaticCheck();
+  });
+
   it.each(["periodic", "interval"] as const)(
     "stops %s creation after a confirmation resolves for an unloaded runtime",
     async (kind) => {

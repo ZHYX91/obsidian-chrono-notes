@@ -509,7 +509,7 @@ describe("ChronoNotesPlugin lifecycle composition", () => {
       await plugin.onload();
       plugin.settings.templateEngine = "templater";
       plugin.settings.periodicNotes.daily = {
-        enabled: true, pattern: "YYYY-MM-DD", templatePath,
+        enabled: true, pattern: "[Ranges]/YYYY-MM-DD[ - 2026-05-20]", templatePath,
       };
       plugin.settings.periodicNotes.weekly.enabled = true;
       const runtime = (plugin as unknown as { runtime: ChronoRuntime }).runtime;
@@ -525,9 +525,20 @@ describe("ChronoNotesPlugin lifecycle composition", () => {
       await vi.waitFor(() => expect(templater.parse_template).toHaveBeenCalledOnce());
       const createdPath = create.mock.calls[0]![0];
       const initial = contents.get(createdPath);
+      // The other command targets the same path after Vault.create but before render completes.
+      const joining = kind === "periodic"
+        ? runtime.intervalNoteCommands.openOrCreate({
+            start: { year: 2026, month: 5, day: 18 },
+            end: { year: 2026, month: 5, day: 20 }, folder: "Ranges",
+          }, { locale: "en", templateEngine: "templater", templatePath })
+        : runtime.periodicNoteCommands.openOrCreate({
+            date: { year: 2026, month: 5, day: 18 }, noteType: "daily",
+          }, plugin.settings);
+      const joined = joining.then(() => "opened", () => "stopped");
       plugin.unload();
       rendered.resolve("# stale output");
       await stopped;
+      expect(await joined).toBe("stopped");
       expect(contents.get(createdPath)).toBe(initial);
       expect(files.has(createdPath)).toBe(true);
       expect(create).toHaveBeenCalledOnce();

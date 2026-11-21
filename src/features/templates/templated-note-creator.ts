@@ -9,8 +9,12 @@ export class TemplatedNoteCreator {
   constructor(
     private readonly files: CreatedNoteFilePort,
     private readonly templates: NoteTemplatePort,
-    private readonly signal?: AbortSignal,
+    readonly signal?: AbortSignal,
   ) {}
+
+  exists(path: string): boolean {
+    return this.files.exists(path);
+  }
 
   pending(path: string): Promise<void> | undefined {
     return this.pendingByPath.get(path);
