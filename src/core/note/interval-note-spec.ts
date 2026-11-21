@@ -77,7 +77,9 @@ export function applyIntervalNoteMetadata(
     throw new RangeError("Interval note template has unterminated frontmatter");
   }
 
-  const frontmatter = parseDocument(parsed.frontmatterText ?? "");
+  // The Markdown parser excludes the delimiter's preceding line break. YAML
+  // needs it to interpret the final block scalar's chomping indicator.
+  const frontmatter = parseDocument(parsed.frontmatterText === null ? "" : parsed.frontmatterText + "\n");
   const yamlError = frontmatter.errors[0];
   if (yamlError !== undefined) {
     throw new RangeError(`Interval note template has invalid frontmatter: ${yamlError.message}`);
@@ -89,12 +91,11 @@ export function applyIntervalNoteMetadata(
   frontmatter.set(CHRONO_NOTES_PROPERTY, CHRONO_NOTES_INTERVAL_VALUE);
   frontmatter.set("start", formatLocalDateKey(spec.start));
   frontmatter.set("end", formatLocalDateKey(spec.end));
-  const yaml = frontmatter.toString({ lineWidth: 0 }).trimEnd();
+  const yaml = frontmatter.toString({ lineWidth: 0 });
   const body = parsed.body.replace(/^\n+/, "").replace(/\n+$/, "");
   return [
     "---",
-    yaml,
-    "---",
+    `${yaml}---`,
     ...(body.length === 0 ? [] : ["", body]),
     "",
   ].join("\n");
