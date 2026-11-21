@@ -6,7 +6,7 @@ import {
   type MomentFormatPart,
   type MomentFormatProfile,
 } from "./moment-format";
-import { getCenturyNumber, getDecadeStart } from "./periodic-date";
+import { getCenturyNumber, getDecadeStart, type PeriodicNoteType } from "./periodic-date";
 
 function isExtended(part: MomentFormatPart): boolean {
   return part.token === "DEC" || part.token === "CEN";
@@ -35,8 +35,28 @@ export function formatPeriodDate(
   }
 }
 
-/** Parse extended fields as constraints, then let Luxon parse the civil fields. */
-export function parsePeriodDate(text: string, format: string, locale: string): DateTime<true> | null {
+const CIVIL_YEAR_CONSTRAINTS = new Set(["DEC", "CEN", "GGGG", "GG", "WW", "W"]);
+const CIVIL_MONTH_CONSTRAINTS = new Set([...CIVIL_YEAR_CONSTRAINTS, "Q"]);
+const ISO_WEEK_CONSTRAINTS = new Set(["DEC", "CEN", "YYYY", "YY", "M", "MM", "MMM", "MMMM", "D", "DD", "Q"]);
+
+function getPathConstraintTokens(parts: readonly MomentFormatPart[], noteType: PeriodicNoteType): ReadonlySet<string> {
+  const tokens = new Set(parts.map((part) => part.token));
+  const hasMonth = ["M", "MM", "MMM", "MMMM"].some((token) => tokens.has(token));
+  const hasCalendarYear = tokens.has("YYYY") || tokens.has("YY");
+  const hasIsoWeek = (tokens.has("GGGG") || tokens.has("GG")) &&
+    (tokens.has("WW") || tokens.has("W"));
+  // Complete civil dates can carry ISO week folders. Week-based identities can
+  // carry a civil year folder whose year differs from the ISO year over New Year.
+  const hasCivilDay = hasMonth && (tokens.has("D") || tokens.has("DD"));
+  if (hasIsoWeek && !(hasCalendarYear &&
+    (hasCivilDay || (noteType !== "daily" && noteType !== "weekly")))) return ISO_WEEK_CONSTRAINTS;
+  return hasMonth ? CIVIL_MONTH_CONSTRAINTS : CIVIL_YEAR_CONSTRAINTS;
+}
+
+/** Parse one date identity; the path round trip validates redundant directory fields. */
+export function parsePeriodDate(
+  text: string, format: string, locale: string, noteType: PeriodicNoteType,
+): DateTime<true> | null {
   const parts = parseMomentFormat(format, "date");
   if (parts === null) return null;
   // Luxon's parser defaults to Latin digits even when its formatter uses a
@@ -44,39 +64,46 @@ export function parsePeriodDate(text: string, format: string, locale: string): D
   const numberingSystem = DateTime.fromMillis(0, { locale, zone: "UTC" })
     .resolvedLocaleOptions().numberingSystem;
   const options = { locale, numberingSystem, zone: "UTC" };
-  if (!parts.some(isExtended)) return parseCivilFields(text, parts, options);
+  const constraints = getPathConstraintTokens(parts, noteType);
+  if (!parts.some((part) => constraints.has(part.token ?? ""))) return parseCivilFields(text, parts, options);
   let expression = "";
-  const fields: { name: string; token: string }[] = [];
+  const fields = new Map<MomentFormatPart, string>();
   for (const part of parts) {
+    let pattern: string;
     if (isExtended(part)) {
-      const name = `period${fields.length}`;
-      fields.push({ name, token: part.token ?? "" });
-      expression += `(?<${name}>[0-9]{${part.token === "DEC" ? "4" : "1,3"}})`;
+      pattern = `[0-9]{${part.token === "DEC" ? "4" : "1,3"}}`;
     } else {
       const explained = DateTime.fromFormatExplain("", compileMomentParts([part]), options);
       if (explained.regex === undefined) return null;
-      const field = explained.regex.source.slice(1, -1);
+      pattern = explained.regex.source.slice(1, -1);
       if (isMonthName(part)) {
         // Some locales format named months as bare numbers, including Japanese.
         const numeric = DateTime.fromFormatExplain("", "M", options).regex;
         if (numeric === undefined) return null;
-        expression += `(?:${field}|${numeric.source.slice(1, -1)})`;
-      } else expression += field;
+        pattern = `(?:${pattern}|${numeric.source.slice(1, -1)})`;
+      }
     }
+    if (part.token !== null && constraints.has(part.token)) {
+      const name = `period${fields.size}`;
+      fields.set(part, name);
+      expression += `(?<${name}>${pattern})`;
+    } else expression += pattern;
   }
   const match = new RegExp(`^${expression}$`, "i").exec(text);
-  if (match === null) return null;
-  const values = fields.map((field) => Number(match.groups?.[field.name]));
-  const decade = fields.findIndex((field) => field.token === "DEC");
-  const century = fields.findIndex((field) => field.token === "CEN");
-  const year = decade !== -1 ? values[decade] ?? 0 : ((values[century] ?? 0) - 1) * 100 + 1;
-  if (year < 0 || year > 9999) return null;
-  let fieldIndex = 0;
-  const nativeParts = parts.map((part) => isExtended(part)
-    ? { token: null, value: match.groups?.[fields[fieldIndex++]?.name ?? ""] ?? "" }
-    : part);
-  const hasYear = parts.some((part) => ["YYYY", "YY", "GGGG", "GG"].includes(part.token ?? ""));
+  if (!match?.groups) return null;
+  const captures = match.groups;
+  const nativeParts = parts.map((part) => {
+    const name = fields.get(part);
+    return name === undefined ? part : { token: null, value: captures[name]! };
+  });
+  const hasYear = nativeParts.some((part) => ["YYYY", "YY", "GGGG", "GG"].includes(part.token ?? ""));
   if (hasYear) return parseCivilFields(text, nativeParts, options);
+
+  const anchor = parts.find((part) => part.token === "DEC") ?? parts.find((part) => part.token === "CEN");
+  if (!anchor) return null;
+  const period = Number(captures[fields.get(anchor)!]);
+  const year = anchor.token === "DEC" ? period : (period - 1) * 100 + 1;
+  if (year < 0 || year > 9999) return null;
   const yearText = DateTime.utc(year).setLocale(locale).toFormat("yyyy");
   return parseCivilFields(`${text} ${yearText}`, [
     ...nativeParts, { token: null, value: " " }, { token: "YYYY", value: "yyyy" },

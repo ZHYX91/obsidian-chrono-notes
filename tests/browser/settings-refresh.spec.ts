@@ -119,9 +119,23 @@ test("the tutorial opens by keyboard and keeps readable line lengths on a wide s
   await page.setContent(fixture.html);
   await page.addScriptTag({ content: fixture.script });
   await page.evaluate(() => window.mountSettingsGuide());
-  const summary = page.locator("summary");
+  const guide = page.locator("details");
+  const summary = guide.locator("summary");
   const body = page.locator(".chrono-notes-settings-guide-body");
   const text = page.getByText("Choose a date to create a range note.");
+  const expectedTint = await guide.evaluate((element) => {
+    const sample = document.createElement("span");
+    sample.style.color = "color-mix(in srgb, var(--interactive-accent) 5%, var(--background-primary))";
+    element.parentElement!.append(sample);
+    const color = getComputedStyle(sample).color;
+    sample.remove();
+    return color;
+  });
+  const chevronColor = () => summary.evaluate((element) => getComputedStyle(element, "::before").borderBlockStartColor);
+  await expect(guide).toHaveCSS("background-color", expectedTint);
+  await expect(guide).toHaveCSS("border-top-color", "rgb(204, 204, 204)");
+  await expect(guide).toHaveCSS("border-top-width", "1px");
+  expect(await chevronColor()).toBe("rgb(120, 82, 238)");
   await expect(text).toBeHidden();
   await expect(summary).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
   await expect(summary).toHaveCSS("border-top-style", "none");
@@ -131,9 +145,11 @@ test("the tutorial opens by keyboard and keeps readable line lengths on a wide s
   await expect(summary).toHaveCSS("outline-style", "solid");
   await summary.press("Enter");
   await expect(text).toBeVisible();
+  await expect(guide).toHaveCSS("background-color", expectedTint);
+  await expect(body).toHaveCSS("border-inline-start-color", await chevronColor());
   await expect(body).toHaveCSS("border-left-width", "2px");
   await expect(body).toHaveCSS("border-right-width", "0px");
-  await expect(body).toHaveCSS("margin-inline-start", "6px");
+  await expect(body).toHaveCSS("margin-inline-start", "14px");
   const widths = await text.evaluate((paragraph) => ({
     text: paragraph.getBoundingClientRect().width,
     available: paragraph.closest("details")!.getBoundingClientRect().width,
@@ -144,7 +160,7 @@ test("the tutorial opens by keyboard and keeps readable line lengths on a wide s
   await page.setViewportSize({ width: 360, height: 800 });
   await expect(body).toHaveCSS("border-left-width", "0px");
   await expect(body).toHaveCSS("border-right-width", "2px");
-  await expect(body).toHaveCSS("margin-inline-start", "0px");
+  await expect(body).toHaveCSS("margin-inline-start", "8px");
   await expect(body).toHaveCSS("padding-inline-start", "10px");
   await summary.press("Space");
   await expect(text).toBeHidden();

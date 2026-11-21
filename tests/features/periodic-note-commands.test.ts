@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 
+import { parsePeriodicNotePath } from "../../src/core/periodic/periodic-note-path";
 import type { PeriodicNoteType } from "../../src/core/periodic/periodic-date";
 import {
   PeriodicNoteCommands,
@@ -79,6 +80,23 @@ function createPorts(existing: readonly string[] = []) {
 }
 
 describe("PeriodicNoteCommands", () => {
+  it.each([
+    ["[Daily]/YYYY-[Q]Q/YYYY-MM-DD", "Daily/2026-Q4/2026-11-21.md", "Daily/2026-Q3/2026-11-21.md"],
+    ["[Daily]/GGGG-[W]WW/YYYY-MM-DD", "Daily/2026-W47/2026-11-21.md", "Daily/2026-W46/2026-11-21.md"],
+  ])("opens and recognizes the full daily path with %s", async (pattern, path, wrongFolder) => {
+    const ports = createPorts([path]);
+    const commands = new PeriodicNoteCommands(ports.files, ports.templates, ports.workspace);
+    const date = { year: 2026, month: 11, day: 21 };
+    const settings = createSettings({ daily: { enabled: true, pattern } });
+    const rule = { noteType: "daily", pattern } as const;
+
+    await expect(commands.openOrCreate({ noteType: "daily", date }, settings))
+      .resolves.toMatchObject({ status: "opened", path, created: false });
+    expect(ports.workspace.open).toHaveBeenCalledWith(path, "default");
+    expect(parsePeriodicNotePath(path, rule, settings)).toEqual(date);
+    expect(parsePeriodicNotePath(wrongFolder, rule, settings)).toBeNull();
+  });
+
   it.each(["confirmation", "render", "open", "cascade"])(
     "executes the confirmed immutable plan when settings change during %s",
     async (boundary) => {

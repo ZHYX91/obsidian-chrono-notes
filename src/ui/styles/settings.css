@@ -149,8 +149,11 @@
 }
 
 .chrono-notes-settings-guide {
-  background: transparent;
-  border: 0;
+  background-color: var(--background-primary);
+  background-color: color-mix(in srgb, var(--interactive-accent) 5%, var(--background-primary));
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--radius-s);
+  box-sizing: border-box;
   box-shadow: none;
   color: var(--text-muted);
   container: chrono-help / inline-size;
@@ -173,7 +176,8 @@
   list-style: none;
   min-block-size: 32px;
   overflow-wrap: anywhere;
-  padding: 0;
+  padding-inline: 8px;
+  border-radius: inherit;
   text-align: start;
 }
 
@@ -187,11 +191,12 @@
   border-inline-end: 1.5px solid currentColor;
   box-sizing: border-box;
   content: "";
-  height: 8.5px;
+  height: 8px;
   justify-self: center;
-  margin-block-start: calc(0.75em - 4.25px);
+  color: var(--interactive-accent);
+  margin-block-start: calc(0.75em - 4px);
   transform: rotate(45deg);
-  width: 8.5px;
+  width: 8px;
 }
 
 .chrono-notes-settings-guide > .chrono-notes-settings-guide-summary:dir(rtl)::before {
@@ -228,23 +233,29 @@
 }
 
 details.chrono-notes-settings-guide[open] > .chrono-notes-settings-guide-body {
-  border-inline-start: 2px solid var(--background-modifier-border);
+  border-inline-start: 2px solid var(--interactive-accent);
   box-sizing: border-box;
-  margin-block: 6px 0;
-  margin-inline: 6px 0;
+  margin-block: 6px 8px;
+  margin-inline: 14px 8px;
   max-inline-size: 68ch;
   min-inline-size: 0;
   padding-inline-start: 10px;
 }
 
-@supports (color: color-mix(in srgb, red, blue)) {
-  details.chrono-notes-settings-guide[open] > .chrono-notes-settings-guide-body {
-    border-inline-start-color: color-mix(in srgb, var(--interactive-accent) 30%, var(--background-modifier-border));
+@media (prefers-reduced-motion: no-preference) {
+  .chrono-notes-settings-guide > .chrono-notes-settings-guide-summary::before {
+    transition: transform 120ms ease;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chrono-notes-settings-guide > .chrono-notes-settings-guide-summary::before {
+    transition: none;
   }
 }
 
 @container chrono-help (max-width: 24rem) {
-  details.chrono-notes-settings-guide[open] > .chrono-notes-settings-guide-body { margin-inline-start: 0; }
+  details.chrono-notes-settings-guide[open] > .chrono-notes-settings-guide-body { margin-inline-start: 8px; }
 }
 
 .chrono-notes-settings-guide-brief {

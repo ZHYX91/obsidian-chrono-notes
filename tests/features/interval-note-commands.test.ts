@@ -1,3 +1,4 @@
+import { parse } from "yaml";
 import { describe, expect, it, vi } from "vitest";
 
 import {
@@ -57,6 +58,23 @@ function createPorts(existing: readonly string[] = []) {
 }
 
 describe("IntervalNoteCommands", () => {
+  it.each([
+    ["|+", "  first\n\n\n", "first\n\n\n"],
+    ["|-", "  final spaces  \n", "final spaces  "],
+  ])("preserves a trailing YAML scalar (%s) in a range template", async (indicator, lines, expected) => {
+    const ports = createPorts();
+    const template = `---\nchrono-notes: interval\nstart: old\nend: old\nmemo: ${indicator}\n${lines}---\nbody\n`;
+    vi.mocked(ports.templates.prepare).mockResolvedValue({ initialContent: template });
+    const result = await new IntervalNoteCommands(ports.files, ports.templates, ports.workspace)
+      .openOrCreate({
+        folder: "Ranges", start: { year: 2026, month: 11, day: 1 }, end: { year: 2026, month: 11, day: 3 },
+      }, SETTINGS);
+    expect(result.status).toBe("opened");
+    const content = ports.contents.get("Ranges/2026-11-01 - 2026-11-03.md")!;
+    const metadata: unknown = parse(content.split("---\n")[1]!);
+    expect(metadata).toMatchObject({ memo: expected, start: "2026-11-01", end: "2026-11-03" });
+  });
+
   it("coordinates same-path creation while preserving each request open target", async () => {
     const ports = createPorts();
     const creation = deferred<void>();
