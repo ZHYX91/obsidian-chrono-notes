@@ -1,4 +1,4 @@
-import type { Vault, Workspace, WorkspaceLeaf } from "obsidian";
+import type { TFile, Vault, Workspace, WorkspaceLeaf } from "obsidian";
 
 import type {
   NoteOpenTarget,
@@ -16,19 +16,7 @@ export class ObsidianPeriodicNoteWorkspacePort implements PeriodicNoteWorkspaceP
   ) {}
 
   async open(path: string, target: NoteOpenTarget): Promise<void> {
-    assertNoteCreationActive(this.signal);
-    const file = this.vault.getAbstractFileByPath(path);
-    if (!isMarkdownFile(file)) throw new Error(`Markdown note not found: ${path}`);
-
-    const leaf =
-      target === "default"
-        ? findOpenMarkdownLeaf(this.workspace, path) ?? this.workspace.getLeaf("tab")
-        : this.workspace.getLeaf("tab");
-    if (getLeafFilePath(leaf) !== path) await leaf.openFile(file);
-    assertNoteCreationActive(this.signal);
-    await this.workspace.revealLeaf(leaf);
-    assertNoteCreationActive(this.signal);
-    this.workspace.setActiveLeaf(leaf, { focus: true });
+    await activateMarkdownFile(this.vault, this.workspace, path, target, this.signal);
   }
 }
 
@@ -39,21 +27,45 @@ export class ObsidianTaskWorkspacePort implements TaskWorkspacePort {
   ) {}
 
   async openAtLine(path: string, line: number, target: NoteOpenTarget): Promise<void> {
-    const file = this.vault.getAbstractFileByPath(path);
-    if (!isMarkdownFile(file)) throw new Error(`Markdown note not found: ${path}`);
-    const leaf = target === "default"
-      ? findOpenMarkdownLeaf(this.workspace, path) ?? this.workspace.getLeaf("tab")
-      : this.workspace.getLeaf("tab");
-    if (getLeafFilePath(leaf) !== path) await leaf.openFile(file);
-    await this.workspace.revealLeaf(leaf);
-    this.workspace.setActiveLeaf(leaf, { focus: true });
-
-    const editor = getLeafEditor(leaf);
-    if (editor === null) throw new Error(`Markdown editor not available: ${path}`);
-    const position = { line, ch: 0 };
-    editor.setCursor(position);
-    editor.scrollIntoView({ from: position, to: position }, true);
+    await activateMarkdownFile(this.vault, this.workspace, path, target, undefined, (leaf) => {
+      const editor = getLeafEditor(leaf);
+      if (editor === null) throw new Error(`Markdown editor not available: ${path}`);
+      const position = { line, ch: 0 };
+      editor.setCursor(position);
+      editor.scrollIntoView({ from: position, to: position }, true);
+    });
   }
+}
+
+async function activateMarkdownFile(
+  vault: Vault,
+  workspace: Workspace,
+  path: string,
+  target: NoteOpenTarget,
+  signal?: AbortSignal,
+  onActive?: (leaf: WorkspaceLeaf) => void,
+): Promise<void> {
+  assertNoteCreationActive(signal);
+  const file = vault.getAbstractFileByPath(path);
+  if (!isMarkdownFile(file)) throw new Error(`Markdown note not found: ${path}`);
+  const leaf = target === "default"
+    ? findOpenMarkdownLeaf(workspace, path) ?? workspace.getLeaf("tab")
+    : workspace.getLeaf("tab");
+
+  const assertDestination = (): void => {
+    assertNoteCreationActive(signal);
+    const view = leaf.view as typeof leaf.view & { file?: TFile | null };
+    if (view.file !== file || file.path !== path || vault.getAbstractFileByPath(path) !== file) {
+      throw new Error(`Markdown tab no longer shows the requested note: ${path}`);
+    }
+  };
+  if (getLeafFilePath(leaf) !== path) await leaf.openFile(file);
+  assertDestination();
+  await workspace.revealLeaf(leaf);
+  assertDestination();
+  workspace.setActiveLeaf(leaf, { focus: true });
+  assertDestination();
+  onActive?.(leaf);
 }
 
 function getLeafFilePath(leaf: WorkspaceLeaf): string | null {

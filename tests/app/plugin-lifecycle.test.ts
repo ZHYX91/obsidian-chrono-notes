@@ -500,9 +500,10 @@ describe("ChronoNotesPlugin lifecycle composition", () => {
         createFolder: vi.fn(async (path: string) => { files.set(path, { path }); }),
         create, process,
       });
-      const openFile = vi.fn(async () => undefined);
+      const view: { file?: { path: string } } = {};
+      const openFile = vi.fn(async (file: { path: string }) => { view.file = file; });
       Object.assign(plugin.app.workspace, {
-        getLeaf: vi.fn(() => ({ view: {}, openFile })),
+        getLeaf: vi.fn(() => ({ view, openFile })),
         iterateRootLeaves: vi.fn(),
         setActiveLeaf: vi.fn(),
       });
