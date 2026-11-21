@@ -80,7 +80,7 @@ function parsePathAnchor(
   rule: PeriodicNotePathRule,
   options: PeriodicNotePathOptions,
 ): LocalDate | null {
-  const parsed = parsePeriodDate(text, rule.pattern, resolvePathLocale(rule));
+  const parsed = parsePeriodDate(text, rule.pattern, resolvePathLocale(rule), rule.noteType);
   return parsed === null ? null : getPeriodAnchor(
     toLocalDate(parsed), rule.noteType, options.weekStartDay,
   );

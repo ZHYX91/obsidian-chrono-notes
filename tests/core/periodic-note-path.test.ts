@@ -11,6 +11,18 @@ import {
 describe("periodic note paths", () => {
   const selectedDate: LocalDate = { year: 2026, month: 5, day: 18 };
 
+  it.each<PeriodicNotePathRule & { path: string }>([
+    { noteType: "daily", pattern: "YYYY/GGGG-[W]WW-dddd", path: "2024/2025-W01-Tuesday.md" },
+    { noteType: "daily", pattern: "GGGG-[W]WW/YYYY-MM-DD", path: "2025-W01/2024-12-31.md" },
+    { noteType: "monthly", pattern: "GGGG-[W]WW/YYYY-MM", path: "2024-W48/2024-12.md" },
+    { noteType: "daily", pattern: "YYYY-[Q]Q/YYYY-MMMM-DD", pathLocale: "ja-JP", path: "2024-Q4/2024-12-31.md" },
+  ])("validates redundant calendar fields in $path", (rule) => {
+    const date = { year: 2024, month: 12, day: 31 };
+    const options = { locale: "en", weekStartDay: "monday" } as const;
+    expect(formatPeriodicNotePath(date, rule, options)).toBe(rule.path);
+    expect(parsePeriodicNotePath(rule.path, rule, options)).toEqual(getPeriodAnchor(date, rule.noteType, "monday"));
+  });
+
   it.each<PeriodicNotePathRule & { expectedPath: string }>([
     { noteType: "daily", pattern: "[Daily]/YYYY-MM-DD", expectedPath: "Daily/2026-05-18.md" },
     { noteType: "monthly", pattern: "[Monthly]/YYYY-MM", expectedPath: "Monthly/2026-05.md" },
