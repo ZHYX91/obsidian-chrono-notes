@@ -1,6 +1,6 @@
 {
   "name": "obsidian-chrono-notes",
-  "version": "0.9.0",
+  "version": "0.9.1",
   "description": "A calendar workspace for periodic notes, calendar extensions, regional holidays, tasks, and time ranges.",
   "type": "module",
   "main": "dist/main.js",
@@ -39,8 +39,8 @@
     "prelint": "node scripts/check-shared-tools.mjs && node scripts/prepare-lint-dependencies.mjs && node scripts/check-lint-dependencies.mjs",
     "check:tools": "node scripts/check-shared-tools.mjs",
     "test:tools": "vitest run tests/scripts/shared-maintenance-tools.test.ts",
-    "prebuild": "node scripts/check-runtime.mjs",
-    "prebuild:bundle": "node scripts/check-runtime.mjs"
+    "prebuild": "node scripts/check-runtime.mjs --build",
+    "prebuild:bundle": "node scripts/check-runtime.mjs --build"
   },
   "keywords": [
     "obsidian",

@@ -2,6 +2,12 @@
 
 Notable changes to Chrono Notes are documented in this file. The repository's numeric Git tags are the evidence for released versions; an entry without a corresponding local tag remains unreleased even if the manifests already contain that version.
 
+## 0.9.1
+
+- Find existing daily notes with paths that combine dates with quarter or ISO week directories.
+- Preserve trailing whitespace and line breaks in YAML block values when creating range notes.
+- Use the theme accent to make settings guides and calendar details easier to find and expand.
+
 ## 0.9.0
 
 - Range note list rows expand to fit their contents. Narrow dialogs wrap dates, paths and task summaries, and give filter and sort menus room for their labels. The full path is available on hover and to screen readers.
