@@ -1,3 +1,4 @@
+import { TemplatedNoteCreator } from "../templates/templated-note-creator";
 import {
   applyIntervalNoteMetadata,
   buildIntervalNoteContent,
@@ -11,10 +12,9 @@ import type {
   NoteOpenTarget,
   PeriodicNoteWorkspacePort,
 } from "../periodic/periodic-note-commands";
-import {
-  runPreparedNoteCreation,
-  type IntervalNoteTemplateContext,
-  type NoteTemplatePort,
+import type {
+  IntervalNoteTemplateContext,
+  NoteTemplatePort,
 } from "../templates/note-template-port";
 import type { CreatedNoteFilePort } from "../templates/created-note-file-port";
 import { assertNoteCreationActive } from "../notes/note-creation-lifecycle";
@@ -57,14 +57,16 @@ class IntervalNoteCreationError extends Error {
 
 /** Command-side range-note workflow. NoteIndex advances only through Vault events. */
 export class IntervalNoteCommands {
-  private readonly creationsByPath = new Map<string, Promise<void>>();
+  private readonly creator: TemplatedNoteCreator;
 
   constructor(
     private readonly files: IntervalNoteFilePort,
-    private readonly templates: NoteTemplatePort,
+    templates: NoteTemplatePort,
     private readonly workspace: PeriodicNoteWorkspacePort,
     private readonly signal?: AbortSignal,
-  ) {}
+  ) {
+    this.creator = new TemplatedNoteCreator(files, templates, signal);
+  }
 
   async openOrCreate(
     request: OpenOrCreateIntervalNoteRequest,
@@ -77,7 +79,7 @@ export class IntervalNoteCommands {
     const spec = buildIntervalNoteSpec(request.start, request.end, request.folder);
     if (spec.dayCount < 2) return Object.freeze({ status: "invalid-range" });
     const target = request.target ?? "default";
-    const pendingCreation = this.creationsByPath.get(spec.path);
+    const pendingCreation = this.creator.pending(spec.path);
     if (pendingCreation !== undefined) {
       await pendingCreation;
       assertNoteCreationActive(this.signal);
@@ -107,7 +109,7 @@ export class IntervalNoteCommands {
     settings: IntervalNoteCommandSettings,
   ): Promise<boolean> {
     assertNoteCreationActive(this.signal);
-    const existing = this.creationsByPath.get(spec.path);
+    const existing = this.creator.pending(spec.path);
     if (existing !== undefined) {
       await existing;
       assertNoteCreationActive(this.signal);
@@ -115,61 +117,24 @@ export class IntervalNoteCommands {
     }
     if (this.files.exists(spec.path)) return false;
 
-    const creation = Promise.resolve().then(() => this.createPopulatedNote(spec, settings));
-    this.creationsByPath.set(spec.path, creation);
-    try {
-      await creation;
-      return true;
-    } finally {
-      if (this.creationsByPath.get(spec.path) === creation) {
-        this.creationsByPath.delete(spec.path);
-      }
-    }
-  }
-
-  private async createPopulatedNote(
-    spec: IntervalNoteSpec,
-    settings: IntervalNoteCommandSettings,
-  ): Promise<void> {
-    let retainedCreatedNote = false;
-    try {
-      assertNoteCreationActive(this.signal);
-      const context: IntervalNoteTemplateContext = Object.freeze({
-        kind: "interval",
-        start: spec.start,
-        end: spec.end,
-        dayCount: spec.dayCount,
-        locale: settings.locale,
-        path: spec.path,
-        templatePath: settings.templatePath,
-        templateEngine: settings.templateEngine,
-        title: spec.title,
-      });
-      const prepared = await this.templates.prepare(
-        context,
-        buildIntervalNoteContent(spec),
-      );
-      await runPreparedNoteCreation(prepared, async () => {
-        assertNoteCreationActive(this.signal);
-        const created = await this.files.create(
-          spec.path,
-          applyIntervalNoteMetadata(prepared.initialContent, spec),
-        );
-        retainedCreatedNote = true;
-        assertNoteCreationActive(this.signal);
-        if (prepared.renderAfterCreate !== undefined) {
-          const rendered = await prepared.renderAfterCreate(spec.path);
-          assertNoteCreationActive(this.signal);
-          await this.files.finalize(
-            created,
-            applyIntervalNoteMetadata(rendered, spec),
-          );
-          assertNoteCreationActive(this.signal);
-        }
-      });
-    } catch (cause) {
-      throw new IntervalNoteCreationError(spec.path, cause, retainedCreatedNote);
-    }
+    const context: IntervalNoteTemplateContext = Object.freeze({
+      kind: "interval",
+      start: spec.start,
+      end: spec.end,
+      dayCount: spec.dayCount,
+      locale: settings.locale,
+      path: spec.path,
+      templatePath: settings.templatePath,
+      templateEngine: settings.templateEngine,
+      title: spec.title,
+    });
+    await this.creator.create(
+      context,
+      buildIntervalNoteContent(spec),
+      (cause, retained) => new IntervalNoteCreationError(spec.path, cause, retained),
+      (content) => applyIntervalNoteMetadata(content, spec),
+    );
+    return true;
   }
 }
 
