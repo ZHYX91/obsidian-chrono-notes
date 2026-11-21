@@ -41,7 +41,7 @@ export async function createSettingsBrowserFixture(): Promise<{ html: string; sc
     script,
     html: `<!doctype html><html><head><meta charset="utf-8"><style>
       :root { --size-2-1:2px; --size-4-5:20px; --font-ui-small:13px; --font-semibold:600;
-        --text-normal:#222; --text-muted:#666; --background-modifier-border:#ccc;
+        --text-normal:#222; --text-muted:#666; --background-primary:#fff; --background-modifier-border:#ccc;
         --interactive-accent:#7852ee; --font-ui-smaller:12px; --background-secondary:#f5f5f5; }
       body { font-family:Arial,sans-serif; margin:32px; color:#222; }
       .setting-item { padding:12px 0; border-bottom:1px solid #ddd; }

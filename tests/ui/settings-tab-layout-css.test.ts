@@ -5,6 +5,12 @@ import { readPluginStyles } from "../support/plugin-styles";
 const styles = readPluginStyles();
 
 describe("settings tab layout CSS", () => {
+  it("keeps the theme accent on the disclosure chevron and the logical content edge", () => {
+    expect(styles).toMatch(/\.chrono-notes-settings-guide\s*\{[^}]*background-color: color-mix\(in srgb, var\(--interactive-accent\) 5%, var\(--background-primary\)\);[^}]*border: 1px solid var\(--background-modifier-border\);/s);
+    expect(styles).toMatch(/\.chrono-notes-settings-guide > [^{]*summary::before\s*\{[^}]*color: var\(--interactive-accent\);/s);
+    expect(styles).toMatch(/\.chrono-notes-settings-guide\[open\] > [^{]+\{[^}]*border-inline-start: 2px solid var\(--interactive-accent\);/s);
+  });
+
   it("keeps the tab list on one horizontally scrollable row", () => {
     expect(styles).toMatch(
       /\.chrono-notes-settings-tabs\s*\{[^}]*flex-wrap:\s*nowrap;[^}]*overflow-x:\s*auto;[^}]*overflow-y:\s*hidden;/s,
