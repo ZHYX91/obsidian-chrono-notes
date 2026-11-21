@@ -92,9 +92,11 @@ export class ObsidianTaskFilePort implements TaskFilePort {
   constructor(
     private readonly vault: Vault,
     private readonly workspace: Workspace,
+    private readonly signal?: AbortSignal,
   ) {}
 
   async process(path: string, update: (content: string) => string | null): Promise<TaskWriteFeedback | void> {
+    this.signal?.throwIfAborted();
     const file = this.vault.getAbstractFileByPath(path);
     if (!isMarkdownFile(file)) throw new Error(`Markdown note not found: ${path}`);
     const openEditor = findOpenTaskEditor(this.workspace, path);
@@ -120,6 +122,7 @@ export class ObsidianTaskFilePort implements TaskFilePort {
         currentEnd -= 1;
         nextEnd -= 1;
       }
+      this.signal?.throwIfAborted();
       let transactionError: unknown;
       let transactionFailed = false;
       try {
@@ -147,6 +150,7 @@ export class ObsidianTaskFilePort implements TaskFilePort {
       // The edit is applied. A later host callback/save failure is a warning,
       // not permission to replay a checkbox toggle or overwrite a third state.
       try {
+        this.signal?.throwIfAborted();
         assertTaskFileIdentity(this.vault, file, path);
         if (!isSameOpenTaskEditor(this.workspace, path, openEditor)) {
           return { warning: "save-not-confirmed" };
@@ -160,6 +164,7 @@ export class ObsidianTaskFilePort implements TaskFilePort {
     }
     let expectedPublished: string | undefined;
     const published = await this.vault.process(file, (content) => {
+      this.signal?.throwIfAborted();
       assertTaskFileIdentity(this.vault, file, path);
       if (getOpenTaskPanes(this.workspace, path).length > 0) {
         throw new Error(`Markdown editor opened before task update: ${path}`);

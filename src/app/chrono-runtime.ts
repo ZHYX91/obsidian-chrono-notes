@@ -161,8 +161,8 @@ export function createChronoRuntime(host: ChronoRuntimeHost): ChronoRuntime {
     }));
     const intervalNoteCommands = new IntervalNoteCommands(noteCreator, noteWorkspace);
     const taskCommands = new TaskCommands(
-      new ObsidianTaskFilePort(host.vault, host.workspace),
-      new ObsidianTaskWorkspacePort(host.vault, host.workspace),
+      new ObsidianTaskFilePort(host.vault, host.workspace, noteCreation.signal),
+      new ObsidianTaskWorkspacePort(host.vault, host.workspace, noteCreation.signal),
     );
     const noteNavbar = new NoteNavbarManager(host.app, {
       noteIndex,

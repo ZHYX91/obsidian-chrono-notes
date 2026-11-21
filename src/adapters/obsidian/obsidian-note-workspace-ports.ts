@@ -24,10 +24,11 @@ export class ObsidianTaskWorkspacePort implements TaskWorkspacePort {
   constructor(
     private readonly vault: Vault,
     private readonly workspace: Workspace,
+    private readonly signal?: AbortSignal,
   ) {}
 
   async openAtLine(path: string, line: number, target: NoteOpenTarget): Promise<void> {
-    await activateMarkdownFile(this.vault, this.workspace, path, target, undefined, (leaf) => {
+    await activateMarkdownFile(this.vault, this.workspace, path, target, this.signal, (leaf) => {
       const editor = getLeafEditor(leaf);
       if (editor === null) throw new Error(`Markdown editor not available: ${path}`);
       const position = { line, ch: 0 };
