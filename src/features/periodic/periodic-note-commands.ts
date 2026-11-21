@@ -57,6 +57,11 @@ export interface PeriodicNoteCreationTarget {
   readonly exists: boolean;
 }
 
+interface CascadeTarget {
+  readonly context: PeriodicNoteTemplateContext;
+  readonly keepExisting: boolean;
+}
+
 interface CascadeFailure {
   readonly name: string;
   readonly message: string;
@@ -138,17 +143,21 @@ export class PeriodicNoteCommands {
       await pendingCreation;
       assertNoteCreationActive(this.signal);
     }
-    // Joining the primary creation does not authorize this request's larger notes.
-    if (request.confirmCreate !== undefined && (pendingCreation === undefined || cascadePlan.length > 0)) {
+    const cascadeTargets = cascadePlan.map((context) => ({
+      context,
+      keepExisting: request.confirmCreate !== undefined && this.files.exists(context.path),
+    }));
+    if (request.confirmCreate !== undefined &&
+        (pendingCreation === undefined || cascadeTargets.some((target) => !target.keepExisting))) {
       const confirmed = await request.confirmCreate(
         Object.freeze({
           date: primary.date,
           noteType,
           path,
-          cascade: Object.freeze(cascadePlan.map((context) => Object.freeze({
+          cascade: Object.freeze(cascadeTargets.map(({ context, keepExisting }) => Object.freeze({
             noteType: context.noteType,
             path: context.path,
-            exists: this.files.exists(context.path),
+            exists: keepExisting,
           }))),
         }),
       );
@@ -162,7 +171,7 @@ export class PeriodicNoteCommands {
     assertNoteCreationActive(this.signal);
     await open();
     assertNoteCreationActive(this.signal);
-    const cascade = await this.createLargerNotes(cascadePlan);
+    const cascade = await this.createLargerNotes(cascadeTargets);
     return Object.freeze({
       status: "opened",
       path,
@@ -172,13 +181,18 @@ export class PeriodicNoteCommands {
   }
 
   private async createLargerNotes(
-    plan: readonly PeriodicNoteTemplateContext[],
+    plan: readonly CascadeTarget[],
   ): Promise<CascadeResult[]> {
     const results: CascadeResult[] = [];
-    for (const context of plan) {
+    for (const { context, keepExisting } of plan) {
       const { noteType, path } = context;
       assertNoteCreationActive(this.signal);
       try {
+        // A target shown as "Keep existing" may be deleted while the prompt or tab is open.
+        if (keepExisting) {
+          if (this.files.exists(path)) results.push(Object.freeze({ noteType, path, status: "existing" }));
+          continue;
+        }
         const created = await this.createPopulatedOnce(context);
         assertNoteCreationActive(this.signal);
         results.push(Object.freeze({

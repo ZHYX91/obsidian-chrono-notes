@@ -358,6 +358,66 @@ describe("PeriodicNoteCommands", () => {
     expect(ports.workspace.open).toHaveBeenCalledTimes(confirmed ? 2 : 1);
   });
 
+  it.each([false, true])("opens a joining tab without confirming existing targets (weekly note removed: %s)", async (removeWeekly) => {
+    const weekly = "Weekly/2026-W21.md";
+    const ports = createPorts([weekly]);
+    const preparation = deferred<{ initialContent: string }>();
+    vi.mocked(ports.templates.prepare).mockReturnValueOnce(preparation.promise);
+    vi.mocked(ports.workspace.open).mockImplementation(async (_path, target) => {
+      if (target === "tab" && removeWeekly) ports.paths.delete(weekly);
+    });
+    const commands = new PeriodicNoteCommands(ports.files, ports.templates, ports.workspace);
+    const settings = createSettings({
+      daily: { enabled: true, pattern: "[Daily]/YYYY-MM-DD" },
+      weekly: { enabled: true, pattern: "[Weekly]/GGGG-[W]WW" },
+    });
+    const date = { year: 2026, month: 5, day: 18 };
+    const first = commands.openOrCreate({ date, noteType: "daily" }, settings);
+    await vi.waitFor(() => expect(ports.templates.prepare).toHaveBeenCalledOnce());
+    const confirmCreate = vi.fn(async () => false);
+    const second = commands.openOrCreate(
+      { date, noteType: "daily", target: "tab", cascade: true, confirmCreate }, settings,
+    );
+
+    preparation.resolve({ initialContent: "" });
+    await first;
+    await expect(second).resolves.toMatchObject({
+      status: "opened", created: false,
+      cascade: removeWeekly ? [] : [{ path: weekly, status: "existing" }],
+    });
+    expect(confirmCreate).not.toHaveBeenCalled();
+    expect(ports.workspace.open).toHaveBeenCalledWith("Daily/2026-05-18.md", "tab");
+    expect(ports.files.create).toHaveBeenCalledOnce();
+    expect(ports.paths.has(weekly)).toBe(!removeWeekly);
+  });
+
+  it("creates only the missing targets approved in a mixed cascade", async () => {
+    const weekly = "Weekly/2026-W21.md";
+    const monthly = "Monthly/2026-05.md";
+    const ports = createPorts([weekly]);
+    const commands = new PeriodicNoteCommands(ports.files, ports.templates, ports.workspace);
+    const settings = createSettings({
+      daily: { enabled: true, pattern: "[Daily]/YYYY-MM-DD" },
+      weekly: { enabled: true, pattern: "[Weekly]/GGGG-[W]WW" },
+      monthly: { enabled: true, pattern: "[Monthly]/YYYY-MM" },
+    });
+    const result = await commands.openOrCreate({
+      date: { year: 2026, month: 5, day: 18 }, noteType: "daily", cascade: true,
+      confirmCreate: async ({ cascade }) => {
+        expect(cascade).toEqual([
+          { noteType: "weekly", path: weekly, exists: true },
+          { noteType: "monthly", path: monthly, exists: false },
+        ]);
+        ports.paths.delete(weekly);
+        return true;
+      },
+    }, settings);
+    expect(result).toMatchObject({ status: "opened", cascade: [{ path: monthly, status: "created" }] });
+    expect(ports.paths.has(weekly)).toBe(false);
+    expect(ports.paths.has(monthly)).toBe(true);
+    expect(ports.files.create).toHaveBeenCalledTimes(2);
+  });
+
   it("returns not-configured without touching external ports", async () => {
     const ports = createPorts();
     const commands = new PeriodicNoteCommands(ports.files, ports.templates, ports.workspace);

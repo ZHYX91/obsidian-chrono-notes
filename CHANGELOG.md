@@ -2,6 +2,10 @@
 
 Notable changes to Chrono Notes are documented in this file. The repository's numeric Git tags are the evidence for released versions; an entry without a corresponding local tag remains unreleased even if the manifests already contain that version.
 
+## Unreleased
+
+- When another request is already creating the same periodic note, open its requested tab directly if every larger-period note exists. Confirm any missing notes before creating them and preserve deletions of notes marked “Keep existing.”
+
 ## 0.9.1
 
 - Find existing daily notes with paths that combine dates with quarter or ISO week directories.
