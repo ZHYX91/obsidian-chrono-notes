@@ -328,6 +328,36 @@ describe("PeriodicNoteCommands", () => {
     expect(ports.workspace.open).toHaveBeenCalledWith("Daily/2026-05-18.md", "tab");
   });
 
+  it.each([true, false])("honors a joining request's cascade confirmation (%s)", async (confirmed) => {
+    const ports = createPorts();
+    const preparation = deferred<{ initialContent: string }>();
+    vi.mocked(ports.templates.prepare).mockReturnValueOnce(preparation.promise);
+    const commands = new PeriodicNoteCommands(ports.files, ports.templates, ports.workspace);
+    const settings = createSettings({
+      daily: { enabled: true, pattern: "[Daily]/YYYY-MM-DD" },
+      weekly: { enabled: true, pattern: "[Weekly]/GGGG-[W]WW" },
+    });
+    const date = { year: 2026, month: 5, day: 18 };
+    const confirmCreate = vi.fn(async () => confirmed);
+    const first = commands.openOrCreate({ date, noteType: "daily" }, settings);
+    await vi.waitFor(() => expect(ports.templates.prepare).toHaveBeenCalledOnce());
+    const second = commands.openOrCreate(
+      { date, noteType: "daily", target: "tab", cascade: true, confirmCreate },
+      settings,
+    );
+
+    preparation.resolve({ initialContent: "" });
+    await expect(first).resolves.toMatchObject({ status: "opened", created: true });
+    await expect(second).resolves.toMatchObject({ status: confirmed ? "opened" : "cancelled" });
+    expect(confirmCreate).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({
+      path: "Daily/2026-05-18.md",
+      cascade: [{ noteType: "weekly", path: "Weekly/2026-W21.md", exists: false }],
+    }));
+    expect(ports.paths.has("Weekly/2026-W21.md")).toBe(confirmed);
+    expect(ports.paths.has("Daily/2026-05-18.md")).toBe(true);
+    expect(ports.workspace.open).toHaveBeenCalledTimes(confirmed ? 2 : 1);
+  });
+
   it("returns not-configured without touching external ports", async () => {
     const ports = createPorts();
     const commands = new PeriodicNoteCommands(ports.files, ports.templates, ports.workspace);

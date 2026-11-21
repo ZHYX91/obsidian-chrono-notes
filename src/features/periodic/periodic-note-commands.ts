@@ -137,17 +137,9 @@ export class PeriodicNoteCommands {
     if (pendingCreation !== undefined) {
       await pendingCreation;
       assertNoteCreationActive(this.signal);
-      await open();
-      assertNoteCreationActive(this.signal);
-      const cascade = await this.createLargerNotes(cascadePlan);
-      return Object.freeze({
-        status: "opened",
-        path,
-        created: false,
-        cascade: Object.freeze(cascade),
-      });
     }
-    if (request.confirmCreate !== undefined) {
+    // Joining the primary creation does not authorize this request's larger notes.
+    if (request.confirmCreate !== undefined && (pendingCreation === undefined || cascadePlan.length > 0)) {
       const confirmed = await request.confirmCreate(
         Object.freeze({
           date: primary.date,
@@ -166,7 +158,7 @@ export class PeriodicNoteCommands {
       }
     }
 
-    const created = await this.createPopulatedOnce(primary);
+    const created = pendingCreation === undefined && await this.createPopulatedOnce(primary);
     assertNoteCreationActive(this.signal);
     await open();
     assertNoteCreationActive(this.signal);
