@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { prepareFuzzySearch } from "obsidian";
+import { AbstractInputSuggest, prepareFuzzySearch } from "obsidian";
 import { yieldToHost } from "../../src/shared/yield-to-host";
 
 const stats = vi.hoisted(() => ({ scores: 0 }));
@@ -41,6 +41,7 @@ vi.mock("obsidian", () => {
 
 import {
   MarkdownFileSuggest,
+  PeriodicNoteFolderSuggest,
   VaultFolderSuggest,
   VaultPathSuggestionCatalog,
 } from "../../src/ui/settings/vault-path-suggest";
@@ -56,6 +57,11 @@ function createInput(value: string): HTMLInputElement {
 }
 
 describe("Vault folder suggestions", () => {
+  it("uses the host keyboard suggestion controls for each path input", () => {
+    for (const control of [PeriodicNoteFolderSuggest, VaultFolderSuggest, MarkdownFileSuggest]) {
+      expect(control.prototype).toBeInstanceOf(AbstractInputSuggest);
+    }
+  });
   it("filters existing folders without constraining new folder input", () => {
     const input = createInput("New/Folder");
     const app = {

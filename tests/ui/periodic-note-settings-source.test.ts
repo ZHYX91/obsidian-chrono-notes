@@ -51,8 +51,6 @@ describe("periodic note settings structure", () => {
     expect(periodicSectionSource).toContain("new PeriodicNoteFolderSuggest");
     expect(templateSectionSource).toContain("new MarkdownFileSuggest");
     expect(rangeSectionSource.match(/new VaultFolderSuggest/g)).toHaveLength(2);
-    expect(suggestSource).toContain("extends AbstractInputSuggest<TFolder>");
-    expect(suggestSource).toContain("extends AbstractInputSuggest<TFile>");
     expect(suggestSource).toContain("getMarkdownFiles()");
   });
 
