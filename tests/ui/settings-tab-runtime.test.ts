@@ -181,6 +181,14 @@ describe("ChronoNotesSettingTab save orchestration", () => {
     expect(tab.containerEl.childElementCount).toBe(0);
   });
 
+  it("stops settings suggestions on plugin unload even while settings are visible", () => {
+    const { tab, context } = displayAndGetGeneralContext();
+    const signal = context.vaultPathSuggestionCatalog.signal;
+    expect(signal.aborted).toBe(false);
+    tab.disposeOnUnload();
+    expect(signal.aborted).toBe(true);
+  });
+
   it("does not let an asynchronous section callback revive a hidden surface", async () => {
     let resolveSave!: () => void;
     const save = new Promise<void>((resolve) => {

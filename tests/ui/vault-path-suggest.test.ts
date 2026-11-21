@@ -1,4 +1,9 @@
 import { describe, expect, it, vi } from "vitest";
+import { prepareFuzzySearch } from "obsidian";
+import { yieldToHost } from "../../src/shared/yield-to-host";
+
+const stats = vi.hoisted(() => ({ scores: 0 }));
+
 
 vi.mock("obsidian", () => {
   class AbstractInputSuggest {
@@ -26,6 +31,7 @@ vi.mock("obsidian", () => {
   return {
     AbstractInputSuggest,
     prepareFuzzySearch: (query: string) => (value: string) => {
+      stats.scores++;
       const index = value.toLocaleLowerCase().indexOf(query.toLocaleLowerCase());
       return index === -1 ? null : { matches: [[index, index + query.length]], score: -index };
     },
@@ -94,7 +100,7 @@ describe("Vault folder suggestions", () => {
 });
 
 describe("Vault path suggestion catalog", () => {
-  it("returns only the best one hundred fuzzy matches", () => {
+  it("returns only the best one hundred fuzzy matches", async () => {
     const files = Array.from(
       { length: 150 },
       (_, index) => ({ path: `Notes/match-${String(index).padStart(3, "0")}.md` }),
@@ -110,7 +116,7 @@ describe("Vault path suggestion catalog", () => {
     );
 
     expect(suggest.getSuggestions("match")).toHaveLength(100);
-    expect(suggest.getSuggestions("match").map(({ path }) => path)).toEqual(
+    expect((await suggest.getSuggestions("match")).map(({ path }) => path)).toEqual(
       files.slice(0, 100).map(({ path }) => path),
     );
   });
@@ -134,16 +140,86 @@ describe("Vault path suggestion catalog", () => {
       },
     } as never;
     const catalog = new VaultPathSuggestionCatalog(app);
+    const suggest = new MarkdownFileSuggest(app, createInput(""), catalog);
     catalog.start();
 
-    expect(catalog.getMarkdownFiles().map(({ path }) => path)).toEqual(["A.md", "Z.md"]);
-    expect(catalog.getMarkdownFiles().map(({ path }) => path)).toEqual(["A.md", "Z.md"]);
+    expect(suggest.getSuggestions("")).toEqual([{ path: "A.md" }, { path: "Z.md" }]);
+    expect(suggest.getSuggestions("")).toEqual([{ path: "A.md" }, { path: "Z.md" }]);
     expect(getMarkdownFiles).toHaveBeenCalledOnce();
     listeners[0]?.();
-    catalog.getMarkdownFiles();
+    expect(suggest.getSuggestions("")).toEqual([{ path: "A.md" }, { path: "Z.md" }]);
     expect(getMarkdownFiles).toHaveBeenCalledTimes(2);
 
     catalog.dispose();
     expect(offref).toHaveBeenCalledTimes(3);
+  });
+});
+
+function largePaths(count = 6000) {
+  let files = Array.from({ length: count }, (_, i) => ({
+    path: (i % 7 === 0 ? "match" : i % 3 === 0 ? "Xmatch" : "Misc") + (count - i) + ".md",
+  }));
+  const listeners = new Map<string, () => void>();
+  const app = { vault: {
+    getMarkdownFiles: () => files,
+    on: (event: string, listener: () => void) => { listeners.set(event, listener); return { event }; },
+    offref: () => {},
+  } } as never;
+  const catalog = new VaultPathSuggestionCatalog(app);
+  catalog.start();
+  const suggest = new MarkdownFileSuggest(app, createInput(""), catalog);
+  return { suggest, catalog, files, replace: (next: typeof files) => { files = next; listeners.get("rename")?.(); } };
+}
+
+describe("cooperative settings path ranking", () => {
+  it("yields to other host work and keeps the fuzzy score and path order", async () => {
+    const { suggest, files } = largePaths();
+    const search = prepareFuzzySearch("match");
+    const expected = files.map((file) => ({ file, result: search(file.path) }))
+      .filter((match) => match.result !== null)
+      .sort((a, b) => b.result!.score - a.result!.score || a.file.path.localeCompare(b.file.path))
+      .slice(0, 100).map(({ file }) => file);
+    const before = stats.scores;
+    const actual = suggest.getSuggestions("match");
+    expect(actual).toBeInstanceOf(Promise);
+    await yieldToHost();
+    expect(stats.scores - before).toBeLessThan(files.length);
+    expect(await actual).toEqual(expected);
+    expect(stats.scores - before).toBe(files.length);
+  });
+
+  it("stops scoring a superseded input and keeps the latest list even when an old response is shown last", async () => {
+    const { suggest, files } = largePaths();
+    const alphabetical = await suggest.getSuggestions("");
+    const before = stats.scores;
+    const old = suggest.getSuggestions("Misc");
+    expect(stats.scores).toBeGreaterThan(before);
+    expect(stats.scores - before).toBeLessThan(files.length);
+    const latest = suggest.getSuggestions("");
+    expect(latest).toEqual(alphabetical);
+    const atSupersession = stats.scores;
+    expect(await old).toBe(latest);
+    expect(stats.scores).toBe(atSupersession);
+  });
+
+  it("adopts a replacement asynchronous query and neither response includes obsolete Vault paths", async () => {
+    const { suggest, replace } = largePaths();
+    const first = suggest.getSuggestions("Misc");
+    const second = suggest.getSuggestions("match");
+    const fresh = [{ path: "match-new.md" }];
+    replace(fresh);
+    expect(await second).toEqual(fresh);
+    expect(await first).toEqual(fresh);
+  });
+
+  it.each(["close", "dispose"] as const)("stops an in-flight rank on %s", async (action) => {
+    const { suggest, catalog } = largePaths();
+    await suggest.getSuggestions("");
+    const result = suggest.getSuggestions("match");
+    if (action === "close") suggest.close();
+    else catalog.dispose();
+    const before = stats.scores;
+    expect(await result).toEqual([]);
+    expect(stats.scores).toBe(before);
   });
 });
