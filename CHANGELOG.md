@@ -4,7 +4,7 @@ Notable changes to Chrono Notes are documented in this file. The repository's nu
 
 ## Unreleased
 
-- When another request is already creating the same periodic note, open its requested tab directly if every larger-period note exists. Confirm any missing notes before creating them and preserve deletions of notes marked “Keep existing.”
+- When another request is already creating the same periodic note, open its requested tab directly if every larger-period note exists. Confirm any missing notes before creating them and preserve deletions of notes marked “Keep existing.” A cascade waits for an existing note’s active template to finish before running the next template and reports rendering failures.
 
 ## 0.9.1
 

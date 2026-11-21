@@ -57,9 +57,10 @@ export interface PeriodicNoteCreationTarget {
   readonly exists: boolean;
 }
 
-interface CascadeTarget {
+interface NoteCreationTarget {
   readonly context: PeriodicNoteTemplateContext;
-  readonly keepExisting: boolean;
+  readonly createIfMissing: boolean;
+  readonly pendingAtConfirmation?: Promise<void> | undefined;
 }
 
 interface CascadeFailure {
@@ -143,21 +144,24 @@ export class PeriodicNoteCommands {
       await pendingCreation;
       assertNoteCreationActive(this.signal);
     }
-    const cascadeTargets = cascadePlan.map((context) => ({
-      context,
-      keepExisting: request.confirmCreate !== undefined && this.files.exists(context.path),
-    }));
+    const cascadeTargets = cascadePlan.map((context): NoteCreationTarget => {
+      if (request.confirmCreate !== undefined && this.files.exists(context.path)) {
+        // An existing path may still hold a template's initial content.
+        return { context, createIfMissing: false, pendingAtConfirmation: this.creationsByPath.get(context.path) };
+      }
+      return { context, createIfMissing: true };
+    });
     if (request.confirmCreate !== undefined &&
-        (pendingCreation === undefined || cascadeTargets.some((target) => !target.keepExisting))) {
+        (pendingCreation === undefined || cascadeTargets.some((target) => target.createIfMissing))) {
       const confirmed = await request.confirmCreate(
         Object.freeze({
           date: primary.date,
           noteType,
           path,
-          cascade: Object.freeze(cascadeTargets.map(({ context, keepExisting }) => Object.freeze({
+          cascade: Object.freeze(cascadeTargets.map(({ context, createIfMissing }) => Object.freeze({
             noteType: context.noteType,
             path: context.path,
-            exists: keepExisting,
+            exists: !createIfMissing,
           }))),
         }),
       );
@@ -167,7 +171,8 @@ export class PeriodicNoteCommands {
       }
     }
 
-    const created = pendingCreation === undefined && await this.createPopulatedOnce(primary);
+    const created = pendingCreation === undefined &&
+      await this.ensurePopulated({ context: primary, createIfMissing: true }) === "created";
     assertNoteCreationActive(this.signal);
     await open();
     assertNoteCreationActive(this.signal);
@@ -181,25 +186,16 @@ export class PeriodicNoteCommands {
   }
 
   private async createLargerNotes(
-    plan: readonly CascadeTarget[],
+    plan: readonly NoteCreationTarget[],
   ): Promise<CascadeResult[]> {
     const results: CascadeResult[] = [];
-    for (const { context, keepExisting } of plan) {
-      const { noteType, path } = context;
+    for (const target of plan) {
+      const { noteType, path } = target.context;
       assertNoteCreationActive(this.signal);
       try {
-        // A target shown as "Keep existing" may be deleted while the prompt or tab is open.
-        if (keepExisting) {
-          if (this.files.exists(path)) results.push(Object.freeze({ noteType, path, status: "existing" }));
-          continue;
-        }
-        const created = await this.createPopulatedOnce(context);
+        const status = await this.ensurePopulated(target);
         assertNoteCreationActive(this.signal);
-        results.push(Object.freeze({
-          noteType,
-          path,
-          status: created ? "created" : "existing",
-        }));
+        if (status !== "missing") results.push(Object.freeze({ noteType, path, status }));
       } catch (error) {
         if (this.signal?.aborted) throw error;
         const cause = error instanceof PeriodicNoteCreationError ? error.cause : error;
@@ -232,25 +228,25 @@ export class PeriodicNoteCommands {
     return Object.freeze(result);
   }
 
-  private async createPopulatedOnce(
-    context: PeriodicNoteTemplateContext,
-  ): Promise<boolean> {
+  private async ensurePopulated(
+    { context, createIfMissing, pendingAtConfirmation }: NoteCreationTarget,
+  ): Promise<"created" | "existing" | "missing"> {
     const { path } = context;
     assertNoteCreationActive(this.signal);
-    const existing = this.creationsByPath.get(path);
-    if (existing !== undefined) {
-      await existing;
+    const pending = this.creationsByPath.get(path) ?? pendingAtConfirmation;
+    if (pending !== undefined) {
+      await pending;
       assertNoteCreationActive(this.signal);
-      return false;
     }
-    if (this.files.exists(path)) return false;
+    if (this.files.exists(path)) return "existing";
+    if (!createIfMissing || pending !== undefined) return "missing";
 
     const creation = Promise.resolve().then(() =>
       this.createPopulatedNote(context));
     this.creationsByPath.set(path, creation);
     try {
       await creation;
-      return true;
+      return "created";
     } finally {
       if (this.creationsByPath.get(path) === creation) {
         this.creationsByPath.delete(path);
