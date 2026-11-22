@@ -4,7 +4,7 @@ import type { Page } from "@playwright/test";
 import type { ObsidianNoteIndexCache } from "../../src/adapters/obsidian/obsidian-note-index-cache";
 import { parseNote } from "../../src/core/note/parsed-note";
 import { createIndexedNote } from "../../src/features/notes/indexed-note";
-import { createPersistedNoteIndexSnapshot } from "../../src/features/notes/note-index-cache";
+import { NOTE_INDEX_CACHE_SCHEMA, createPersistedNoteIndexSnapshot } from "../../src/features/notes/note-index-cache";
 
 declare global {
   interface Window {
@@ -92,10 +92,10 @@ test("migrates v1 snapshots atomically and keeps same-name Vaults isolated", asy
 });
 
 test("serializes changes and rolls back all row and metadata edits on clone failure", async ({ page }) => {
-  const result = await page.evaluate(async ({ a, b, c }) => {
+  const result = await page.evaluate(async ({ a, b, c, schema }) => {
     const first = window.cacheFixture.cache("one");
     const second = window.cacheFixture.cache("one");
-    await first.save({ schema: 7, entries: [a] });
+    await first.save({ schema, entries: [a] });
     await Promise.all([
       first.applyChanges({ upserts: [b], deletes: [] }),
       second.applyChanges({ upserts: [c], deletes: [] }),
@@ -119,7 +119,7 @@ test("serializes changes and rolls back all row and metadata edits on clone fail
     const missingBaseline = await second.applyChanges({ upserts: [a], deletes: [] })
       .then(() => false, () => true);
     return { count, aborted, afterAbort, status, touched, after, missingBaseline };
-  }, { a, b, c });
+  }, { a, b, c, schema: NOTE_INDEX_CACHE_SCHEMA } as const);
   expect(result).toEqual({
     count: { state: "stored", entryCount: 3 }, aborted: true,
     afterAbort: createPersistedNoteIndexSnapshot([a, c, b]),
@@ -130,12 +130,12 @@ test("serializes changes and rolls back all row and metadata edits on clone fail
 });
 
 test("refreshes membership after another window replaces the baseline and compacts a large overlay", async ({ page }) => {
-  const report = await page.evaluate(async ({ a, b, c }) => {
+  const report = await page.evaluate(async ({ a, b, c, schema }) => {
     const first = window.cacheFixture.cache("one");
     const second = window.cacheFixture.cache("one");
-    await first.save({ schema: 7, entries: [a] });
+    await first.save({ schema, entries: [a] });
     await second.load();
-    await first.save({ schema: 7, entries: [c] });
+    await first.save({ schema, entries: [c] });
     await second.applyChanges({ upserts: [a], deletes: [c.file.path] });
     const afterReplacement = await first.load();
     const additions = Array.from({ length: 256 }, (_, i) => {
@@ -145,11 +145,11 @@ test("refreshes membership after another window replaces the baseline and compac
     await second.applyChanges({ upserts: additions, deletes: [] });
     await first.load();
     const compaction = first.needsFullSave;
-    await first.save({ schema: 7, entries: [a, ...additions] });
+    await first.save({ schema, entries: [a, ...additions] });
     const status = await second.getStatus();
     await second.load();
     return { afterReplacement, compaction, compacted: !second.needsFullSave, status };
-  }, { a, b, c });
+  }, { a, b, c, schema: NOTE_INDEX_CACHE_SCHEMA } as const);
   expect(report).toEqual({
     afterReplacement: createPersistedNoteIndexSnapshot([a]), compaction: true, compacted: true,
     status: { state: "stored", entryCount: 257 },
@@ -157,7 +157,7 @@ test("refreshes membership after another window replaces the baseline and compac
 });
 
 test("rejects corrupt manifests, mismatched overlay keys, and a missing baseline", async ({ page }) => {
-  const report = await page.evaluate(async ({ a, b }) => {
+  const report = await page.evaluate(async ({ a, b, schema }) => {
     const cache = window.cacheFixture.cache("one");
     const key = "Notes\u0000one";
     const metadataKey = JSON.stringify(["metadata", key]);
@@ -176,10 +176,10 @@ test("rejects corrupt manifests, mismatched overlay keys, and a missing baseline
         });
       } finally { db.close(); }
     };
-    await cache.save({ schema: 7, entries: [a] });
+    await cache.save({ schema, entries: [a] });
     await edit((tx) => { tx.objectStore("note-index-entries").put(b, [key, b.file.path]); });
     const undeclaredRow = await cache.load();
-    await cache.save({ schema: 7, entries: [a] });
+    await cache.save({ schema, entries: [a] });
     await cache.applyChanges({ upserts: [b], deletes: [] });
     await edit((tx) => { tx.objectStore("note-index-entries").put(a, [key, b.file.path]); });
     const wrongKey = await cache.load();
@@ -190,11 +190,11 @@ test("rejects corrupt manifests, mismatched overlay keys, and a missing baseline
     const unknownStatus = await cache.getStatus();
     await edit((tx) => { tx.objectStore("note-index-snapshots").delete(metadataKey); });
     const orphanRows = await cache.load();
-    await cache.save({ schema: 7, entries: [a] });
+    await cache.save({ schema, entries: [a] });
     await edit((tx) => { tx.objectStore("note-index-snapshots").delete(key); });
     const missing = await cache.getStatus();
     return { undeclaredRow, wrongKey, unknown, unknownStatus, orphanRows, missing };
-  }, { a, b });
+  }, { a, b, schema: NOTE_INDEX_CACHE_SCHEMA } as const);
   expect(report).toEqual({
     undeclaredRow: {}, wrongKey: {}, unknown: {}, unknownStatus: { state: "invalid" }, orphanRows: {}, missing: { state: "invalid" },
   });

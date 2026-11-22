@@ -12,6 +12,8 @@ export interface MarkdownBodyLineProjection {
   readonly visibleText: string;
   /** Visible body text with inline code spans masked for syntax consumers. */
   readonly semanticText: string;
+  /** Semantic text with resolved Markdown images and reference definitions removed. */
+  readonly previewText: string;
   /** Writable task metadata, with protected syntax blocked at the same offsets. */
   readonly taskText: string;
   /** Semantic text with escaped syntax and link metadata masked for tags. */
@@ -22,6 +24,7 @@ export interface MarkdownBodyLineProjection {
 export interface MarkdownBodyProjection {
   readonly lines: readonly MarkdownBodyLineProjection[];
   readonly linkCount: number;
+  readonly markdownImageTargets: readonly string[];
 }
 
 interface MaskRange {
@@ -35,6 +38,8 @@ interface ContainerMark extends MaskRange {
 
 interface MarkdownLink extends MaskRange {
   readonly reference: string | null;
+  readonly image: boolean;
+  readonly destination: string | null;
   readonly label: MaskRange | null;
   readonly taskContent: MaskRange | null;
 }
@@ -57,7 +62,7 @@ export function projectMarkdownBody(
   const markers: MaskRange[] = [];
   const tagMasks: MaskRange[] = [];
   const taskMasks: MaskRange[] = [];
-  const references: { label: string; from: number }[] = [];
+  const references: (MaskRange & { label: string; destination: string })[] = [];
   const links: MarkdownLink[] = [];
   parser.parse(syntax).iterate({
     enter(node) {
@@ -76,8 +81,11 @@ export function projectMarkdownBody(
       if (node.name === "HTMLTag") taskMasks.push({ from: node.from, to: node.to });
       if (node.name === "LinkReference") {
         const label = node.node.getChild("LinkLabel");
-        if (label !== null) {
+        const url = node.node.getChild("URL");
+        if (label !== null && url !== null) {
           references.push({
+            destination: syntax.slice(url.from, url.to),
+            to: node.to,
             label: normalizeReference(syntax.slice(label.from + 1, label.to - 1)),
             from: node.from,
           });
@@ -92,7 +100,10 @@ export function projectMarkdownBody(
         const label = node.node.getChild("LinkLabel");
         const explicitLabel = label === null ? "" : syntax.slice(label.from + 1, label.to - 1);
         const isInline = marks.some((mark) => syntax.slice(mark.from, mark.to) === "(");
+        const url = node.node.getChild("URL");
         links.push({
+          image: node.name === "Image",
+          destination: url === null ? null : syntax.slice(url.from, url.to),
           from: node.from, to: node.to,
           reference: isInline ? null : normalizeReference(
             explicitLabel || syntax.slice(opening.to, closing.from),
@@ -113,9 +124,13 @@ export function projectMarkdownBody(
   const visibleLines = visible.split("\n");
   const semantic = maskRanges(visible, inline);
   const semanticLines = semantic.split("\n");
-  const referenceLabels = new Set(references
-    .filter((reference) => semantic[reference.from] === "[")
-    .map((reference) => reference.label));
+  const definitions = references.filter((reference) => semantic[reference.from] === "[");
+  const referenceTargets = new Map<string, string>();
+  for (const definition of definitions) {
+    if (!referenceTargets.has(definition.label)) {
+      referenceTargets.set(definition.label, definition.destination);
+    }
+  }
   const wikiLinks = Array.from(semantic.matchAll(/!?\[\[[^[\]\n]+\]\]/gu))
     .filter((match) => !isEscaped(semantic, match.index))
     .map((match) => {
@@ -132,7 +147,16 @@ export function projectMarkdownBody(
   const resolvedLinks = links.filter((link) =>
     (semantic[link.from] === "[" || semantic[link.from] === "!") &&
     !containsOffset(wikiLinks, link.from) &&
-    (link.reference === null || referenceLabels.has(link.reference)));
+    (link.reference === null || referenceTargets.has(link.reference)));
+  const markdownImages: MarkdownLink[] = [];
+  for (const link of resolvedLinks) {
+    // An inner image in the alt text describes its parent; it is not rendered separately.
+    if (link.image && link.from >= (markdownImages.at(-1)?.to ?? 0)) markdownImages.push(link);
+  }
+  const markdownImageTargets = markdownImages.map((image) =>
+    image.reference === null ? image.destination ?? "" : referenceTargets.get(image.reference)!);
+  const previewLines = markdownImages.length === 0 && definitions.length === 0 ? semanticLines
+    : maskRanges(semantic, [...definitions, ...markdownImages].sort((a, b) => a.from - b.from)).split("\n");
   const linkLabels = resolvedLinks.flatMap((link) => link.label === null ? [] : [link.label]);
   const tagLines = maskRanges(semantic, [...tagMasks, ...wikiLinks, ...linkLabels]
     .sort((left, right) => left.from - right.from)).split("\n");
@@ -169,13 +193,32 @@ export function projectMarkdownBody(
     offset += rawText.length + 1;
     return Object.freeze({
       sourceLine: bodyStartLine + index,
-      rawText, visibleText, semanticText, taskText: taskLines[index] ?? "",
+      rawText, visibleText, semanticText, previewText: previewLines[index] ?? "",
+      taskText: taskMarker === null ? taskLines[index] ?? "" : maskBareTaskUrls(taskLines[index] ?? ""),
       tagText: tagLines[index] ?? "", taskMarker,
     });
   });
   return Object.freeze({
     lines: Object.freeze(lines),
+    markdownImageTargets: Object.freeze(markdownImageTargets),
     linkCount: wikiLinks.length + resolvedLinks.filter((link) => !taskCheckboxes.has(link.from)).length,
+  });
+}
+
+/** Obsidian also makes unbracketed URLs clickable; their bytes are never writable task metadata. */
+function maskBareTaskUrls(text: string): string {
+  return text.replace(/\b(?:https?:\/\/|ftp:\/\/|www\.)[^\s<>"\uFFFC]+/giu, (url) => {
+    let parentheses = 0;
+    let brackets = 0;
+    let end = 0;
+    for (; end < url.length; end += 1) {
+      const character = url[end];
+      if (character === "(") parentheses += 1;
+      else if (character === ")" && --parentheses < 0) break;
+      else if (character === "[") brackets += 1;
+      else if (character === "]" && --brackets < 0) break;
+    }
+    return "\uFFFC".repeat(end) + url.slice(end);
   });
 }
 
