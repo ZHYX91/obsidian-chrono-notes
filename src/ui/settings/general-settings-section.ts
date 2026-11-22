@@ -45,8 +45,8 @@ export function renderGeneralSettingsSection(
         .onChange(async (value) => {
           if (!isPluginLocale(value)) return;
           context.host.settings.locale = value;
-          await context.persistSettings();
           context.display();
+          await context.persistSettings();
         });
     });
 
@@ -94,6 +94,7 @@ export function renderGeneralSettingsSection(
     .setName(t("settings.general.propertyDateDisplayFormat"))
     .setDesc(t("settings.general.propertyDateDisplayFormatDesc"))
     .addDropdown((dropdown) => {
+      dropdown.selectEl.dataset.chronoSettingsControl = "propertyDateDisplayFormat";
       dropdown
         .addOption("system", t("settings.general.propertyDateDisplaySystem"))
         .addOption("ymd-dash", t("settings.general.propertyDateDisplayYmdDash"))
@@ -109,8 +110,8 @@ export function renderGeneralSettingsSection(
         .onChange(async (value) => {
           if (!isPropertyDateDisplayFormat(value)) return;
           context.host.settings.propertyDateDisplayFormat = value;
-          await context.persistSettings();
           context.display();
+          await context.persistSettings();
         });
     });
 
@@ -124,6 +125,7 @@ export function renderGeneralSettingsSection(
     .setName(t("settings.general.propertyTimeDisplayFormat"))
     .setDesc(t("settings.general.propertyTimeDisplayFormatDesc"))
     .addDropdown((dropdown) => {
+      dropdown.selectEl.dataset.chronoSettingsControl = "propertyTimeDisplayFormat";
       dropdown
         .addOption("system", t("settings.general.propertyTimeDisplaySystem"))
         .addOption("24-hour", t("settings.general.propertyTimeDisplay24Hour"))
@@ -141,8 +143,8 @@ export function renderGeneralSettingsSection(
         .onChange(async (value) => {
           if (!isPropertyTimeDisplayFormat(value)) return;
           context.host.settings.propertyTimeDisplayFormat = value;
-          await context.persistSettings();
           context.display();
+          await context.persistSettings();
         });
     });
 

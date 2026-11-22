@@ -32,6 +32,7 @@ installObsidianDomFactories(document);
 Object.defineProperties(HTMLElement.prototype, {
   empty: { configurable: true, value(this: HTMLElement) { this.replaceChildren(); } },
   addClass: { configurable: true, value(this: HTMLElement, ...names: string[]) { this.classList.add(...names); } },
+  toggleClass: { configurable: true, value(this: HTMLElement, name: string, enabled: boolean) { this.classList.toggle(name, enabled); } },
   setText: { configurable: true, value(this: HTMLElement, text: string) { this.textContent = text; } },
 });
 

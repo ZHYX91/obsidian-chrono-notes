@@ -17,6 +17,7 @@ export function renderTemplateEngineSettings(
     .setName(t("settings.templates.engine"))
     .setDesc(t("settings.templates.engineDesc"))
     .addDropdown((dropdown) => {
+      dropdown.selectEl.dataset.chronoSettingsControl = "template-engine";
       dropdown
         .addOption("builtin", t("settings.templates.builtinEngine"))
         .addOption("templater", t("settings.templates.templaterEngine"))
@@ -24,8 +25,8 @@ export function renderTemplateEngineSettings(
         .onChange(async (value) => {
           if (!isTemplateEngine(value)) return;
           context.host.settings.templateEngine = value;
-          await context.persistSettings();
           context.display();
+          await context.persistSettings();
         });
     });
   renderTemplateSyntaxGuide(containerEl, context);
