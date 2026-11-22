@@ -194,6 +194,7 @@ type PendingEventIntent =
 
 interface ScheduledFlush {
   readonly lifecycle: number;
+  publishedRemoval: boolean;
 }
 
 interface PendingLiveCommit {
@@ -244,6 +245,10 @@ export class NoteIndex {
   private readonly documentFingerprints = new Map<string, bigint>();
   private readonly projections = new NoteIndexProjections();
   private readonly revisions = new Map<string, number>();
+  private retiredRevision = 0;
+  private errorCount = 0;
+  private readonly pendingRemovals = new Map<string, null>();
+  private removalNotificationPending = false;
   private readonly inFlight = new Map<string, InFlightRead>();
   private readonly readQueue: QueuedRead[] = [];
   private readonly runningReads = new Set<QueuedRead>();
@@ -337,6 +342,17 @@ export class NoteIndex {
       documentFingerprints: new Map(),
     };
     this.initialStaging = staging;
+    const initializing = this.startInitialIndex(staging, operationStartedAt);
+    if (this.isCurrentLifecycle(startLifecycle)) this.initialIndexing = initializing;
+    try {
+      await initializing;
+    } finally {
+      if (this.initialIndexing === initializing) this.initialIndexing = null;
+    }
+  }
+
+  private async startInitialIndex(staging: InitialStaging, operationStartedAt: number): Promise<void> {
+    const startLifecycle = staging.lifecycle;
     this.bufferedStartupEvents = [];
     try {
       this.unsubscribeSource = this.source.subscribe(
@@ -377,16 +393,10 @@ export class NoteIndex {
           staging,
         );
       if (cachedPaths.size > 0) this.commitInitialStaging(staging, "indexing");
-      const initialIndexing = this.completeInitialIndexing(
+      await this.completeInitialIndexing(
         [...knownPaths].filter((path) => !cachedPaths.has(path)),
         staging,
       );
-      this.initialIndexing = initialIndexing;
-      try {
-        await initialIndexing;
-      } finally {
-        if (this.initialIndexing === initialIndexing) this.initialIndexing = null;
-      }
       if (this.active && this.lifecycle === startLifecycle) {
         this.lastFullIndex = this.completeOperation(
           operationStartedAt,
@@ -424,31 +434,36 @@ export class NoteIndex {
     this.initialStaging?.entries.clear();
     this.initialStaging?.documentFingerprints.clear();
     this.initialStaging = null;
+    this.initialIndexing = null;
     this.initialKnownPaths = null;
     this.bufferedStartupEvents = null;
     this.revisions.clear();
-    this.notifyDiagnosticsListeners();
-    if (this.entries.size > 0 || this.snapshot.readiness !== "indexing") {
-      const hadPublishedEntries = Object.keys(this.snapshot.notes).length > 0;
+    this.retiredRevision = 0;
+    this.pendingRemovals.clear();
+    this.removalNotificationPending = false;
+    const hadPublishedEntries = Object.keys(this.snapshot.notes).length > 0;
+    if (hadPublishedEntries || this.entries.size > 0 || this.snapshot.readiness !== "indexing") {
       this.entries.clear();
+      this.errorCount = 0;
       this.documentFingerprints.clear();
       this.projections.clear();
       if (hadPublishedEntries) this.publish(true, "indexing");
       else this.publish(false, "indexing");
     }
+    this.notifyDiagnosticsListeners();
   }
 
   getSnapshot(): NoteIndexSnapshot {
+    if (this.pendingRemovals.size > 0) this.updateSnapshot(true, this.snapshot.readiness);
     return this.snapshot;
   }
 
   getStatus(): NoteIndexStatus {
-    const notes = Object.values(this.snapshot.notes);
     return Object.freeze({
       active: this.active,
       readiness: this.snapshot.readiness,
-      noteCount: notes.length,
-      errorCount: notes.filter((entry) => entry.kind === "error").length,
+      noteCount: this.entries.size,
+      errorCount: this.errorCount,
       cacheConfigured: this.cache !== null,
     });
   }
@@ -489,7 +504,7 @@ export class NoteIndex {
   }
 
   get(path: string): NoteIndexEntry {
-    return this.snapshot.notes[path] ?? Object.freeze({ kind: "missing", path });
+    return this.entries.get(path) ?? Object.freeze({ kind: "missing", path });
   }
 
   subscribe(listener: NoteIndexListener): () => void {
@@ -681,13 +696,22 @@ export class NoteIndex {
     readiness: NoteIndexReadiness = this.snapshot.readiness,
   ): boolean {
     this.cacheWriter.changed(path);
-    if (this.entries.delete(path)) {
-      this.documentFingerprints.delete(path);
-      this.projections.replace(path, null);
+    const previous = this.entries.get(path);
+    if (previous === undefined) return false;
+    this.entries.delete(path);
+    if (previous.kind === "error") this.errorCount -= 1;
+    this.documentFingerprints.delete(path);
+    this.pendingRemovals.set(path, null);
+    const flush = this.scheduledEventFlush;
+    if (flush === null || !flush.publishedRemoval || readiness !== this.snapshot.readiness) {
+      if (flush !== null) flush.publishedRemoval = true;
       this.publish(true, readiness);
-      return true;
+    } else {
+      // Direct lookups already see the deletion. A synchronous snapshot reader
+      // materializes this prefix; ordinary subscribers share the end-of-burst copy.
+      this.removalNotificationPending = true;
     }
-    return false;
+    return true;
   }
 
   private queueReadIntent(
@@ -714,7 +738,7 @@ export class NoteIndex {
 
   private scheduleEventFlush(): void {
     if (this.scheduledEventFlush !== null) return;
-    const scheduled = { lifecycle: this.lifecycle };
+    const scheduled = { lifecycle: this.lifecycle, publishedRemoval: false };
     this.scheduledEventFlush = scheduled;
     queueMicrotask(() => {
       if (this.scheduledEventFlush !== scheduled) return;
@@ -732,6 +756,11 @@ export class NoteIndex {
   private flushEventIntents(lifecycle: number): void {
     const intents = [...this.pendingEventIntents.entries()];
     this.pendingEventIntents.clear();
+    if (this.removalNotificationPending) {
+      this.removalNotificationPending = false;
+      this.getSnapshot();
+      this.notifySnapshotListeners();
+    }
     this.notifyDiagnosticsListeners();
     if (!this.active || this.lifecycle !== lifecycle) return;
     this.incrementDiagnostic("eventBatches");
@@ -742,11 +771,14 @@ export class NoteIndex {
       Extract<PendingEventIntent, { kind: "read" }>,
     ]> = [];
     for (const [path, intent] of intents) {
-      if (
-        intent.kind === "read" &&
-        this.canCommit(path, intent.revision, lifecycle)
-      ) {
+      if (!this.canCommit(path, intent.revision, lifecycle)) continue;
+      if (intent.kind === "read") {
         reads.push([path, intent]);
+      } else {
+        // A later file at this path must outrank every obsolete read without
+        // keeping a tombstone for every name the Vault has ever contained.
+        this.retiredRevision = Math.max(this.retiredRevision, intent.revision);
+        this.revisions.delete(path);
       }
     }
     if (reads.length === 0) {
@@ -926,6 +958,8 @@ export class NoteIndex {
       running.slotHeld = false;
       this.activeReadCount -= 1;
     }
+    // Host reads may settle later. Their lifecycle still rejects publication.
+    this.runningReads.clear();
   }
 
   private async readAndCommit(
@@ -1123,7 +1157,7 @@ export class NoteIndex {
         for (const commit of commits) {
           if (!this.canCommit(commit.path, commit.revision, commit.lifecycle)) continue;
           this.cacheWriter.changed(commit.path);
-          this.entries.set(commit.path, commit.entry);
+          this.storeEntry(commit.path, commit.entry);
           if (commit.documentFingerprint === null) {
             this.documentFingerprints.delete(commit.path);
           } else {
@@ -1185,7 +1219,7 @@ export class NoteIndex {
       const projectionChanges: Array<readonly [string, IndexedNote | null]> = [];
       for (const [path, entry] of staging.entries) {
         if (this.revisions.get(path) !== entry.revision) continue;
-        this.entries.set(path, entry);
+        this.storeEntry(path, entry);
         const fingerprint = staging.documentFingerprints.get(path);
         if (fingerprint === undefined) this.documentFingerprints.delete(path);
         else this.documentFingerprints.set(path, fingerprint);
@@ -1243,7 +1277,11 @@ export class NoteIndex {
     this.initialKnownPaths = null;
     this.bufferedStartupEvents = null;
     this.revisions.clear();
-    const hadPublishedEntries = this.entries.size > 0;
+    this.retiredRevision = 0;
+    this.pendingRemovals.clear();
+    this.removalNotificationPending = false;
+    this.errorCount = 0;
+    const hadPublishedEntries = Object.keys(this.snapshot.notes).length > 0;
     this.entries.clear();
     this.documentFingerprints.clear();
     this.projections.clear();
@@ -1252,8 +1290,15 @@ export class NoteIndex {
     }
   }
 
+  private storeEntry(path: string, entry: PresentNoteIndexEntry): void {
+    if (this.entries.get(path)?.kind === "error") this.errorCount -= 1;
+    if (entry.kind === "error") this.errorCount += 1;
+    this.entries.set(path, entry);
+    this.pendingRemovals.delete(path);
+  }
+
   private advanceRevision(path: string): number {
-    const revision = (this.revisions.get(path) ?? 0) + 1;
+    const revision = (this.revisions.get(path) ?? this.retiredRevision) + 1;
     this.revisions.set(path, revision);
     return revision;
   }
@@ -1300,7 +1345,17 @@ export class NoteIndex {
     notesChanged = true,
     readiness: NoteIndexReadiness = this.snapshot.readiness,
   ): void {
+    this.removalNotificationPending = false;
+    this.updateSnapshot(notesChanged || this.pendingRemovals.size > 0, readiness);
+    this.notifySnapshotListeners();
+  }
+
+  private updateSnapshot(notesChanged: boolean, readiness: NoteIndexReadiness): void {
     const materializationStarted = this.startDiagnosticTiming();
+    if (this.pendingRemovals.size > 0) {
+      this.projections.replaceBatch(this.pendingRemovals);
+      this.pendingRemovals.clear();
+    }
     let notes = this.snapshot.notes;
     if (notesChanged) {
       const materialized: Record<string, PresentNoteIndexEntry> = Object.create(null) as Record<
@@ -1322,6 +1377,9 @@ export class NoteIndex {
       "snapshotMaterializationsMs",
       materializationStarted,
     );
+  }
+
+  private notifySnapshotListeners(): void {
     this.incrementDiagnostic("publishes");
     const notificationStarted = this.startDiagnosticTiming();
     try {
@@ -1329,7 +1387,7 @@ export class NoteIndex {
     } finally {
       this.finishDiagnosticTiming("listenerNotificationsMs", notificationStarted);
     }
-    if (readiness === "ready") this.cacheWriter.schedule();
+    if (this.snapshot.readiness === "ready") this.cacheWriter.schedule();
   }
 
   private collectCacheChanges(paths?: Iterable<string>): NoteIndexCacheChanges {

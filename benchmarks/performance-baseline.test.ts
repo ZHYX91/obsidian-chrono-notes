@@ -61,6 +61,43 @@ const DISABLED_ICS = createIcsSnapshot({
 });
 
 describe(`performance baseline (${__CHRONO_BENCHMARK_NOTE_COUNT__} notes)`, () => {
+  it("shares full snapshot copies across a bulk delete and rename burst", async () => {
+    const paths = Array.from({ length: __CHRONO_BENCHMARK_NOTE_COUNT__ }, (_, i) => `Folder/${i}.md`);
+    const source = new BenchmarkNoteSource(new Map(paths.map((path) => [path, "body"])));
+    const diagnostics = createDiagnostics(createTimingDiagnostics());
+    const index = new NoteIndex(source, { ...NODE_NOTE_INDEX_RUNTIME, diagnostics });
+    const unsubscribe = index.subscribe(() => { index.getSnapshot(); });
+    try {
+      await index.start();
+      const before = index.getSnapshot();
+      const copies = diagnostics.materializations;
+      const publishes = diagnostics.publishes;
+      for (const [i, oldPath] of paths.entries()) {
+        source.deleteContent(oldPath);
+        if (i % 2 === 0) {
+          source.emit({ type: "delete", path: oldPath });
+        } else {
+          const path = `Moved/${i}.md`;
+          source.setContent(path, "body");
+          source.emit({ type: "rename", oldPath, path });
+        }
+      }
+      expect(index.getStatus().noteCount).toBe(0);
+      expect(index.get(paths.at(-1)!).kind).toBe("missing");
+      await index.start();
+      expect(index.getStatus().noteCount).toBe(Math.floor(paths.length / 2));
+      expect(Object.keys(before.notes)).toHaveLength(paths.length);
+      // First delete, first transition to indexing, remaining removals, and
+      // at most two live-read publications, independent of the Vault size.
+      expect(diagnostics.materializations - copies).toBeLessThanOrEqual(5);
+      expect(diagnostics.publishes - publishes).toBeLessThanOrEqual(6);
+      expect(index["revisions"].size).toBe(index.getStatus().noteCount);
+    } finally {
+      unsubscribe();
+      index.stop();
+    }
+  });
+
   it("reports deterministic indexing, event batching, query, and heap measurements", async () => {
     const dataset = createBenchmarkDataset(__CHRONO_BENCHMARK_NOTE_COUNT__);
     const initialConcurrency = await measureInitialConcurrencyMatrix();
