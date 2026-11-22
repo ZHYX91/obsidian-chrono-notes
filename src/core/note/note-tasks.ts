@@ -1,4 +1,4 @@
-import type { MarkdownBodyProjection } from "../document/markdown-body-projection";
+import type { MarkdownBodyLineProjection, MarkdownBodyProjection } from "../document/markdown-body-projection";
 import { parseLocalDateKey } from "../periodic/periodic-date";
 
 export interface NoteTask {
@@ -12,11 +12,14 @@ export interface NoteTask {
   readonly line: number;
 }
 
-const DUE_PATTERN = /📅\s*(\d{4}-\d{2}-\d{2})/u;
-const SCHEDULED_PATTERN = /[⏳⌛]\s*(\d{4}-\d{2}-\d{2})/u;
-const START_PATTERN = /🛫\s*(\d{4}-\d{2}-\d{2})/u;
-const DONE_PATTERN = /✅\s*(\d{4}-\d{2}-\d{2})/u;
-const DISPLAY_DATE_MARKER_PATTERN = /(📅|⏳|⌛|🛫|✅)\s*\d{4}-\d{2}-\d{2}/gu;
+const TASK_DATE_KINDS = {
+  "📅": "dueDate",
+  "⏳": "scheduledDate",
+  "⌛": "scheduledDate",
+  "🛫": "startDate",
+  "✅": "doneDate",
+} as const;
+type TaskDateKind = typeof TASK_DATE_KINDS[keyof typeof TASK_DATE_KINDS];
 
 export function parseNoteTasks(
   projection: MarkdownBodyProjection,
@@ -24,34 +27,40 @@ export function parseNoteTasks(
 ): readonly NoteTask[] {
   const tasks: NoteTask[] = [];
   for (const line of projection.lines) {
-    const marker = line.taskMarker;
-    if (marker === null) continue;
-    const contentStart = marker.contentOffset;
-    // RegExp indices are UTF-16 code-unit offsets, so keep the writable copy
-    // in the same coordinate system even when emoji markers use surrogate pairs.
-    const visibleWithoutDates = line.visibleText.split("");
-    for (const dateMarker of line.taskText.matchAll(DISPLAY_DATE_MARKER_PATTERN)) {
-      const start = dateMarker.index;
-      const end = start + dateMarker[0].length;
-      for (let index = start; index < end; index += 1) visibleWithoutDates[index] = " ";
-    }
-    const rawText = line.visibleText.slice(contentStart).trim();
-    const text = visibleWithoutDates.join("").slice(contentStart).replace(/\s+/g, " ").trim();
-    tasks.push(Object.freeze({
-      text: text || rawText,
-      completed: line.semanticText[marker.checkboxOffset] !== " ",
-      dueDate: parseTaskDate(DUE_PATTERN, line.taskText),
-      scheduledDate: parseTaskDate(SCHEDULED_PATTERN, line.taskText),
-      startDate: parseTaskDate(START_PATTERN, line.taskText),
-      doneDate: parseTaskDate(DONE_PATTERN, line.taskText),
-      path,
-      line: line.sourceLine,
-    }));
+    const parsed = parseTaskLine(line, path);
+    if (parsed !== null) tasks.push(parsed.task);
   }
   return Object.freeze(tasks);
 }
 
-function parseTaskDate(pattern: RegExp, line: string): string | null {
-  const value = pattern.exec(line)?.[1];
-  return value !== undefined && parseLocalDateKey(value) !== null ? value : null;
+/** Keep writable source coordinates ephemeral; the index contains only task values. */
+export function parseTaskLine(line: MarkdownBodyLineProjection, path: string) {
+  const marker = line.taskMarker;
+  if (marker === null) return null;
+  const dates: Partial<Record<TaskDateKind, string | null>> = {};
+  let dueOffset: number | null = null;
+  const visibleWithoutDates = line.visibleText.split("");
+  for (const match of line.taskText.matchAll(/(📅|⏳|⌛|🛫|✅)\s*(\d{4}-\d{2}-\d{2})(?!\d)/gu)) {
+    const kind = TASK_DATE_KINDS[match[1] as keyof typeof TASK_DATE_KINDS];
+    const date = match[2]!;
+    const end = match.index + match[0].length;
+    if (!(kind in dates)) {
+      dates[kind] = parseLocalDateKey(date) === null ? null : date;
+      if (kind === "dueDate" && dates[kind] !== null) dueOffset = end - date.length;
+    }
+    for (let index = match.index; index < end; index += 1) visibleWithoutDates[index] = " ";
+  }
+  const rawText = line.visibleText.slice(marker.contentOffset).trim();
+  const text = visibleWithoutDates.join("").slice(marker.contentOffset).replace(/\s+/g, " ").trim();
+  const task: NoteTask = Object.freeze({
+    text: text || rawText,
+    completed: line.semanticText[marker.checkboxOffset] !== " ",
+    dueDate: dates.dueDate ?? null,
+    scheduledDate: dates.scheduledDate ?? null,
+    startDate: dates.startDate ?? null,
+    doneDate: dates.doneDate ?? null,
+    path,
+    line: line.sourceLine,
+  });
+  return { task, checkboxOffset: marker.checkboxOffset, dueOffset };
 }

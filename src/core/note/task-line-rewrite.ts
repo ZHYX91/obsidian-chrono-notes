@@ -2,10 +2,10 @@ import { projectMarkdownBody } from "../document/markdown-body-projection";
 import { parseNoteDocument } from "../document/parse-note-document";
 import {
   formatLocalDateKey,
-  toDateTime,
+  parseLocalDateKey,
   type LocalDate,
 } from "../periodic/periodic-date";
-import { parseNoteTasks, type NoteTask } from "./note-tasks";
+import { parseTaskLine, type NoteTask } from "./note-tasks";
 
 export type TaskLineRewriteResult =
   | Readonly<{ status: "updated"; content: string }>
@@ -17,7 +17,7 @@ export function toggleTaskInContent(
   content: string,
   expected: NoteTask,
 ): TaskLineRewriteResult {
-  return rewriteTaskLine(content, expected, (line, _semanticLine, checkboxOffset) =>
+  return rewriteTaskLine(content, expected, (line, { checkboxOffset }) =>
     `${line.slice(0, checkboxOffset)}${expected.completed ? " " : "x"}` +
     line.slice(checkboxOffset + 1));
 }
@@ -27,47 +27,36 @@ export function rescheduleTaskDueDateInContent(
   expected: NoteTask,
   nextDueDate: LocalDate,
 ): TaskLineRewriteResult {
-  if (!isValidDate(nextDueDate)) return Object.freeze({ status: "invalid-date" });
-  if (expected.dueDate === null) return Object.freeze({ status: "no-due" });
   const nextDateKey = formatLocalDateKey(nextDueDate);
-  if (expected.dueDate === nextDateKey) return Object.freeze({ status: "unchanged" });
-  return rewriteTaskLine(content, expected, (line, semanticLine) => {
-    // Locate the same marker used by the parser, not a lookalike in code or
-    // a comment. The projection retains UTF-16 offsets into the source line.
-    const match = /📅\s*(\d{4}-\d{2}-\d{2})/u.exec(semanticLine);
-    const date = match?.[1];
-    if (match === null || date === undefined) return line;
-    const start = match.index + match[0].length - date.length;
-    // Replace only the date, preserving marker spacing and all masked text.
-    return `${line.slice(0, start)}${nextDateKey}${line.slice(start + date.length)}`;
-  });
+  if (parseLocalDateKey(nextDateKey) === null) return Object.freeze({ status: "invalid-date" });
+  const oldDate = expected.dueDate;
+  if (oldDate === null) return Object.freeze({ status: "no-due" });
+  if (oldDate === nextDateKey) return Object.freeze({ status: "unchanged" });
+  return rewriteTaskLine(content, expected, (line, { dueOffset }) => dueOffset === null
+    ? line
+    : line.slice(0, dueOffset) + nextDateKey + line.slice(dueOffset + oldDate.length));
 }
 
 function rewriteTaskLine(
   content: string,
   expected: NoteTask,
-  update: (line: string, semanticLine: string, checkboxOffset: number) => string,
+  update: (line: string, offsets: { checkboxOffset: number; dueOffset: number | null }) => string,
 ): TaskLineRewriteResult {
   const range = findLineRange(content, expected.line);
   if (range === null) return Object.freeze({ status: "line-missing" });
   const line = content.slice(range.start, range.end);
   const document = parseNoteDocument(content);
   const projection = projectMarkdownBody(document.body, document.bodyStartLine);
-  const current = parseNoteTasks(projection, expected.path).find(
-    (task) => task.line === expected.line,
-  );
-  const projectedLine = projection.lines.find((item) => item.sourceLine === expected.line);
-  if (current === undefined || projectedLine?.taskMarker == null ||
-    !sameTaskIdentity(current, expected)) {
+  const projectedLine = projection.lines[expected.line - document.bodyStartLine];
+  const parsed = projectedLine === undefined ? null : parseTaskLine(projectedLine, expected.path);
+  if (parsed === null || !sameTaskIdentity(parsed.task, expected)) {
     return Object.freeze({ status: "stale" });
   }
-  // The document parser removes the file BOM. Restore its source coordinate
-  // before mapping semantic offsets back into the original first line.
   const bomOffset = document.hadBom && expected.line === 0 ? 1 : 0;
-  const semanticLine = bomOffset === 1
-    ? ` ${projectedLine.taskText}`
-    : projectedLine.taskText;
-  const updatedLine = update(line, semanticLine, projectedLine.taskMarker.checkboxOffset + bomOffset);
+  const updatedLine = update(line, {
+    checkboxOffset: bomOffset + parsed.checkboxOffset,
+    dueOffset: parsed.dueOffset === null ? null : bomOffset + parsed.dueOffset,
+  });
   if (updatedLine === line) return Object.freeze({ status: "stale" });
   return Object.freeze({
     status: "updated",
@@ -102,13 +91,4 @@ function sameTaskIdentity(current: NoteTask, expected: NoteTask): boolean {
     current.scheduledDate === expected.scheduledDate &&
     current.startDate === expected.startDate &&
     current.doneDate === expected.doneDate;
-}
-
-function isValidDate(date: LocalDate): boolean {
-  try {
-    toDateTime(date);
-    return true;
-  } catch {
-    return false;
-  }
 }

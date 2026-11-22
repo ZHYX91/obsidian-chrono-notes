@@ -14,6 +14,44 @@ function task(content: string, index = 0) {
 
 describe("task line rewriting", () => {
   it.each([
+    "https://example.org/archive/📅2026-11-02",
+    "https://example.org?date=📅2026-11-02",
+    "https://example.org#📅2026-11-02",
+    "www.example.org/📅2026-11-02",
+    "https://[::1]/history_(old)/📅2026-11-02",
+  ])("uses only the writable due date following a bare URL: %s", (url) => {
+    const content = `\uFEFF> - [ ] 🗓️ ${url} 📅  2026-11-05\r\n`;
+    const expected = task(content);
+    expect(expected.dueDate).toBe("2026-11-05");
+    expect(expected.text).toContain(url);
+    const rewritten = rescheduleTaskDueDateInContent(content, expected, { year: 2026, month: 11, day: 6 });
+    expect(rewritten).toEqual({ status: "updated", content: content.replace("2026-11-05", "2026-11-06") });
+    if (rewritten.status === "updated") expect(task(rewritten.content).dueDate).toBe("2026-11-06");
+    const onlyUrl = `- [ ] Read ${url}`;
+    expect(task(onlyUrl).dueDate).toBeNull();
+    expect(rescheduleTaskDueDateInContent(onlyUrl, task(onlyUrl), { year: 2026, month: 11, day: 6 }))
+      .toEqual({ status: "no-due" });
+  });
+
+  it("preserves a longer numeric token before the complete date to be rewritten", () => {
+    const malformed = "📅 2026-11-221";
+    const content = `- [ ] Read ${malformed}, submit 📅 2026-11-24`;
+    const expected = task(content);
+    expect(expected.dueDate).toBe("2026-11-24");
+    expect(expected.text).toContain(malformed);
+    const rewritten = rescheduleTaskDueDateInContent(content, expected, { year: 2026, month: 11, day: 25 });
+    expect(rewritten).toEqual({ status: "updated", content: content.replace("2026-11-24", "2026-11-25") });
+    if (rewritten.status === "updated") expect(task(rewritten.content).dueDate).toBe("2026-11-25");
+    expect(task(`- [ ] Read ${malformed}`).dueDate).toBeNull();
+  });
+
+  it("does not write a date the task parser cannot read back", () => {
+    const content = "- [ ] Finish 📅 9999-12-31";
+    expect(rescheduleTaskDueDateInContent(content, task(content), { year: 10000, month: 1, day: 1 }))
+      .toEqual({ status: "invalid-date" });
+  });
+
+  it.each([
     "[[📅 2026-11-02|会议笔记]]",
     "[[📅 2026-11-02]]",
     "[会议笔记](<📅 2026-11-02>)",

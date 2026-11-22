@@ -60,6 +60,24 @@ describe("note content derivation", () => {
     });
   });
 
+  it("keeps lines after a literal ellipsis until the actual excerpt limit", () => {
+    expect(derivePreview("Wait…\nThen continue").text).toBe("Wait…\nThen continue");
+  });
+
+  it("classifies resolved reference images by the first visible definition", () => {
+    const body = [
+      "Before ![cover][ASSET] after", "![photo][]", "![photo]", "Line…", "More",
+      "![clip][recording]", "An ![undefined] reference",
+      "", "[asset]: <first file.svg>", "[asset]: second.pdf", "[photo]: photo.jpg", "[recording]: clip.mp4",
+    ].join("\n");
+    const result = derivePreview(body);
+    expect(result.text).toBe("Before after\nLine…\nMore\nAn ![undefined] reference");
+    expect(result.embeds).toEqual({ ...EMPTY_NOTE_EMBED_STATISTICS, imageCount: 3, videoCount: 1 });
+    expect(derivePreview("![![inner](one.png)](outer.pdf)").embeds)
+      .toEqual({ ...EMPTY_NOTE_EMBED_STATISTICS, pdfCount: 1 });
+    expect(derivePreview("[asset]: hidden.png\n\n![unknown][missing]").text).toBe("![unknown][missing]");
+  });
+
   it("reuses the frozen empty embed statistics for notes without embeds", () => {
     const derived = derivePreview("Plain text");
 

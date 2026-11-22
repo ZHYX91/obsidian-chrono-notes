@@ -11,6 +11,7 @@ import { createIndexedNote } from "../../src/features/notes/indexed-note";
 import { NoteIndex } from "../../src/features/notes/note-index";
 import { NoteIndexCacheWriter } from "../../src/features/notes/note-index-cache-writer";
 import {
+  NOTE_INDEX_CACHE_SCHEMA,
   createPersistedNoteIndexStorageMetadata,
   createPersistedNoteIndexSnapshot,
   parsePersistedNoteIndexSnapshot,
@@ -142,7 +143,7 @@ describe("persistent NoteIndex cache", () => {
 
     await expect(index.persistCacheNow()).resolves.toBeUndefined();
     expect(cache.save).toHaveBeenCalledOnce();
-    expect(cache.value).toMatchObject({ schema: 7 });
+    expect(cache.value).toMatchObject({ schema: NOTE_INDEX_CACHE_SCHEMA });
 
     const saveError = new Error("save failed");
     const consoleError = vi.spyOn(console, "error").mockImplementation(() => undefined);
@@ -240,7 +241,7 @@ describe("persistent NoteIndex cache", () => {
     index.stop();
   });
 
-  it.each([2, 3, 4, 5, 6])("clears parser-semantic schema %i and falls back to a complete scan", async (schema) => {
+  it.each([2, 3, 4, 5, 6, 7])("clears parser-semantic schema %i and falls back to a complete scan", async (schema) => {
     const source = new MetadataNoteSource();
     source.files = [FILE];
     source.read.mockResolvedValue("fresh");
@@ -562,7 +563,7 @@ describe("persistent NoteIndex cache", () => {
       entries: [duplicate.entries[0], duplicate.entries[0]],
     })).toBeNull();
     expect(parsePersistedNoteIndexSnapshot({
-      schema: 7,
+      schema: NOTE_INDEX_CACHE_SCHEMA,
       entries: [{
         ...duplicate.entries[0],
         file: { ...FILE, mtime: Number.NaN },

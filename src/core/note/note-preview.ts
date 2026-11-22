@@ -60,14 +60,19 @@ export function deriveNotePreview(projection: MarkdownBodyProjection): NotePrevi
     noteCount: 0,
     otherCount: 0,
   };
+  for (const destination of projection.markdownImageTargets) {
+    const target = destination.startsWith("<") && destination.endsWith(">")
+      ? destination.slice(1, -1) : destination;
+    incrementEmbedCount(counts, classifyEmbed(target, false));
+  }
   const lines: string[] = [];
   let totalLength = 0;
   let previewComplete = false;
 
   for (const line of projection.lines) {
     const semanticLine = line.taskMarker === null
-      ? line.semanticText
-      : line.semanticText.slice(line.taskMarker.contentOffset);
+      ? line.previewText
+      : line.previewText.slice(line.taskMarker.contentOffset);
     if (previewComplete) {
       stripAndCountEmbeds(semanticLine, counts);
       continue;
@@ -86,7 +91,7 @@ export function deriveNotePreview(projection: MarkdownBodyProjection): NotePrevi
     lines.push(clipped);
     totalLength += clipped.length;
     previewComplete =
-      lines.length >= NOTE_PREVIEW_MAX_LINES || clipped.endsWith("…");
+      lines.length >= NOTE_PREVIEW_MAX_LINES || cleaned.length > remaining;
   }
 
   return Object.freeze({
@@ -146,33 +151,15 @@ function parseEmbedAt(
   line: string,
   startIndex: number,
 ): Readonly<{ target: string; wiki: boolean; nextIndex: number }> | null {
-  if (!line.startsWith("![", startIndex)) return null;
+  if (!line.startsWith("![[", startIndex)) return null;
   let backslashes = 0;
   for (let index = startIndex - 1; line[index] === "\\"; index -= 1) backslashes += 1;
   if (backslashes % 2 === 1) return null;
 
-  if (line.startsWith("![[", startIndex)) {
-    const endIndex = findWikiEmbedEnd(line, startIndex + 3);
-    return endIndex === null
-      ? null
-      : Object.freeze({
-          target: line.slice(startIndex + 3, endIndex),
-          wiki: true,
-          nextIndex: endIndex + 2,
-        });
-  }
-  const altEnd = findUnescapedCharacter(line, startIndex + 2, "]");
-  if (altEnd === null || line[altEnd + 1] !== "(") return null;
-  const destinationEnd = findBalancedDestinationEnd(line, altEnd + 2);
-  return destinationEnd === null
-    ? null
-    : Object.freeze({
-        target: extractMarkdownDestination(
-          line.slice(altEnd + 2, destinationEnd),
-        ),
-        wiki: false,
-        nextIndex: destinationEnd + 1,
-      });
+  const endIndex = findWikiEmbedEnd(line, startIndex + 3);
+  return endIndex === null ? null : {
+    target: line.slice(startIndex + 3, endIndex), wiki: true, nextIndex: endIndex + 2,
+  };
 }
 
 function findWikiEmbedEnd(line: string, startIndex: number): number | null {
@@ -184,51 +171,6 @@ function findWikiEmbedEnd(line: string, startIndex: number): number | null {
     if (line[index] === "]" && line[index + 1] === "]") return index;
   }
   return null;
-}
-
-function findUnescapedCharacter(
-  line: string,
-  startIndex: number,
-  target: string,
-): number | null {
-  for (let index = startIndex; index < line.length; index += 1) {
-    if (line[index] === "\\") {
-      index += 1;
-      continue;
-    }
-    if (line[index] === target) return index;
-  }
-  return null;
-}
-
-function findBalancedDestinationEnd(
-  line: string,
-  startIndex: number,
-): number | null {
-  let depth = 1;
-  for (let index = startIndex; index < line.length; index += 1) {
-    const character = line[index];
-    if (character === "\\") {
-      index += 1;
-      continue;
-    }
-    if (character === "(") {
-      depth += 1;
-    } else if (character === ")") {
-      depth -= 1;
-      if (depth === 0) return index;
-    }
-  }
-  return null;
-}
-
-function extractMarkdownDestination(target: string): string {
-  const trimmed = target.trim();
-  if (trimmed.startsWith("<")) {
-    const closing = trimmed.indexOf(">");
-    if (closing > 0) return trimmed.slice(1, closing);
-  }
-  return trimmed.replace(/\s+(?=["'(]).*$/, "");
 }
 
 function formatWikiLink(target: string): string {
