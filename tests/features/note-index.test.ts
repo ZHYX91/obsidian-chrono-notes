@@ -1333,6 +1333,60 @@ describe("NoteIndex", () => {
     expect(diagnostics.publishes).toBe(5);
   });
 
+  it("keeps intermediate snapshots immutable during concurrent removals", async () => {
+    const source = new FakeNoteSource();
+    source.paths = ["A.md", "B.md", "C.md"];
+    source.read.mockImplementation(async (path) => {
+      if (path === "A.md") throw new Error("unreadable");
+      return "---\nstart: 2026-11-01\nend: 2026-11-02\n---\n- [ ] Read 📅 2026-11-01";
+    });
+    const index = new NoteIndex(source);
+    await index.start();
+    const before = index.getSnapshot();
+    const subscribed: number[] = [];
+    index.subscribe(() => subscribed.push(Object.keys(index.getSnapshot().notes).length));
+
+    source.emit({ type: "delete", path: "A.md" });
+    source.emit({ type: "rename", oldPath: "B.md", path: "Moved.md" });
+    const prefix = index.getSnapshot();
+    source.emit({ type: "delete", path: "C.md" });
+    expect(index.get("C.md").kind).toBe("missing");
+    expect(index.getStatus()).toMatchObject({ noteCount: 0, errorCount: 0 });
+    expect(index.getSnapshot().taskDates.byDate).toEqual({});
+    await Promise.resolve();
+    expect(index.getSnapshot().intervals.items).toEqual([]);
+    expect(subscribed.at(-1)).toBe(0);
+    expect(prefix.intervals.items.map((item) => item.path)).toEqual(["C.md"]);
+    expect(prefix.taskDates.byDate["2026-11-01"]?.map((ref) => ref.task.path)).toEqual(["C.md"]);
+    expect(Object.keys(before.notes)).toHaveLength(3);
+    await index.refresh("Moved.md");
+    expect(index.getSnapshot().intervals.items[0]?.path).toBe("Moved.md");
+    index.stop();
+  });
+
+  it("retires the old revision without letting a delayed read replace a recreated file", async () => {
+    const source = new FakeNoteSource();
+    const old = new Deferred<string>();
+    const path = "Reused.md";
+    source.read.mockReturnValueOnce(old.promise).mockResolvedValue("replacement");
+    const index = new NoteIndex(source);
+    await index.start();
+    // Both reads would get revision 1 if retiring a path reset its counter.
+    const oldRefresh = index.refresh(path);
+    source.emit({ type: "delete", path });
+    await Promise.resolve();
+    expect(index["revisions"].size).toBe(0);
+
+    source.emit({ type: "create", path });
+    await index.refresh(path);
+    const replacement = index.get(path);
+    expect(replacement).toMatchObject({ note: { preview: "replacement" } });
+    old.resolve("obsolete");
+    await oldRefresh;
+    expect(index.get(path)).toBe(replacement);
+    index.stop();
+  });
+
   it("keeps chained rename barriers and reads only the final path", async () => {
     const source = new FakeNoteSource();
     const contents = new Map<string, string>([["Daily/A.md", "same content"]]);

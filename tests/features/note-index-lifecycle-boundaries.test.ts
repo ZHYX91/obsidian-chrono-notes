@@ -12,6 +12,39 @@ function deferred<T>() {
 }
 
 describe("NoteIndex lifecycle boundaries", () => {
+  it("joins the current startup during cache loading even while a stopped read is pending", async () => {
+    const oldRead = deferred<string>();
+    const newCache = deferred<unknown>();
+    const source = {
+      listFiles: () => [{ path: "A.md", mtime: 1, size: 4 }],
+      listPaths: () => ["A.md"],
+      read: vi.fn().mockReturnValueOnce(oldRead.promise).mockResolvedValue("current"),
+      subscribe: () => () => undefined,
+    };
+    const cache = {
+      load: vi.fn().mockResolvedValueOnce(null).mockReturnValueOnce(newCache.promise),
+      save: async () => undefined,
+      clear: async () => undefined,
+    };
+    const index = new NoteIndex(source, { cache, scheduleCacheSave: () => () => undefined });
+    const old = index.start();
+    await vi.waitFor(() => expect(source.read).toHaveBeenCalledOnce());
+    index.stop();
+    const current = index.start();
+    const joined = index.start();
+    const settled = vi.fn();
+    void joined.then(settled);
+    await vi.waitFor(() => expect(cache.load).toHaveBeenCalledTimes(2));
+    expect(settled).not.toHaveBeenCalled();
+    newCache.resolve(null);
+    await current;
+    await vi.waitFor(() => expect(settled).toHaveBeenCalledOnce());
+    expect(index.get("A.md")).toMatchObject({ note: { preview: "current" } });
+    oldRead.resolve("obsolete");
+    await Promise.all([old, joined]);
+    index.stop();
+  });
+
   it("does not let old cache validation invalidate new reads", async () => {
     const files = ["A.md", "B.md"].map((path) => ({ path, mtime: 1, size: 4 }));
     const pausedValidation = deferred<void>();

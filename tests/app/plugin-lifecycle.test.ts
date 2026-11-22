@@ -891,6 +891,36 @@ describe("ChronoNotesPlugin lifecycle composition", () => {
     error.mockRestore();
   });
 
+  it("rebuilds and indexes new files while a read from the stopped index is still pending", async () => {
+    const obsolete = mocks.createDeferred<string>();
+    mocks.state.noteListPaths.mockReturnValue(["A.md"]);
+    mocks.state.noteRead.mockReturnValueOnce(obsolete.promise).mockResolvedValue("current");
+    const plugin = createPlugin();
+    await plugin.onload();
+    const index = plugin.noteIndex!;
+    const start = vi.spyOn(index, "start");
+    mocks.state.layoutReadyCallbacks[0]?.();
+    await vi.waitFor(() => expect(mocks.state.noteRead).toHaveBeenCalledOnce());
+    const firstStart = start.mock.results[0]!.value;
+    try {
+      await plugin.rebuildNoteIndexCache();
+      expect(index.get("A.md")).toMatchObject({ note: { preview: "current" } });
+
+      mocks.state.noteListPaths.mockReturnValue(["A.md", "B.md"]);
+      mocks.state.noteEventListeners.at(-1)?.({ type: "create", path: "B.md" });
+      await vi.waitFor(() => expect(index.getStatus()).toMatchObject({
+        readiness: "ready", noteCount: 2, errorCount: 0,
+      }));
+      const current = index.getSnapshot();
+      obsolete.resolve("obsolete");
+      await firstStart;
+      expect(index.getSnapshot()).toBe(current);
+    } finally {
+      obsolete.resolve("obsolete");
+      plugin.unload();
+    }
+  });
+
   it("serializes a current-Vault cache clear with a full note-index rebuild", async () => {
     mocks.state.noteListPaths.mockReturnValue(["ready.md"]);
     mocks.state.noteRead.mockResolvedValue("# Ready");
