@@ -46,10 +46,16 @@ export function attachSettingsTabOverflow(
   function updateButtons(): void {
     const focused = row.ownerDocument.activeElement;
     const rtl = ownerWindow?.getComputedStyle(list).direction === "rtl";
+    const viewport = list.getBoundingClientRect();
     const canScrollEarlier = firstClippedTab(rtl) !== undefined;
     const canScrollLater = firstClippedTab(!rtl) !== undefined;
+    const revealEarlier = canScrollEarlier && earlier.disabled;
     earlier.disabled = !canScrollEarlier;
     later.disabled = !canScrollLater;
+    if (revealEarlier) {
+      const resized = list.getBoundingClientRect();
+      list.scrollLeft += rtl ? resized.right - viewport.right : resized.left - viewport.left;
+    }
     if ((focused === earlier && earlier.disabled) || (focused === later && later.disabled)) {
       const other = focused === earlier ? later : earlier;
       (other.disabled ? activeTab : other).focus({ preventScroll: true });
@@ -77,14 +83,15 @@ export function attachSettingsTabOverflow(
     const span = Math.max(first.right, last.right) - Math.min(first.left, last.left);
     const width = row.getBoundingClientRect().width;
     row.classList.toggle("has-overflow", width > 0 && span - width > 0.5);
+    updateButtons();
     if (width > 0 && needsInitialReveal) {
       const bounds = list.getBoundingClientRect();
       const active = activeTab.getBoundingClientRect();
       if (active.left < bounds.left) list.scrollLeft += active.left - bounds.left;
       else if (active.right > bounds.right) list.scrollLeft += active.right - bounds.right;
       needsInitialReveal = false;
+      updateButtons();
     }
-    updateButtons();
   }
 
   earlier.addEventListener("click", () => scroll(false));
