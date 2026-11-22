@@ -8,4 +8,6 @@
 
 [[2026-08-31|Existing note]]
 
+[[Daily/2029-01-23.MD|Existing uppercase note]]
+
 [[Ordinary target]]
