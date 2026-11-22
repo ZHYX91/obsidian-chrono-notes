@@ -1368,11 +1368,10 @@ describe("NoteIndex", () => {
     const source = new FakeNoteSource();
     const old = new Deferred<string>();
     const path = "Reused.md";
-    source.paths = [path];
-    source.read.mockResolvedValueOnce("initial").mockReturnValueOnce(old.promise)
-      .mockResolvedValue("replacement");
+    source.read.mockReturnValueOnce(old.promise).mockResolvedValue("replacement");
     const index = new NoteIndex(source);
     await index.start();
+    // Both reads would get revision 1 if retiring a path reset its counter.
     const oldRefresh = index.refresh(path);
     source.emit({ type: "delete", path });
     await Promise.resolve();
