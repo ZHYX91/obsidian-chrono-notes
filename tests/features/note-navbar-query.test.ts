@@ -35,6 +35,17 @@ function settings() {
 }
 
 describe("selectNoteNavbarContext", () => {
+  it("keeps centuries at both endpoints navigable in the supported direction", () => {
+    const options = settings();
+    options.periodicNotes.century = { enabled: true, pattern: "[C]CEN", templatePath: "" };
+    const first = selectNoteNavbarContext("C1.md", snapshot({}), options);
+    expect(first?.previous).toBeNull();
+    expect(first?.next?.date.year).toBe(101);
+    const last = selectNoteNavbarContext("C100.md", snapshot({}), options);
+    expect(last?.previous?.date.year).toBe(9801);
+    expect(last?.next).toBeNull();
+  });
+
   it.each([
     ["diary/2026/2026-07/2026-07-24.md", "daily"],
     ["diary/2026/2026-W30.md", "weekly"],

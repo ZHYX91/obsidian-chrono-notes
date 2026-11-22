@@ -161,6 +161,7 @@ function NoteNavbar({ path, host }: Readonly<{ path: string; host: NoteNavbarHos
     rangeNotes: settings.rangeNotes,
   });
   if (context === null) return null;
+  const { previous, next } = context;
   const collapsed = settings.relatedIntervalNotesCollapsed;
   const visible = collapsed ? [] : context.relatedIntervals.slice(0, RELATED_LIMIT);
   const hiddenCount = Math.max(0, context.relatedIntervals.length - visible.length);
@@ -174,11 +175,8 @@ function NoteNavbar({ path, host }: Readonly<{ path: string; host: NoteNavbarHos
               type="button"
               aria-label={messages.previousPeriod}
               title={messages.previousPeriod}
-              onClick={() => void host.openPeriodic(
-                context.previous.date,
-                context.previous.noteType,
-                "default",
-              )}
+              disabled={previous === null}
+              onClick={previous === null ? undefined : () => void host.openPeriodic(previous.date, previous.noteType, "default")}
             >
               <PreviousIcon size={15} aria-hidden="true" />
             </button>
@@ -187,7 +185,7 @@ function NoteNavbar({ path, host }: Readonly<{ path: string; host: NoteNavbarHos
               className="chrono-notes-navbar-label"
               aria-label={messages.chooseDate}
               title={messages.chooseDate}
-              onClick={() => host.pickDate(context.date, (date) =>
+              onClick={() => host.pickDate(context.date.year < 1 ? { year: 1, month: 1, day: 1 } : context.date, (date) =>
                 host.openPeriodic(date, context.noteType, "default"))}
             >
               <Calendar size={15} aria-hidden="true" />
@@ -199,11 +197,8 @@ function NoteNavbar({ path, host }: Readonly<{ path: string; host: NoteNavbarHos
               type="button"
               aria-label={messages.nextPeriod}
               title={messages.nextPeriod}
-              onClick={() => void host.openPeriodic(
-                context.next.date,
-                context.next.noteType,
-                "default",
-              )}
+              disabled={next === null}
+              onClick={next === null ? undefined : () => void host.openPeriodic(next.date, next.noteType, "default")}
             >
               <NextIcon size={15} aria-hidden="true" />
             </button>

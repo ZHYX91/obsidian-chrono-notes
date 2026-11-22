@@ -1,3 +1,4 @@
+import { isInteractiveCalendarYear } from "../../features/calendar/date-picker";
 import type { TaskUiFeedback } from "../../features/tasks/task-write-feedback";
 import { CalendarPlus } from "lucide-react";
 import {
@@ -124,6 +125,10 @@ export function WeekView({
   const messages = getWeekViewMessages(t);
   const [draggedTask, setDraggedTask] = useState<NoteTask | null>(null);
   const [dropTarget, setDropTarget] = useState<string | null>(null);
+  const interactiveDays = useMemo(
+    () => query.days.filter((day) => isInteractiveCalendarYear(day.date.year)),
+    [query.days],
+  );
   const visibleTasks = useMemo(() => query.tasks.map(({ task }) => task), [query.tasks]);
   const taskActions = useTaskActionFeedback(visibleTasks);
   const feedbackId = useId();
@@ -188,6 +193,7 @@ export function WeekView({
         >
           {query.days.map((day) => {
             const dayKey = formatLocalDateKey(day.date);
+            const supported = isInteractiveCalendarYear(day.date.year);
             const dailyPreview = createDailyCalendarPreview(day);
             const selected = selectionKind === "day" &&
               isSameLocalDate(selectedDate, day.date);
@@ -210,6 +216,7 @@ export function WeekView({
             return (
               <button
                 type="button"
+                disabled={!supported}
                 className={`chrono-notes-week-day${selected ? " is-selected" : ""}${isToday ? " is-current-period" : ""}${dropTarget === dayKey ? " is-drop-target" : ""}`}
                 data-note-state={day.noteState}
                 data-show-note-indicators={String(showNoteIndicators)}
@@ -254,6 +261,7 @@ export function WeekView({
                 }
                 onBlur={onDismissPreview}
                 onContextMenu={(event) => {
+                  if (!supported) return;
                   touch.onContextMenu();
                   event.preventDefault();
                   event.stopPropagation();
@@ -267,13 +275,13 @@ export function WeekView({
                   );
                 }}
                 onDragOver={(event) => {
-                  if (draggedTask?.dueDate === null || draggedTask === null)
+                  if (!supported || draggedTask?.dueDate === null || draggedTask === null)
                     return;
                   event.preventDefault();
                   event.dataTransfer.dropEffect = "move";
                 }}
                 onDragEnter={() => {
-                  if (draggedTask?.dueDate !== null && draggedTask !== null)
+                  if (supported && draggedTask?.dueDate !== null && draggedTask !== null)
                     setDropTarget(dayKey);
                 }}
                 onDrop={(event) => {
@@ -281,7 +289,7 @@ export function WeekView({
                   const task = draggedTask;
                   setDraggedTask(null);
                   setDropTarget(null);
-                  if (task !== null && task.dueDate !== dayKey) {
+                  if (supported && task !== null && task.dueDate !== dayKey) {
                     void taskActions.run(task, () => onRescheduleTask(task, day.date));
                   }
                 }}
@@ -335,13 +343,13 @@ export function WeekView({
           >
             <header>
               <h3>{messages.rangeNotes}</h3>
-              {query.rangeCreationConfigured ? (
+              {query.rangeCreationConfigured && interactiveDays.length >= 2 ? (
                 <button
                   type="button"
                   className="chrono-notes-week-create-range"
                   aria-label={messages.createRange}
                   title={messages.createRange}
-                  onClick={() => onCreateRange(query.weekStart, query.weekEnd)}
+                  onClick={() => onCreateRange(interactiveDays[0]!.date, interactiveDays[interactiveDays.length - 1]!.date)}
                 >
                   <CalendarPlus size={15} aria-hidden="true" />
                 </button>
@@ -524,7 +532,7 @@ export function WeekView({
                       draggable={false}
                       onDragStart={(event) => event.stopPropagation()}
                       onChange={(event) => {
-                        const nextDay = query.days.find(
+                        const nextDay = interactiveDays.find(
                           (day) =>
                             formatLocalDateKey(day.date) ===
                             event.currentTarget.value,
@@ -537,7 +545,7 @@ export function WeekView({
                         }
                       }}
                     >
-                      {query.days.map((day) => {
+                      {interactiveDays.map((day) => {
                         const dateKey = formatLocalDateKey(day.date);
                         return (
                           <option value={dateKey} key={dateKey}>
