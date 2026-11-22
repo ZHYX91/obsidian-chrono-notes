@@ -81,6 +81,49 @@ function createPorts(existing: readonly string[] = []) {
 }
 
 describe("PeriodicNoteCommands", () => {
+  it.each(["MD", "Md", "mD"])("opens an existing .%s note with its physical path", async (ext) => {
+    const path = "Daily/2026-05-18." + ext;
+    const ports = createPorts([path]);
+    const commands = new PeriodicNoteCommands(ports.creator, ports.workspace);
+    const settings = createSettings({ daily: { enabled: true, pattern: "[Daily]/YYYY-MM-DD" } });
+    const confirmCreate = vi.fn(async () => true);
+    const result = await commands.openOrCreate({
+      noteType: "daily", date: { year: 2026, month: 5, day: 18 }, confirmCreate,
+    }, settings);
+    expect(result).toMatchObject({ status: "opened", path, created: false });
+    expect(ports.workspace.open).toHaveBeenCalledExactlyOnceWith(path, "default");
+    expect(ports.files.create).not.toHaveBeenCalled();
+    expect(confirmCreate).not.toHaveBeenCalled();
+  });
+
+  it("keeps a higher-period .MD file and reuses a daily .Md arriving during template preparation", async () => {
+    const weekly = "Weekly/2026-W21.MD";
+    const daily = "Daily/2026-05-18.Md";
+    const ports = createPorts([weekly]);
+    const commands = new PeriodicNoteCommands(ports.creator, ports.workspace);
+    const settings = createSettings({
+      daily: { enabled: true, pattern: "[Daily]/YYYY-MM-DD" },
+      weekly: { enabled: true, pattern: "[Weekly]/GGGG-[W]WW" },
+    });
+    const renderAfterCreate = vi.fn(async () => "do not write this");
+    vi.mocked(ports.templates.prepare).mockImplementationOnce(async () => {
+      ports.paths.add(daily);
+      return { initialContent: "initial", renderAfterCreate };
+    });
+    const result = await commands.openOrCreate({
+      noteType: "daily", date: { year: 2026, month: 5, day: 18 }, cascade: true,
+      confirmCreate: async ({ cascade }) => {
+        expect(cascade).toEqual([{ path: weekly, noteType: "weekly", exists: true }]);
+        return true;
+      },
+    }, settings);
+    expect(result).toEqual({ status: "opened", path: daily, created: false,
+      cascade: [{ noteType: "weekly", path: weekly, status: "existing" }] });
+    expect(ports.files.create).not.toHaveBeenCalled();
+    expect(renderAfterCreate).not.toHaveBeenCalled();
+    expect(ports.workspace.open).toHaveBeenCalledExactlyOnceWith(daily, "default");
+  });
+
   it.each([
     ["[Daily]/YYYY-[Q]Q/YYYY-MM-DD", "Daily/2026-Q4/2026-11-21.md", "Daily/2026-Q3/2026-11-21.md"],
     ["[Daily]/GGGG-[W]WW/YYYY-MM-DD", "Daily/2026-W47/2026-11-21.md", "Daily/2026-W46/2026-11-21.md"],
@@ -324,7 +367,7 @@ describe("PeriodicNoteCommands", () => {
     ]);
 
     expect(ports.files.create).toHaveBeenCalledTimes(2);
-    expect(ports.files.create).toHaveBeenCalledWith("Daily/2026-05-18.md", "");
+    expect(ports.files.create).toHaveBeenCalledWith("Daily/2026-05-18.md", "", expect.any(Function));
     expect(ports.workspace.open).toHaveBeenCalledWith("Daily/2026-05-18.md", "default");
     expect(ports.workspace.open).toHaveBeenCalledWith("Daily/2026-05-18.md", "tab");
   });
@@ -417,6 +460,45 @@ describe("PeriodicNoteCommands", () => {
     expect(ports.paths.has(weekly)).toBe(false);
     expect(ports.paths.has(monthly)).toBe(true);
     expect(ports.files.create).toHaveBeenCalledTimes(2);
+  });
+
+  it("awaits the owner of a replacement spelling of a preserved cascade note", async () => {
+    const old = "Weekly/2026-W21.MD";
+    const weekly = "Weekly/2026-W21.md";
+    const date = { year: 2026, month: 5, day: 18 };
+    const ports = createPorts([old]);
+    const commands = new PeriodicNoteCommands(ports.creator, ports.workspace);
+    const settings = createSettings({
+      daily: { enabled: true, pattern: "[Daily]/YYYY-MM-DD" },
+      weekly: { enabled: true, pattern: "[Weekly]/GGGG-[W]WW" },
+    });
+    const confirming = deferred<void>();
+    const confirm = deferred<boolean>();
+    const rendering = deferred<void>();
+    const finish = deferred<void>();
+    vi.mocked(ports.templates.prepare).mockImplementation(async ({ path }) => path === weekly
+      ? { initialContent: "initial", renderAfterCreate: async () => {
+          rendering.resolve();
+          await finish.promise;
+          throw new Error("replacement failed");
+        } }
+      : { initialContent: "daily" });
+    const daily = commands.openOrCreate({ date, noteType: "daily", cascade: true,
+      confirmCreate: ({ cascade }) => {
+        expect(cascade[0]).toEqual({ noteType: "weekly", path: old, exists: true });
+        confirming.resolve();
+        return confirm.promise;
+      } }, settings);
+    await confirming.promise;
+    ports.paths.delete(old);
+    const replacement = commands.openOrCreate({ date, noteType: "weekly" }, settings);
+    const failure = expect(replacement).rejects.toThrow("replacement failed");
+    await rendering.promise;
+    confirm.resolve(true);
+    await vi.waitFor(() => expect(ports.workspace.open).toHaveBeenCalledOnce());
+    finish.resolve();
+    await failure;
+    await expect(daily).resolves.toMatchObject({ cascade: [{ path: weekly, status: "failed" }] });
   });
 
   it("waits for an existing weekly note to finish rendering before the monthly template reads it", async () => {
@@ -608,6 +690,7 @@ describe("PeriodicNoteCommands", () => {
     expect(ports.files.create).toHaveBeenCalledWith(
       "Quarterly/2026-Q2.md",
       "# rendered quarterly note",
+      expect.any(Function),
     );
     expect(ports.files.finalize).not.toHaveBeenCalled();
     expect(ports.workspace.open).toHaveBeenCalledWith("Quarterly/2026-Q2.md", "default");
@@ -655,7 +738,7 @@ describe("PeriodicNoteCommands", () => {
       { date: { year: 2026, month: 5, day: 18 }, noteType: "daily" },
       settings,
     )).rejects.toThrow("templater boom");
-    expect(ports.files.create).toHaveBeenCalledWith("Daily/2026-05-18.md", "");
+    expect(ports.files.create).toHaveBeenCalledWith("Daily/2026-05-18.md", "", expect.any(Function));
     expect(ports.files.finalize).not.toHaveBeenCalled();
     expect(ports.paths.has("Daily/2026-05-18.md")).toBe(true);
     expect(ports.contents.get("Daily/2026-05-18.md")).toBe("");

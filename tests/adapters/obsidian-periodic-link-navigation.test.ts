@@ -17,6 +17,12 @@ const day = "2026-11-19";
 const source = "Projects/Meeting.md";
 const journal = `日记/2026/2026-11/${day}/${day}.md`;
 
+function deferred<T>() {
+  let resolve!: (value: T) => void;
+  const promise = new Promise<T>((settle) => { resolve = settle; });
+  return { promise, resolve };
+}
+
 function fixture() {
   const settings = createDefaultSettings();
   settings.periodicNotes.daily = {
@@ -49,7 +55,9 @@ function fixture() {
       path.toLowerCase() === source.toLowerCase() || path === "file:/outside-vault.md" ? { path, body: "" } : notes.get(path) ?? null },
   };
   const confirm = vi.fn(async () => true);
-  const prepare = vi.fn(async () => ({ initialContent: "# Journal template" }));
+  const prepare = vi.fn<() => Promise<{ initialContent: string; renderAfterCreate?: () => Promise<string> }>>(
+    async () => ({ initialContent: "# Journal template" }),
+  );
   const files = {
     exists: (path: string) => notes.has(path),
     create: async (path: string, initialContent: string) => {
@@ -57,10 +65,15 @@ function fixture() {
       notes.set(path, identity);
       return { path, initialContent, identity };
     },
-    finalize: vi.fn(),
+    finalize: vi.fn(async (ref: { path: string }, content: string) => {
+      const note = notes.get(ref.path);
+      if (note === undefined) throw new Error("missing note");
+      note.body = content;
+    }),
   };
+  const creator = new TemplatedNoteCreator(files, { prepare });
   const commands = new PeriodicNoteCommands(
-    new TemplatedNoteCreator(files, { prepare }),
+    creator,
     { open: vi.fn() },
   );
   const reportError = vi.fn();
@@ -69,7 +82,7 @@ function fixture() {
       await commands.openOrCreate({ date, noteType, target: navigate, confirmCreate: confirm }, {
         ...settings, locale: "en",
       });
-    }, reportError);
+    }, reportError, (path: string) => creator.pending(path));
   return { reportError, listeners, settings, notes, native, openFile, workspace, getFirstLinkpathDest, app, router, prepare, confirm };
 }
 
@@ -139,6 +152,91 @@ describe("workspace link navigation for missing periodic notes", () => {
     expect(prepare).not.toHaveBeenCalled();
     expect(confirm).not.toHaveBeenCalled();
     expect([...notes.keys()]).toEqual([existing.path]);
+  });
+
+  it("finds source-relative extension variants and honors an explicitly named periodic file", async () => {
+    const { router, workspace, notes, openFile, prepare } = fixture();
+    router.setEnabled(true);
+    const relative = `Projects/${day}.mD`;
+    const upper = journal.slice(0, -3) + ".MD";
+    for (const path of [relative, journal, upper]) notes.set(path, { path, body: path });
+    await workspace.openLinkText(day + "#Part", source);
+    expect(openFile).toHaveBeenLastCalledWith(notes.get(relative), { eState: { subpath: "#Part" } });
+    const root = day + ".Md";
+    notes.set(root, { path: root, body: "exact extension at root" });
+    await workspace.openLinkText(root, source);
+    expect(openFile).toHaveBeenLastCalledWith(notes.get(root), undefined);
+    notes.delete(relative);
+    notes.delete(root);
+    await workspace.openLinkText(day + ".MD", source);
+    expect(openFile).toHaveBeenLastCalledWith(notes.get(upper), undefined);
+    await workspace.openLinkText(day, source);
+    expect(openFile).toHaveBeenLastCalledWith(notes.get(journal), undefined);
+    expect(prepare).not.toHaveBeenCalled();
+  });
+
+  it.each([false, true])("waits for a periodic owner before opening a link (metadata resolved: %s)", async (resolved) => {
+    const { router, workspace, notes, openFile, native, getFirstLinkpathDest, prepare, reportError } = fixture();
+    const started = deferred<void>();
+    const finish = deferred<string>();
+    prepare.mockResolvedValueOnce({ initialContent: "initial", renderAfterCreate: () => {
+      started.resolve();
+      return finish.promise;
+    } });
+    router.setEnabled(true);
+    const creating = workspace.openLinkText(day, source);
+    await started.promise;
+    if (resolved) getFirstLinkpathDest.mockImplementation(() => notes.get(journal) ?? null);
+    const explicit = journal.slice(0, -3) + ".MD#Heading";
+    const opening = workspace.openLinkText(explicit, source, "tab");
+    await Promise.resolve();
+    expect(openFile).not.toHaveBeenCalled();
+    expect(native).not.toHaveBeenCalled();
+    finish.resolve("complete");
+    await Promise.all([creating, opening]);
+    expect(notes.get(journal)?.body).toBe("complete");
+    expect(reportError).not.toHaveBeenCalled();
+    if (resolved) {
+      expect(native).toHaveBeenCalledExactlyOnceWith(explicit, source, "tab");
+      expect(openFile).toHaveBeenCalledOnce();
+    } else {
+      expect(native).not.toHaveBeenCalled();
+      expect(openFile).toHaveBeenCalledTimes(2);
+    }
+  });
+
+  it("keeps native navigation closed if the resolved template owner fails", async () => {
+    const { router, workspace, notes, openFile, native, getFirstLinkpathDest, prepare, reportError } = fixture();
+    const started = deferred<void>();
+    const finish = deferred<void>();
+    prepare.mockResolvedValueOnce({ initialContent: "initial", renderAfterCreate: async () => {
+      started.resolve();
+      await finish.promise;
+      throw new Error("template failed");
+    } });
+    router.setEnabled(true);
+    const creating = workspace.openLinkText(day, source);
+    await started.promise;
+    getFirstLinkpathDest.mockImplementation(() => notes.get(journal) ?? null);
+    const opening = workspace.openLinkText(day, source);
+    finish.resolve();
+    await Promise.all([creating, opening]);
+    expect(native).not.toHaveBeenCalled();
+    expect(openFile).not.toHaveBeenCalled();
+    expect(reportError).toHaveBeenCalled();
+  });
+
+  it("keeps the explicit spelling of a short link while confirmation is open", async () => {
+    const { router, workspace, notes, openFile, confirm, prepare } = fixture();
+    const upper = journal.slice(0, -3) + ".MD";
+    confirm.mockImplementationOnce(async () => {
+      for (const path of [journal, upper]) notes.set(path, { path, body: path });
+      return true;
+    });
+    router.setEnabled(true);
+    await workspace.openLinkText(day + ".MD", source);
+    expect(prepare).not.toHaveBeenCalled();
+    expect(openFile).toHaveBeenCalledExactlyOnceWith(notes.get(upper), undefined);
   });
 
   it("preserves literal pipes in Markdown headings instead of treating part of the target as an alias", async () => {

@@ -1,5 +1,6 @@
 import type { App, TFile, Vault } from "obsidian";
 
+import { findMarkdownExtensionVariant } from "../../core/document/markdown-extension";
 import { buildTemplaterPeriodFormatter } from "../../core/template/templater-period-format";
 import { formatLocalDateKey, type LocalDate } from "../../core/periodic/periodic-date";
 import {
@@ -37,13 +38,7 @@ export class ObsidianBuiltinTemplatePort implements NoteTemplatePort {
     const configuredPath = context.templatePath.trim();
     if (configuredPath.length === 0) return preparedContent(defaultContent);
 
-    const templatePath = withMarkdownExtension(configuredPath);
-    const template = this.vault.getAbstractFileByPath(templatePath);
-    if (!isMarkdownFile(template)) {
-      throw new OperationError("templateMissing", `Template note not found: ${templatePath}`, {
-        path: templatePath,
-      });
-    }
+    const template = resolveTemplateFile(this.vault, configuredPath);
 
     const content = await this.vault.cachedRead(template);
     assertNoteCreationActive(this.signal);
@@ -130,13 +125,7 @@ class ObsidianTemplaterTemplatePort implements NoteTemplatePort {
       throw new OperationError("templaterIncompatible", "Templater rendering API is unavailable.");
     }
 
-    const templatePath = withMarkdownExtension(configuredPath);
-    const template = this.vault.getAbstractFileByPath(templatePath);
-    if (!isMarkdownFile(template)) {
-      throw new OperationError("templateMissing", `Template note not found: ${templatePath}`, {
-        path: templatePath,
-      });
-    }
+    const template = resolveTemplateFile(this.vault, configuredPath);
 
     const rawTemplate = await this.vault.cachedRead(template);
     assertNoteCreationActive(this.signal);
@@ -245,8 +234,16 @@ function errorMessage(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
 }
 
-function withMarkdownExtension(path: string): string {
-  return path.toLowerCase().endsWith(".md") ? path : `${path}.md`;
+function resolveTemplateFile(vault: Vault, configuredPath: string): TFile {
+  const path = /\.md$/iu.test(configuredPath) ? configuredPath : configuredPath + ".md";
+  const file = findMarkdownExtensionVariant(path, (candidate) => {
+    const entry = vault.getAbstractFileByPath(candidate);
+    return isMarkdownFile(entry) ? entry : null;
+  });
+  if (file === undefined) {
+    throw new OperationError("templateMissing", `Template note not found: ${path}`, { path });
+  }
+  return file;
 }
 
 interface TemplaterPlugin {

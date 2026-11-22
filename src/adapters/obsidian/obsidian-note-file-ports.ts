@@ -19,26 +19,20 @@ export class ObsidianCreatedNoteFilePort implements CreatedNoteFilePort {
     return isMarkdownFile(this.vault.getAbstractFileByPath(path));
   }
 
-  async create(path: string, content: string): Promise<CreatedNoteReference> {
-    return createNote(this.vault, path, content, this.signal);
+  create(path: string, content: string): Promise<CreatedNoteReference>;
+  create(path: string, content: string, canCreate: () => boolean): Promise<CreatedNoteReference | null>;
+  async create(path: string, content: string, canCreate?: () => boolean): Promise<CreatedNoteReference | null> {
+    assertNoteCreationActive(this.signal);
+    await ensureParentFolders(this.vault, path, this.signal);
+    assertNoteCreationActive(this.signal);
+    if (canCreate !== undefined && !canCreate()) return null;
+    const file = await this.vault.create(path, content);
+    return Object.freeze({ identity: file, initialContent: content, path });
   }
 
   async finalize(reference: CreatedNoteReference, content: string): Promise<void> {
     await finalizeCreatedNote(this.vault, this.workspace, reference, content, this.signal);
   }
-}
-
-async function createNote(
-  vault: Vault,
-  path: string,
-  content: string,
-  signal?: AbortSignal,
-): Promise<CreatedNoteReference> {
-  assertNoteCreationActive(signal);
-  await ensureParentFolders(vault, path, signal);
-  assertNoteCreationActive(signal);
-  const file = await vault.create(path, content);
-  return Object.freeze({ identity: file, initialContent: content, path });
 }
 
 async function finalizeCreatedNote(

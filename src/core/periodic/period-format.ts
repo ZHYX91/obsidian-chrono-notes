@@ -54,11 +54,11 @@ function getPathConstraintTokens(parts: readonly MomentFormatPart[], noteType: P
 }
 
 /** Parse one date identity; the path round trip validates redundant directory fields. */
-export function parsePeriodDate(
+export function parsePeriodDates(
   text: string, format: string, locale: string, noteType: PeriodicNoteType,
-): DateTime<true> | null {
+): readonly DateTime<true>[] {
   const parts = parseMomentFormat(format, "date");
-  if (parts === null) return null;
+  if (parts === null) return [];
   // Luxon's parser defaults to Latin digits even when its formatter uses a
   // locale's native digits. Resolve the same numbering system for both.
   const numberingSystem = DateTime.fromMillis(0, { locale, zone: "UTC" })
@@ -74,12 +74,12 @@ export function parsePeriodDate(
       pattern = `[0-9]{${part.token === "DEC" ? "4" : "1,3"}}`;
     } else {
       const explained = DateTime.fromFormatExplain("", compileMomentParts([part]), options);
-      if (explained.regex === undefined) return null;
+      if (explained.regex === undefined) return [];
       pattern = explained.regex.source.slice(1, -1);
       if (isMonthName(part)) {
         // Some locales format named months as bare numbers, including Japanese.
         const numeric = DateTime.fromFormatExplain("", "M", options).regex;
-        if (numeric === undefined) return null;
+        if (numeric === undefined) return [];
         pattern = `(?:${pattern}|${numeric.source.slice(1, -1)})`;
       }
     }
@@ -90,7 +90,7 @@ export function parsePeriodDate(
     } else expression += pattern;
   }
   const match = new RegExp(`^${expression}$`, "i").exec(text);
-  if (!match?.groups) return null;
+  if (!match?.groups) return [];
   const captures = match.groups;
   const nativeParts = parts.map((part) => {
     const name = fields.get(part);
@@ -100,10 +100,10 @@ export function parsePeriodDate(
   if (hasYear) return parseCivilFields(text, nativeParts, options);
 
   const anchor = parts.find((part) => part.token === "DEC") ?? parts.find((part) => part.token === "CEN");
-  if (!anchor) return null;
+  if (!anchor) return [];
   const period = Number(captures[fields.get(anchor)!]);
   const year = anchor.token === "DEC" ? period : (period - 1) * 100 + 1;
-  if (year < 0 || year > 9999) return null;
+  if (year < 0 || year > 9999) return [];
   const yearText = DateTime.utc(year).setLocale(locale).toFormat("yyyy");
   return parseCivilFields(`${text} ${yearText}`, [
     ...nativeParts, { token: null, value: " " }, { token: "YYYY", value: "yyyy" },
@@ -118,25 +118,31 @@ function parseCivilFields(
   text: string,
   parts: readonly MomentFormatPart[],
   options: DateTimeOptions,
-): DateTime<true> | null {
+): readonly DateTime<true>[] {
   const format = compileMomentParts(parts);
   const parsed = DateTime.fromFormat(text, format, options);
-  if (!parts.some(isMonthName)) return parsed.isValid ? parsed : null;
-  if (parsed.isValid && parsed.toFormat(format) === text) return parsed;
+  if (!parts.some(isMonthName)) return parsed.isValid ? [parsed] : [];
 
-  // Only replace month tokens; year digits and quoted literals may contain the same number.
+  // In a Gregorian display calendar each named month has a fixed civil month.
+  // Other display calendars can emit the same month name for two civil dates.
+  const candidates = new Map<number, DateTime<true>>();
+  const consider = (value: DateTime<true> | DateTime<false>): void => {
+    if (value.isValid && value.toFormat(format) === text) candidates.set(value.toMillis(), value);
+  };
+  consider(parsed);
+  // Some locales format named months as numbers. Preserve the year and literals.
   const numericFormat = compileMomentParts(parts.map((part) =>
     isMonthName(part) ? { token: "M", value: "M" } : part));
-  const numeric = DateTime.fromFormat(text, numericFormat, options);
-  if (numeric.isValid && numeric.toFormat(format) === text) return numeric;
+  if (candidates.size === 0) consider(DateTime.fromFormat(text, numericFormat, options));
 
-  // A locale's display calendar can change month partway through a Gregorian month.
-  // Preserve the filename emitted for the actual civil day, including localized digits.
-  const { result } = DateTime.fromFormatExplain(text, format, options);
-  if (typeof result?.month !== "number") return null;
-  for (let month = 1; month <= 12; month += 1) {
-    const candidate = DateTime.fromObject({ ...result, month }, options);
-    if (candidate.isValid && candidate.toFormat(format) === text) return candidate;
+  const displayCalendar = DateTime.fromMillis(0, options).resolvedLocaleOptions().outputCalendar;
+  if (displayCalendar !== "gregory" && displayCalendar !== "iso8601") {
+    const { result } = DateTime.fromFormatExplain(text, format, options);
+    if (typeof result?.month === "number") {
+      for (let month = 1; month <= 12; month += 1) {
+        consider(DateTime.fromObject({ ...result, month }, options));
+      }
+    }
   }
-  return null;
+  return [...candidates.values()];
 }

@@ -291,4 +291,14 @@ describe("selectNoteNavbarContext", () => {
       },
     )?.snapshotVersion).toBe(indexed.intervals.revision);
   });
+
+  it.each(["MD", "mD", "Md"])("recognizes a known physical .%s note and keeps folder case exact", (extension) => {
+    const options = { ...settings(), locale: "en" };
+    const target = "Daily/2026-07-24." + extension;
+    const input = snapshot({ [target]: "existing" });
+    expect(selectNoteNavbarContext(target, input, options)).toMatchObject({
+      noteType: "daily", date: { year: 2026, month: 7, day: 24 },
+    });
+    expect(selectNoteNavbarContext(target.replace("Daily/", "daily/"), input, options)).toBeNull();
+  });
 });

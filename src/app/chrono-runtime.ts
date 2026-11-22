@@ -124,8 +124,9 @@ export function createChronoRuntime(host: ChronoRuntimeHost): ChronoRuntime {
       host.app,
       () => host.getSettings(),
       () => host.getTranslator().locale,
-      (date, type, navigate) => host.openPeriodicNote(date, type, navigate),
+      (date, type, target) => host.openPeriodicNote(date, type, target),
       (error) => { new Notice(formatPluginErrorNotice(error, host.getTranslator().t)); },
+      (path) => noteCreator.pending(path),
     );
     registerDisposer(() => periodicLinkNavigation.setEnabled(false));
     periodicLinkNavigation.setEnabled(settings.createMissingPeriodicNotesFromLinks);

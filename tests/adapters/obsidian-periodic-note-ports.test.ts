@@ -75,7 +75,7 @@ describe("Obsidian periodic note ports", () => {
       moment.locale("en");
       try {
         const vault = new FakeVault();
-        const template = { path: "Templates/Time.md", extension: "md" };
+        const template = { path: "Templates/Time.MD", extension: "MD" };
         const target = { path: "Notes/time.md", extension: "md" };
         vault.files.set(template.path, template);
         vault.files.set(target.path, target);
@@ -97,7 +97,7 @@ describe("Obsidian periodic note ports", () => {
           } }) },
         } as never, vault as never);
         const common = {
-          locale: "en", path: target.path, templatePath: template.path,
+          locale: "en", path: target.path, templatePath: "Templates/Time",
           templateEngine: "templater", title: "time",
         } as const;
         const date = { year: 2000, month: 12, day: 31 };
@@ -156,6 +156,19 @@ describe("Obsidian periodic note ports", () => {
 
     await files.finalize(created, "# Updated");
     expect(vault.contents.get("Calendar/Daily/2026-05-18.md")).toBe("# Updated");
+  });
+
+  it("rechecks a periodic destination after creating its parent folder", async () => {
+    const vault = new FakeVault();
+    const files = new ObsidianCreatedNoteFilePort(vault as never, closedWorkspace() as never);
+    const sibling = { path: "Daily/2026-05-18.MD", extension: "MD" };
+    vault.createFolder.mockImplementationOnce(async (folder) => {
+      vault.folders.add(folder);
+      vault.files.set(sibling.path, sibling);
+    });
+    await expect(files.create("Daily/2026-05-18.md", "template", () => !files.exists(sibling.path)))
+      .resolves.toBeNull();
+    expect(vault.create).not.toHaveBeenCalled();
   });
 
   it("preserves a created note changed before deferred template finalization", async () => {
@@ -399,9 +412,9 @@ describe("Obsidian periodic note ports", () => {
 
   it("renders built-in range placeholders through the shared template port", async () => {
     const vault = new FakeVault();
-    vault.files.set("Templates/Range.md", { path: "Templates/Range.md", extension: "md" });
+    vault.files.set("Templates/Range.mD", { path: "Templates/Range.mD", extension: "mD" });
     vault.contents.set(
-      "Templates/Range.md",
+      "Templates/Range.mD",
       "# {{title}}\n{{start:YYYY/MM/DD}} – {{end}} · {{days}}",
     );
     const templates = new ObsidianBuiltinTemplatePort(vault as never);
@@ -413,7 +426,7 @@ describe("Obsidian periodic note ports", () => {
       dayCount: 7,
       locale: "en-US",
       path: "Ranges/trip.md",
-      templatePath: "Templates/Range.md",
+      templatePath: "Templates/Range",
       templateEngine: "builtin",
       title: "trip",
     }, "default range");
