@@ -9,8 +9,8 @@ import type {
   PeriodicNoteType,
   WeekStartDay,
 } from "../../core/periodic/periodic-date";
-import { formatPeriodicNotePath } from "../../core/periodic/periodic-note-path";
-import type { NoteIndexSnapshot } from "../notes/note-index";
+import { findPeriodicMarkdownFile, formatPeriodicNotePath } from "../../core/periodic/periodic-note-path";
+import type { NoteIndexSnapshot, PresentNoteIndexEntry } from "../notes/note-index";
 
 export type IndexedPeriodicNoteState =
   | NoteContentState
@@ -87,6 +87,15 @@ export function selectIndexedPeriodicNote(
   );
 }
 
+export function findIndexedPeriodicEntry(
+  snapshot: NoteIndexSnapshot,
+  path: string | null,
+): PresentNoteIndexEntry | undefined {
+  if (path === null) return undefined;
+  const notes = snapshot.notes;
+  return findPeriodicMarkdownFile(path, (candidate) => notes[candidate]);
+}
+
 export function selectIndexedPeriodicNoteAtPath(
   date: LocalDate,
   notePath: string | null,
@@ -96,7 +105,7 @@ export function selectIndexedPeriodicNoteAtPath(
     return emptyIndexedPeriodicNote(date, null, "not-configured");
   }
 
-  const entry = snapshot.notes[notePath];
+  const entry = findIndexedPeriodicEntry(snapshot, notePath);
   if (entry === undefined) {
     return emptyIndexedPeriodicNote(
       date,
@@ -107,7 +116,7 @@ export function selectIndexedPeriodicNoteAtPath(
   if (entry.kind === "error") {
     return Object.freeze({
       date,
-      notePath,
+      notePath: entry.path,
       noteState: "error",
       preview: null,
       embeds: EMPTY_NOTE_EMBED_STATISTICS,
@@ -118,7 +127,7 @@ export function selectIndexedPeriodicNoteAtPath(
 
   return Object.freeze({
     date,
-    notePath,
+    notePath: entry.note.path,
     noteState: entry.note.state,
     preview: entry.note.preview,
     embeds: entry.note.embeds,

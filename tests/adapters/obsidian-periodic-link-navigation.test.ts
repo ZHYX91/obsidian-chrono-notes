@@ -141,6 +141,27 @@ describe("workspace link navigation for missing periodic notes", () => {
     expect([...notes.keys()]).toEqual([existing.path]);
   });
 
+  it("finds source-relative extension variants and honors an explicitly named periodic file", async () => {
+    const { router, workspace, notes, openFile, prepare } = fixture();
+    router.setEnabled(true);
+    const relative = `Projects/${day}.mD`;
+    const upper = journal.slice(0, -3) + ".MD";
+    for (const path of [relative, journal, upper]) notes.set(path, { path, body: path });
+    await workspace.openLinkText(day + "#Part", source);
+    expect(openFile).toHaveBeenLastCalledWith(notes.get(relative), { eState: { subpath: "#Part" } });
+    const root = day + ".Md";
+    notes.set(root, { path: root, body: "exact extension at root" });
+    await workspace.openLinkText(root, source);
+    expect(openFile).toHaveBeenLastCalledWith(notes.get(root), undefined);
+    notes.delete(relative);
+    notes.delete(root);
+    await workspace.openLinkText(day + ".MD", source);
+    expect(openFile).toHaveBeenLastCalledWith(notes.get(upper), undefined);
+    await workspace.openLinkText(day, source);
+    expect(openFile).toHaveBeenLastCalledWith(notes.get(journal), undefined);
+    expect(prepare).not.toHaveBeenCalled();
+  });
+
   it("preserves literal pipes in Markdown headings instead of treating part of the target as an alias", async () => {
     const { router, workspace, openFile, notes } = fixture();
     router.setEnabled(true);

@@ -158,6 +158,19 @@ describe("Obsidian periodic note ports", () => {
     expect(vault.contents.get("Calendar/Daily/2026-05-18.md")).toBe("# Updated");
   });
 
+  it("rechecks a periodic destination after creating its parent folder", async () => {
+    const vault = new FakeVault();
+    const files = new ObsidianCreatedNoteFilePort(vault as never, closedWorkspace() as never);
+    const sibling = { path: "Daily/2026-05-18.MD", extension: "MD" };
+    vault.createFolder.mockImplementationOnce(async (folder) => {
+      vault.folders.add(folder);
+      vault.files.set(sibling.path, sibling);
+    });
+    await expect(files.create("Daily/2026-05-18.md", "template", () => !files.exists(sibling.path)))
+      .resolves.toBeNull();
+    expect(vault.create).not.toHaveBeenCalled();
+  });
+
   it("preserves a created note changed before deferred template finalization", async () => {
     const vault = new FakeVault();
     const files = new ObsidianCreatedNoteFilePort(

@@ -4,7 +4,7 @@ import {
   type LocalDate,
   type PeriodicNoteType,
 } from "../../core/periodic/periodic-date";
-import { matchMissingPeriodicLink } from "../../core/periodic/periodic-note-path";
+import { findPeriodicMarkdownFile, matchMissingPeriodicLink } from "../../core/periodic/periodic-note-path";
 import type { ChronoNotesSettings } from "../../shared/settings";
 
 type Navigate = (path: string) => Promise<void>;
@@ -98,13 +98,20 @@ export class ObsidianPeriodicLinkNavigation {
       await leaf.openFile(file, state);
     };
 
-    // A file already in the Vault may not have entered the metadata index yet.
-    // Check exact destinations before prompting or writing to the periodic path.
+    // Metadata can lag behind actual Vault files. Prefer an exact extension
+    // in the source folder or at the root before trying the other spellings.
     const markdownPath = /\.md$/iu.test(path) ? path : path + ".md";
     const sourceFolder = source.slice(0, source.lastIndexOf("/") + 1);
-    const existing = this.app.vault.getFileByPath(sourceFolder + markdownPath)
-      ?? this.app.vault.getFileByPath(markdownPath);
-    if (existing !== null) return navigate(existing.path);
+    const named = match.path.slice(0, -3) + markdownPath.slice(-3);
+    const existing = findPeriodicMarkdownFile(markdownPath, (candidate) => {
+      const nearby = this.app.vault.getFileByPath(sourceFolder + candidate)
+        ?? this.app.vault.getFileByPath(candidate);
+      if (nearby !== null) return nearby;
+      // Honor an explicit extension on a short link when two physical files
+      // coexist in the configured periodic folder.
+      return candidate === markdownPath && named !== match.path ? this.app.vault.getFileByPath(named) : null;
+    });
+    if (existing !== undefined) return navigate(existing.path);
     return this.openPeriodic(match.date, match.noteType, navigate);
   }
 }

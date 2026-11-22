@@ -17,7 +17,7 @@ import {
 import { isIntervalNoteInScope } from "../../src/features/intervals/interval-note-query";
 import type { NoteIndexSnapshot } from "../../src/features/notes/note-index";
 import type { RangeNoteSettings } from "../../src/shared/settings";
-import { createParsedNoteIndexSnapshot } from "../support/note-index-snapshot";
+import { createNoteIndexSnapshot, createParsedNoteIndexSnapshot } from "../support/note-index-snapshot";
 
 const DATE = Object.freeze({ year: 2026, month: 7, day: 8 });
 const RANGE: RangeNoteSettings = {
@@ -76,9 +76,22 @@ describe("calendar query dependency consistency", () => {
       businessValue(selectFresh(request, changed, ics)),
     );
 
-    const removed = createParsedNoteIndexSnapshot({}, 3);
-    notes.publish(removed);
+    // A case-sensitive Vault can contain both physical files simultaneously.
+    // Removing the preferred spelling must reveal the surviving file in every view.
+    const alternate = path.slice(0, -3) + ".MD";
+    const alternateOnly = createParsedNoteIndexSnapshot({ [alternate]: "mixed-case content" }, 3);
+    const both = createNoteIndexSnapshot({ ...alternateOnly.notes, ...changed.notes }, 4);
+    notes.publish(both);
+    expect(listener).toHaveBeenCalledTimes(1);
+    notes.publish(alternateOnly);
     expect(listener).toHaveBeenCalledTimes(2);
+    const business = businessValue(store.getSnapshot().query);
+    expect(JSON.stringify(business)).toContain(alternate);
+    expect(business).toEqual(businessValue(selectFresh(request, alternateOnly, ics)));
+
+    const removed = createParsedNoteIndexSnapshot({}, 5);
+    notes.publish(removed);
+    expect(listener).toHaveBeenCalledTimes(3);
     expect(businessValue(store.getSnapshot().query)).toEqual(
       businessValue(selectFresh(request, removed, ics)),
     );

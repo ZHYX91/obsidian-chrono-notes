@@ -15,6 +15,7 @@ import {
   type PeriodicNoteType,
 } from "../../core/periodic/periodic-date";
 import {
+  findIndexedPeriodicEntry,
   resolveIndexedPeriodicNotePath,
   type PeriodicNoteRule,
 } from "./indexed-periodic-note";
@@ -513,7 +514,7 @@ function collectYearDependencies(
 ): YearDependencies {
   const { options, year } = request;
   const entry = (path: string | null): NoteEntryReference =>
-    path === null ? undefined : noteSnapshot.notes[path];
+    findIndexedPeriodicEntry(noteSnapshot, path);
   const quarters = request.layout.quarters.map((quarter) => ({
     summaryEntry: entry(quarter.summary.path),
     months: quarter.months.map((month) => ({
@@ -546,7 +547,7 @@ function getPeriodicEntry(
   rule: PeriodicNoteRule,
 ): NoteEntryReference {
   const path = resolveIndexedPeriodicNotePath(date, noteType, context, rule);
-  return path === null ? undefined : snapshot.notes[path];
+  return findIndexedPeriodicEntry(snapshot, path);
 }
 
 function getIcsEvents(

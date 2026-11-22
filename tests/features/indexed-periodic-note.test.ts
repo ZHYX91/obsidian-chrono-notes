@@ -27,6 +27,18 @@ describe("indexed periodic note", () => {
     expect(getIndexedPeriodicNoteExistence("error")).toBe(true);
   });
 
+  it("uses a stable extension preference when several physical notes coexist", () => {
+    const stem = "Daily/2026-07-20";
+    const extensions = [".md", ".MD", ".Md", ".mD"];
+    for (let index = 0; index < extensions.length; index += 1) {
+      const files = extensions.slice(index).reverse().map((extension) => [stem + extension, extension]);
+      const snapshot = createParsedNoteIndexSnapshot(Object.fromEntries(files), 1);
+      expect(selectIndexedPeriodicNote(DATE, "daily", snapshot, CONTEXT, RULE)).toMatchObject({
+        notePath: stem + extensions[index], preview: extensions[index],
+      });
+    }
+  });
+
   it("keeps an absent path unknown while the index is updating", () => {
     const ready = createParsedNoteIndexSnapshot({}, 1);
     const indexing = Object.freeze({

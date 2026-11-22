@@ -4,7 +4,7 @@ import { runPreparedNoteCreation, type NoteTemplateContext, type NoteTemplatePor
 
 /** Owns a path until preparation, creation and any template finalizer have settled. */
 export class TemplatedNoteCreator {
-  private readonly pendingByPath = new Map<string, Promise<void>>();
+  private readonly pendingByPath = new Map<string, Promise<boolean>>();
 
   constructor(
     private readonly files: CreatedNoteFilePort,
@@ -16,7 +16,7 @@ export class TemplatedNoteCreator {
     return this.files.exists(path);
   }
 
-  pending(path: string): Promise<void> | undefined {
+  pending(path: string): Promise<boolean> | undefined {
     return this.pendingByPath.get(path);
   }
 
@@ -25,10 +25,11 @@ export class TemplatedNoteCreator {
     defaultContent: string,
     creationError: (cause: unknown, retainedCreatedNote: boolean) => Error,
     prepareContent: (content: string) => string = (content) => content,
-  ): Promise<void> {
+    canCreate?: () => boolean,
+  ): Promise<boolean> {
     const { path } = context;
     const existing = this.pending(path);
-    if (existing !== undefined) return existing;
+    if (existing !== undefined) return existing.then(() => false);
 
     // Publish the promise before template code can re-enter a command.
     const creation = Promise.resolve().then(async () => {
@@ -38,7 +39,11 @@ export class TemplatedNoteCreator {
         const prepared = await this.templates.prepare(context, defaultContent);
         await runPreparedNoteCreation(prepared, async () => {
           assertNoteCreationActive(this.signal);
-          const created = await this.files.create(path, prepareContent(prepared.initialContent));
+          if (canCreate !== undefined && !canCreate()) return;
+          const content = prepareContent(prepared.initialContent);
+          const created = canCreate === undefined ? await this.files.create(path, content)
+            : await this.files.create(path, content, canCreate);
+          if (created === null) return;
           retainedCreatedNote = true;
           assertNoteCreationActive(this.signal);
           if (prepared.renderAfterCreate === undefined) return;
@@ -47,6 +52,7 @@ export class TemplatedNoteCreator {
           await this.files.finalize(created, prepareContent(rendered));
           assertNoteCreationActive(this.signal);
         });
+        return retainedCreatedNote;
       } catch (cause) {
         throw creationError(cause, retainedCreatedNote);
       } finally {

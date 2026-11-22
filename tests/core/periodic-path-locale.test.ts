@@ -98,3 +98,25 @@ describe("periodic path locale", () => {
     expect(chineseUi).toBe(englishUi);
   });
 });
+
+describe("localized dates with the same month name", () => {
+  const options = { locale: "en", weekStartDay: "monday" } as const;
+  const dates = [6, 7].map((month) => ({ year: 2026, month, day: 22 }));
+  it.each(["YYYY-[Q]Q/YYYY-MMMM-DD", "GGGG-[W]WW/YYYY-MMMM-DD"])(
+    "uses the complete %s path to identify each note",
+    (pattern) => {
+      const rule = { noteType: "daily", pattern, pathLocale: "fa" } as const;
+      const paths = dates.map((date) => formatPeriodicNotePath(date, rule, options));
+      expect(paths[0]?.split("/").at(-1)).toBe("۲۰۲۶-تیر-۲۲.md");
+      expect(paths[1]?.split("/").at(-1)).toBe("۲۰۲۶-تیر-۲۲.md");
+      expect(paths[0]).not.toBe(paths[1]);
+      expect(paths.map((path) => parsePeriodicNotePath(path!, rule, options))).toEqual(dates);
+    },
+  );
+
+  it("refuses the shared basename when no folder identifies the month", () => {
+    const rule = { noteType: "daily", pattern: "YYYY-MMMM-DD", pathLocale: "fa" } as const;
+    expect(dates.map((date) => formatPeriodicNotePath(date, rule, options))).toEqual([null, null]);
+    expect(parsePeriodicNotePath("۲۰۲۶-تیر-۲۲.md", rule, options)).toBeNull();
+  });
+});

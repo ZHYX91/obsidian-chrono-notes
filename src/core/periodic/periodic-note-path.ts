@@ -1,12 +1,13 @@
 import {
   getPeriodAnchor,
+  isSameLocalDate,
   toDateTime,
   toLocalDate,
   type LocalDate,
   type PeriodicNoteType,
   type WeekStartDay,
 } from "./periodic-date";
-import { formatPeriodDate, parsePeriodDate } from "./period-format";
+import { formatPeriodDate, parsePeriodDates } from "./period-format";
 import { parseMomentFormat, quoteMomentLiteral, splitMomentFormat } from "./moment-format";
 
 export interface PeriodicNotePathRule {
@@ -25,6 +26,24 @@ export interface PeriodicNotePathMatch {
   readonly date: LocalDate;
 }
 
+/** The extension is case-insensitive; folders and the entire filename stem stay exact. */
+export function findPeriodicMarkdownFile<T>(
+  path: string,
+  lookup: (candidate: string) => T | null | undefined,
+): T | undefined {
+  const exact = lookup(path);
+  if (exact != null) return exact;
+  if (!/\.md$/iu.test(path)) return undefined;
+  const stem = path.slice(0, -3);
+  for (const extension of [".md", ".MD", ".Md", ".mD"]) {
+    const candidate = stem + extension;
+    if (candidate === path) continue;
+    const value = lookup(candidate);
+    if (value != null) return value;
+  }
+  return undefined;
+}
+
 export function formatPeriodicNotePath(
   selectedDate: LocalDate,
   rule: PeriodicNotePathRule,
@@ -34,26 +53,10 @@ export function formatPeriodicNotePath(
 
   try {
     const anchor = getPeriodAnchor(selectedDate, rule.noteType, options.weekStartDay);
-    let filenameDate = toDateTime(anchor);
-    if (rule.noteType === "weekly" && options.weekStartDay === "sunday") {
-      filenameDate = filenameDate.plus({ days: 1 });
-    }
-
-    const formatted = formatPeriodDate(
-      filenameDate.setLocale(resolvePathLocale(rule)),
-      rule.pattern,
-      "date",
-      anchor.year,
-    );
+    const formatted = formatAnchor(anchor, rule, options);
     if (formatted === null) return null;
     const parsedAnchor = parsePathAnchor(formatted, rule, options);
-    // Formatting is also used by queries and commands. A path that parses to
-    // another period must never become an actionable existing or new note.
-    return parsedAnchor !== null &&
-      parsedAnchor.year === anchor.year && parsedAnchor.month === anchor.month &&
-      parsedAnchor.day === anchor.day
-      ? `${formatted}.md`
-      : null;
+    return parsedAnchor !== null && isSameLocalDate(parsedAnchor, anchor) ? formatted + ".md" : null;
   } catch {
     return null;
   }
@@ -64,12 +67,10 @@ export function parsePeriodicNotePath(
   rule: PeriodicNotePathRule,
   options: PeriodicNotePathOptions,
 ): LocalDate | null {
-  if (!hasPeriodIdentity(rule) || !path.endsWith(".md")) return null;
+  if (!hasPeriodIdentity(rule) || !/\.md$/iu.test(path)) return null;
 
   try {
-    const anchor = parsePathAnchor(path.slice(0, -3), rule, options);
-    if (anchor === null) return null;
-    return formatPeriodicNotePath(anchor, rule, options) === path ? anchor : null;
+    return parsePathAnchor(path.slice(0, -3), rule, options);
   } catch {
     return null;
   }
@@ -80,10 +81,26 @@ function parsePathAnchor(
   rule: PeriodicNotePathRule,
   options: PeriodicNotePathOptions,
 ): LocalDate | null {
-  const parsed = parsePeriodDate(text, rule.pattern, resolvePathLocale(rule), rule.noteType);
-  return parsed === null ? null : getPeriodAnchor(
-    toLocalDate(parsed), rule.noteType, options.weekStartDay,
-  );
+  const candidates = parsePeriodDates(text, rule.pattern, resolvePathLocale(rule), rule.noteType);
+  let match: LocalDate | null = null;
+  for (const candidate of candidates) {
+    const anchor = getPeriodAnchor(toLocalDate(candidate), rule.noteType, options.weekStartDay);
+    if (formatAnchor(anchor, rule, options) !== text) continue;
+    if (match !== null && !isSameLocalDate(anchor, match)) return null;
+    match = anchor;
+  }
+  return match;
+}
+
+function formatAnchor(
+  anchor: LocalDate,
+  rule: PeriodicNotePathRule,
+  options: PeriodicNotePathOptions,
+): string | null {
+  const start = toDateTime(anchor);
+  const filenameDate = rule.noteType === "weekly" && options.weekStartDay === "sunday"
+    ? start.plus({ days: 1 }) : start;
+  return formatPeriodDate(filenameDate.setLocale(resolvePathLocale(rule)), rule.pattern, "date", anchor.year);
 }
 
 function resolvePathLocale(rule: PeriodicNotePathRule): string {
