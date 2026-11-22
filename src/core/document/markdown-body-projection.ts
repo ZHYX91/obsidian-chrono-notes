@@ -53,7 +53,8 @@ export function projectMarkdownBody(
   body: string,
   bodyStartLine: number,
 ): MarkdownBodyProjection {
-  const { comments, containerMarks, originalBlocks } = collectSyntaxContext(body);
+  const originalTree = parser.parse(body);
+  const { comments, containerMarks, originalBlocks } = collectSyntaxContext(body, originalTree);
   const uncommented = maskRanges(body, comments);
   const rawLines = body.split("\n");
   const syntax = createSyntaxInput(body, uncommented, rawLines, comments, containerMarks);
@@ -64,7 +65,8 @@ export function projectMarkdownBody(
   const taskMasks: MaskRange[] = [];
   const references: (MaskRange & { label: string; destination: string })[] = [];
   const links: MarkdownLink[] = [];
-  parser.parse(syntax).iterate({
+  const tree = comments.length === 0 ? originalTree : parser.parse(syntax);
+  tree.iterate({
     enter(node) {
       if (node.name === "FencedCode" || node.name === "CodeBlock") {
         blocks.push({ from: node.from, to: node.to });
@@ -119,7 +121,8 @@ export function projectMarkdownBody(
   });
   // Comment suffixes can become paragraphs in the syntax input. Genuine code
   // blocks from the original tree must not become paragraph continuations.
-  const codeBlocks = [...originalBlocks, ...blocks].sort((left, right) => left.from - right.from);
+  const codeBlocks = comments.length === 0 ? blocks
+    : [...originalBlocks, ...blocks].sort((left, right) => left.from - right.from);
   const visible = maskRanges(uncommented, codeBlocks);
   const visibleLines = visible.split("\n");
   const semantic = maskRanges(visible, inline);
@@ -222,15 +225,18 @@ function maskBareTaskUrls(text: string): string {
   });
 }
 
-function collectSyntaxContext(body: string): Readonly<{
+function collectSyntaxContext(body: string, tree: ReturnType<typeof parser.parse>): Readonly<{
   comments: readonly MaskRange[];
   containerMarks: readonly ContainerMark[];
   originalBlocks: readonly MaskRange[];
 }> {
+  if (!body.includes("<!--") && !body.includes("%%")) {
+    return { comments: [], containerMarks: [], originalBlocks: [] };
+  }
   const codes: MaskRange[] = [];
   const originalBlocks: MaskRange[] = [];
   const marks: ContainerMark[] = [];
-  parser.parse(body).iterate({
+  tree.iterate({
     enter(node) {
       if (node.name === "FencedCode" || node.name === "CodeBlock" || node.name === "InlineCode") {
         const code = { from: node.from, to: node.to };
