@@ -19,6 +19,7 @@
   background: transparent;
   box-shadow: none;
   color: var(--text-accent);
+  cursor: var(--cursor, default);
 }
 
 .chrono-notes-settings-tab-row.has-overflow > button.chrono-notes-settings-tab-scroll {
@@ -31,6 +32,7 @@
 
 .chrono-notes-settings-tab-scroll::before {
   content: "";
+  box-sizing: border-box;
   inline-size: 8px;
   block-size: 8px;
   border-block-start: 2px solid currentColor;
@@ -48,6 +50,10 @@
 
 .chrono-notes-settings-tab-scroll[data-side="earlier"]:dir(rtl)::before {
   transform: rotate(135deg);
+}
+
+.chrono-notes-settings-tab-row > button.chrono-notes-settings-tab-scroll:hover {
+  background: var(--background-modifier-hover);
 }
 
 .chrono-notes-settings-tab-scroll:focus-visible {

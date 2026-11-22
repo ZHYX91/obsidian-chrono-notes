@@ -207,6 +207,9 @@ for (const locale of ["en", "ar"] as const) {
     const freeSpace = await list.evaluate((el) =>
       el.parentElement!.getBoundingClientRect().width - el.getBoundingClientRect().width);
     expect(freeSpace).toBeLessThan(1);
+    await expect(list.getByRole("tab").first()).toHaveCSS("padding-inline-start", "12px");
+    await page.locator("#settings-fixture").evaluate((root) => { root.style.width = "500px"; });
+    await expect(list.getByRole("tab").first()).toHaveCSS("padding-inline-start", "8px");
     await page.locator("#settings-fixture").evaluate((root) => { root.style.width = "235px"; });
     await expect(later).toBeVisible();
     await expect(earlier).toBeHidden();
