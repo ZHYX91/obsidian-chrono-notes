@@ -80,7 +80,7 @@ export function preserveIcsTimezoneRules(unfolded: string): string {
     // ICAL.parse otherwise validates/normalizes recurrence values before we
     // can isolate a bad timezone (including silently changing INTERVAL=0).
     // Keep the original property as escaped TEXT in this parse only; no design
-    // registry or library prototype is changed. VEVENT rules remain untouched.
+    // registry or library prototype is changed.
     const escaped = line.replace(/\\/gu, "\\\\").replace(/;/gu, "\\;").replace(/,/gu, "\\,");
     return `RRULE;VALUE=TEXT:${escaped}`;
   }).join("\r\n");

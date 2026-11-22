@@ -36,6 +36,26 @@ describe("ICS calendar parsing", () => {
     );
   });
 
+  it("preserves standalone events and ignores nested alarm fields when classifying them", () => {
+    const lines = [
+      "begin:vevent", "DTSTART;VALUE=DATE:20261122", "SUMMARY:Reminder",
+      "BEGIN:VALARM", "STATUS:CANCELLED", "END:VALARM", "end:vevent",
+    ];
+    const parsed = parseIcsCalendar(lines.join("\r"), "event.ics", { displayZone: "UTC" });
+    expect(parsed).toMatchObject({
+      events: [{ id: "event.ics#0", title: "Reminder", isAllDay: true }],
+      skippedInvalid: 0, skippedRecurring: 0,
+    });
+  });
+
+  it.each([
+    ["BEGIN:VCALENDAR", "BEGIN:VEVENT", "END:VCALENDAR"],
+    ["BEGIN:VCALENDAR", "BEGIN:VEVENT", "END:VEVENT"],
+  ])("rejects an unbalanced component envelope", (...lines) => {
+    expect(() => parseIcsCalendar(lines.join("\n"), "broken.ics", { displayZone: "UTC" }))
+      .toThrow(/component/iu);
+  });
+
   it("handles BOM, folded lines, escaped text, and multiple events", () => {
     const parsed = parseIcsCalendar([
       "\uFEFFBEGIN:VCALENDAR",
