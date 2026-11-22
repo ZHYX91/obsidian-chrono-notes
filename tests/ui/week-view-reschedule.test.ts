@@ -142,6 +142,42 @@ describe("WeekView task rescheduling", () => {
     );
   });
 
+  it("disables the next year's days for task moves and range creation at the calendar limit", async () => {
+    const date = { year: 9999, month: 12, day: 31 };
+    const query = selectWeekCalendar(date, createParsedNoteIndexSnapshot({
+      "Tasks.md": "- [ ] Year end 📅 9999-12-31",
+    }, 1), DISABLED_ICS, {
+      locale: "en", weekStartDay: "monday", today: date, calendarExtensions: [], holidayRegions: [],
+      daily: { enabled: false, pattern: "" }, weekly: { enabled: false, pattern: "" },
+      rangeNotes: { showInCalendar: true, folder: "Ranges", templatePath: "", scanScope: "range-folder",
+        customFolder: "", monthViewLimit: 2, weekViewLimit: 2 },
+    });
+    const reschedule = vi.fn<WeekViewProps["onRescheduleTask"]>();
+    const createRange = vi.fn<WeekViewProps["onCreateRange"]>();
+    await act(async () => root.render(createElement(WeekView, {
+      query, translator: createTranslator("en", "en"), selectionKind: "day", selectedDate: date,
+      today: date, weekStartDay: "monday", showNoteIndicators: true, showTaskProgress: true,
+      activePreviewKey: null, previewId: "preview", onSelectDate: vi.fn(), onOpenPeriodic: vi.fn(),
+      onOpenPath: vi.fn(), onCreateRange: createRange, onToggleTask: vi.fn(), onRescheduleTask: reschedule,
+      onOpenTaskSource: vi.fn(), onSchedulePreview: vi.fn(), onDismissPreview: vi.fn(),
+      onOpenDateContextMenu: vi.fn(), longPress,
+    })));
+    const days = Array.from(container.querySelectorAll<HTMLButtonElement>(".chrono-notes-week-day"));
+    expect(days.map((button) => button.disabled)).toEqual([false, false, false, false, false, true, true]);
+    const select = container.querySelector<HTMLSelectElement>(".chrono-notes-week-task-due")!;
+    expect(Array.from(select.options, (option) => option.value)).toEqual([
+      "9999-12-27", "9999-12-28", "9999-12-29", "9999-12-30", "9999-12-31",
+    ]);
+    const source = container.querySelector<HTMLElement>("[draggable=true]")!;
+    const transfer = { setData: vi.fn() };
+    await act(async () => source.dispatchEvent(Object.assign(new Event("dragstart", { bubbles: true }), { dataTransfer: transfer })));
+    expect(transfer.setData).toHaveBeenCalledWith("text/plain", "Tasks.md:0");
+    await act(async () => days[5]!.dispatchEvent(Object.assign(new Event("drop", { bubbles: true }), { dataTransfer: transfer })));
+    expect(reschedule).not.toHaveBeenCalled();
+    await act(async () => container.querySelector<HTMLButtonElement>(".chrono-notes-week-create-range")!.click());
+    expect(createRange).toHaveBeenCalledWith(query.weekStart, date);
+  });
+
   it("resets task pages across week navigation and retains a reduced-data clamp", async () => {
     const snapshot = createParsedNoteIndexSnapshot({
       "A.md": Array.from({ length: 205 }, (_, index) => `- [ ] A-${index} 📅 2026-07-22`).join("\n"),

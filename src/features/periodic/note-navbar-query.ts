@@ -1,4 +1,5 @@
 import {
+  compareLocalDate,
   getPeriodAnchor,
   PERIODIC_NOTE_TYPES,
   shiftPeriod,
@@ -37,8 +38,8 @@ export interface NoteNavbarContext {
   readonly snapshotVersion: number;
   readonly noteType: PeriodicNoteType;
   readonly date: LocalDate;
-  readonly previous: NoteNavbarTarget;
-  readonly next: NoteNavbarTarget;
+  readonly previous: NoteNavbarTarget | null;
+  readonly next: NoteNavbarTarget | null;
   readonly higher: NoteNavbarTarget | null;
   readonly relatedIntervals: readonly IntervalNoteItem[];
 }
@@ -72,22 +73,27 @@ export function selectNoteNavbarContextFromProjection(
   const match = findPeriodicNotePathMatch(path, rules, options);
   if (match === null) return null;
 
-  const higher = findHigherTarget(match.noteType, match.date, options);
+  const { date, noteType } = match;
+  const first = getPeriodAnchor({ year: 1, month: 1, day: 1 }, noteType, options.weekStartDay);
+  const last = getPeriodAnchor({ year: 9999, month: 12, day: 31 }, noteType, options.weekStartDay);
+  if (compareLocalDate(date, first) < 0 || compareLocalDate(date, last) > 0) return null;
+  // A week or decade overlapping year one can have a year-zero file anchor.
+  const higher = findHigherTarget(noteType, date.year < 1 ? { year: 1, month: 1, day: 1 } : date, options);
   return Object.freeze({
     snapshotVersion,
     noteType: match.noteType,
     date: match.date,
-    previous: freezeTarget(
-      match.noteType,
-      shiftPeriod(match.date, match.noteType, -1, options.weekStartDay),
-    ),
-    next: freezeTarget(
-      match.noteType,
-      shiftPeriod(match.date, match.noteType, 1, options.weekStartDay),
-    ),
+    previous: adjacent(-1),
+    next: adjacent(1),
     higher,
     relatedIntervals: selectRelatedIntervals(match, intervals, options),
   });
+
+  function adjacent(direction: -1 | 1): NoteNavbarTarget | null {
+    const limit = direction === -1 ? first : last;
+    if (direction * compareLocalDate(date, limit) >= 0) return null;
+    return freezeTarget(noteType, shiftPeriod(date, noteType, direction, options.weekStartDay));
+  }
 }
 
 function selectRelatedIntervals(

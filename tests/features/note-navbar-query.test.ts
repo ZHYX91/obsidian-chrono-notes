@@ -35,6 +35,24 @@ function settings() {
 }
 
 describe("selectNoteNavbarContext", () => {
+  it("keeps centuries at both endpoints navigable in the supported direction", () => {
+    const options = settings();
+    options.periodicNotes.century = { enabled: true, pattern: "[C]CEN", templatePath: "" };
+    const first = selectNoteNavbarContext("C1.md", snapshot({}), options);
+    expect(first?.previous).toBeNull();
+    expect(first?.next?.date.year).toBe(101);
+    const last = selectNoteNavbarContext("C100.md", snapshot({}), options);
+    expect(last?.previous?.date.year).toBe(9801);
+    expect(last?.next).toBeNull();
+    expect(selectNoteNavbarContext("Daily/0000-01-01.md", snapshot({}), options)).toBeNull();
+    expect(selectNoteNavbarContext("Monthly/0000-01.md", snapshot({}), options)).toBeNull();
+    options.weekStartDay = "sunday";
+    const overlappingWeek = selectNoteNavbarContext("Weekly/0001-01.md", snapshot({}), options);
+    expect(overlappingWeek?.date).toEqual({ year: 0, month: 12, day: 31 });
+    expect(overlappingWeek?.previous).toBeNull();
+    expect(overlappingWeek?.next?.date).toEqual({ year: 1, month: 1, day: 7 });
+  });
+
   it.each([
     ["diary/2026/2026-07/2026-07-24.md", "daily"],
     ["diary/2026/2026-W30.md", "weekly"],
