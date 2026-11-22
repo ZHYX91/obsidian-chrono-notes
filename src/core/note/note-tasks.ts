@@ -37,16 +37,17 @@ export function parseNoteTasks(
 export function parseTaskLine(line: MarkdownBodyLineProjection, path: string) {
   const marker = line.taskMarker;
   if (marker === null) return null;
-  const dates: Partial<Record<TaskDateKind, string | null>> = {};
+  const dates: Partial<Record<TaskDateKind, string>> = {};
   let dueOffset: number | null = null;
   const visibleWithoutDates = line.visibleText.split("");
   for (const match of line.taskText.matchAll(/(📅|⏳|⌛|🛫|✅)\s*(\d{4}-\d{2}-\d{2})(?!\d)/gu)) {
     const kind = TASK_DATE_KINDS[match[1] as keyof typeof TASK_DATE_KINDS];
     const date = match[2]!;
+    if (parseLocalDateKey(date) === null) continue;
     const end = match.index + match[0].length;
     if (!(kind in dates)) {
-      dates[kind] = parseLocalDateKey(date) === null ? null : date;
-      if (kind === "dueDate" && dates[kind] !== null) dueOffset = end - date.length;
+      dates[kind] = date;
+      if (kind === "dueDate") dueOffset = end - date.length;
     }
     for (let index = match.index; index < end; index += 1) visibleWithoutDates[index] = " ";
   }
