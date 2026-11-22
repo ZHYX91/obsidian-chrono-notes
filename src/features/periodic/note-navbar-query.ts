@@ -74,6 +74,9 @@ export function selectNoteNavbarContextFromProjection(
   if (match === null) return null;
 
   const { date, noteType } = match;
+  const first = getPeriodAnchor({ year: 1, month: 1, day: 1 }, noteType, options.weekStartDay);
+  const last = getPeriodAnchor({ year: 9999, month: 12, day: 31 }, noteType, options.weekStartDay);
+  if (compareLocalDate(date, first) < 0 || compareLocalDate(date, last) > 0) return null;
   // A week or decade overlapping year one can have a year-zero file anchor.
   const higher = findHigherTarget(noteType, date.year < 1 ? { year: 1, month: 1, day: 1 } : date, options);
   return Object.freeze({
@@ -87,8 +90,7 @@ export function selectNoteNavbarContextFromProjection(
   });
 
   function adjacent(direction: -1 | 1): NoteNavbarTarget | null {
-    const edge = direction === -1 ? { year: 1, month: 1, day: 1 } : { year: 9999, month: 12, day: 31 };
-    const limit = getPeriodAnchor(edge, noteType, options.weekStartDay);
+    const limit = direction === -1 ? first : last;
     if (direction * compareLocalDate(date, limit) >= 0) return null;
     return freezeTarget(noteType, shiftPeriod(date, noteType, direction, options.weekStartDay));
   }

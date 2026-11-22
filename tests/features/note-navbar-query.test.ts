@@ -44,6 +44,13 @@ describe("selectNoteNavbarContext", () => {
     const last = selectNoteNavbarContext("C100.md", snapshot({}), options);
     expect(last?.previous?.date.year).toBe(9801);
     expect(last?.next).toBeNull();
+    expect(selectNoteNavbarContext("Daily/0000-01-01.md", snapshot({}), options)).toBeNull();
+    expect(selectNoteNavbarContext("Monthly/0000-01.md", snapshot({}), options)).toBeNull();
+    options.weekStartDay = "sunday";
+    const overlappingWeek = selectNoteNavbarContext("Weekly/0001-01.md", snapshot({}), options);
+    expect(overlappingWeek?.date).toEqual({ year: 0, month: 12, day: 31 });
+    expect(overlappingWeek?.previous).toBeNull();
+    expect(overlappingWeek?.next?.date).toEqual({ year: 1, month: 1, day: 7 });
   });
 
   it.each([
