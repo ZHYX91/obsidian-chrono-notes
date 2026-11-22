@@ -279,6 +279,8 @@ export const ZH_CN_MESSAGES = {
   "settings.tab.periodic": "周期笔记",
   "settings.tab.ranges": "区间笔记",
   "settings.tab.extensionsAndIntegrations": "扩展与集成",
+  "settings.tabsEarlier": "显示前面的选项卡",
+  "settings.tabsLater": "显示后面的选项卡",
   "settings.tabsLabel": "Chrono Notes 设置分类",
   "settings.save.scheduled": "更改还没有保存。",
   "settings.save.saving": "正在保存设置……",

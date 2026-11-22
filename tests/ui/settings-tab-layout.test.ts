@@ -8,6 +8,8 @@ import {
 } from "../../src/ui/settings/settings-tab-layout";
 import type { SettingsTabId } from "../../src/ui/settings/settings-tab-navigation";
 
+const labels = { categories: "Chrono Notes settings categories", earlier: "Show earlier tabs", later: "Show later tabs" };
+
 const tabs: readonly SettingsTabDefinition[] = [
   { id: "general", label: "General" },
   { id: "appearance", label: "Appearance" },
@@ -28,7 +30,7 @@ describe("createSettingsTabLayout", () => {
       container,
       tabs,
       "periodic",
-      "Chrono Notes settings categories",
+      labels,
       vi.fn(),
     );
     const tabList = container.querySelector<HTMLElement>("[role=tablist]");
@@ -51,7 +53,7 @@ describe("createSettingsTabLayout", () => {
     }
     const second = document.createElement("div");
     document.body.append(second);
-    const other = createSettingsTabLayout(second, tabs, "general", "Settings", vi.fn());
+    const other = createSettingsTabLayout(second, tabs, "general", labels, vi.fn());
     expect(other.panelEl.id).not.toBe(layout.panelEl.id);
     expect(document.getElementById(other.panelEl.getAttribute("aria-labelledby")!)).toBe(other.activeTabEl);
     expect(layout.panelEl.getAttribute("aria-labelledby")).toBe(layout.activeTabEl.id);
@@ -72,7 +74,7 @@ describe("createSettingsTabLayout", () => {
         container,
         tabs,
         initialTab,
-        "Chrono Notes settings categories",
+        labels,
         onSelect,
       );
       const activeTab = container.querySelector<HTMLElement>("[role=tab][aria-selected=true]");
@@ -90,7 +92,7 @@ describe("createSettingsTabLayout", () => {
       container,
       tabs,
       "general",
-      "Chrono Notes settings categories",
+      labels,
       onSelect,
     );
 
@@ -111,7 +113,7 @@ describe("createSettingsTabLayout", () => {
         container,
         tabs,
         activeTab,
-        "Chrono Notes settings categories",
+        labels,
         (tabId) => {
           activeTab = tabId;
           render(true);

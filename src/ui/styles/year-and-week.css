@@ -765,10 +765,6 @@
     --chrono-notes-heatmap-cell-gap: 4px;
   }
 
-  .chrono-notes-settings-tab {
-    min-block-size: 44px;
-  }
-
   .chrono-notes-calendar-header > button,
   .chrono-notes-calendar-navigation > button,
   .chrono-notes-calendar-toolbar button {

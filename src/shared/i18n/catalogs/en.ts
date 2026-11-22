@@ -281,6 +281,8 @@ export const EN_MESSAGES = {
   "settings.tab.periodic": "Periodic notes",
   "settings.tab.ranges": "Range notes",
   "settings.tab.extensionsAndIntegrations": "Extensions & integrations",
+  "settings.tabsEarlier": "Show earlier tabs",
+  "settings.tabsLater": "Show later tabs",
   "settings.tabsLabel": "Chrono Notes settings categories",
   "settings.save.scheduled": "Changes have not been saved yet.",
   "settings.save.saving": "Saving settings…",

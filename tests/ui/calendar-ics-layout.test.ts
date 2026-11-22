@@ -1,4 +1,5 @@
 import { readFileSync } from "node:fs";
+import { Window, type CSSGroupingRule } from "happy-dom";
 import { describe, expect, it } from "vitest";
 
 import { readPluginStyles } from "../support/plugin-styles";
@@ -28,12 +29,18 @@ describe("calendar ICS layout", () => {
   });
 
   it("folds visible summaries by available width rather than input modality", () => {
-    expect(styles).toMatch(
-      /@container \(max-width: 360px\)[\s\S]*?\.chrono-notes-ics-list\s*\{[^}]*display:\s*none;/s,
+    const dom = new Window();
+    const sheet = new dom.CSSStyleSheet();
+    sheet.replaceSync(styles);
+    const hidesSummaries = (group: CSSGroupingRule) => Array.from(group.cssRules).some(
+      (rule) => rule instanceof dom.CSSStyleRule &&
+        rule.selectorText === ".chrono-notes-ics-list" && rule.style.display === "none",
     );
-    expect(styles).not.toMatch(
-      /@media \(pointer: coarse\)[\s\S]*?\.chrono-notes-ics-list\s*\{[^}]*display:\s*none;/s,
-    );
+    const rules = Array.from(sheet.cssRules);
+    expect(rules.some((rule) => rule instanceof dom.CSSContainerRule &&
+      rule.conditionText === "(max-width: 360px)" && hidesSummaries(rule))).toBe(true);
+    expect(rules.some((rule) => rule instanceof dom.CSSMediaRule &&
+      rule.conditionText === "(pointer: coarse)" && hidesSummaries(rule))).toBe(false);
   });
 
   it("does not reserve a category-specific height for absent ICS events", () => {

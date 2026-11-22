@@ -13,6 +13,7 @@ Notable changes to Chrono Notes are documented in this file. The repository's nu
 - Keep valid local ICS events when another event is malformed. Report unsupported numeric offsets instead of silently changing the displayed time.
 - Keep task scheduling and note navigation within supported calendar dates.
 - Keep settings controls and their focus usable after a failed save. Yield while searching file and folder suggestions in large Vaults.
+- Use the arrows at the edges of the settings tabs to reveal more categories without leaving the current page. Settings tabs and arrows have touch targets at least 44 pixels high.
 
 ## 0.9.1
 

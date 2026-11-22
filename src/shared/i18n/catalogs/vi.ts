@@ -424,6 +424,8 @@ export const VI_MESSAGES: MessageCatalog = Object.freeze({
   "settings.index.cacheRebuilding": "Đang xóa chỉ mục đã lưu rồi quét lại ghi chú trong Vault…",
   "settings.index.rebuildDesc": "Chỉ xóa chỉ mục ghi chú do Chrono Notes lưu cho Vault hiện tại, sau đó đọc lại các tệp Markdown. Không thay đổi ghi chú, cài đặt hay bộ nhớ đệm khác.",
   "settings.index.rebuildFailed": "Không thể tạo lại chỉ mục ghi chú. Chọn “Xóa bộ nhớ đệm và tạo lại chỉ mục” để thử lại.",
+  "settings.tabsEarlier": "Hiển thị các thẻ trước",
+  "settings.tabsLater": "Hiển thị các thẻ tiếp theo",
   "settings.tabsLabel": "Các mục cài đặt Chrono Notes",
   "settings.readOnly.futureSchema": "Những cài đặt này được lưu bởi phiên bản Chrono Notes mới hơn. Ở phiên bản này, chúng chỉ đọc. Hãy cập nhật plugin để chỉnh sửa.",
   "settings.general.languageEnglish": "Tiếng Anh",

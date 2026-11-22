@@ -280,6 +280,8 @@ export const ZH_TW_MESSAGES = {
   "settings.tab.periodic": "週期筆記",
   "settings.tab.ranges": "區間筆記",
   "settings.tab.extensionsAndIntegrations": "擴充與整合",
+  "settings.tabsEarlier": "顯示前面的分頁",
+  "settings.tabsLater": "顯示後面的分頁",
   "settings.tabsLabel": "Chrono Notes 設定分類",
   "settings.save.scheduled": "變更正在等待儲存。",
   "settings.save.saving": "正在儲存設定……",

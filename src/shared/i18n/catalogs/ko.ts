@@ -424,6 +424,8 @@ export const KO_MESSAGES: MessageCatalog = Object.freeze({
   "settings.index.cacheRebuilding": "저장된 색인을 지우고 Vault 노트를 다시 스캔하는 중…",
   "settings.index.rebuildDesc": "현재 Vault에 Chrono Notes가 저장한 노트 색인만 삭제한 뒤 Markdown 파일을 다시 읽습니다. 노트, 설정, 다른 캐시는 바뀌지 않습니다.",
   "settings.index.rebuildFailed": "노트 색인을 다시 만들지 못했습니다. “캐시 지우고 색인 다시 만들기”를 선택해 다시 시도하세요.",
+  "settings.tabsEarlier": "앞쪽 탭 표시",
+  "settings.tabsLater": "뒤쪽 탭 표시",
   "settings.tabsLabel": "Chrono Notes 설정 카테고리",
   "settings.readOnly.futureSchema": "이 설정은 새로운 버전의 Chrono Notes에서 저장되었습니다. 이 버전에서는 읽기 전용입니다. 수정하려면 플러그인을 업데이트하세요.",
   "settings.general.languageEnglish": "영어",

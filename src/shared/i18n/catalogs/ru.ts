@@ -427,6 +427,8 @@ export const RU_MESSAGES: MessageCatalog = Object.freeze({
   "settings.index.cacheRebuilding": "Удаление сохранённого индекса и повторное сканирование заметок…",
   "settings.index.rebuildDesc": "Удаляется только индекс заметок, сохранённый Chrono Notes для этого хранилища, затем заново читаются файлы Markdown. Заметки, настройки и другие кеши останутся без изменений.",
   "settings.index.rebuildFailed": "Не удалось пересоздать индекс заметок. Выберите «Очистить кеш и пересоздать индекс», чтобы повторить попытку.",
+  "settings.tabsEarlier": "Показать предыдущие вкладки",
+  "settings.tabsLater": "Показать следующие вкладки",
   "settings.tabsLabel": "Разделы настроек Chrono Notes",
   "settings.readOnly.futureSchema": "Эти настройки сохранены более новой версией Chrono Notes. Здесь они доступны только для чтения. Обновите плагин, чтобы изменить их.",
   "settings.general.languageEnglish": "Английский",

@@ -288,6 +288,8 @@ export const HI_MESSAGES = Object.freeze({
   "settings.tab.periodic": "आवधिक नोट्स",
   "settings.tab.ranges": "रेंज नोट्स",
   "settings.tab.extensionsAndIntegrations": "एक्सटेंशन और एकीकरण",
+  "settings.tabsEarlier": "पिछले टैब दिखाएँ",
+  "settings.tabsLater": "अगले टैब दिखाएँ",
   "settings.tabsLabel": "Chrono Notes सेटिंग्स श्रेणियाँ",
   "settings.save.scheduled": "बदलाव सहेजे जाने की प्रतीक्षा में हैं।",
   "settings.save.saving": "सेटिंग्स सहेजी जा रही हैं…",

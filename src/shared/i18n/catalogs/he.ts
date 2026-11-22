@@ -296,6 +296,8 @@ export const HE_MESSAGES = Object.freeze({
   "settings.tab.periodic": "הערות תקופתיות",
   "settings.tab.ranges": "הערות טווח",
   "settings.tab.extensionsAndIntegrations": "הרחבות ואינטגרציות",
+  "settings.tabsEarlier": "הצגת הלשוניות הקודמות",
+  "settings.tabsLater": "הצגת הלשוניות הבאות",
   "settings.tabsLabel": "Chrono Notes קטגוריות הגדרות",
   "settings.save.scheduled": "השינויים ממתינים לשמירה.",
   "settings.save.saving": "שומר את ההגדרות…",

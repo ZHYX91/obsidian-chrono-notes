@@ -167,3 +167,67 @@ test("the tutorial opens by keyboard and keeps readable line lengths on a wide s
   await expect(body).toHaveCSS("border-inline-start-width", "0px");
   await expect(summary).toBeFocused();
 });
+
+for (const locale of ["en", "ar"] as const) {
+  test(`${locale}: reveals clipped settings tabs without switching the panel`, async ({ page }) => {
+    await page.setContent(fixture.html);
+    await page.addScriptTag({ content: fixture.script });
+    await page.evaluate((language) => window.mountChronoSettings(language, 240), locale);
+
+    const earlier = page.locator('button[data-side="earlier"]');
+    const later = page.locator('button[data-side="later"]');
+    const list = page.getByRole("tablist");
+    const panel = page.getByRole("tabpanel");
+    const panelId = await panel.getAttribute("id");
+    await expect(earlier).toBeHidden();
+    await expect(later).toBeVisible();
+    await expect(later).toHaveAccessibleName(locale === "en" ? "Show later tabs" : "إظهار علامات التبويب التالية");
+
+    await later.click();
+    await expect(earlier).toBeVisible();
+    await expect.poll(() => list.evaluate((el) => Math.abs(el.scrollLeft))).toBeGreaterThan(0);
+    await expect(panel).toHaveAttribute("id", panelId!);
+    await expect(page.getByRole("tab", { selected: true })).toHaveAttribute("data-tab-id", "general");
+
+    // Enlarge the final label to exercise the case where even a single tab
+    // spans more than a scrollport. Repeated clicks must still reach the end.
+    await list.getByRole("tab").last().evaluate((el) => { el.style.minWidth = "400px"; });
+    for (let step = 0; step < 12 && await later.isVisible(); step++) await later.click();
+    await expect(later).toBeHidden();
+    await expect(earlier).toBeFocused();
+    await earlier.press("Enter");
+    await expect(later).toBeVisible();
+    await list.evaluate((el) => { el.scrollLeft = 0; });
+    await expect(earlier).toBeHidden();
+    await expect(later).toBeVisible();
+
+    await page.locator("#settings-fixture").evaluate((root) => { root.style.width = "1800px"; });
+    await expect(earlier).toBeHidden();
+    await expect(later).toBeHidden();
+    const freeSpace = await list.evaluate((el) =>
+      el.parentElement!.getBoundingClientRect().width - el.getBoundingClientRect().width);
+    expect(freeSpace).toBeLessThan(1);
+    await expect(list.getByRole("tab").first()).toHaveCSS("padding-inline-start", "12px");
+    await page.locator("#settings-fixture").evaluate((root) => { root.style.width = "500px"; });
+    await expect(list.getByRole("tab").first()).toHaveCSS("padding-inline-start", "8px");
+    await page.locator("#settings-fixture").evaluate((root) => { root.style.width = "235px"; });
+    await expect(later).toBeVisible();
+    await expect(earlier).toBeHidden();
+  });
+}
+
+test.describe("touch settings tabs", () => {
+  test.use({ hasTouch: true });
+
+  test("provides 44px tap targets for tabs and scroll controls", async ({ page }) => {
+    await page.setContent(fixture.html);
+    await page.addScriptTag({ content: fixture.script });
+    await page.evaluate(() => window.mountChronoSettings("en", 200));
+    const tab = page.getByRole("tab", { selected: true });
+    const control = page.getByRole("button", { name: "Show later tabs" });
+    await expect(tab).toHaveCSS("min-block-size", "44px");
+    const target = await control.boundingBox();
+    expect(target?.width).toBeGreaterThanOrEqual(44);
+    expect(target?.height).toBeGreaterThanOrEqual(44);
+  });
+});

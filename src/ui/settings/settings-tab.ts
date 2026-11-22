@@ -34,6 +34,7 @@ export class ChronoNotesSettingTab extends PluginSettingTab {
   private activeTab: SettingsTabId = "general";
   private readonly settingsSave: SettingsSaveCoordinator;
   private readonly vaultPathSuggestionCatalog: VaultPathSuggestionCatalog;
+  private tabLayoutCleanup: SettingsCleanup | null = null;
   private imperativeSectionCleanup: SettingsCleanup | null = null;
   private imperativeSaveStatusCleanup: SettingsCleanup | null = null;
   private surfaceRevision = 0;
@@ -103,16 +104,21 @@ export class ChronoNotesSettingTab extends PluginSettingTab {
     containerEl.empty();
     this.applySurfaceSemantics();
 
-    const { activeTabEl, panelEl } = createSettingsTabLayout(
+    const { activeTabEl, panelEl, dispose } = createSettingsTabLayout(
       containerEl,
       getSettingsTabLabels(this.translator.t),
       this.activeTab,
-      this.translator.t("settings.tabsLabel"),
+      {
+        categories: this.translator.t("settings.tabsLabel"),
+        earlier: this.translator.t("settings.tabsEarlier"),
+        later: this.translator.t("settings.tabsLater"),
+      },
       (tabId) => {
         this.activeTab = tabId;
         this.render(tabId);
       },
     );
+    this.tabLayoutCleanup = dispose;
     const settingsReadOnly = this.host.isSettingsReadOnly();
     if (settingsReadOnly) this.renderReadOnlyStatus(panelEl);
     this.imperativeSaveStatusCleanup = this.renderSaveStatus(panelEl);
@@ -141,7 +147,7 @@ export class ChronoNotesSettingTab extends PluginSettingTab {
     if (settingsReadOnly) this.disableSettingsControls(panelEl);
 
     if (focusTab !== null) {
-      activeTabEl.focus();
+      activeTabEl.focus({ preventScroll: true });
     } else if (focusedControl !== null) {
       const controls = containerEl.querySelectorAll<HTMLElement>("[data-chrono-settings-control]");
       for (const control of controls) {
@@ -154,6 +160,8 @@ export class ChronoNotesSettingTab extends PluginSettingTab {
   }
 
   private cleanupImperativeSection(): void {
+    this.tabLayoutCleanup?.();
+    this.tabLayoutCleanup = null;
     const saveStatusCleanup = this.imperativeSaveStatusCleanup;
     this.imperativeSaveStatusCleanup = null;
     saveStatusCleanup?.();

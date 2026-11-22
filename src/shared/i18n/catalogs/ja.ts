@@ -424,6 +424,8 @@ export const JA_MESSAGES: MessageCatalog = Object.freeze({
   "settings.index.cacheRebuilding": "保存済み索引を消去して Vault のノートを再走査中…",
   "settings.index.rebuildDesc": "この Vault に Chrono Notes が保存したノート索引だけを消し、Markdown ファイルを読み直します。ノート、設定、ほかのキャッシュは変更しません。",
   "settings.index.rebuildFailed": "ノート索引を再構築できませんでした。「キャッシュを消去して再構築」を選んで再試行してください。",
+  "settings.tabsEarlier": "前のタブを表示",
+  "settings.tabsLater": "後ろのタブを表示",
   "settings.tabsLabel": "Chrono Notes の設定カテゴリー",
   "settings.readOnly.futureSchema": "これらの設定は新しいバージョンの Chrono Notes で保存されました。このバージョンでは読み取り専用です。変更するにはプラグインを更新してください。",
   "settings.general.languageEnglish": "英語",
