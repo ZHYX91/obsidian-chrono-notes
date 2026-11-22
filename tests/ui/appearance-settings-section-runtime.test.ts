@@ -1,3 +1,4 @@
+import { Window } from "happy-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 interface SettingRecord {
@@ -15,7 +16,7 @@ vi.mock("obsidian", () => ({
   Setting: class {
     private readonly record: SettingRecord;
 
-    constructor(_containerEl: unknown) {
+    constructor(private readonly containerEl: HTMLElement) {
       this.record = {
         name: "",
         disabled: false,
@@ -41,6 +42,7 @@ vi.mock("obsidian", () => ({
 
     addToggle(configure: (toggle: unknown) => void): this {
       const toggle = {
+        toggleEl: this.containerEl.createDiv(),
         setValue: vi.fn((value: boolean) => {
           this.record.toggleValue = value;
           return toggle;
@@ -56,6 +58,7 @@ vi.mock("obsidian", () => ({
 
     addDropdown(configure: (dropdown: unknown) => void): this {
       const dropdown = {
+        selectEl: this.containerEl.createEl("select"),
         addOption: vi.fn(() => dropdown),
         setValue: vi.fn(() => dropdown),
         onChange: vi.fn(() => dropdown),
@@ -66,6 +69,7 @@ vi.mock("obsidian", () => ({
 
     addSlider(configure: (slider: unknown) => void): this {
       const slider = {
+        sliderEl: this.containerEl.createEl("input", { attr: { type: "range" } }),
         setLimits: vi.fn(() => slider),
         setValue: vi.fn(() => slider),
         setDynamicTooltip: vi.fn(() => slider),
@@ -77,7 +81,7 @@ vi.mock("obsidian", () => ({
 
     addText(configure: (text: unknown) => void): this {
       const text = {
-        inputEl: { inputMode: "" },
+        inputEl: this.containerEl.createEl("input"),
         setValue: vi.fn(() => text),
         onChange: vi.fn(() => text),
       };
@@ -87,6 +91,7 @@ vi.mock("obsidian", () => ({
   },
 }));
 
+import { installObsidianDomFactories } from "../setup/obsidian-dom";
 import { createDefaultSettings } from "../../src/shared/settings";
 import { renderAppearanceSettingsSection } from "../../src/ui/settings/appearance-settings-section";
 import type { SettingsSectionContext } from "../../src/ui/settings/settings-section-context";
@@ -112,12 +117,14 @@ describe("appearance settings runtime", () => {
       flushSettingsSaveOnBlur: vi.fn(),
       display,
     } as unknown as SettingsSectionContext;
-    const containerEl = {
-      createEl: vi.fn(),
-    } as unknown as HTMLElement;
+    const document = new Window().document as unknown as Document;
+    installObsidianDomFactories(document);
+    const containerEl = document.createElement("div");
 
     renderAppearanceSettingsSection(containerEl, context);
 
+    expect(containerEl.querySelector('[data-chrono-settings-control="font-size-mode"]')?.tagName).toBe("SELECT");
+    expect(containerEl.querySelector('[data-chrono-settings-control="show-note-indicators"]')).not.toBeNull();
     const noteStatusIndex = mocks.settings.findIndex(
       ({ name }) => name === "settings.appearance.showNoteIndicators",
     );

@@ -9,6 +9,7 @@ import {
   type TFolder,
 } from "obsidian";
 
+import { yieldToHost } from "../../shared/yield-to-host";
 import type { PeriodicNoteType } from "../../core/periodic/periodic-date";
 import {
   getPeriodicNoteFolderQuery,
@@ -21,16 +22,29 @@ interface RankedPath<T> {
 }
 
 const DEFAULT_SUGGESTION_LIMIT = 100;
+const PATH_BATCH = 256;
+
+interface PathSnapshot<T> {
+  items: readonly T[];
+  sorted?: boolean;
+  sorting?: Generator<void, void>;
+}
 
 export class VaultPathSuggestionCatalog {
-  private markdownFiles: readonly TFile[] | null = null;
-  private folders: readonly TFolder[] | null = null;
+  private markdownFiles: PathSnapshot<TFile> | null = null;
+  private folders: PathSnapshot<TFolder> | null = null;
   private eventRefs: EventRef[] = [];
+
+  revision = 0;
+  private lifetime = new AbortController();
+
+  get signal(): AbortSignal { return this.lifetime.signal; }
 
   public constructor(private readonly app: App) {}
 
   public start(): void {
     if (this.eventRefs.length > 0) return;
+    if (this.lifetime.signal.aborted) this.lifetime = new AbortController();
     const markDirty = (): void => this.markDirty();
     this.eventRefs = [
       this.app.vault.on("create", markDirty),
@@ -42,42 +56,74 @@ export class VaultPathSuggestionCatalog {
   public dispose(): void {
     for (const eventRef of this.eventRefs) this.app.vault.offref(eventRef);
     this.eventRefs = [];
+    this.lifetime.abort();
     this.markDirty();
   }
 
-  public getMarkdownFiles(): readonly TFile[] {
-    this.markdownFiles ??= [...this.app.vault.getMarkdownFiles()].sort(comparePaths);
+  public getMarkdownFiles(): PathSnapshot<TFile> {
+    this.markdownFiles ??= { items: this.app.vault.getMarkdownFiles() };
     return this.markdownFiles;
   }
 
-  public getFolders(): readonly TFolder[] {
-    this.folders ??= [...this.app.vault.getAllFolders(false)].sort(comparePaths);
+  public getFolders(): PathSnapshot<TFolder> {
+    this.folders ??= { items: this.app.vault.getAllFolders(false) };
     return this.folders;
   }
 
   private markDirty(): void {
+    this.revision++;
     this.markdownFiles = null;
     this.folders = null;
   }
 }
 
-export class PeriodicNoteFolderSuggest extends AbstractInputSuggest<TFolder> {
-  public constructor(
-    app: App,
-    private readonly inputEl: HTMLInputElement,
-    private readonly noteType: PeriodicNoteType,
-    private readonly catalog: VaultPathSuggestionCatalog,
-  ) {
+abstract class VaultPathSuggest<T extends { readonly path: string }> extends AbstractInputSuggest<T> {
+  private latest: { result: T[] | Promise<T[]> } | null = null;
+
+  constructor(app: App, protected readonly inputEl: HTMLInputElement, protected readonly catalog: VaultPathSuggestionCatalog) {
     super(app, inputEl);
   }
 
-  public getSuggestions(pattern: string): TFolder[] {
-    return rankPaths(
-      this.catalog.getFolders(),
-      getPeriodicNoteFolderQuery(pattern),
-      getSuggestionLimit(this.limit),
-    );
+  protected abstract paths(): PathSnapshot<T>;
+  protected abstract query(value: string): string;
+
+  public getSuggestions(value: string): T[] | Promise<T[]> {
+    const lifetime = this.catalog.signal;
+    if (lifetime.aborted) return [];
+    const request: { result: T[] | Promise<T[]> } = { result: [] };
+    this.latest = request;
+    const revision = this.catalog.revision;
+    const ranking = rankPaths(this.paths(), this.query(value), getSuggestionLimit(this.limit));
+    const resume = (): T[] | Promise<T[]> => {
+      // Host versions may display each resolved Promise regardless of input order.
+      if (this.latest !== request) return this.latest?.result ?? [];
+      if (lifetime.aborted) return [];
+      if (this.catalog.revision !== revision) return this.getSuggestions(value);
+      const start = performance.now();
+      for (let batch = 0; batch < 4; batch++) {
+        const next = ranking.next();
+        if (next.done) return next.value;
+        if (performance.now() - start >= 4) break;
+      }
+      return yieldToHost().then(resume);
+    };
+    request.result = resume();
+    return request.result;
   }
+
+  override close(): void {
+    this.latest = null;
+    super.close();
+  }
+}
+
+export class PeriodicNoteFolderSuggest extends VaultPathSuggest<TFolder> {
+  public constructor(app: App, inputEl: HTMLInputElement, private readonly noteType: PeriodicNoteType, catalog: VaultPathSuggestionCatalog) {
+    super(app, inputEl, catalog);
+  }
+
+  protected paths(): PathSnapshot<TFolder> { return this.catalog.getFolders(); }
+  protected query(pattern: string): string { return getPeriodicNoteFolderQuery(pattern); }
 
   public renderSuggestion(folder: TFolder, element: HTMLElement): void {
     renderPathSuggestion(element, folder.path, getPeriodicNoteFolderQuery(this.getValue()));
@@ -90,22 +136,9 @@ export class PeriodicNoteFolderSuggest extends AbstractInputSuggest<TFolder> {
   }
 }
 
-export class VaultFolderSuggest extends AbstractInputSuggest<TFolder> {
-  public constructor(
-    app: App,
-    private readonly inputEl: HTMLInputElement,
-    private readonly catalog: VaultPathSuggestionCatalog,
-  ) {
-    super(app, inputEl);
-  }
-
-  public getSuggestions(query: string): TFolder[] {
-    return rankPaths(
-      this.catalog.getFolders(),
-      normalizeFolderQuery(query),
-      getSuggestionLimit(this.limit),
-    );
-  }
+export class VaultFolderSuggest extends VaultPathSuggest<TFolder> {
+  protected paths(): PathSnapshot<TFolder> { return this.catalog.getFolders(); }
+  protected query(query: string): string { return normalizeFolderQuery(query); }
 
   public renderSuggestion(folder: TFolder, element: HTMLElement): void {
     renderPathSuggestion(element, folder.path, normalizeFolderQuery(this.getValue()));
@@ -118,22 +151,9 @@ export class VaultFolderSuggest extends AbstractInputSuggest<TFolder> {
   }
 }
 
-export class MarkdownFileSuggest extends AbstractInputSuggest<TFile> {
-  public constructor(
-    app: App,
-    private readonly inputEl: HTMLInputElement,
-    private readonly catalog: VaultPathSuggestionCatalog,
-  ) {
-    super(app, inputEl);
-  }
-
-  public getSuggestions(query: string): TFile[] {
-    return rankPaths(
-      this.catalog.getMarkdownFiles(),
-      query.trim(),
-      getSuggestionLimit(this.limit),
-    );
-  }
+export class MarkdownFileSuggest extends VaultPathSuggest<TFile> {
+  protected paths(): PathSnapshot<TFile> { return this.catalog.getMarkdownFiles(); }
+  protected query(query: string): string { return query.trim(); }
 
   public renderSuggestion(file: TFile, element: HTMLElement): void {
     renderPathSuggestion(element, file.path, this.getValue().trim());
@@ -146,16 +166,62 @@ export class MarkdownFileSuggest extends AbstractInputSuggest<TFile> {
   }
 }
 
-function rankPaths<T extends { readonly path: string }>(
-  items: readonly T[],
+// A cold catalog must yield during its stable path sort, too. Keep the sorted
+// snapshot for subsequent inputs and retain localeCompare's ordering of ties.
+function* sortPaths<T extends { readonly path: string }>(snapshot: PathSnapshot<T>): Generator<void, void> {
+  const items = snapshot.items;
+  let runs: T[][] = [];
+  for (let i = 0; i < items.length; i += PATH_BATCH) {
+    runs.push(items.slice(i, i + PATH_BATCH).sort(comparePaths));
+    if (items.length > PATH_BATCH) yield;
+  }
+  while (runs.length > 1) {
+    const next: T[][] = [];
+    for (let i = 0; i < runs.length; i += 2) {
+      const left = runs[i]!;
+      const right = runs[i + 1];
+      if (!right) {
+        next.push(left);
+        continue;
+      }
+      const merged: T[] = [];
+      let leftIndex = 0;
+      let rightIndex = 0;
+      while (leftIndex < left.length || rightIndex < right.length) {
+        if (rightIndex === right.length || (leftIndex < left.length && comparePaths(left[leftIndex]!, right[rightIndex]!) <= 0)) {
+          merged.push(left[leftIndex++]!);
+        } else {
+          merged.push(right[rightIndex++]!);
+        }
+        if (merged.length % PATH_BATCH === 0) yield;
+      }
+      next.push(merged);
+    }
+    runs = next;
+  }
+  snapshot.items = runs[0] ?? [];
+  snapshot.sorted = true;
+  delete snapshot.sorting;
+}
+
+function* rankPaths<T extends { readonly path: string }>(
+  snapshot: PathSnapshot<T>,
   query: string,
   limit: number,
-): T[] {
+): Generator<void, T[]> {
+  if (!snapshot.sorted) {
+    // Request changes and separate inputs can continue the same cold sort.
+    const sorting = snapshot.sorting ??= sortPaths(snapshot);
+    while (!sorting.next().done) yield;
+  }
+  const items = snapshot.items;
   if (query.length === 0) return items.slice(0, limit);
 
   const search = prepareFuzzySearch(query);
   const best: RankedPath<T>[] = [];
-  for (const item of items) {
+  for (let i = 0; i < items.length; i++) {
+    if (i > 0 && i % PATH_BATCH === 0) yield;
+    const item = items[i]!;
     const result = search(item.path);
     if (result === null) continue;
     const candidate = { item, result };

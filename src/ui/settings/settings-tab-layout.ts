@@ -13,6 +13,8 @@ export interface SettingsTabLayout {
   readonly panelEl: HTMLElement;
 }
 
+let nextLayoutId = 0;
+
 export function createSettingsTabLayout(
   containerEl: HTMLElement,
   tabs: readonly SettingsTabDefinition[],
@@ -20,6 +22,8 @@ export function createSettingsTabLayout(
   ariaLabel: string,
   onSelect: (tabId: SettingsTabId) => void,
 ): SettingsTabLayout {
+  const layoutId = `chrono-notes-settings-${++nextLayoutId}`;
+  const panelId = `${layoutId}-panel`;
   const tabListEl = containerEl.createDiv();
   tabListEl.className = "chrono-notes-settings-tabs";
   tabListEl.setAttribute("role", "tablist");
@@ -35,11 +39,11 @@ export function createSettingsTabLayout(
       : "chrono-notes-settings-tab";
     buttonEl.type = "button";
     buttonEl.textContent = tab.label;
-    buttonEl.id = getTabElementId(tab.id);
+    buttonEl.id = `${layoutId}-tab-${tab.id}`;
     buttonEl.dataset.tabId = tab.id;
     buttonEl.setAttribute("role", "tab");
     buttonEl.setAttribute("aria-selected", String(active));
-    buttonEl.setAttribute("aria-controls", getPanelElementId(tab.id));
+    buttonEl.setAttribute("aria-controls", panelId);
     buttonEl.tabIndex = active ? 0 : -1;
     buttonEl.addEventListener("click", () => {
       if (tab.id === activeTab) {
@@ -68,9 +72,9 @@ export function createSettingsTabLayout(
 
   const panelEl = containerEl.createDiv();
   panelEl.className = "chrono-notes-settings-panel";
-  panelEl.id = getPanelElementId(activeTab);
+  panelEl.id = panelId;
   panelEl.setAttribute("role", "tabpanel");
-  panelEl.setAttribute("aria-labelledby", getTabElementId(activeTab));
+  panelEl.setAttribute("aria-labelledby", activeTabEl.id);
   panelEl.tabIndex = 0;
 
   const tabListRect = tabListEl.getBoundingClientRect();
@@ -84,12 +88,4 @@ export function createSettingsTabLayout(
   }
 
   return Object.freeze({ activeTabEl, panelEl });
-}
-
-function getTabElementId(tabId: SettingsTabId): string {
-  return `chrono-notes-settings-tab-${tabId}`;
-}
-
-function getPanelElementId(tabId: SettingsTabId): string {
-  return `chrono-notes-settings-panel-${tabId}`;
 }

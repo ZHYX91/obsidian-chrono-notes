@@ -46,7 +46,14 @@ describe("createSettingsTabLayout", () => {
     expect(tabElements.map((tab) => tab.tabIndex)).toEqual([-1, -1, 0, -1, -1]);
     expect(layout.panelEl.getAttribute("role")).toBe("tabpanel");
     expect(layout.panelEl.tabIndex).toBe(0);
-    expect(layout.activeTabEl.getAttribute("aria-controls")).toBe(layout.panelEl.id);
+    for (const tab of tabElements) {
+      expect(document.getElementById(tab.getAttribute("aria-controls")!)).toBe(layout.panelEl);
+    }
+    const second = document.createElement("div");
+    document.body.append(second);
+    const other = createSettingsTabLayout(second, tabs, "general", "Settings", vi.fn());
+    expect(other.panelEl.id).not.toBe(layout.panelEl.id);
+    expect(document.getElementById(other.panelEl.getAttribute("aria-labelledby")!)).toBe(other.activeTabEl);
     expect(layout.panelEl.getAttribute("aria-labelledby")).toBe(layout.activeTabEl.id);
   });
 

@@ -42,6 +42,7 @@ export function renderAppearanceSettingsSection(
     .setName(t("settings.appearance.fontSizeMode"))
     .setDesc(t("settings.appearance.fontSizeModeDesc"))
     .addDropdown((dropdown) => {
+      dropdown.selectEl.dataset.chronoSettingsControl = "font-size-mode";
       dropdown
         .addOption("follow-obsidian", t("settings.appearance.fontSizeFollowObsidian"))
         .addOption("follow-widget", t("settings.appearance.fontSizeFollowSidebar"))
@@ -50,8 +51,8 @@ export function renderAppearanceSettingsSection(
         .onChange(async (value) => {
           if (!isFontSizeMode(value)) return;
           context.host.settings.fontSizeMode = value;
-          await context.persistSettings();
           context.display();
+          await context.persistSettings();
         });
     });
 
@@ -77,10 +78,11 @@ export function renderAppearanceSettingsSection(
     .setName(t("settings.appearance.showNoteIndicators"))
     .setDesc(t("settings.appearance.showNoteIndicatorsDesc"))
     .addToggle((toggle) => {
+      toggle.toggleEl.dataset.chronoSettingsControl = "show-note-indicators";
       toggle.setValue(context.host.settings.showNoteIndicators).onChange(async (enabled) => {
         context.host.settings.showNoteIndicators = enabled;
-        await context.persistSettings();
         context.display();
+        await context.persistSettings();
       });
     });
 

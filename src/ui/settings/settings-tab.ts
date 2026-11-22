@@ -82,7 +82,10 @@ export class ChronoNotesSettingTab extends PluginSettingTab {
     }
   }
 
-  flushSettingsSaveOnUnload(): void {
+  disposeOnUnload(): void {
+    this.surfaceVisible = false;
+    this.cleanupImperativeSection();
+    this.vaultPathSuggestionCatalog.dispose();
     this.settingsSave.close();
   }
 

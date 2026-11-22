@@ -32,7 +32,10 @@ function track(result: unknown): void {
 class Dropdown {
   readonly selectEl = document.createElement("select");
   addOption(value: string, label: string): this {
-    this.selectEl.add(new Option(label, value));
+    const option = document.createElement("option");
+    option.value = value;
+    option.textContent = label;
+    this.selectEl.add(option);
     return this;
   }
   setValue(value: string): this { this.selectEl.value = value; return this; }

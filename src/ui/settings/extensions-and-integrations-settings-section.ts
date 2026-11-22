@@ -173,8 +173,8 @@ function addCalendarExtensionSlot(
       context.host.settings.calendarExtensions = [
         ...updateCalendarExtensionSlot(context.host.settings.calendarExtensions, slot, next),
       ];
-      await context.persistSettings();
       context.display();
+      await context.persistSettings();
     });
   });
 }
@@ -209,8 +209,8 @@ function addHolidayRegionSlot(
       context.host.settings.holidayRegions = [
         ...updateHolidayRegionSlot(context.host.settings.holidayRegions, slot, next),
       ];
-      await context.persistSettings();
       context.display();
+      await context.persistSettings();
     });
   });
 }

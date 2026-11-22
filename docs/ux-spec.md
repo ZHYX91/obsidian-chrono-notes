@@ -146,7 +146,7 @@ Density responds to container width. In summary mode, year view groups a quarter
 
 When interval lanes overflow, `+N` is a real button with `aria-expanded`, `aria-controls`, and `aria-haspopup="dialog"`, not static tooltip-only text. It opens a current-week-only hidden-item panel. Every item retains its canonical path, title, original boundaries, inclusive duration, and task statistics, uses an independent target of at least `44px`, and keeps the existing open-in-tab action. The desktop panel is anchored to its Gantt; mobile keeps it inside system safe areas. Escape or an outside pointer action closes it, and Escape restores trigger focus.
 
-Vault-path suggestions are capped at 100. An empty query takes the first 100 path-sorted candidates. A fuzzy query preserves Obsidian's all-candidate matching and ranking but retains only the best 100. One catalog is shared while settings are open, rebuilds lazily after create/delete/rename but not modify, and releases its listeners and data when settings close.
+Vault-path suggestions are capped at 100. An empty query takes the first 100 path-sorted candidates. A fuzzy query preserves Obsidian's all-candidate matching and ranking but retains only the best 100. Large catalogs sort paths and score matches over several host tasks. Typing a new query supersedes its predecessor, and closing settings stops the search. One catalog is shared while settings are open, rebuilds lazily after create/delete/rename but not modify, and releases its listeners and data when settings close.
 
 
 ## Settings tutorial disclosures

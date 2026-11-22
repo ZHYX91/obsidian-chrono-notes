@@ -1,3 +1,4 @@
+import { yieldToHost } from "../../shared/yield-to-host";
 import {
   parseNoteDocument,
   type ParsedNoteDocument,
@@ -295,7 +296,7 @@ export class NoteIndex {
     this.readConcurrency = readConcurrency;
     this.initialIndexTimeSliceMs = initialIndexTimeSliceMs;
     this.initialIndexClock = options.initialIndexClock ?? defaultDiagnosticClock;
-    this.yieldInitialIndex = options.yieldInitialIndex ?? yieldInitialIndexToHost;
+    this.yieldInitialIndex = options.yieldInitialIndex ?? yieldToHost;
     this.diagnostics = options.diagnostics ?? null;
     this.diagnosticClock = options.diagnosticClock ?? defaultDiagnosticClock;
     this.operationClock = options.operationClock ?? defaultDiagnosticClock;
@@ -1416,23 +1417,6 @@ export class NoteIndex {
 
 function defaultDiagnosticClock(): number {
   return typeof performance === "undefined" ? Date.now() : performance.now();
-}
-
-function yieldInitialIndexToHost(): Promise<void> {
-  if (typeof MessageChannel === "function") {
-    return new Promise((resolve) => {
-      const channel = new MessageChannel();
-      channel.port1.onmessage = () => {
-        channel.port1.close();
-        channel.port2.close();
-        resolve();
-      };
-      channel.port2.postMessage(undefined);
-    });
-  }
-  return new Promise((resolve) => {
-    scheduleTimeout(resolve, 0);
-  });
 }
 
 function scheduleMacrotaskCheckpoint(callback: () => void): () => void {

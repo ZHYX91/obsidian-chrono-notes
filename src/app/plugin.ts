@@ -141,7 +141,7 @@ export default class ChronoNotesPlugin extends Plugin {
   }
 
   override onunload(): void {
-    this.settingsTab?.flushSettingsSaveOnUnload();
+    this.settingsTab?.disposeOnUnload();
     this.localizedCommands.length = 0;
     this.ribbonElement = null;
     this.endRuntime();
