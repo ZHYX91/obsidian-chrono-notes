@@ -2,12 +2,17 @@
 
 Notable changes to Chrono Notes are documented in this file. The repository's numeric Git tags are the evidence for released versions; an entry without a corresponding local tag remains unreleased even if the manifests already contain that version.
 
-## Unreleased
+## 0.9.2
 
 - When Chrono Notes is disabled, pending week-task actions stop before editing the note or focusing its tab.
 - When a tab switches files while a calendar or task link is opening, stop before focusing the replacement note or moving its cursor.
-
 - When another request is already creating the same periodic note, open its requested tab directly if every larger-period note exists. Confirm any missing notes before creating them and preserve deletions of notes marked “Keep existing.” A cascade waits for an existing note’s active template to finish before running the next template and reports rendering failures.
+- Match localized periodic notes against the full configured path. Reuse existing uppercase Markdown extensions and wait for the template to finish before following a periodic link.
+- Preserve URLs and link targets when rescheduling tasks. Include reference images and text after ellipses in note previews.
+- Let a rebuilt index finish and save while an obsolete read is still pending. Batch snapshot updates during large deletions.
+- Keep valid local ICS events when another event is malformed. Report unsupported numeric offsets instead of silently changing the displayed time.
+- Keep task scheduling and note navigation within supported calendar dates.
+- Keep settings controls and their focus usable after a failed save. Yield while searching file and folder suggestions in large Vaults.
 
 ## 0.9.1
 
