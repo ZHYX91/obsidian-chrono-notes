@@ -1,3 +1,4 @@
+import { findMarkdownExtensionVariant } from "../../core/document/markdown-extension";
 import type { NoteContentState } from "../../core/document/parse-note-document";
 import type { NoteStatistics } from "../../core/note/note-statistics";
 import {
@@ -9,7 +10,7 @@ import type {
   PeriodicNoteType,
   WeekStartDay,
 } from "../../core/periodic/periodic-date";
-import { findPeriodicMarkdownFile, formatPeriodicNotePath } from "../../core/periodic/periodic-note-path";
+import { formatPeriodicNotePath } from "../../core/periodic/periodic-note-path";
 import type { NoteIndexSnapshot, PresentNoteIndexEntry } from "../notes/note-index";
 
 export type IndexedPeriodicNoteState =
@@ -93,7 +94,7 @@ export function findIndexedPeriodicEntry(
 ): PresentNoteIndexEntry | undefined {
   if (path === null) return undefined;
   const notes = snapshot.notes;
-  return findPeriodicMarkdownFile(path, (candidate) => notes[candidate]);
+  return findMarkdownExtensionVariant(path, (candidate) => notes[candidate]);
 }
 
 export function selectIndexedPeriodicNoteAtPath(

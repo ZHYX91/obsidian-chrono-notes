@@ -1,3 +1,4 @@
+import { findMarkdownExtensionVariant } from "../../core/document/markdown-extension";
 import type { TemplatedNoteCreator } from "../templates/templated-note-creator";
 import {
   PERIODIC_NOTE_TYPES,
@@ -7,7 +8,7 @@ import {
   type PeriodicNoteType,
   type WeekStartDay,
 } from "../../core/periodic/periodic-date";
-import { findPeriodicMarkdownFile, formatPeriodicNotePath } from "../../core/periodic/periodic-note-path";
+import { formatPeriodicNotePath } from "../../core/periodic/periodic-note-path";
 import {
   getOperationErrorDetails,
   type OperationErrorDetails,
@@ -20,7 +21,11 @@ import type { CreatedNoteFilePort } from "../templates/created-note-file-port";
 import { assertNoteCreationActive } from "../notes/note-creation-lifecycle";
 
 export type NoteOpenTarget = "default" | "tab";
-export type PeriodicNoteDestination = NoteOpenTarget | ((path: string) => Promise<void>);
+export interface PeriodicLinkDestination {
+  readonly requestedPath: string;
+  open(path: string): Promise<void>;
+}
+export type PeriodicNoteDestination = NoteOpenTarget | PeriodicLinkDestination | ((path: string) => Promise<void>);
 
 export type PeriodicNoteFilePort = CreatedNoteFilePort;
 
@@ -59,6 +64,7 @@ export interface PeriodicNoteCreationTarget {
 interface NoteCreationTarget {
   readonly context: PeriodicNoteTemplateContext;
   readonly createIfMissing: boolean;
+  readonly existingAtConfirmation?: string;
   readonly pendingAtConfirmation?: Promise<boolean> | undefined;
 }
 
@@ -123,9 +129,12 @@ export class PeriodicNoteCommands {
     }
 
     const target = request.target ?? "default";
-    const open = (actual: string) => typeof target === "function" ? target(actual) : this.workspace.open(actual, target);
-    const pendingCreation = this.creator.pending(path);
-    const existing = this.existingPath(path);
+    const open = typeof target === "object" ? (actual: string) => target.open(actual)
+      : typeof target === "function" ? target : (actual: string) => this.workspace.open(actual, target);
+    const preferredPath = typeof target === "object" && /\.md$/iu.test(target.requestedPath) &&
+      target.requestedPath.slice(0, -3) === path.slice(0, -3) ? target.requestedPath : path;
+    const existing = this.existingPath(preferredPath);
+    const pendingCreation = this.creator.pending(existing ?? path);
     if (pendingCreation === undefined && existing !== undefined) {
       await open(existing);
       assertNoteCreationActive(this.creator.signal);
@@ -145,8 +154,8 @@ export class PeriodicNoteCommands {
       if (request.confirmCreate !== undefined && actual !== undefined) {
         // An existing path may still hold a template's initial content.
         return {
-          context: { ...context, path: actual }, createIfMissing: false,
-          pendingAtConfirmation: this.creator.pending(context.path),
+          context, existingAtConfirmation: actual, createIfMissing: false,
+          pendingAtConfirmation: this.creator.pending(actual),
         };
       }
       return { context, createIfMissing: true };
@@ -158,9 +167,9 @@ export class PeriodicNoteCommands {
           date: primary.date,
           noteType,
           path,
-          cascade: Object.freeze(cascadeTargets.map(({ context, createIfMissing }) => Object.freeze({
+          cascade: Object.freeze(cascadeTargets.map(({ context, existingAtConfirmation, createIfMissing }) => Object.freeze({
             noteType: context.noteType,
-            path: context.path,
+            path: existingAtConfirmation ?? context.path,
             exists: !createIfMissing,
           }))),
         }),
@@ -171,17 +180,18 @@ export class PeriodicNoteCommands {
       }
     }
 
-    const created = pendingCreation === undefined &&
-      await this.ensurePopulated({ context: primary, createIfMissing: true }) === "created";
+    const primaryStatus = await this.ensurePopulated({
+      context: primary, createIfMissing: pendingCreation === undefined,
+    }, preferredPath);
     assertNoteCreationActive(this.creator.signal);
-    const actual = this.existingPath(path) ?? path;
+    const actual = this.existingPath(preferredPath) ?? path;
     await open(actual);
     assertNoteCreationActive(this.creator.signal);
     const cascade = await this.createLargerNotes(cascadeTargets);
     return Object.freeze({
       status: "opened",
       path: actual,
-      created,
+      created: primaryStatus === "created" && actual === path,
       cascade: Object.freeze(cascade),
     });
   }
@@ -233,16 +243,21 @@ export class PeriodicNoteCommands {
 
   private async ensurePopulated(
     { context, createIfMissing, pendingAtConfirmation }: NoteCreationTarget,
+    preferredPath = context.path,
   ): Promise<"created" | "existing" | "missing"> {
     const { path } = context;
     assertNoteCreationActive(this.creator.signal);
-    const pending = this.creator.pending(path) ?? pendingAtConfirmation;
-    if (pending !== undefined) {
+    let actual = this.existingPath(preferredPath);
+    let pending = this.creator.pending(actual ?? path) ?? pendingAtConfirmation;
+    const joined = pending !== undefined;
+    while (pending !== undefined) {
       await pending;
       assertNoteCreationActive(this.creator.signal);
+      actual = this.existingPath(preferredPath);
+      pending = this.creator.pending(actual ?? path);
     }
-    if (this.existingPath(path) !== undefined) return "existing";
-    if (!createIfMissing || pending !== undefined) return "missing";
+    if (actual !== undefined) return "existing";
+    if (!createIfMissing || joined) return "missing";
 
     const created = await this.creator.create(
       context,
@@ -255,7 +270,7 @@ export class PeriodicNoteCommands {
   }
 
   private existingPath(path: string): string | undefined {
-    return findPeriodicMarkdownFile(path, (candidate) => this.creator.exists(candidate) ? candidate : undefined);
+    return findMarkdownExtensionVariant(path, (candidate) => this.creator.exists(candidate) ? candidate : undefined);
   }
 }
 

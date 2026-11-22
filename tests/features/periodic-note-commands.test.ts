@@ -462,6 +462,45 @@ describe("PeriodicNoteCommands", () => {
     expect(ports.files.create).toHaveBeenCalledTimes(2);
   });
 
+  it("awaits the owner of a replacement spelling of a preserved cascade note", async () => {
+    const old = "Weekly/2026-W21.MD";
+    const weekly = "Weekly/2026-W21.md";
+    const date = { year: 2026, month: 5, day: 18 };
+    const ports = createPorts([old]);
+    const commands = new PeriodicNoteCommands(ports.creator, ports.workspace);
+    const settings = createSettings({
+      daily: { enabled: true, pattern: "[Daily]/YYYY-MM-DD" },
+      weekly: { enabled: true, pattern: "[Weekly]/GGGG-[W]WW" },
+    });
+    const confirming = deferred<void>();
+    const confirm = deferred<boolean>();
+    const rendering = deferred<void>();
+    const finish = deferred<void>();
+    vi.mocked(ports.templates.prepare).mockImplementation(async ({ path }) => path === weekly
+      ? { initialContent: "initial", renderAfterCreate: async () => {
+          rendering.resolve();
+          await finish.promise;
+          throw new Error("replacement failed");
+        } }
+      : { initialContent: "daily" });
+    const daily = commands.openOrCreate({ date, noteType: "daily", cascade: true,
+      confirmCreate: ({ cascade }) => {
+        expect(cascade[0]).toEqual({ noteType: "weekly", path: old, exists: true });
+        confirming.resolve();
+        return confirm.promise;
+      } }, settings);
+    await confirming.promise;
+    ports.paths.delete(old);
+    const replacement = commands.openOrCreate({ date, noteType: "weekly" }, settings);
+    const failure = expect(replacement).rejects.toThrow("replacement failed");
+    await rendering.promise;
+    confirm.resolve(true);
+    await vi.waitFor(() => expect(ports.workspace.open).toHaveBeenCalledOnce());
+    finish.resolve();
+    await failure;
+    await expect(daily).resolves.toMatchObject({ cascade: [{ path: weekly, status: "failed" }] });
+  });
+
   it("waits for an existing weekly note to finish rendering before the monthly template reads it", async () => {
     const weeklyPath = "Weekly/2026-W21.md";
     const monthlyPath = "Monthly/2026-05.md";
