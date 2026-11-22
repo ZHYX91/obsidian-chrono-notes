@@ -22,12 +22,8 @@
   cursor: var(--cursor, default);
 }
 
-.chrono-notes-settings-tab-row.has-overflow > button.chrono-notes-settings-tab-scroll {
+.chrono-notes-settings-tab-row.has-overflow > button.chrono-notes-settings-tab-scroll:not(:disabled) {
   display: inline-flex;
-}
-
-.chrono-notes-settings-tab-scroll:disabled {
-  visibility: hidden;
 }
 
 .chrono-notes-settings-tab-scroll::before {

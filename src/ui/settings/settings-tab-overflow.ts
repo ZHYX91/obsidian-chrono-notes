@@ -15,6 +15,7 @@ export function attachSettingsTabOverflow(
   function makeButton(label: string, side: string): HTMLButtonElement {
     const button = row.createEl("button");
     button.type = "button";
+    button.disabled = true;
     button.className = "chrono-notes-settings-tab-scroll";
     button.dataset.side = side;
     button.title = label;
@@ -23,27 +24,32 @@ export function attachSettingsTabOverflow(
     return button;
   }
 
-  function clippedDelta(toEnd: boolean): number {
-    const rtl = ownerWindow?.getComputedStyle(list).direction === "rtl";
-    const right = toEnd !== rtl;
-    const bounds = list.getBoundingClientRect();
-    if (bounds.width <= 0) return 0;
-    // Search from the visible region outwards. A label wider than the strip
-    // can be read a viewport at a time before moving on to the next one.
+  function distanceToEdge(tab: HTMLButtonElement, viewport: DOMRect, right: boolean): number {
+    const rect = tab.getBoundingClientRect();
+    return right ? rect.right - viewport.right : viewport.left - rect.left;
+  }
+
+  function firstClippedTab(right: boolean): HTMLButtonElement | undefined {
+    const viewport = list.getBoundingClientRect();
+    if (viewport.width <= 0) return;
     let nearest = Infinity;
+    let target: HTMLButtonElement | undefined;
     for (const tab of tabs) {
-      const rect = tab.getBoundingClientRect();
-      const distance = right ? rect.right - bounds.right : bounds.left - rect.left;
-      if (distance > 0.5) nearest = Math.min(nearest, distance);
+      const distance = distanceToEdge(tab, viewport, right);
+      if (distance <= 0.5 || distance >= nearest) continue;
+      nearest = distance;
+      target = tab;
     }
-    if (!Number.isFinite(nearest)) return 0;
-    return (right ? 1 : -1) * Math.min(nearest, bounds.width);
+    return target;
   }
 
   function updateButtons(): void {
     const focused = row.ownerDocument.activeElement;
-    earlier.disabled = clippedDelta(false) === 0;
-    later.disabled = clippedDelta(true) === 0;
+    const rtl = ownerWindow?.getComputedStyle(list).direction === "rtl";
+    const canScrollEarlier = firstClippedTab(rtl) !== undefined;
+    const canScrollLater = firstClippedTab(!rtl) !== undefined;
+    earlier.disabled = !canScrollEarlier;
+    later.disabled = !canScrollLater;
     if ((focused === earlier && earlier.disabled) || (focused === later && later.disabled)) {
       const other = focused === earlier ? later : earlier;
       (other.disabled ? activeTab : other).focus({ preventScroll: true });
@@ -51,7 +57,15 @@ export function attachSettingsTabOverflow(
   }
 
   function scroll(toEnd: boolean): void {
-    list.scrollLeft += clippedDelta(toEnd);
+    const right = toEnd !== (ownerWindow?.getComputedStyle(list).direction === "rtl");
+    const target = firstClippedTab(right);
+    if (target === undefined) return;
+    // Reveal the same tab after reserving space for the reverse control.
+    const other = toEnd ? earlier : later;
+    other.disabled = false;
+    const viewport = list.getBoundingClientRect();
+    const distance = Math.max(0, Math.min(distanceToEdge(target, viewport, right), viewport.width));
+    list.scrollLeft += right ? distance : -distance;
     updateButtons();
   }
 
