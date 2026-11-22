@@ -222,7 +222,7 @@ test.describe("touch settings tabs", () => {
   test("provides 44px tap targets for tabs and scroll controls", async ({ page }) => {
     await page.setContent(fixture.html);
     await page.addScriptTag({ content: fixture.script });
-    await page.evaluate(() => window.mountChronoSettings("en", 320));
+    await page.evaluate(() => window.mountChronoSettings("en", 200));
     const tab = page.getByRole("tab", { selected: true });
     const control = page.getByRole("button", { name: "Show later tabs" });
     await expect(tab).toHaveCSS("min-block-size", "44px");

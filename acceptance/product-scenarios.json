@@ -431,6 +431,20 @@
       ]
     },
     {
+      "id": "settings-tab-overflow",
+      "title": "Reveal settings tabs without changing the open panel",
+      "surfaces": ["desktop", "android-emulator"],
+      "requiredCapabilities": { "desktop": [], "android-emulator": [] },
+      "steps": [
+        "Open Chrono Notes settings at a width that clips the tab list. On desktop, reduce the settings window if needed. Verify that the arrow is visible beside the clipped edge and leaves the labels uncovered.",
+        "Click or tap the arrow to reveal the remaining tabs. Verify the open panel stays selected and that the other arrow can scroll back. Select a newly revealed tab and verify that the settings panel changes.",
+        "On desktop, widen the settings window and verify the arrows leave the row once all labels fit. On Android, use touch to scroll the strip and to tap a tab and an arrow."
+      ],
+      "expected": [
+        "Only clipped directions show an arrow. Using an arrow reveals tabs without changing the open settings panel, and selecting a tab still opens its panel."
+      ]
+    },
+    {
       "id": "periodic-link-navigation",
       "title": "Follow missing periodic links in Reading view and Live Preview",
       "surfaces": [

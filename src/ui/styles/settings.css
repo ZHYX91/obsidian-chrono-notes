@@ -7,7 +7,7 @@
 
 .chrono-notes-settings-tab-row > button.chrono-notes-settings-tab-scroll {
   display: none;
-  flex: 0 0 min(32px, 20%);
+  flex: 0 0 32px;
   align-items: center;
   justify-content: center;
   box-sizing: border-box;
@@ -129,7 +129,7 @@
     min-block-size: 44px;
   }
   .chrono-notes-settings-tab-row > button.chrono-notes-settings-tab-scroll {
-    flex-basis: min(44px, 20%);
+    flex-basis: 44px;
     min-block-size: 44px;
   }
 }
