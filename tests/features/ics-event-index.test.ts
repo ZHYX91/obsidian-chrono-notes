@@ -26,6 +26,39 @@ function deferred<T>() {
 }
 
 describe("IcsEventIndex", () => {
+  it("keeps healthy neighbors when a recurrence, date, duration or other event field is malformed", async () => {
+    const events = [
+      ["UID:good-before", 'DTSTART;X-LABEL="a:b":20261122T050000Z'],
+      ["RRULE:FREQ=DAILY;COUNT=wrong", "DTSTART:20261122T120000Z"],
+      ["RDATE;VALUE=PERIOD:invalid", "STATUS:CANCELLED"],
+      ["UID:offset", "DTSTART:20261122T000000+0800"],
+      ["DTSTART:20261122T000000Z", "DTEND:20261123T000000Zextra"],
+      ["DTSTART;VALUE=DATE:20261122T000000"],
+      ["DTSTART:20261122T000000Z", "DURATION:P1Dgarbage"],
+      ["DTSTART:20261122T000000Z", "unreadable property"],
+      ["UID:good-after", "DTSTART:20261122T120000", "DURATION:+P1DT2H3M4S",
+        "BEGIN:VALARM", "DURATION:PT5M", "REPEAT:2", "END:VALARM"],
+    ];
+    const mixed = ["BEGIN:VCALENDAR", ...events.flatMap((lines) => [
+      "BEGIN:VEVENT", ...lines, "END:VEVENT",
+    ]), "END:VCALENDAR"].join("\r\n");
+    const index = new IcsEventIndex({ read: async (source) =>
+      source === "mixed.ics" ? mixed : calendar("other", "20261122") });
+    await index.refresh({ enabled: true, sources: ["mixed.ics", "other.ics"], displayZone: "America/New_York" });
+    const snapshot = index.getSnapshot();
+    expect(snapshot).toMatchObject({
+      state: "ready", loadedSources: 2, eventCount: 3, skippedInvalid: 5, skippedRecurring: 1, errors: [],
+      sourceStatuses: [
+        { source: "mixed.ics", eventCount: 2, skippedInvalid: 5, skippedRecurring: 1, error: null },
+        { source: "other.ics", eventCount: 1, error: null },
+      ],
+    });
+    expect(snapshot.eventsByDate["2026-11-22"]?.map(({ id, timeLabel }) => [id, timeLabel])).toEqual([
+      ["other", null], ["good-before", "00:00"], ["good-after", "12:00"],
+    ]);
+    expect(snapshot.eventsByDate["2026-11-23"]?.map(({ id }) => id)).toEqual(["good-after"]);
+  });
+
   it("finishes a refresh with invalid year ranges and preserves valid events from every source", async () => {
     const mixed = [
       "BEGIN:VCALENDAR", "VERSION:2.0",

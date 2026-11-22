@@ -1,6 +1,8 @@
 import ICAL from "ical.js";
 import { DateTime } from "luxon";
 
+import { separateIcsEvents } from "./ics-event-input";
+
 import {
   createIcsEmbeddedTimezone,
   IcsTimezoneBudget,
@@ -95,32 +97,33 @@ export function parseIcsCalendar(
     }
   }
   const normalized = unfolded.startsWith("\uFEFF") ? unfolded.slice(1) : unfolded;
-  const parsed: unknown = ICAL.parse(preserveIcsTimezoneRules(normalized));
+  const input = separateIcsEvents(normalized);
+  const parsed: unknown = ICAL.parse(preserveIcsTimezoneRules(input.calendar));
   if (!isJCalComponent(parsed)) {
     throw new Error("ICS source must contain exactly one calendar component");
   }
   const root = new ICAL.Component(parsed);
-  const components = root.name === "vevent"
-    ? [root]
-    : root.getAllSubcomponents("vevent");
-  if (components.length > MAX_ICS_EVENTS_PER_SOURCE) {
+  if (input.events.length > MAX_ICS_EVENTS_PER_SOURCE) {
     throw new RangeError(`ICS source exceeds ${MAX_ICS_EVENTS_PER_SOURCE} events`);
   }
-  const embeddedTimezones = collectEmbeddedTimezones(root, components);
+  const embeddedTimezones = collectEmbeddedTimezones(root,
+    input.events.filter((event) => typeof event !== "string"));
   const events: IcsCalendarEvent[] = [];
   let skippedRecurring = 0;
   let skippedInvalid = 0;
   let skippedUnsupportedTimezone = 0;
 
-  for (const [index, component] of components.entries()) {
+  for (const [index, component] of input.events.entries()) {
+    if (component === "cancelled") continue;
+    if (component === "recurring") {
+      skippedRecurring += 1;
+      continue;
+    }
+    if (component === "invalid") {
+      skippedInvalid += 1;
+      continue;
+    }
     try {
-      if (
-        String(component.getFirstPropertyValue("status") ?? "").toUpperCase() === "CANCELLED"
-      ) continue;
-      if (component.hasProperty("rrule") || component.hasProperty("rdate")) {
-        skippedRecurring += 1;
-        continue;
-      }
       const event = parseEvent(
         component,
         source,
@@ -243,8 +246,6 @@ function embeddedTimezoneCoverage(
   };
   for (const event of events) {
     try {
-      if (String(event.getFirstPropertyValue("status") ?? "").toUpperCase() === "CANCELLED" ||
-        event.hasProperty("rrule") || event.hasProperty("rdate")) continue;
       for (const name of ["dtstart", "dtend"]) {
         const property = event.getFirstProperty(name);
         if (property === null || property.type !== "date-time") continue;
