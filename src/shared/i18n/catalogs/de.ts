@@ -425,6 +425,8 @@ export const DE_MESSAGES: MessageCatalog = Object.freeze({
   "settings.index.cacheRebuilding": "Gespeicherten Index löschen und Notizen neu einlesen…",
   "settings.index.rebuildDesc": "Löscht nur den von Chrono Notes gespeicherten Notizindex dieses Vaults und liest die Markdown-Dateien erneut. Notizen, Einstellungen und andere Caches bleiben unverändert.",
   "settings.index.rebuildFailed": "Der Notizindex konnte nicht neu aufgebaut werden. Wählen Sie „Cache löschen und neu aufbauen“, um es erneut zu versuchen.",
+  "settings.tabsEarlier": "Vorherige Tabs anzeigen",
+  "settings.tabsLater": "Weitere Tabs anzeigen",
   "settings.tabsLabel": "Einstellungsbereiche von Chrono Notes",
   "settings.readOnly.futureSchema": "Diese Einstellungen wurden mit einer neueren Version von Chrono Notes gespeichert und sind hier schreibgeschützt. Aktualisieren Sie das Plugin, um sie zu ändern.",
   "settings.general.languageEnglish": "Englisch",

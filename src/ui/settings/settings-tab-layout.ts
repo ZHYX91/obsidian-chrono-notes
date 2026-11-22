@@ -2,6 +2,7 @@ import {
   moveSettingsTab,
   type SettingsTabId,
 } from "./settings-tab-navigation";
+import { attachSettingsTabOverflow } from "./settings-tab-overflow";
 
 export interface SettingsTabDefinition {
   readonly id: SettingsTabId;
@@ -11,6 +12,7 @@ export interface SettingsTabDefinition {
 export interface SettingsTabLayout {
   readonly activeTabEl: HTMLButtonElement;
   readonly panelEl: HTMLElement;
+  readonly dispose: () => void;
 }
 
 let nextLayoutId = 0;
@@ -19,17 +21,18 @@ export function createSettingsTabLayout(
   containerEl: HTMLElement,
   tabs: readonly SettingsTabDefinition[],
   activeTab: SettingsTabId,
-  ariaLabel: string,
+  labels: { categories: string; earlier: string; later: string },
   onSelect: (tabId: SettingsTabId) => void,
 ): SettingsTabLayout {
   const layoutId = `chrono-notes-settings-${++nextLayoutId}`;
   const panelId = `${layoutId}-panel`;
-  const tabListEl = containerEl.createDiv();
+  const row = containerEl.createDiv({ cls: "chrono-notes-settings-tab-row" });
+  const tabListEl = row.createDiv();
+  tabListEl.id = `${layoutId}-tabs`;
   tabListEl.className = "chrono-notes-settings-tabs";
   tabListEl.setAttribute("role", "tablist");
-  tabListEl.setAttribute("aria-label", ariaLabel);
+  tabListEl.setAttribute("aria-label", labels.categories);
   tabListEl.setAttribute("aria-orientation", "horizontal");
-  containerEl.appendChild(tabListEl);
 
   const buttons = tabs.map((tab) => {
     const buttonEl = tabListEl.createEl("button");
@@ -77,15 +80,6 @@ export function createSettingsTabLayout(
   panelEl.setAttribute("aria-labelledby", activeTabEl.id);
   panelEl.tabIndex = 0;
 
-  const tabListRect = tabListEl.getBoundingClientRect();
-  const activeTabRect = activeTabEl.getBoundingClientRect();
-  // Browser-measured physical edges work with negative RTL scrollLeft too.
-  // Scroll only this strip, without scrolling the surrounding settings page.
-  if (activeTabRect.left < tabListRect.left) {
-    tabListEl.scrollLeft += activeTabRect.left - tabListRect.left;
-  } else if (activeTabRect.right > tabListRect.right) {
-    tabListEl.scrollLeft += activeTabRect.right - tabListRect.right;
-  }
-
-  return Object.freeze({ activeTabEl, panelEl });
+  const dispose = attachSettingsTabOverflow(row, tabListEl, buttons, activeTabEl, labels);
+  return { activeTabEl, panelEl, dispose };
 }

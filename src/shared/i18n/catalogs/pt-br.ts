@@ -425,6 +425,8 @@ export const PT_BR_MESSAGES: MessageCatalog = Object.freeze({
   "settings.index.cacheRebuilding": "Apagando o índice salvo e lendo as notas do Vault novamente…",
   "settings.index.rebuildDesc": "Apaga apenas o índice de notas salvo pelo Chrono Notes para este Vault e lê os arquivos Markdown novamente. Notas, configurações e outros caches não mudam.",
   "settings.index.rebuildFailed": "Não foi possível reconstruir o índice de notas. Escolha “Limpar cache e reconstruir índice” para tentar novamente.",
+  "settings.tabsEarlier": "Mostrar abas anteriores",
+  "settings.tabsLater": "Mostrar abas seguintes",
   "settings.tabsLabel": "Categorias de configurações do Chrono Notes",
   "settings.readOnly.futureSchema": "Estas configurações foram salvas por uma versão mais recente do Chrono Notes. Aqui são somente para leitura. Atualize o plugin para alterá-las.",
   "settings.general.languageEnglish": "Inglês",

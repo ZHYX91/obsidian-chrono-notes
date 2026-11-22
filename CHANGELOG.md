@@ -2,6 +2,10 @@
 
 Notable changes to Chrono Notes are documented in this file. The repository's numeric Git tags are the evidence for released versions; an entry without a corresponding local tag remains unreleased even if the manifests already contain that version.
 
+## Unreleased
+
+- Use the arrows at the edges of the settings tabs to reveal more categories without leaving the current page. Touch targets grow to 44px.
+
 ## 0.9.2
 
 - When Chrono Notes is disabled, pending week-task actions stop before editing the note or focusing its tab.

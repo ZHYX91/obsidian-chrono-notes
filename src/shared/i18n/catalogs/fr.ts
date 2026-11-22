@@ -425,6 +425,8 @@ export const FR_MESSAGES: MessageCatalog = Object.freeze({
   "settings.index.cacheRebuilding": "Suppression de l’index et nouvelle analyse des notes du coffre…",
   "settings.index.rebuildDesc": "Supprime uniquement l’index des notes enregistré par Chrono Notes pour ce coffre, puis relit les fichiers Markdown. Les notes, les paramètres et les autres caches ne changent pas.",
   "settings.index.rebuildFailed": "L’index de notes n’a pas pu être reconstruit. Choisissez « Vider le cache et réindexer » pour réessayer.",
+  "settings.tabsEarlier": "Afficher les onglets précédents",
+  "settings.tabsLater": "Afficher les onglets suivants",
   "settings.tabsLabel": "Rubriques des paramètres de Chrono Notes",
   "settings.readOnly.futureSchema": "Ces paramètres ont été enregistrés par une version plus récente de Chrono Notes. Ils sont en lecture seule ici. Mettez le module à jour pour les modifier.",
   "settings.general.languageEnglish": "Anglais",

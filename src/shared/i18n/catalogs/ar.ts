@@ -320,6 +320,8 @@ export const AR_MESSAGES = Object.freeze({
   "settings.tab.periodic": "ملاحظات دورية",
   "settings.tab.ranges": "ملاحظات النطاق",
   "settings.tab.extensionsAndIntegrations": "الملحقات وعمليات التكامل",
+  "settings.tabsEarlier": "إظهار علامات التبويب السابقة",
+  "settings.tabsLater": "إظهار علامات التبويب التالية",
   "settings.tabsLabel": "فئات إعدادات Chrono Notes",
   "settings.save.scheduled": "التغييرات في انتظار الحفظ.",
   "settings.save.saving": "جارٍ حفظ الإعدادات…",
