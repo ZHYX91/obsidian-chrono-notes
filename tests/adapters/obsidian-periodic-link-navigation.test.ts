@@ -1,3 +1,4 @@
+import { TemplatedNoteCreator } from "../../src/features/templates/templated-note-creator";
 import type { App, Workspace } from "obsidian";
 import { describe, expect, it, vi } from "vitest";
 import { ObsidianPeriodicLinkNavigation } from "../../src/adapters/obsidian/obsidian-periodic-link-navigation";
@@ -58,7 +59,10 @@ function fixture() {
     },
     finalize: vi.fn(),
   };
-  const commands = new PeriodicNoteCommands(files, { prepare }, { open: vi.fn() });
+  const commands = new PeriodicNoteCommands(
+    new TemplatedNoteCreator(files, { prepare }),
+    { open: vi.fn() },
+  );
   const reportError = vi.fn();
   const router = new ObsidianPeriodicLinkNavigation(app as unknown as App, () => settings, () => "en",
     async (date, noteType, navigate) => {

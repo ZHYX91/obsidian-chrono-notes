@@ -436,6 +436,44 @@ describe("ChronoNotesPlugin lifecycle composition", () => {
     vi.unstubAllGlobals();
   });
 
+  it.each(["navigate", "toggle", "reschedule"] as const)("retires pending week task %s when the plugin unloads", async (action) => {
+    const plugin = createPlugin();
+    const task = { path: "Tasks.md", line: 0, text: "review", completed: false, dueDate: "2026-05-18",
+      scheduledDate: null, startDate: null, doneDate: null };
+    const file = { path: task.path, extension: "md" };
+    const initial = "- [ ] review 📅 2026-05-18";
+    let stored = initial;
+    const parked = mocks.createDeferred<void>();
+    const revealLeaf = vi.fn(() => parked.promise);
+    const editor = { setCursor: vi.fn(), scrollIntoView: vi.fn() };
+    const processFile = vi.fn(async (_file: unknown, update: (content: string) => string) => {
+      await parked.promise;
+      stored = update(stored);
+      return stored;
+    });
+    Object.assign(plugin.app.vault, { getAbstractFileByPath: () => file, process: processFile });
+    Object.assign(plugin.app.workspace, {
+      getLeaf: () => ({ view: { file, editor } }), iterateRootLeaves: vi.fn(), revealLeaf,
+      getLeavesOfType: () => [], setActiveLeaf: vi.fn(),
+    });
+    await plugin.onload();
+    const host = plugin as unknown as {
+      openTaskSource(input: typeof task, target: "tab"): Promise<void>;
+      toggleTask(input: typeof task): Promise<unknown>;
+      rescheduleTask(input: typeof task, date: { year: number; month: number; day: number }): Promise<unknown>;
+    };
+    const pending = action === "navigate" ? host.openTaskSource(task, "tab")
+      : action === "toggle" ? host.toggleTask(task) : host.rescheduleTask(task, { year: 2026, month: 5, day: 19 });
+    expect(action === "navigate" ? revealLeaf : processFile).toHaveBeenCalledOnce();
+    plugin.unload();
+    parked.resolve();
+    await pending;
+    expect(stored).toBe(initial);
+    expect(plugin.app.workspace.setActiveLeaf).not.toHaveBeenCalled();
+    expect(editor.setCursor).not.toHaveBeenCalled();
+    expect(editor.scrollIntoView).not.toHaveBeenCalled();
+  });
+
   it("invalidates creation commands and queued confirmation saves when the runtime unloads", async () => {
     const plugin = createPlugin();
     await plugin.onload();
@@ -500,16 +538,17 @@ describe("ChronoNotesPlugin lifecycle composition", () => {
         createFolder: vi.fn(async (path: string) => { files.set(path, { path }); }),
         create, process,
       });
-      const openFile = vi.fn(async () => undefined);
+      const view: { file?: { path: string } } = {};
+      const openFile = vi.fn(async (file: { path: string }) => { view.file = file; });
       Object.assign(plugin.app.workspace, {
-        getLeaf: vi.fn(() => ({ view: {}, openFile })),
+        getLeaf: vi.fn(() => ({ view, openFile })),
         iterateRootLeaves: vi.fn(),
         setActiveLeaf: vi.fn(),
       });
       await plugin.onload();
       plugin.settings.templateEngine = "templater";
       plugin.settings.periodicNotes.daily = {
-        enabled: true, pattern: "YYYY-MM-DD", templatePath,
+        enabled: true, pattern: "[Ranges]/YYYY-MM-DD[ - 2026-05-20]", templatePath,
       };
       plugin.settings.periodicNotes.weekly.enabled = true;
       const runtime = (plugin as unknown as { runtime: ChronoRuntime }).runtime;
@@ -525,9 +564,20 @@ describe("ChronoNotesPlugin lifecycle composition", () => {
       await vi.waitFor(() => expect(templater.parse_template).toHaveBeenCalledOnce());
       const createdPath = create.mock.calls[0]![0];
       const initial = contents.get(createdPath);
+      // The other command targets the same path after Vault.create but before render completes.
+      const joining = kind === "periodic"
+        ? runtime.intervalNoteCommands.openOrCreate({
+            start: { year: 2026, month: 5, day: 18 },
+            end: { year: 2026, month: 5, day: 20 }, folder: "Ranges",
+          }, { locale: "en", templateEngine: "templater", templatePath })
+        : runtime.periodicNoteCommands.openOrCreate({
+            date: { year: 2026, month: 5, day: 18 }, noteType: "daily",
+          }, plugin.settings);
+      const joined = joining.then(() => "opened", () => "stopped");
       plugin.unload();
       rendered.resolve("# stale output");
       await stopped;
+      expect(await joined).toBe("stopped");
       expect(contents.get(createdPath)).toBe(initial);
       expect(files.has(createdPath)).toBe(true);
       expect(create).toHaveBeenCalledOnce();

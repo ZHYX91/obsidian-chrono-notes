@@ -493,7 +493,7 @@ export default class ChronoNotesPlugin extends Plugin {
     try {
       await runtime.noteWorkspace.open(path, target);
     } catch (error) {
-      new Notice(formatPluginErrorNotice(error, this.getTranslator().t));
+      if (runtime === this.runtime) new Notice(formatPluginErrorNotice(error, this.getTranslator().t));
     }
   }
 
@@ -501,9 +501,10 @@ export default class ChronoNotesPlugin extends Plugin {
     const runtime = this.runtime;
     if (runtime === null) return;
     try {
-      return this.showTaskCommandResult(await runtime.taskCommands.toggle(task));
+      const result = await runtime.taskCommands.toggle(task);
+      if (runtime === this.runtime) return this.showTaskCommandResult(result);
     } catch (error) {
-      return this.showTaskCommandError(error);
+      if (runtime === this.runtime) return this.showTaskCommandError(error);
     }
   }
 
@@ -511,9 +512,10 @@ export default class ChronoNotesPlugin extends Plugin {
     const runtime = this.runtime;
     if (runtime === null) return;
     try {
-      return this.showTaskCommandResult(await runtime.taskCommands.rescheduleDue(task, nextDueDate));
+      const result = await runtime.taskCommands.rescheduleDue(task, nextDueDate);
+      if (runtime === this.runtime) return this.showTaskCommandResult(result);
     } catch (error) {
-      return this.showTaskCommandError(error);
+      if (runtime === this.runtime) return this.showTaskCommandError(error);
     }
   }
 
@@ -523,7 +525,7 @@ export default class ChronoNotesPlugin extends Plugin {
     try {
       await runtime.taskCommands.openSource(task, target);
     } catch (error) {
-      this.showTaskCommandError(error);
+      if (runtime === this.runtime) this.showTaskCommandError(error);
     }
   }
 

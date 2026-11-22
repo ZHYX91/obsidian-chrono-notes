@@ -1,3 +1,4 @@
+import { TemplatedNoteCreator } from "../features/templates/templated-note-creator";
 import { formatPluginErrorNotice } from "./plugin-presentation";
 import type { TaskUiFeedback } from "../features/tasks/task-write-feedback";
 import {
@@ -17,8 +18,7 @@ import { ObsidianPropertiesDateDocuments } from "../adapters/obsidian/obsidian-p
 import { ObsidianPropertiesDateDisplay } from "../adapters/obsidian/obsidian-properties-date-display";
 import { OBSIDIAN_PROPERTY_DATE_VALUE_FORMATTER } from "../adapters/obsidian/obsidian-property-date-value-formatter";
 import {
-  ObsidianIntervalNoteFilePort,
-  ObsidianPeriodicNoteFilePort,
+  ObsidianCreatedNoteFilePort,
   ObsidianNoteTemplatePort,
   ObsidianPeriodicNoteWorkspacePort,
   ObsidianTaskFilePort,
@@ -114,12 +114,12 @@ export function createChronoRuntime(host: ChronoRuntimeHost): ChronoRuntime {
     const noteTemplates = new ObsidianNoteTemplatePort(
       host.app, host.vault, undefined, undefined, noteCreation.signal,
     );
-    const periodicNoteCommands = new PeriodicNoteCommands(
-      new ObsidianPeriodicNoteFilePort(host.vault, host.workspace, noteCreation.signal),
+    const noteCreator = new TemplatedNoteCreator(
+      new ObsidianCreatedNoteFilePort(host.vault, host.workspace, noteCreation.signal),
       noteTemplates,
-      noteWorkspace,
       noteCreation.signal,
     );
+    const periodicNoteCommands = new PeriodicNoteCommands(noteCreator, noteWorkspace);
     const periodicLinkNavigation = new ObsidianPeriodicLinkNavigation(
       host.app,
       () => host.getSettings(),
@@ -159,15 +159,10 @@ export function createChronoRuntime(host: ChronoRuntimeHost): ChronoRuntime {
     host.registerEvent(host.workspace.on("window-close", (_workspaceWindow, closedWindow) => {
       propertiesDateDocuments.removeDocument(closedWindow.document);
     }));
-    const intervalNoteCommands = new IntervalNoteCommands(
-      new ObsidianIntervalNoteFilePort(host.vault, host.workspace, noteCreation.signal),
-      noteTemplates,
-      noteWorkspace,
-      noteCreation.signal,
-    );
+    const intervalNoteCommands = new IntervalNoteCommands(noteCreator, noteWorkspace);
     const taskCommands = new TaskCommands(
-      new ObsidianTaskFilePort(host.vault, host.workspace),
-      new ObsidianTaskWorkspacePort(host.vault, host.workspace),
+      new ObsidianTaskFilePort(host.vault, host.workspace, noteCreation.signal),
+      new ObsidianTaskWorkspacePort(host.vault, host.workspace, noteCreation.signal),
     );
     const noteNavbar = new NoteNavbarManager(host.app, {
       noteIndex,

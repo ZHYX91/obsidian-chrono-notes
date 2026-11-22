@@ -1,36 +1,14 @@
 import type { Editor, TFile, Vault, Workspace, WorkspaceLeaf } from "obsidian";
 
-import type { IntervalNoteFilePort } from "../../features/intervals/interval-note-commands";
-import type { PeriodicNoteFilePort } from "../../features/periodic/periodic-note-commands";
 import type { TaskFilePort } from "../../features/tasks/task-commands";
 import { TaskWriteError, type TaskWriteFeedback } from "../../features/tasks/task-write-feedback";
-import type { CreatedNoteReference } from "../../features/templates/created-note-file-port";
+import type { CreatedNoteReference, CreatedNoteFilePort } from "../../features/templates/created-note-file-port";
 import { assertNoteCreationActive } from "../../features/notes/note-creation-lifecycle";
 import { isMarkdownFile } from "./obsidian-markdown-files";
 
 const pendingFolderCreates = new WeakMap<Vault, Map<string, Promise<void>>>();
 
-export class ObsidianPeriodicNoteFilePort implements PeriodicNoteFilePort {
-  constructor(
-    private readonly vault: Vault,
-    private readonly workspace: Workspace,
-    private readonly signal?: AbortSignal,
-  ) {}
-
-  exists(path: string): boolean {
-    return isMarkdownFile(this.vault.getAbstractFileByPath(path));
-  }
-
-  async create(path: string, content: string): Promise<CreatedNoteReference> {
-    return createNote(this.vault, path, content, this.signal);
-  }
-
-  async finalize(reference: CreatedNoteReference, content: string): Promise<void> {
-    await finalizeCreatedNote(this.vault, this.workspace, reference, content, this.signal);
-  }
-}
-
-export class ObsidianIntervalNoteFilePort implements IntervalNoteFilePort {
+export class ObsidianCreatedNoteFilePort implements CreatedNoteFilePort {
   constructor(
     private readonly vault: Vault,
     private readonly workspace: Workspace,
@@ -114,9 +92,11 @@ export class ObsidianTaskFilePort implements TaskFilePort {
   constructor(
     private readonly vault: Vault,
     private readonly workspace: Workspace,
+    private readonly signal?: AbortSignal,
   ) {}
 
   async process(path: string, update: (content: string) => string | null): Promise<TaskWriteFeedback | void> {
+    this.signal?.throwIfAborted();
     const file = this.vault.getAbstractFileByPath(path);
     if (!isMarkdownFile(file)) throw new Error(`Markdown note not found: ${path}`);
     const openEditor = findOpenTaskEditor(this.workspace, path);
@@ -142,6 +122,7 @@ export class ObsidianTaskFilePort implements TaskFilePort {
         currentEnd -= 1;
         nextEnd -= 1;
       }
+      this.signal?.throwIfAborted();
       let transactionError: unknown;
       let transactionFailed = false;
       try {
@@ -169,6 +150,7 @@ export class ObsidianTaskFilePort implements TaskFilePort {
       // The edit is applied. A later host callback/save failure is a warning,
       // not permission to replay a checkbox toggle or overwrite a third state.
       try {
+        this.signal?.throwIfAborted();
         assertTaskFileIdentity(this.vault, file, path);
         if (!isSameOpenTaskEditor(this.workspace, path, openEditor)) {
           return { warning: "save-not-confirmed" };
@@ -182,6 +164,7 @@ export class ObsidianTaskFilePort implements TaskFilePort {
     }
     let expectedPublished: string | undefined;
     const published = await this.vault.process(file, (content) => {
+      this.signal?.throwIfAborted();
       assertTaskFileIdentity(this.vault, file, path);
       if (getOpenTaskPanes(this.workspace, path).length > 0) {
         throw new Error(`Markdown editor opened before task update: ${path}`);

@@ -1,3 +1,4 @@
+import { TemplatedNoteCreator } from "../../src/features/templates/templated-note-creator";
 import { describe, expect, it, vi } from "vitest";
 
 import { parsePeriodicNotePath } from "../../src/core/periodic/periodic-note-path";
@@ -76,7 +77,7 @@ function createPorts(existing: readonly string[] = []) {
   const workspace: PeriodicNoteWorkspacePort = {
     open: vi.fn(async () => undefined),
   };
-  return { files, templates, workspace, paths, contents, identities };
+  return { creator: new TemplatedNoteCreator(files, templates), files, templates, workspace, paths, contents, identities };
 }
 
 describe("PeriodicNoteCommands", () => {
@@ -85,7 +86,7 @@ describe("PeriodicNoteCommands", () => {
     ["[Daily]/GGGG-[W]WW/YYYY-MM-DD", "Daily/2026-W47/2026-11-21.md", "Daily/2026-W46/2026-11-21.md"],
   ])("opens and recognizes the full daily path with %s", async (pattern, path, wrongFolder) => {
     const ports = createPorts([path]);
-    const commands = new PeriodicNoteCommands(ports.files, ports.templates, ports.workspace);
+    const commands = new PeriodicNoteCommands(ports.creator, ports.workspace);
     const date = { year: 2026, month: 11, day: 21 };
     const settings = createSettings({ daily: { enabled: true, pattern } });
     const rule = { noteType: "daily", pattern } as const;
@@ -136,7 +137,7 @@ describe("PeriodicNoteCommands", () => {
       vi.mocked(ports.workspace.open).mockImplementation(async () => {
         if (boundary === "open") changeSettings();
       });
-      const commands = new PeriodicNoteCommands(ports.files, ports.templates, ports.workspace);
+      const commands = new PeriodicNoteCommands(ports.creator, ports.workspace);
       const result = await commands.openOrCreate({
         date: { year: 2026, month: 7, day: 22 }, noteType: "daily", cascade: true,
         confirmCreate: async (confirmation) => {
@@ -187,7 +188,7 @@ describe("PeriodicNoteCommands", () => {
       }
       return { initialContent: "" };
     });
-    const commands = new PeriodicNoteCommands(ports.files, ports.templates, ports.workspace);
+    const commands = new PeriodicNoteCommands(ports.creator, ports.workspace);
     const result = await commands.openOrCreate({
       date: { year: 2026, month: 7, day: 22 }, noteType: "daily", cascade: true,
       confirmCreate: async () => {
@@ -211,7 +212,7 @@ describe("PeriodicNoteCommands", () => {
     vi.mocked(ports.templates.prepare).mockResolvedValueOnce({
       initialContent: "", renderAfterCreate: () => rendering.promise,
     });
-    const commands = new PeriodicNoteCommands(ports.files, ports.templates, ports.workspace);
+    const commands = new PeriodicNoteCommands(ports.creator, ports.workspace);
     const settings = createSettings({
       daily: { enabled: true, pattern: "[Daily]/YYYY-MM-DD" },
       monthly: { enabled: true, pattern: "[First]/YYYY-MM", templatePath: "First.md" },
@@ -240,7 +241,7 @@ describe("PeriodicNoteCommands", () => {
   it("confirms the exact cascade paths and distinguishes existing notes before creating anything", async () => {
     const ports = createPorts(["Months/2026-05.md"]);
     const confirmCreate = vi.fn(async () => false);
-    const commands = new PeriodicNoteCommands(ports.files, ports.templates, ports.workspace);
+    const commands = new PeriodicNoteCommands(ports.creator, ports.workspace);
     await commands.openOrCreate({
       date: { year: 2026, month: 5, day: 18 }, noteType: "daily", cascade: true, confirmCreate,
     }, createSettings({
@@ -260,7 +261,7 @@ describe("PeriodicNoteCommands", () => {
 
   it("cascades each long period from the original year and preserves existing files", async () => {
     const ports = createPorts(["diary/2000s.md"]);
-    const commands = new PeriodicNoteCommands(ports.files, ports.templates, ports.workspace);
+    const commands = new PeriodicNoteCommands(ports.creator, ports.workspace);
     const settings = createSettings({
       yearly: { enabled: true, pattern: "[diary]/YYYY" },
       decadal: { enabled: true, pattern: "[diary]/DEC[s]" },
@@ -286,7 +287,7 @@ describe("PeriodicNoteCommands", () => {
     const ports = createPorts();
     const preparation = deferred<{ initialContent: string }>();
     vi.mocked(ports.templates.prepare).mockReturnValueOnce(preparation.promise);
-    const commands = new PeriodicNoteCommands(ports.files, ports.templates, ports.workspace);
+    const commands = new PeriodicNoteCommands(ports.creator, ports.workspace);
     const settings = createSettings({
       daily: { enabled: true, pattern: "[Daily]/YYYY-MM-DD" },
       monthly: { enabled: true, pattern: "[Monthly]/YYYY-MM" },
@@ -328,9 +329,171 @@ describe("PeriodicNoteCommands", () => {
     expect(ports.workspace.open).toHaveBeenCalledWith("Daily/2026-05-18.md", "tab");
   });
 
+  it.each([true, false])("honors a joining request's cascade confirmation (%s)", async (confirmed) => {
+    const ports = createPorts();
+    const preparation = deferred<{ initialContent: string }>();
+    vi.mocked(ports.templates.prepare).mockReturnValueOnce(preparation.promise);
+    const commands = new PeriodicNoteCommands(ports.creator, ports.workspace);
+    const settings = createSettings({
+      daily: { enabled: true, pattern: "[Daily]/YYYY-MM-DD" },
+      weekly: { enabled: true, pattern: "[Weekly]/GGGG-[W]WW" },
+    });
+    const date = { year: 2026, month: 5, day: 18 };
+    const confirmCreate = vi.fn(async () => confirmed);
+    const first = commands.openOrCreate({ date, noteType: "daily" }, settings);
+    await vi.waitFor(() => expect(ports.templates.prepare).toHaveBeenCalledOnce());
+    const second = commands.openOrCreate(
+      { date, noteType: "daily", target: "tab", cascade: true, confirmCreate },
+      settings,
+    );
+
+    preparation.resolve({ initialContent: "" });
+    await expect(first).resolves.toMatchObject({ status: "opened", created: true });
+    await expect(second).resolves.toMatchObject({ status: confirmed ? "opened" : "cancelled" });
+    expect(confirmCreate).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({
+      path: "Daily/2026-05-18.md",
+      cascade: [{ noteType: "weekly", path: "Weekly/2026-W21.md", exists: false }],
+    }));
+    expect(ports.paths.has("Weekly/2026-W21.md")).toBe(confirmed);
+    expect(ports.paths.has("Daily/2026-05-18.md")).toBe(true);
+    expect(ports.workspace.open).toHaveBeenCalledTimes(confirmed ? 2 : 1);
+  });
+
+  it.each([false, true])("opens a joining tab without confirming existing targets (weekly note removed: %s)", async (removeWeekly) => {
+    const weekly = "Weekly/2026-W21.md";
+    const ports = createPorts([weekly]);
+    const preparation = deferred<{ initialContent: string }>();
+    vi.mocked(ports.templates.prepare).mockReturnValueOnce(preparation.promise);
+    vi.mocked(ports.workspace.open).mockImplementation(async (_path, target) => {
+      if (target === "tab" && removeWeekly) ports.paths.delete(weekly);
+    });
+    const commands = new PeriodicNoteCommands(ports.creator, ports.workspace);
+    const settings = createSettings({
+      daily: { enabled: true, pattern: "[Daily]/YYYY-MM-DD" },
+      weekly: { enabled: true, pattern: "[Weekly]/GGGG-[W]WW" },
+    });
+    const date = { year: 2026, month: 5, day: 18 };
+    const first = commands.openOrCreate({ date, noteType: "daily" }, settings);
+    await vi.waitFor(() => expect(ports.templates.prepare).toHaveBeenCalledOnce());
+    const confirmCreate = vi.fn(async () => false);
+    const second = commands.openOrCreate(
+      { date, noteType: "daily", target: "tab", cascade: true, confirmCreate }, settings,
+    );
+
+    preparation.resolve({ initialContent: "" });
+    await first;
+    await expect(second).resolves.toMatchObject({
+      status: "opened", created: false,
+      cascade: removeWeekly ? [] : [{ path: weekly, status: "existing" }],
+    });
+    expect(confirmCreate).not.toHaveBeenCalled();
+    expect(ports.workspace.open).toHaveBeenCalledWith("Daily/2026-05-18.md", "tab");
+    expect(ports.files.create).toHaveBeenCalledOnce();
+    expect(ports.paths.has(weekly)).toBe(!removeWeekly);
+  });
+
+  it("creates only the missing targets approved in a mixed cascade", async () => {
+    const weekly = "Weekly/2026-W21.md";
+    const monthly = "Monthly/2026-05.md";
+    const ports = createPorts([weekly]);
+    const commands = new PeriodicNoteCommands(ports.creator, ports.workspace);
+    const settings = createSettings({
+      daily: { enabled: true, pattern: "[Daily]/YYYY-MM-DD" },
+      weekly: { enabled: true, pattern: "[Weekly]/GGGG-[W]WW" },
+      monthly: { enabled: true, pattern: "[Monthly]/YYYY-MM" },
+    });
+    const result = await commands.openOrCreate({
+      date: { year: 2026, month: 5, day: 18 }, noteType: "daily", cascade: true,
+      confirmCreate: async ({ cascade }) => {
+        expect(cascade).toEqual([
+          { noteType: "weekly", path: weekly, exists: true },
+          { noteType: "monthly", path: monthly, exists: false },
+        ]);
+        ports.paths.delete(weekly);
+        return true;
+      },
+    }, settings);
+    expect(result).toMatchObject({ status: "opened", cascade: [{ path: monthly, status: "created" }] });
+    expect(ports.paths.has(weekly)).toBe(false);
+    expect(ports.paths.has(monthly)).toBe(true);
+    expect(ports.files.create).toHaveBeenCalledTimes(2);
+  });
+
+  it("waits for an existing weekly note to finish rendering before the monthly template reads it", async () => {
+    const weeklyPath = "Weekly/2026-W21.md";
+    const monthlyPath = "Monthly/2026-05.md";
+    const date = { year: 2026, month: 5, day: 18 };
+    const ports = createPorts();
+    const rendering = deferred<void>();
+    const finalContent = deferred<string>();
+    vi.mocked(ports.templates.prepare).mockImplementation(async (context) => {
+      if (context.path === weeklyPath) return {
+        initialContent: "Draft",
+        renderAfterCreate: () => { rendering.resolve(); return finalContent.promise; },
+      };
+      return { initialContent: ports.contents.get(weeklyPath) ?? "" };
+    });
+    const settings = createSettings({
+      daily: { enabled: true, pattern: "[Daily]/YYYY-MM-DD" },
+      weekly: { enabled: true, pattern: "[Weekly]/GGGG-[W]WW" },
+      monthly: { enabled: true, pattern: "[Monthly]/YYYY-MM" },
+    });
+    const commands = new PeriodicNoteCommands(ports.creator, ports.workspace);
+    const weekly = commands.openOrCreate({ date, noteType: "weekly" }, settings);
+    await rendering.promise;
+    const dailyOpened = deferred<void>();
+    vi.mocked(ports.workspace.open).mockImplementation(async () => { dailyOpened.resolve(); });
+    const daily = commands.openOrCreate({
+      date, noteType: "daily", cascade: true, confirmCreate: async () => true,
+    }, settings);
+    await dailyOpened.promise;
+    // Let the cascade reach the weekly target before finishing its deferred render.
+    await new Promise<void>((resolve) => setTimeout(resolve, 0));
+    finalContent.resolve("Final weekly text");
+    await Promise.all([weekly, daily]);
+    expect(ports.contents.get(monthlyPath)).toBe("Final weekly text");
+  });
+
+  it("reports a weekly template that fails while the daily confirmation is still open", async () => {
+    const ports = createPorts();
+    const rendering = deferred<void>();
+    const finish = deferred<void>();
+    vi.mocked(ports.templates.prepare).mockResolvedValueOnce({
+      initialContent: "Draft",
+      renderAfterCreate: async () => {
+        rendering.resolve();
+        await finish.promise;
+        throw new Error("weekly render failed");
+      },
+    });
+    const settings = createSettings({
+      daily: { enabled: true, pattern: "[Daily]/YYYY-MM-DD" },
+      weekly: { enabled: true, pattern: "[Weekly]/GGGG-[W]WW" },
+      monthly: { enabled: true, pattern: "[Monthly]/YYYY-MM" },
+    });
+    const commands = new PeriodicNoteCommands(ports.creator, ports.workspace);
+    const date = { year: 2026, month: 5, day: 18 };
+    const weekly = commands.openOrCreate({ date, noteType: "weekly" }, settings);
+    await rendering.promise;
+    const daily = await commands.openOrCreate({
+      date, noteType: "daily", cascade: true,
+      confirmCreate: async ({ cascade }) => {
+        expect(cascade[0]).toMatchObject({ noteType: "weekly", exists: true });
+        finish.resolve();
+        await expect(weekly).rejects.toThrow("weekly render failed");
+        return true;
+      },
+    }, settings);
+    expect(daily).toMatchObject({ cascade: [
+      { noteType: "weekly", status: "failed", error: { message: "weekly render failed" } },
+      { noteType: "monthly", status: "created" },
+    ] });
+    expect(ports.contents.get("Weekly/2026-W21.md")).toBe("Draft");
+  });
+
   it("returns not-configured without touching external ports", async () => {
     const ports = createPorts();
-    const commands = new PeriodicNoteCommands(ports.files, ports.templates, ports.workspace);
+    const commands = new PeriodicNoteCommands(ports.creator, ports.workspace);
 
     await expect(
       commands.openOrCreate(
@@ -344,7 +507,7 @@ describe("PeriodicNoteCommands", () => {
 
   it("opens an existing note without creating, templating, or cascading", async () => {
     const ports = createPorts(["Daily/2026-05-18.md"]);
-    const commands = new PeriodicNoteCommands(ports.files, ports.templates, ports.workspace);
+    const commands = new PeriodicNoteCommands(ports.creator, ports.workspace);
     const settings = createSettings({
       daily: { enabled: true, pattern: "[Daily]/YYYY-MM-DD" },
       monthly: { enabled: true, pattern: "[Monthly]/YYYY-MM" },
@@ -373,7 +536,7 @@ describe("PeriodicNoteCommands", () => {
 
   it("cancels before creating when confirmation is declined", async () => {
     const ports = createPorts();
-    const commands = new PeriodicNoteCommands(ports.files, ports.templates, ports.workspace);
+    const commands = new PeriodicNoteCommands(ports.creator, ports.workspace);
     const confirmCreate = vi.fn(async () => false);
     const settings = createSettings({
       daily: { enabled: true, pattern: "[Daily]/YYYY-MM-DD" },
@@ -407,7 +570,7 @@ describe("PeriodicNoteCommands", () => {
     vi.mocked(ports.templates.prepare).mockResolvedValueOnce({
       initialContent: "# rendered quarterly note",
     });
-    const commands = new PeriodicNoteCommands(ports.files, ports.templates, ports.workspace);
+    const commands = new PeriodicNoteCommands(ports.creator, ports.workspace);
     const settings = createSettings({
       quarterly: {
         enabled: true,
@@ -453,7 +616,7 @@ describe("PeriodicNoteCommands", () => {
   it("fails before file creation when template preparation fails", async () => {
     const ports = createPorts();
     vi.mocked(ports.templates.prepare).mockRejectedValueOnce(new Error("template boom"));
-    const commands = new PeriodicNoteCommands(ports.files, ports.templates, ports.workspace);
+    const commands = new PeriodicNoteCommands(ports.creator, ports.workspace);
     const settings = createSettings({
       daily: { enabled: true, pattern: "[Daily]/YYYY-MM-DD" },
     });
@@ -483,7 +646,7 @@ describe("PeriodicNoteCommands", () => {
         throw new Error("templater boom");
       }),
     });
-    const commands = new PeriodicNoteCommands(ports.files, ports.templates, ports.workspace);
+    const commands = new PeriodicNoteCommands(ports.creator, ports.workspace);
     const settings = createSettings({
       daily: { enabled: true, pattern: "[Daily]/YYYY-MM-DD" },
     });
@@ -508,7 +671,7 @@ describe("PeriodicNoteCommands", () => {
         return "# Rendered template";
       }),
     });
-    const commands = new PeriodicNoteCommands(ports.files, ports.templates, ports.workspace);
+    const commands = new PeriodicNoteCommands(ports.creator, ports.workspace);
     const settings = createSettings({
       daily: { enabled: true, pattern: "[Daily]/YYYY-MM-DD" },
     });
@@ -523,7 +686,7 @@ describe("PeriodicNoteCommands", () => {
 
   it("cascade-creates every enabled larger period and skips existing notes", async () => {
     const ports = createPorts(["Monthly/2026-05.md"]);
-    const commands = new PeriodicNoteCommands(ports.files, ports.templates, ports.workspace);
+    const commands = new PeriodicNoteCommands(ports.creator, ports.workspace);
     const confirmCreate = vi.fn(async () => true);
     const settings = createSettings({
       daily: { enabled: true, pattern: "[Daily]/YYYY-MM-DD" },
@@ -571,7 +734,7 @@ describe("PeriodicNoteCommands", () => {
       .mockResolvedValueOnce({ initialContent: "" })
       .mockRejectedValueOnce(new Error("weekly template failed"))
       .mockResolvedValueOnce({ initialContent: "" });
-    const commands = new PeriodicNoteCommands(ports.files, ports.templates, ports.workspace);
+    const commands = new PeriodicNoteCommands(ports.creator, ports.workspace);
     const settings = createSettings({
       daily: { enabled: true, pattern: "[Daily]/YYYY-MM-DD" },
       weekly: { enabled: true, pattern: "[Weekly]/GGGG-[W]WW" },
@@ -600,7 +763,7 @@ describe("PeriodicNoteCommands", () => {
   it("does not roll back a populated note when opening it fails", async () => {
     const ports = createPorts();
     vi.mocked(ports.workspace.open).mockRejectedValueOnce(new Error("workspace unavailable"));
-    const commands = new PeriodicNoteCommands(ports.files, ports.templates, ports.workspace);
+    const commands = new PeriodicNoteCommands(ports.creator, ports.workspace);
     const settings = createSettings({
       daily: { enabled: true, pattern: "[Daily]/YYYY-MM-DD" },
     });

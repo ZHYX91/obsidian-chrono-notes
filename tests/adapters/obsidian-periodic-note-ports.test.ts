@@ -11,9 +11,8 @@ import { createTemplaterDateNow } from "../support/templater-date";
 
 import {
   ObsidianBuiltinTemplatePort,
-  ObsidianIntervalNoteFilePort,
   ObsidianNoteTemplatePort,
-  ObsidianPeriodicNoteFilePort,
+  ObsidianCreatedNoteFilePort,
   ObsidianPeriodicNoteWorkspacePort,
   ObsidianTaskFilePort,
   ObsidianTaskWorkspacePort,
@@ -122,7 +121,7 @@ describe("Obsidian periodic note ports", () => {
   it("creates interval note content after ensuring parent folders", async () => {
     const vault = new FakeVault();
     const workspace = closedWorkspace();
-    const files = new ObsidianIntervalNoteFilePort(
+    const files = new ObsidianCreatedNoteFilePort(
       vault as never,
       workspace as never,
     );
@@ -145,7 +144,7 @@ describe("Obsidian periodic note ports", () => {
 
   it("creates missing parent folders and conditionally finalizes the same Markdown note", async () => {
     const vault = new FakeVault();
-    const files = new ObsidianPeriodicNoteFilePort(
+    const files = new ObsidianCreatedNoteFilePort(
       vault as never,
       closedWorkspace() as never,
     );
@@ -161,7 +160,7 @@ describe("Obsidian periodic note ports", () => {
 
   it("preserves a created note changed before deferred template finalization", async () => {
     const vault = new FakeVault();
-    const files = new ObsidianPeriodicNoteFilePort(
+    const files = new ObsidianCreatedNoteFilePort(
       vault as never,
       closedWorkspace() as never,
     );
@@ -175,7 +174,7 @@ describe("Obsidian periodic note ports", () => {
 
   it("rejects a same-path replacement even when its content is unchanged", async () => {
     const vault = new FakeVault();
-    const files = new ObsidianPeriodicNoteFilePort(
+    const files = new ObsidianCreatedNoteFilePort(
       vault as never,
       closedWorkspace() as never,
     );
@@ -190,7 +189,7 @@ describe("Obsidian periodic note ports", () => {
 
   it("rejects a renamed target before deferred template finalization", async () => {
     const vault = new FakeVault();
-    const files = new ObsidianPeriodicNoteFilePort(
+    const files = new ObsidianCreatedNoteFilePort(
       vault as never,
       closedWorkspace() as never,
     );
@@ -208,7 +207,7 @@ describe("Obsidian periodic note ports", () => {
   it("refuses to finalize a note that opened in a Markdown editor", async () => {
     const vault = new FakeVault();
     const workspace = closedWorkspace();
-    const files = new ObsidianPeriodicNoteFilePort(vault as never, workspace as never);
+    const files = new ObsidianCreatedNoteFilePort(vault as never, workspace as never);
     const created = await files.create("Daily/open.md", "");
     workspace.getLeavesOfType.mockReturnValue([{
       view: {
@@ -226,8 +225,8 @@ describe("Obsidian periodic note ports", () => {
   it("shares an in-flight parent-folder creation across different note ports", async () => {
     const vault = new FakeVault();
     const workspace = closedWorkspace();
-    const periodic = new ObsidianPeriodicNoteFilePort(vault as never, workspace as never);
-    const intervals = new ObsidianIntervalNoteFilePort(vault as never, workspace as never);
+    const periodic = new ObsidianCreatedNoteFilePort(vault as never, workspace as never);
+    const intervals = new ObsidianCreatedNoteFilePort(vault as never, workspace as never);
     let releaseSharedFolder: (() => void) | undefined;
     let signalSharedFolderStarted: (() => void) | undefined;
     const sharedFolderStarted = new Promise<void>((resolve) => {
@@ -263,7 +262,7 @@ describe("Obsidian periodic note ports", () => {
 
   it("retries a folder after the shared creation promise rejects", async () => {
     const vault = new FakeVault();
-    const files = new ObsidianPeriodicNoteFilePort(
+    const files = new ObsidianCreatedNoteFilePort(
       vault as never,
       closedWorkspace() as never,
     );
@@ -280,7 +279,7 @@ describe("Obsidian periodic note ports", () => {
 
   it("accepts a parent folder completed by another actor during creation", async () => {
     const vault = new FakeVault();
-    const files = new ObsidianPeriodicNoteFilePort(
+    const files = new ObsidianCreatedNoteFilePort(
       vault as never,
       closedWorkspace() as never,
     );
@@ -688,9 +687,9 @@ describe("Obsidian periodic note ports", () => {
       openFile: vi.fn(async () => undefined),
     };
     const newLeaf = {
-      view: { file: null },
+      view: { file: null as FakeFile | null },
       getViewState: () => ({ type: "empty" }),
-      openFile: vi.fn(async () => undefined),
+      openFile: vi.fn(async () => { newLeaf.view.file = file; }),
     };
     const workspace = {
       iterateRootLeaves: (callback: (leaf: typeof existingLeaf) => void) => callback(existingLeaf),
@@ -719,8 +718,11 @@ describe("Obsidian periodic note ports", () => {
       let finish!: () => void;
       const pending = new Promise<void>((resolve) => { finish = resolve; });
       const leaf = {
-        view: { file: null },
-        openFile: vi.fn(async () => { if (pauseAt === "openFile") await pending; }),
+        view: { file: null as FakeFile | null },
+        openFile: vi.fn(async () => {
+          if (pauseAt === "openFile") await pending;
+          leaf.view.file = file;
+        }),
       };
       const workspace = {
         getLeaf: vi.fn(() => leaf),
@@ -742,6 +744,49 @@ describe("Obsidian periodic note ports", () => {
       if (pauseAt === "openFile") expect(workspace.revealLeaf).not.toHaveBeenCalled();
     },
   );
+
+  it.each(["note", "task"] as const)("leaves a replacement note alone when a %s destination changes during reveal", async (operation) => {
+    const vault = new FakeVault();
+    const file = { path: "Tasks.md", extension: "md" };
+    const replacement = { path: "Other.md", extension: "md" };
+    vault.files.set(file.path, file);
+    vault.files.set(replacement.path, replacement);
+    const editor = { setCursor: vi.fn(), scrollIntoView: vi.fn() };
+    const leaf = { view: { file, editor }, openFile: vi.fn() };
+    const workspace = {
+      getLeaf: () => leaf,
+      revealLeaf: vi.fn(async () => { leaf.view.file = replacement; }),
+      setActiveLeaf: vi.fn(),
+    };
+    const open = operation === "task"
+      ? new ObsidianTaskWorkspacePort(vault as never, workspace as never).openAtLine(file.path, 14, "tab")
+      : new ObsidianPeriodicNoteWorkspacePort(vault as never, workspace as never).open(file.path, "tab");
+    await expect(open).rejects.toThrow();
+    expect(workspace.setActiveLeaf).not.toHaveBeenCalled();
+    expect(editor.setCursor).not.toHaveBeenCalled();
+    expect(editor.scrollIntoView).not.toHaveBeenCalled();
+  });
+
+  it("does not position the editor of a replacement file at the same path during activation", async () => {
+    const vault = new FakeVault();
+    const file = { path: "Tasks.md", extension: "md" };
+    vault.files.set(file.path, file);
+    const editor = { setCursor: vi.fn(), scrollIntoView: vi.fn() };
+    const leaf = { view: { file, editor } };
+    const workspace = {
+      getLeaf: () => leaf,
+      revealLeaf: vi.fn(async () => undefined),
+      setActiveLeaf: () => {
+        const replacement = { ...file };
+        vault.files.set(file.path, replacement);
+        leaf.view.file = replacement;
+      },
+    };
+    const tasks = new ObsidianTaskWorkspacePort(vault as never, workspace as never);
+    await expect(tasks.openAtLine(file.path, 14, "tab")).rejects.toThrow();
+    expect(editor.setCursor).not.toHaveBeenCalled();
+    expect(editor.scrollIntoView).not.toHaveBeenCalled();
+  });
 
   it("opens a task source and positions the Markdown editor at its exact line", async () => {
     const vault = new FakeVault();

@@ -1,3 +1,4 @@
+import { TemplatedNoteCreator } from "../../src/features/templates/templated-note-creator";
 import { parse } from "yaml";
 import { describe, expect, it, vi } from "vitest";
 
@@ -54,7 +55,7 @@ function createPorts(existing: readonly string[] = []) {
   const workspace: PeriodicNoteWorkspacePort = {
     open: vi.fn(async () => undefined),
   };
-  return { files, templates, workspace, paths, contents, identities };
+  return { creator: new TemplatedNoteCreator(files, templates), files, templates, workspace, paths, contents, identities };
 }
 
 describe("IntervalNoteCommands", () => {
@@ -65,7 +66,7 @@ describe("IntervalNoteCommands", () => {
     const ports = createPorts();
     const template = `---\nchrono-notes: interval\nstart: old\nend: old\nmemo: ${indicator}\n${lines}---\nbody\n`;
     vi.mocked(ports.templates.prepare).mockResolvedValue({ initialContent: template });
-    const result = await new IntervalNoteCommands(ports.files, ports.templates, ports.workspace)
+    const result = await new IntervalNoteCommands(ports.creator, ports.workspace)
       .openOrCreate({
         folder: "Ranges", start: { year: 2026, month: 11, day: 1 }, end: { year: 2026, month: 11, day: 3 },
       }, SETTINGS);
@@ -86,11 +87,7 @@ describe("IntervalNoteCommands", () => {
       ports.contents.set(path, content);
       return Object.freeze({ identity, initialContent: content, path });
     });
-    const commands = new IntervalNoteCommands(
-      ports.files,
-      ports.templates,
-      ports.workspace,
-    );
+    const commands = new IntervalNoteCommands(ports.creator, ports.workspace);
     const base = {
       start: { year: 2026, month: 5, day: 6 },
       end: { year: 2026, month: 5, day: 8 },
@@ -130,11 +127,7 @@ describe("IntervalNoteCommands", () => {
 
   it("returns not-configured and invalid-range without touching external ports", async () => {
     const ports = createPorts();
-    const commands = new IntervalNoteCommands(
-      ports.files,
-      ports.templates,
-      ports.workspace,
-    );
+    const commands = new IntervalNoteCommands(ports.creator, ports.workspace);
 
     await expect(commands.openOrCreate({
       start: { year: 2026, month: 5, day: 6 },
@@ -152,11 +145,7 @@ describe("IntervalNoteCommands", () => {
   it("opens an existing normalized range without confirming or creating", async () => {
     const path = "Ranges/2026-05-06 - 2026-05-09.md";
     const ports = createPorts([path]);
-    const commands = new IntervalNoteCommands(
-      ports.files,
-      ports.templates,
-      ports.workspace,
-    );
+    const commands = new IntervalNoteCommands(ports.creator, ports.workspace);
     const confirmCreate = vi.fn(async () => true);
 
     await expect(commands.openOrCreate({
@@ -173,11 +162,7 @@ describe("IntervalNoteCommands", () => {
 
   it("passes a frozen spec to confirmation and cancels before creation", async () => {
     const ports = createPorts();
-    const commands = new IntervalNoteCommands(
-      ports.files,
-      ports.templates,
-      ports.workspace,
-    );
+    const commands = new IntervalNoteCommands(ports.creator, ports.workspace);
     const confirmCreate = vi.fn(async (_spec: unknown) => false);
 
     const result = await commands.openOrCreate({
@@ -197,11 +182,7 @@ describe("IntervalNoteCommands", () => {
 
   it("creates the deterministic Markdown note and opens it", async () => {
     const ports = createPorts();
-    const commands = new IntervalNoteCommands(
-      ports.files,
-      ports.templates,
-      ports.workspace,
-    );
+    const commands = new IntervalNoteCommands(ports.creator, ports.workspace);
 
     await expect(commands.openOrCreate({
       start: { year: 2026, month: 5, day: 6 },
@@ -236,11 +217,7 @@ describe("IntervalNoteCommands", () => {
         "# Custom range",
       ].join("\n"),
     });
-    const commands = new IntervalNoteCommands(
-      ports.files,
-      ports.templates,
-      ports.workspace,
-    );
+    const commands = new IntervalNoteCommands(ports.creator, ports.workspace);
 
     await commands.openOrCreate({
       start: { year: 2026, month: 7, day: 7 },
@@ -272,11 +249,7 @@ describe("IntervalNoteCommands", () => {
     vi.mocked(ports.templates.prepare).mockRejectedValueOnce(
       new Error("template failed"),
     );
-    const commands = new IntervalNoteCommands(
-      ports.files,
-      ports.templates,
-      ports.workspace,
-    );
+    const commands = new IntervalNoteCommands(ports.creator, ports.workspace);
     const path = "Ranges/2026-07-01 - 2026-07-07.md";
 
     await expect(commands.openOrCreate({
@@ -297,11 +270,7 @@ describe("IntervalNoteCommands", () => {
     vi.mocked(ports.templates.prepare).mockResolvedValueOnce({
       initialContent: "---\ninvalid: [\n---\nBody",
     });
-    const commands = new IntervalNoteCommands(
-      ports.files,
-      ports.templates,
-      ports.workspace,
-    );
+    const commands = new IntervalNoteCommands(ports.creator, ports.workspace);
     const path = "Ranges/2026-07-01 - 2026-07-07.md";
 
     await expect(commands.openOrCreate({
@@ -331,11 +300,7 @@ describe("IntervalNoteCommands", () => {
       initialContent: "---\nstart: 2026-07-01\nend: 2026-07-07\n---\n",
       renderAfterCreate,
     });
-    const commands = new IntervalNoteCommands(
-      ports.files,
-      ports.templates,
-      ports.workspace,
-    );
+    const commands = new IntervalNoteCommands(ports.creator, ports.workspace);
     const path = "Ranges/2026-07-01 - 2026-07-07.md";
 
     await commands.openOrCreate({
@@ -366,11 +331,7 @@ describe("IntervalNoteCommands", () => {
         throw new Error("templater failed");
       }),
     });
-    const commands = new IntervalNoteCommands(
-      ports.files,
-      ports.templates,
-      ports.workspace,
-    );
+    const commands = new IntervalNoteCommands(ports.creator, ports.workspace);
     await expect(commands.openOrCreate({
       start: { year: 2026, month: 7, day: 1 },
       end: { year: 2026, month: 7, day: 7 },
@@ -389,11 +350,7 @@ describe("IntervalNoteCommands", () => {
   it("does not erase a successful file when opening fails", async () => {
     const ports = createPorts();
     vi.mocked(ports.workspace.open).mockRejectedValueOnce(new Error("workspace unavailable"));
-    const commands = new IntervalNoteCommands(
-      ports.files,
-      ports.templates,
-      ports.workspace,
-    );
+    const commands = new IntervalNoteCommands(ports.creator, ports.workspace);
 
     await expect(commands.openOrCreate({
       start: { year: 2026, month: 5, day: 6 },

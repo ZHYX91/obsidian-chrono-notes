@@ -2,6 +2,13 @@
 
 Notable changes to Chrono Notes are documented in this file. The repository's numeric Git tags are the evidence for released versions; an entry without a corresponding local tag remains unreleased even if the manifests already contain that version.
 
+## Unreleased
+
+- When Chrono Notes is disabled, pending week-task actions stop before editing the note or focusing its tab.
+- When a tab switches files while a calendar or task link is opening, stop before focusing the replacement note or moving its cursor.
+
+- When another request is already creating the same periodic note, open its requested tab directly if every larger-period note exists. Confirm any missing notes before creating them and preserve deletions of notes marked “Keep existing.” A cascade waits for an existing note’s active template to finish before running the next template and reports rendering failures.
+
 ## 0.9.1
 
 - Find existing daily notes with paths that combine dates with quarter or ISO week directories.
