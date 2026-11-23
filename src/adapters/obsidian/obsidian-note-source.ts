@@ -1,4 +1,4 @@
-import type { EventRef, TAbstractFile, TFile, Vault } from "obsidian";
+import type { EventRef, TAbstractFile, TFile, TFolder, Vault } from "obsidian";
 
 import type {
   NoteSource,
@@ -33,12 +33,18 @@ export class ObsidianNoteSource implements NoteSource {
   subscribe(listener: NoteSourceListener): () => void {
     const refs: EventRef[] = [
       this.vault.on("create", (file) => {
-        if (isMarkdownFile(file)) listener({ type: "create", path: file.path });
+        if (isFolder(file)) notifyFolderNotes(file, listener);
+        else if (isMarkdownFile(file)) listener({ type: "create", path: file.path });
       }),
       this.vault.on("modify", (file) => {
         if (isMarkdownFile(file)) listener({ type: "modify", path: file.path });
       }),
       this.vault.on("rename", (file, oldPath) => {
+        if (isFolder(file)) {
+          listener({ type: "delete-folder", path: oldPath });
+          notifyFolderNotes(file, listener);
+          return;
+        }
         const wasMarkdown = hasMarkdownExtension(oldPath);
         const isMarkdown = isMarkdownFile(file);
         if (wasMarkdown && isMarkdown) {
@@ -50,13 +56,33 @@ export class ObsidianNoteSource implements NoteSource {
         }
       }),
       this.vault.on("delete", (file) => {
-        if (isMarkdownFile(file)) listener({ type: "delete", path: file.path });
+        if (isFolder(file)) listener({ type: "delete-folder", path: file.path });
+        else if (isMarkdownFile(file)) listener({ type: "delete", path: file.path });
       }),
     ];
 
     return () => {
       for (const ref of refs) this.vault.offref(ref);
     };
+  }
+}
+
+function isFolder(file: TAbstractFile): file is TFolder {
+  return "children" in file && Array.isArray(file.children);
+}
+
+// A parent move may arrive before every child path has been updated by the
+// adapter. Build the destination from the reported parent and child names.
+function notifyFolderNotes(folder: TFolder, listener: NoteSourceListener): void {
+  const pending = [{ folder, path: folder.path }];
+  while (pending.length > 0) {
+    const parent = pending.pop()!;
+    const prefix = parent.path === "/" || parent.path === "" ? "" : parent.path + "/";
+    for (const child of parent.folder.children) {
+      const path = prefix + child.name;
+      if (isFolder(child)) pending.push({ folder: child, path });
+      else if (isMarkdownFile(child)) listener({ type: "create", path });
+    }
   }
 }
 

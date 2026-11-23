@@ -675,6 +675,22 @@ export class NoteIndex {
         this.queueReadIntent(event.path, newRevision, true);
         break;
       }
+      case "delete-folder": {
+        // Revisions cover live and in-flight reads. During startup there can
+        // also be known paths which have not yet been assigned a revision.
+        const removed = new Set<string>();
+        const prefix = event.path + "/";
+        for (const path of this.revisions.keys()) {
+          if (path.startsWith(prefix)) removed.add(path);
+        }
+        if (this.initialKnownPaths !== null) {
+          for (const path of this.initialKnownPaths) {
+            if (path.startsWith(prefix)) removed.add(path);
+          }
+        }
+        for (const path of removed) this.applySourceEvent({ type: "delete", path });
+        break;
+      }
       case "delete": {
         this.initialKnownPaths?.delete(event.path);
         const revision = this.advanceRevision(event.path);
@@ -1532,6 +1548,11 @@ function reconcileStartupPaths(
         paths.delete(event.oldPath);
         paths.add(event.path);
         break;
+      case "delete-folder": {
+        const prefix = event.path + "/";
+        for (const path of paths) if (path.startsWith(prefix)) paths.delete(path);
+        break;
+      }
       case "delete":
         paths.delete(event.path);
         break;

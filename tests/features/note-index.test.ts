@@ -491,7 +491,7 @@ describe("NoteIndex", () => {
 
   it("reconciles buffered startup create, modify, rename, and delete events", async () => {
     const source = new FakeNoteSource();
-    source.paths = ["Daily/deleted.md", "Daily/renamed.md", "Daily/modified.md"];
+    source.paths = ["Daily/deleted.md", "Daily/renamed.md", "Daily/modified.md", "Moved/old.md"];
     const contents = new Map([
       ["Daily/final.md", "renamed"],
       ["Daily/modified.md", "modified"],
@@ -505,6 +505,7 @@ describe("NoteIndex", () => {
     const subscribe = source.subscribe.bind(source);
     vi.spyOn(source, "subscribe").mockImplementation((listener) => {
       const unsubscribe = subscribe(listener);
+      source.emit({ type: "delete-folder", path: "Moved" });
       source.emit({ type: "delete", path: "Daily/deleted.md" });
       source.emit({
         type: "rename",

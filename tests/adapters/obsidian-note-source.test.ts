@@ -110,6 +110,39 @@ describe("ObsidianNoteSource", () => {
     expect(listener).toHaveBeenCalledTimes(6);
   });
 
+  it("reconciles a folder-only move and deletion without reviving an obsolete read", async () => {
+    const vault = new FakeVault();
+    const file = { name: "day.md", path: "Old/nested/day.md", extension: "md" };
+    const sibling = { path: "Older/keep.md", extension: "md" };
+    vault.files.set(file.path, file);
+    vault.files.set(sibling.path, sibling);
+    const index = new NoteIndex(new ObsidianNoteSource(vault as never));
+    await index.start();
+    try {
+      const previous = file.path;
+      const delayed = new Deferred<string>();
+      vault.cachedRead.mockImplementationOnce(() => delayed.promise);
+      vault.emit("modify", file);
+      await vi.waitFor(() => expect(vault.cachedRead).toHaveBeenCalledTimes(3));
+      vault.files.delete(previous);
+      file.path = "New/nested/day.md";
+      vault.files.set(file.path, file);
+      vault.emit("rename", {
+        path: "New", children: [{ name: "nested", children: [file, { name: "photo.jpg", extension: "jpg" }] }],
+      }, "Old");
+      delayed.resolve("content from before the move");
+      await vi.waitFor(() => expect(index.get(file.path).kind).toBe("parsed"));
+      expect(index.get(previous).kind).toBe("missing");
+
+      vault.files.delete(file.path);
+      vault.emit("delete", { path: "New", children: [] });
+      expect(index.get(file.path).kind).toBe("missing");
+      expect(index.get(sibling.path).kind).toBe("parsed");
+    } finally {
+      index.stop();
+    }
+  });
+
   it("rejects an older cachedRead completion after a newer modify read", async () => {
     const vault = new FakeVault();
     const file = { path: "Daily/today.md", extension: "md" };

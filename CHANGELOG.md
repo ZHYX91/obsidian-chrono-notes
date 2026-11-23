@@ -4,6 +4,7 @@ Notable changes to Chrono Notes are documented in this file. The repository's nu
 
 ## Unreleased
 
+- Moving or deleting a folder updates the calendar index even when the vault sends only a folder notification.
 - Open crowded week and month views and filter long range-note lists with less work. Hidden ranges stay available in the overflow list.
 - Ignore superseded calendar navigation and ICS refresh results. Disabling the plugin during startup also stops a late settings migration from saving.
 
