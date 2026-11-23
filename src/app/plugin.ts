@@ -83,6 +83,8 @@ export default class ChronoNotesPlugin extends Plugin {
   private intervalSettingsRevision = 0;
   private runtimeRevision = 0;
   private runtimeActive = false;
+  private calendarRequest = 0;
+  private icsRefreshRequest = 0;
   private lastIcsDisplayZone: string | null = null;
 
   get noteIndex(): NoteIndex | null {
@@ -96,7 +98,7 @@ export default class ChronoNotesPlugin extends Plugin {
   override async onload(): Promise<void> {
     const runtimeRevision = this.beginRuntime();
     try {
-      await this.loadSettings();
+      await this.loadSettings(runtimeRevision);
       if (!this.isRuntimeCurrent(runtimeRevision)) return;
 
       const runtime = createChronoRuntime(this.createChronoRuntimeHost());
@@ -147,8 +149,9 @@ export default class ChronoNotesPlugin extends Plugin {
     this.endRuntime();
   }
 
-  async loadSettings(): Promise<void> {
+  private async loadSettings(runtimeRevision: number): Promise<void> {
     const loaded: unknown = await this.loadData();
+    if (!this.isRuntimeCurrent(runtimeRevision)) return;
     this.settingsReadOnly = isFutureSettingsSchema(loaded);
     const migrationRequired = isSettingsMigrationRequired(loaded);
     const migrated = migrateSettings(
@@ -379,14 +382,26 @@ export default class ChronoNotesPlugin extends Plugin {
   }
 
   private async activateCalendarView(date?: LocalDate): Promise<void> {
-    const existing = this.app.workspace.getLeavesOfType(CHRONO_NOTES_VIEW_TYPE)[0];
-    const leaf = existing ?? this.app.workspace.getRightLeaf(false) ?? this.app.workspace.getLeaf("tab");
-    if (existing === undefined) {
-      await leaf.setViewState({ type: CHRONO_NOTES_VIEW_TYPE, active: true });
-    }
-    await this.app.workspace.revealLeaf(leaf);
-    if (date !== undefined && leaf.view instanceof ChronoNotesView) {
-      leaf.view.jumpToDate(date);
+    const runtime = this.runtime;
+    if (runtime === null) return;
+    const request = ++this.calendarRequest;
+    const current = () => this.runtime === runtime && this.calendarRequest === request;
+    const workspace = this.app.workspace;
+    try {
+      const existing = workspace.getLeavesOfType(CHRONO_NOTES_VIEW_TYPE)[0];
+      const leaf = existing ?? workspace.getRightLeaf(false) ?? workspace.getLeaf("tab");
+      if (existing === undefined) {
+        await leaf.setViewState({ type: CHRONO_NOTES_VIEW_TYPE, active: true });
+      }
+      // Deferred calendar views are resolved by revealLeaf. Check the host's
+      // view type first, then check the concrete view before changing its date.
+      if (!current() || leaf.getViewState().type !== CHRONO_NOTES_VIEW_TYPE) return;
+      await workspace.revealLeaf(leaf);
+      if (current() && date !== undefined && leaf.view instanceof ChronoNotesView) {
+        leaf.view.jumpToDate(date);
+      }
+    } catch (error) {
+      if (current()) new Notice(formatPluginErrorNotice(error, this.getTranslator().t));
     }
   }
 
@@ -673,6 +688,8 @@ export default class ChronoNotesPlugin extends Plugin {
     if (!this.isRuntimeCurrent(runtimeRevision)) return;
     const index = this.icsEventIndex;
     if (index === null) return;
+    const request = ++this.icsRefreshRequest;
+    const current = () => this.isRuntimeCurrent(runtimeRevision) && this.icsRefreshRequest === request;
     this.lastIcsDisplayZone = displayZone;
     try {
       await index.refresh({
@@ -680,10 +697,10 @@ export default class ChronoNotesPlugin extends Plugin {
         sources: settings.ics.sources,
         displayZone,
       });
-      if (!this.isRuntimeCurrent(runtimeRevision) || this.icsEventIndex !== index) return;
+      if (!current()) return;
       if (showNotice) new Notice(formatIcsRefreshNotice(index.getSnapshot(), this.getTranslator().t));
     } catch (error) {
-      if (!this.isRuntimeCurrent(runtimeRevision) || this.icsEventIndex !== index) return;
+      if (!current()) return;
       console.error("Chrono Notes: ICS refresh failed", error);
       if (showNotice) new Notice(formatPluginErrorNotice(error, this.getTranslator().t));
     }
