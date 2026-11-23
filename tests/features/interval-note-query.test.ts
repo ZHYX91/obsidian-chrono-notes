@@ -310,6 +310,25 @@ describe("interval note queries", () => {
     ).rows.every((row) => row.data.totalCount === 0)).toBe(true);
   });
 
+  it("preserves every hidden note in order and reuses a visible lane across dense overlaps", () => {
+    const source = snapshot({
+      "Ranges/first.md": range("2026-05-04", "2026-05-04"),
+      "Ranges/overlap.md": range("2026-05-04", "2026-05-10"),
+      "Ranges/later.md": range("2026-05-05", "2026-05-06"),
+    }).intervals.items;
+    const [first, overlap, later] = source;
+    const dense = Array.from({ length: 2000 }, (_, i) => ({ ...overlap!, path: `long-${i}.md` }));
+    const items = [first!, ...dense, later!];
+    const weekStart = { year: 2026, month: 5, day: 4 };
+    const result = selectIntervalWeekData(items, weekStart, 1);
+    expect(result.items.map((item) => [item.lane, item.path])).toEqual([
+      [0, first!.path], [0, later!.path],
+    ]);
+    expect(result.hiddenItems).toEqual(dense);
+    expect(result.totalCount).toBe(items.length);
+    expect(selectIntervalWeekData(items, weekStart, 0).hiddenItems).toEqual(items);
+  });
+
   it("reuses lanes for non-overlapping notes and keeps path colors stable", () => {
     const items = selectIntervalNotes(snapshot({
       "Ranges/first.md": range("2026-05-04", "2026-05-05"),

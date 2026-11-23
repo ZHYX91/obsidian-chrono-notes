@@ -1,5 +1,6 @@
 import type { MonthGrid } from "../../core/calendar/month-grid";
 import {
+  compareLocalDate,
   shiftPeriod,
   toDateTime,
   type LocalDate,
@@ -99,8 +100,8 @@ export function selectIntervalWeekData(
 ): IntervalWeekData {
   const weekEnd = shiftPeriod(weekStart, "daily", 6, "monday");
   const window = createDayWindow(weekStart, weekEnd);
-  const lanes = allocateIntervalLanes(items, window);
-  return buildWeekData(lanes, window, maxItems);
+  const lanes = allocateIntervalLanes(items, window, maxItems);
+  return buildWeekData(lanes, window);
 }
 
 export function selectMonthIntervalRowsForGrid(
@@ -119,6 +120,7 @@ export function selectMonthIntervalRowsForGrid(
     ? allocateIntervalLanes(
         selectIntervalNotes(snapshot, settings).items,
         createDayWindow(visibleStart, visibleEnd),
+        settings.monthViewLimit,
       )
     : null;
   return Object.freeze({
@@ -136,7 +138,6 @@ export function selectMonthIntervalRowsForGrid(
           : buildWeekData(
               lanes,
               createDayWindow(weekStart, weekEnd),
-              settings.monthViewLimit,
             ),
       });
     })),
@@ -147,96 +148,80 @@ function isPathInFolder(path: string, folder: string): boolean {
   return path === folder || path.startsWith(`${folder}/`);
 }
 
-function buildWeekSegment(
-  item: IntervalLaneItem,
-  window: DayWindow,
-): IntervalWeekSegment {
-  return Object.freeze({
-    ...item.source,
-    lane: item.lane,
-    colorIndex: item.colorIndex,
-    startColumn: Math.max(
-      0,
-      Math.floor((item.startDayMillis - window.startMillis) / DAY_MILLIS),
-    ),
-    endColumn: Math.min(
-      6,
-      Math.floor((item.endDayMillis - window.startMillis) / DAY_MILLIS),
-    ),
-    startsBeforeWeek: item.startDayMillis < window.startMillis,
-    endsAfterWeek: item.endDayMillis > window.endMillis,
-  });
-}
-
 interface IntervalLaneItem {
   readonly source: IntervalNoteItem;
-  readonly startDayMillis: number;
-  readonly endDayMillis: number;
-  readonly lane: number;
-  readonly colorIndex: number;
+  readonly lane: number | null;
 }
 
 interface DayWindow {
+  readonly start: LocalDate;
+  readonly end: LocalDate;
   readonly startMillis: number;
-  readonly endMillis: number;
 }
 
 const DAY_MILLIS = 24 * 60 * 60 * 1_000;
 
+function createDayWindow(start: LocalDate, end: LocalDate): DayWindow {
+  return { start, end, startMillis: toDateTime(start).toMillis() };
+}
+
+function overlapsWindow(item: IntervalNoteItem, window: DayWindow): boolean {
+  return compareLocalDate(item.end.date, window.start) >= 0 &&
+    compareLocalDate(item.start.date, window.end) <= 0;
+}
+
 function allocateIntervalLanes(
   items: readonly IntervalNoteItem[],
   window: DayWindow,
+  maxLanes: number,
 ): readonly IntervalLaneItem[] {
-  const laneEnds: number[] = [];
+  const limit = Math.max(0, Math.trunc(maxLanes));
+  const laneEnds: LocalDate[] = [];
   const result: IntervalLaneItem[] = [];
-
   for (const item of items) {
-    const startDayMillis = toDateTime(item.start.date).toMillis();
-    const endDayMillis = toDateTime(item.end.date).toMillis();
-    if (startDayMillis > window.endMillis) continue;
-    if (endDayMillis < window.startMillis) continue;
-    let lane = laneEnds.findIndex((laneEnd) => laneEnd < startDayMillis);
-    if (lane < 0) lane = laneEnds.length;
-    laneEnds[lane] = endDayMillis;
-    result.push(Object.freeze({
-      source: item,
-      startDayMillis,
-      endDayMillis,
-      lane,
-      colorIndex: getIntervalColorIndex(item.path),
+    if (!overlapsWindow(item, window)) continue;
+    // A hidden lane can never influence the first free visible lane. Preserve
+    // input order, including offset timestamps whose civil dates run backwards.
+    const free = laneEnds.findIndex((end) => compareLocalDate(end, item.start.date) < 0);
+    const lane = free >= 0 ? free : laneEnds.length;
+    if (lane < limit) {
+      laneEnds[lane] = item.end.date;
+      result.push({ source: item, lane });
+    } else {
+      result.push({ source: item, lane: null });
+    }
+  }
+  return result;
+}
+
+function buildWeekData(lanes: readonly IntervalLaneItem[], window: DayWindow): IntervalWeekData {
+  const visible: IntervalWeekSegment[] = [];
+  const hidden: IntervalNoteItem[] = [];
+  let visibleLaneCount = 0;
+  for (const { source, lane } of lanes) {
+    if (!overlapsWindow(source, window)) continue;
+    if (lane === null) {
+      hidden.push(source);
+      continue;
+    }
+    visibleLaneCount = Math.max(visibleLaneCount, lane + 1);
+    const startColumn = (toDateTime(source.start.date).toMillis() - window.startMillis) / DAY_MILLIS;
+    const endColumn = (toDateTime(source.end.date).toMillis() - window.startMillis) / DAY_MILLIS;
+    visible.push(Object.freeze({
+      ...source, lane, colorIndex: getIntervalColorIndex(source.path),
+      startColumn: Math.max(0, startColumn),
+      endColumn: Math.min(6, endColumn),
+      startsBeforeWeek: startColumn < 0,
+      endsAfterWeek: endColumn > 6,
     }));
   }
-  return Object.freeze(result);
-}
-
-function buildWeekData(
-  lanes: readonly IntervalLaneItem[],
-  window: DayWindow,
-  maxLanes: number,
-): IntervalWeekData {
-  const overlapping = lanes.filter(
-    (item) =>
-      item.endDayMillis >= window.startMillis &&
-      item.startDayMillis <= window.endMillis,
-  );
-  if (overlapping.length === 0) return EMPTY_WEEK_DATA;
-
-  const limit = Math.max(0, Math.trunc(maxLanes));
-  const visible = overlapping.filter((item) => item.lane < limit);
-  const hidden = overlapping.filter((item) => item.lane >= limit);
+  if (visible.length === 0 && hidden.length === 0) return EMPTY_WEEK_DATA;
   return Object.freeze({
-    items: Object.freeze(visible.map((item) => buildWeekSegment(item, window))),
-    visibleLaneCount: visible.reduce((count, item) => Math.max(count, item.lane + 1), 0),
+    items: Object.freeze(visible),
+    visibleLaneCount,
     hiddenCount: hidden.length,
-    hiddenItems: Object.freeze(hidden.map((item) => item.source)),
-    totalCount: overlapping.length,
-  });
-}
-
-function createDayWindow(start: LocalDate, end: LocalDate): DayWindow {
-  return Object.freeze({
-    startMillis: toDateTime(start).toMillis(),
-    endMillis: toDateTime(end).toMillis(),
+    hiddenItems: Object.freeze(hidden),
+    totalCount: visible.length + hidden.length,
   });
 }
 
