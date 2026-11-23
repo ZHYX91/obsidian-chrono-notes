@@ -14,7 +14,6 @@ import {
 import {
   compareLocalDate,
   formatLocalDateKey,
-  parseLocalDateKey,
   shiftPeriod,
   toDateTime,
   toLocalDate,
@@ -160,37 +159,14 @@ export function buildIcsDateIndex(events: readonly IcsCalendarEvent[]): IcsDateI
   let truncatedEvents = 0;
 
   for (const event of events) {
-    const endDate = getInclusiveEndDate(event);
-    const keys = getDateKeys(event.start.date, endDate);
-    if (keys.truncated) truncatedEvents += 1;
-    const startKey = formatLocalDateKey(event.start.date);
-    const endKey = formatLocalDateKey(endDate);
-    for (const dateKey of keys.values) {
-      const occurrenceDate = parseLocalDateKey(dateKey);
-      if (occurrenceDate === null) {
-        throw new Error(`Invalid generated ICS date key: ${dateKey}`);
-      }
-      const startsOnDate = dateKey === startKey;
-      const endsOnDate = dateKey === endKey;
-      const occurrence = Object.freeze({
-        id: event.id,
-        title: event.title,
-        source: event.source,
-        sourceLabel: event.sourceLabel,
-        isAllDay: event.isAllDay,
-        startsOnDate,
-        endsOnDate,
-        continuesBefore: !startsOnDate,
-        continuesAfter: !endsOnDate,
-        timeLabel: !event.isAllDay && startsOnDate
-          ? formatTime(event.start.timeMinutes ?? 0)
-          : null,
-        sortTimestamp: startsOnDate
-          ? event.start.timestamp
-          : startOfDisplayDay(occurrenceDate, event.start.zone),
-      });
+    const days = iterateIcsOccurrences(event);
+    let next = days.next();
+    while (!next.done) {
+      const [dateKey, occurrence] = next.value;
       (mutable[dateKey] ??= []).push(occurrence);
+      next = days.next();
     }
+    if (next.value) truncatedEvents += 1;
   }
 
   for (const occurrences of Object.values(mutable)) {
@@ -507,21 +483,33 @@ function getInclusiveEndDate(event: IcsCalendarEvent): LocalDate {
   return Object.freeze(toLocalDate(value as DateTime<true>));
 }
 
-function getDateKeys(
-  start: LocalDate,
-  end: LocalDate,
-): Readonly<{ values: readonly string[]; truncated: boolean }> {
-  const values: string[] = [];
-  let cursor = start;
+/** Yield occupied days lazily. The return value indicates truncation at the per-event limit. */
+export function* iterateIcsOccurrences(
+  event: IcsCalendarEvent,
+): Generator<readonly [string, IcsEventOccurrence], boolean> {
+  const endDate = getInclusiveEndDate(event);
+  let date = event.start.date;
+  if (compareLocalDate(date, endDate) > 0) return false;
   for (let index = 0; index < MAX_EVENT_SPAN_DAYS; index += 1) {
-    if (compareLocalDate(cursor, end) > 0) break;
-    values.push(formatLocalDateKey(cursor));
-    cursor = shiftPeriod(cursor, "daily", 1, "monday");
+    const startsOnDate = index === 0;
+    const endsOnDate = compareLocalDate(date, endDate) === 0;
+    yield [formatLocalDateKey(date), Object.freeze({
+      id: event.id,
+      title: event.title,
+      source: event.source,
+      sourceLabel: event.sourceLabel,
+      isAllDay: event.isAllDay,
+      startsOnDate,
+      endsOnDate,
+      continuesBefore: !startsOnDate,
+      continuesAfter: !endsOnDate,
+      timeLabel: !event.isAllDay && startsOnDate ? formatTime(event.start.timeMinutes ?? 0) : null,
+      sortTimestamp: startsOnDate ? event.start.timestamp : startOfDisplayDay(date, event.start.zone),
+    })];
+    if (endsOnDate) return false;
+    date = shiftPeriod(date, "daily", 1, "monday");
   }
-  return Object.freeze({
-    values: Object.freeze(values),
-    truncated: compareLocalDate(cursor, end) <= 0,
-  });
+  return true;
 }
 
 export function compareOccurrences(left: IcsEventOccurrence, right: IcsEventOccurrence): number {
