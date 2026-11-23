@@ -2,6 +2,11 @@
 
 Notable changes to Chrono Notes are documented in this file. The repository's numeric Git tags are the evidence for released versions; an entry without a corresponding local tag remains unreleased even if the manifests already contain that version.
 
+## Unreleased
+
+- Open crowded week and month views and filter long range-note lists with less work. Hidden ranges stay available in the overflow list.
+- Ignore superseded calendar navigation and ICS refresh results. Disabling the plugin during startup also stops a late settings migration from saving.
+
 ## 0.9.2
 
 - When Chrono Notes is disabled, pending week-task actions stop before editing the note or focusing its tab.
