@@ -33,7 +33,7 @@ export class ObsidianNoteSource implements NoteSource {
   subscribe(listener: NoteSourceListener): () => void {
     const refs: EventRef[] = [
       this.vault.on("create", (file) => {
-        if (isFolder(file)) notifyFolderNotes(file, listener);
+        if (isFolder(file)) listener({ type: "folder", removedFolder: null, paths: folderNotePaths(file) });
         else if (isMarkdownFile(file)) listener({ type: "create", path: file.path });
       }),
       this.vault.on("modify", (file) => {
@@ -41,8 +41,7 @@ export class ObsidianNoteSource implements NoteSource {
       }),
       this.vault.on("rename", (file, oldPath) => {
         if (isFolder(file)) {
-          listener({ type: "delete-folder", path: oldPath });
-          notifyFolderNotes(file, listener);
+          listener({ type: "folder", removedFolder: oldPath, paths: folderNotePaths(file) });
           return;
         }
         const wasMarkdown = hasMarkdownExtension(oldPath);
@@ -56,7 +55,7 @@ export class ObsidianNoteSource implements NoteSource {
         }
       }),
       this.vault.on("delete", (file) => {
-        if (isFolder(file)) listener({ type: "delete-folder", path: file.path });
+        if (isFolder(file)) listener({ type: "folder", removedFolder: file.path, paths: [] });
         else if (isMarkdownFile(file)) listener({ type: "delete", path: file.path });
       }),
     ];
@@ -73,7 +72,8 @@ function isFolder(file: TAbstractFile): file is TFolder {
 
 // A parent move may arrive before every child path has been updated by the
 // adapter. Build the destination from the reported parent and child names.
-function notifyFolderNotes(folder: TFolder, listener: NoteSourceListener): void {
+function folderNotePaths(folder: TFolder): string[] {
+  const paths: string[] = [];
   const pending = [{ folder, path: folder.path }];
   while (pending.length > 0) {
     const parent = pending.pop()!;
@@ -81,9 +81,10 @@ function notifyFolderNotes(folder: TFolder, listener: NoteSourceListener): void 
     for (const child of parent.folder.children) {
       const path = prefix + child.name;
       if (isFolder(child)) pending.push({ folder: child, path });
-      else if (isMarkdownFile(child)) listener({ type: "create", path });
+      else if (isMarkdownFile(child)) paths.push(path);
     }
   }
+  return paths;
 }
 
 function fileMetadata(file: TFile): NoteSourceFile {

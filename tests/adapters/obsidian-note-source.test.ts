@@ -143,6 +143,52 @@ describe("ObsidianNoteSource", () => {
     }
   });
 
+  it("announces every path in a folder together, before subscribers can observe a ready gap", async () => {
+    const vault = new FakeVault();
+    const notes = ["a.md", "b.md"].map((name) => ({ name, path: `Old/${name}`, extension: "md" }));
+    const sibling = { path: "Older/keep.md", extension: "md" };
+    vault.files.set(sibling.path, sibling);
+    const index = new NoteIndex(new ObsidianNoteSource(vault as never));
+    await index.start();
+    try {
+      const observe = vi.fn(() => {
+        const snapshot = index.getSnapshot();
+        return [snapshot.readiness, Object.keys(snapshot.notes).sort()];
+      });
+      const observeDiagnostics = vi.fn(() => index.getDiagnostics().pendingUpdateCount);
+      index.subscribe(observe);
+      index.subscribeDiagnostics(observeDiagnostics);
+
+      for (const file of notes) vault.files.set(file.path, file);
+      vault.emit("create", { path: "Old", children: notes });
+      expect(observe.mock.results.map(({ value }) => value)).toEqual([["indexing", [sibling.path]]]);
+      expect(observeDiagnostics.mock.results.map(({ value }) => value)).toEqual([2]);
+      await vi.waitFor(() => expect(index.getSnapshot().readiness).toBe("ready"));
+
+      observe.mockClear();
+      observeDiagnostics.mockClear();
+      for (const file of notes) {
+        vault.files.delete(file.path);
+        file.path = `New/${file.name}`;
+        vault.files.set(file.path, file);
+      }
+      vault.emit("rename", { path: "New", children: notes }, "Old");
+      expect(observe.mock.results.map(({ value }) => value)).toEqual([["indexing", [sibling.path]]]);
+      expect(observeDiagnostics.mock.results.map(({ value }) => value)).toEqual([4]);
+      await vi.waitFor(() => expect(index.getSnapshot().readiness).toBe("ready"));
+      expect(Object.keys(index.getSnapshot().notes).sort()).toEqual(["New/a.md", "New/b.md", sibling.path]);
+
+      observe.mockClear();
+      observeDiagnostics.mockClear();
+      for (const file of notes) vault.files.delete(file.path);
+      vault.emit("delete", { path: "New", children: [] });
+      expect(observe.mock.results.map(({ value }) => value)).toEqual([["ready", [sibling.path]]]);
+      expect(observeDiagnostics.mock.results.map(({ value }) => value)).toEqual([2]);
+    } finally {
+      index.stop();
+    }
+  });
+
   it("rejects an older cachedRead completion after a newer modify read", async () => {
     const vault = new FakeVault();
     const file = { path: "Daily/today.md", extension: "md" };

@@ -494,6 +494,8 @@ describe("NoteIndex", () => {
     source.paths = ["Daily/deleted.md", "Daily/renamed.md", "Daily/modified.md", "Moved/old.md"];
     const contents = new Map([
       ["Daily/final.md", "renamed"],
+      ["Created/one.md", "new subtree"],
+      ["Final/new.md", "moved subtree"],
       ["Daily/modified.md", "modified"],
       ["Daily/created.md", "created"],
     ]);
@@ -505,7 +507,8 @@ describe("NoteIndex", () => {
     const subscribe = source.subscribe.bind(source);
     vi.spyOn(source, "subscribe").mockImplementation((listener) => {
       const unsubscribe = subscribe(listener);
-      source.emit({ type: "delete-folder", path: "Moved" });
+      source.emit({ type: "folder", removedFolder: "Moved", paths: ["Final/new.md"] });
+      source.emit({ type: "folder", removedFolder: null, paths: ["Created/one.md"] });
       source.emit({ type: "delete", path: "Daily/deleted.md" });
       source.emit({
         type: "rename",
@@ -521,14 +524,18 @@ describe("NoteIndex", () => {
     await index.start();
 
     expect(source.read.mock.calls.map(([path]) => path).sort()).toEqual([
+      "Created/one.md",
       "Daily/created.md",
       "Daily/final.md",
       "Daily/modified.md",
+      "Final/new.md",
     ]);
     expect(Object.keys(index.getSnapshot().notes).sort()).toEqual([
+      "Created/one.md",
       "Daily/created.md",
       "Daily/final.md",
       "Daily/modified.md",
+      "Final/new.md",
     ]);
     expect(index.get("Daily/deleted.md").kind).toBe("missing");
     expect(index.get("Daily/renamed.md").kind).toBe("missing");

@@ -1,6 +1,12 @@
 export type NoteSourceEvent =
   | Readonly<{ type: "create" | "modify" | "delete"; path: string }>
-  | Readonly<{ type: "delete-folder"; path: string }>
+  | Readonly<{
+    type: "folder";
+    /** Previous subtree to remove, or null when a folder was created. */
+    removedFolder: string | null;
+    /** Current Markdown descendants. Empty when a folder was deleted. */
+    paths: readonly string[];
+  }>
   | Readonly<{ type: "rename"; oldPath: string; path: string }>;
 
 export type NoteSourceListener = (event: NoteSourceEvent) => void;
