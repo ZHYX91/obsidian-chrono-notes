@@ -88,6 +88,9 @@ describe("parseNoteInterval", () => {
     [{ start: "2026-123", end: "2026-05-02" }, "invalid-value"],
     [{ start: "2026-W18-5", end: "2026-05-02" }, "invalid-value"],
     [{ start: "20260501", end: "2026-05-02" }, "invalid-value"],
+    [{ start: "2026-05-01T10:00+01:60", end: "2026-05-02" }, "invalid-value"],
+    [{ start: "2026-05-01", end: "2026-05-02T10:00-0299" }, "invalid-value"],
+    [{ start: "2026-05-01T10:00+24", end: "2026-05-02" }, "invalid-value"],
     [{ start: "2026-02-30", end: "2026-03-02" }, "invalid-value"],
     [{ start: "2026-05-03", end: "2026-05-02" }, "reversed-range"],
     [
