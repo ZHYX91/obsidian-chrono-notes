@@ -57,16 +57,19 @@ for (const [width, fontSize, locale] of [
         expect.soft(await row.locator("small").evaluate((label) => label.scrollWidth - label.clientWidth)).toBeLessThanOrEqual(1);
       }
     }
-    const optionsFit = await page.getByRole("combobox").evaluateAll((elements) =>
-      elements.every((element) => {
+    const overflowingOptions = await page.getByRole("combobox").evaluateAll((elements) =>
+      elements.flatMap((element) => {
         const select = element as HTMLSelectElement;
         const style = getComputedStyle(select);
         const canvas = document.createElement("canvas").getContext("2d")!;
         canvas.font = style.font;
         const available = select.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight);
-        return [...select.options].every((option) => canvas.measureText(option.text).width <= available + 1);
+        return [...select.options].flatMap((option) => {
+          const width = canvas.measureText(option.text).width;
+          return width <= available + 1 ? [] : [{ label: option.text, width, available }];
+        });
       }));
-    expect.soft(optionsFit, "both menus fit every translated option").toBe(true);
+    expect.soft(overflowingOptions, "both menus fit every translated option").toEqual([]);
     const results = page.locator(".chrono-notes-interval-list-results");
     await last.focus();
     expect(await results.evaluate((list) => list.scrollTop)).toBeGreaterThan(0);
