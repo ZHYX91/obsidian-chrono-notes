@@ -91,9 +91,19 @@
   font-weight: inherit;
   block-size: auto;
   min-block-size: 34px;
-  margin: 0 0 -1px !important;
+  margin: 0 !important;
   padding: 7px 12px !important;
   white-space: nowrap;
+}
+
+@media (forced-colors: active) {
+  .chrono-notes-settings-tabs {
+    --interactive-accent: Highlight;
+  }
+
+  .chrono-notes-settings-tabs > button.chrono-notes-settings-tab[aria-selected="false"] {
+    border-block-end-color: Canvas !important;
+  }
 }
 
 .chrono-notes-settings-tabs > button.chrono-notes-settings-tab:focus-visible {

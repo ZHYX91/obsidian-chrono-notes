@@ -260,3 +260,49 @@ test.describe("touch settings tabs", () => {
     expect(target?.height).toBeGreaterThanOrEqual(44);
   });
 });
+
+for (const scheme of ["light", "dark"] as const) {
+  for (const forcedColors of ["none", "active"] as const) {
+    test(`paints the selected underline separately from keyboard focus in ${scheme} with forced colors ${forcedColors}`, async ({ page }) => {
+      await page.emulateMedia({ colorScheme: scheme, forcedColors });
+      await page.setContent(fixture.html);
+      await page.addStyleTag({ content: `
+        :root { color-scheme: light dark; --background-primary: light-dark(white, #1c1c1c);
+          --text-normal: light-dark(#222, #ddd); --interactive-accent: light-dark(#9873f7, #8a5cf5); }
+        body { background: var(--background-primary); }
+      ` });
+      await page.addScriptTag({ content: fixture.script });
+      await page.evaluate(() => window.mountChronoSettings("en", 720));
+      const tabs = page.getByRole("tab");
+      await page.keyboard.press("Tab");
+      await tabs.nth(1).focus();
+      await expect(tabs.nth(1)).toBeFocused();
+      await expect(tabs.first()).toHaveAttribute("aria-selected", "true");
+
+      const screenshot = (await page.screenshot({ scale: "css" })).toString("base64");
+      const [selected, focused, idle] = await page.evaluate(async (png) => {
+        const image = new Image();
+        image.src = "data:image/png;base64," + png;
+        await image.decode();
+        const canvas = document.createElement("canvas");
+        canvas.width = image.width;
+        canvas.height = image.height;
+        const ctx = canvas.getContext("2d")!;
+        ctx.drawImage(image, 0, 0);
+        return Array.from(document.querySelectorAll('[role=tab]')).slice(0, 3).map((button) => {
+          const bounds = button.getBoundingClientRect();
+          const x = Math.floor(bounds.left + bounds.width / 2);
+          const pixel = (y: number) => Array.from(ctx.getImageData(x, Math.floor(y), 1, 1).data);
+          return { bottom: [pixel(bounds.bottom - 0.5), pixel(bounds.bottom - 1.5)],
+            top: pixel(bounds.top + 0.5), interior: pixel(bounds.top + 4.5) };
+        });
+      }, screenshot);
+      expect(selected!.bottom[0]).toEqual(selected!.bottom[1]);
+      for (let edge = 0; edge < 2; edge++) {
+        expect(selected!.bottom[edge]).not.toEqual(idle!.bottom[edge]);
+      }
+      expect(focused!.top).not.toEqual(focused!.interior);
+      expect(idle!.top).toEqual(idle!.interior);
+    });
+  }
+}
