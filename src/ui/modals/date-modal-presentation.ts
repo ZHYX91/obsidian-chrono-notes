@@ -18,10 +18,10 @@ export interface DateModalMessages {
 export function getDateModalMessages(t: Translator["t"]): DateModalMessages {
   return Object.freeze({
     chooseDate: t("calendar.chooseDate"),
-    previousYear: t("calendar.previous", { period: t("calendar.period.year") }),
-    previousMonth: t("calendar.previous", { period: t("calendar.period.month") }),
-    nextMonth: t("calendar.next", { period: t("calendar.period.month") }),
-    nextYear: t("calendar.next", { period: t("calendar.period.year") }),
+    previousYear: t("calendar.previous.year"),
+    previousMonth: t("calendar.previous.month"),
+    nextMonth: t("calendar.next.month"),
+    nextYear: t("calendar.next.year"),
     today: t("calendar.today"),
     jumpToDate: t("dateModal.jumpToDate"),
     date: t("dateModal.date"),
