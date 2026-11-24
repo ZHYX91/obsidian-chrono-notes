@@ -245,7 +245,7 @@ function addPositiveIntegerSetting(
 }
 
 /** Accept only complete positive integers; never silently truncate user input. */
-export function parsePositiveIntegerInput(value: string): number | null {
+function parsePositiveIntegerInput(value: string): number | null {
   if (!/^[1-9]\d*$/u.test(value)) return null;
   const parsed = Number(value);
   return Number.isSafeInteger(parsed) ? parsed : null;
