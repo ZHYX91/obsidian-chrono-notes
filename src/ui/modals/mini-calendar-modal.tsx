@@ -29,6 +29,7 @@ import {
   type CalendarMonth,
 } from "../../features/calendar/date-picker";
 import type { Translator } from "../../shared/i18n";
+import { resolvePeriodGridNavigation } from "../calendar/calendar-period-picker";
 import { moveCalendarSelection } from "../calendar/calendar-interaction";
 import {
   CalendarPickerLayer,
@@ -65,6 +66,8 @@ export class MiniCalendarModal extends Modal {
 
   override onOpen(): void {
     this.titleEl.setText(getDateModalMessages(this.options.translator.t).chooseDate);
+    this.modalEl.lang = this.options.translator.locale;
+    this.modalEl.dir = this.options.translator.direction;
     this.modalEl.addClass("chrono-notes-mini-calendar-modal-container");
     this.contentEl.empty();
     const mount = this.contentEl.createDiv();
@@ -118,9 +121,8 @@ function MiniCalendar({
   const [isSelecting, setIsSelecting] = useState(false);
   const [periodPickerOpen, setPeriodPickerOpen] = useState(false);
   const selecting = useRef(false);
-  const focusAfterMove = useRef(false);
+  const focusAfterMove = useRef(true);
   const dayButtons = useRef(new Map<string, HTMLButtonElement>());
-  const monthButtons = useRef(new Map<number, HTMLButtonElement>());
   const periodTrigger = useRef<HTMLButtonElement>(null);
   const periodPickerId = useId();
   const model = useMemo(
@@ -138,26 +140,13 @@ function MiniCalendar({
 
   useEffect(() => {
     const key = formatLocalDateKey(focusedDate);
-    if (
-      !focusAfterMove.current &&
-      !isSameLocalDate(focusedDate, safeInitialDate)
-    ) return;
-    focusAfterMove.current = false;
-    const handle = host.window.setTimeout(
-      () => dayButtons.current.get(key)?.focus(),
-      0,
-    );
+    if (!focusAfterMove.current) return;
+    const handle = host.window.setTimeout(() => {
+      focusAfterMove.current = false;
+      dayButtons.current.get(key)?.focus();
+    }, 0);
     return () => host.window.clearTimeout(handle);
-  }, [focusedDate, host.window, safeInitialDate, model.grid]);
-
-  useEffect(() => {
-    if (!periodPickerOpen) return;
-    const handle = host.window.setTimeout(
-      () => monthButtons.current.get(displayMonth.month)?.focus(),
-      0,
-    );
-    return () => host.window.clearTimeout(handle);
-  }, [displayMonth.month, host.window, periodPickerOpen]);
+  }, [focusedDate, host.window, model.grid]);
 
   const selectDate = useCallback(
     async (date: LocalDate) => {
@@ -278,6 +267,8 @@ function MiniCalendar({
         >
           <div
             id={periodPickerId}
+            lang={translator.locale}
+            dir={translator.direction}
             className="chrono-notes-mini-calendar-period-picker"
             role="group"
             aria-label={t("calendar.chooseMonth")}
@@ -305,34 +296,12 @@ function MiniCalendar({
                 <NextIcon size={16} aria-hidden="true" />
               </button>
             </div>
-            <div className="chrono-notes-mini-calendar-month-grid">
-              {monthLabels.map((label, index) => {
-                const month = index + 1;
-                const selected = month === displayMonth.month;
-                return (
-                  <button
-                    ref={(element) => {
-                      if (element === null) monthButtons.current.delete(month);
-                      else monthButtons.current.set(month, element);
-                    }}
-                    type="button"
-                    className={selected ? "is-selected" : undefined}
-                    aria-label={formatMonthLabel(
-                      { year: displayMonth.year, month },
-                      locale,
-                    )}
-                    aria-pressed={selected}
-                    key={month}
-                    onClick={() => {
-                      setPeriodPickerOpen(false);
-                      showMonth({ year: displayMonth.year, month }, true);
-                    }}
-                  >
-                    {label}
-                  </button>
-                );
-              })}
-            </div>
+            <MiniCalendarMonthGrid displayMonth={displayMonth} labels={monthLabels} translator={translator}
+              onSelect={(month) => {
+                setPeriodPickerOpen(false);
+                showMonth({ year: displayMonth.year, month }, true);
+              }}
+            />
           </div>
         </CalendarPickerLayer>
       ) : null}
@@ -397,6 +366,47 @@ function MiniCalendar({
           </div>
         ))}
       </div>
+    </div>
+  );
+}
+
+function MiniCalendarMonthGrid({ displayMonth, labels, translator, onSelect }: Readonly<{
+  displayMonth: CalendarMonth;
+  labels: readonly string[];
+  translator: Translator;
+  onSelect: (month: number) => void;
+}>) {
+  const grid = useRef<HTMLDivElement>(null);
+  const [focusedMonth, setFocusedMonth] = useState(displayMonth.month);
+  useEffect(() => {
+    grid.current?.querySelector<HTMLButtonElement>('[aria-pressed="true"]')?.focus();
+  }, [displayMonth.month]);
+  return (
+    <div ref={grid} className="chrono-notes-mini-calendar-month-grid">
+      {labels.map((label, index) => {
+        const month = index + 1;
+        const selected = month === displayMonth.month;
+        return (
+          <button key={month} type="button" className={selected ? "is-selected" : undefined}
+            aria-label={formatMonthLabel({ year: displayMonth.year, month }, translator.locale)}
+            aria-pressed={selected} tabIndex={month === focusedMonth ? 0 : -1}
+            onFocus={() => setFocusedMonth(month)}
+            onClick={() => onSelect(month)}
+            onKeyDown={(event) => {
+              if (event.ctrlKey || event.metaKey || event.altKey || grid.current === null) return;
+              const columns = grid.current.ownerDocument.defaultView?.getComputedStyle(grid.current)
+                .gridTemplateColumns.split(" ").length ?? 4;
+              const target = resolvePeriodGridNavigation(event.key, index, labels.length, columns,
+                translator.direction === "rtl");
+              if (target === null) return;
+              event.preventDefault();
+              grid.current.querySelectorAll("button")[target]?.focus();
+            }}
+          >
+            {label}
+          </button>
+        );
+      })}
     </div>
   );
 }

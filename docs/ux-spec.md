@@ -23,6 +23,8 @@ The command palette exposes both the mini calendar and direct date jump. Direct 
 
 The mini calendar uses the same layout grammar: previous month, a nominally `132px` year/month trigger that may shrink at narrow widths, and next month form a compact leading navigation cluster with `6px` internal gaps; Today stays at the trailing edge, with at least `12px` of flexible space between the two groups and no duplicate footer action. The date model still supplies only the four to six complete boundary weeks intersecting the target month, while presentation reserves six fixed-height row tracks to keep the modal dimensions stable without generating, displaying, or exposing wholly unrelated placeholder weeks. Changing months must not move title-row controls.
 
+The mini calendar’s month picker has a single Tab stop. The arrows follow its visible rows and reading direction, Home and End reach January and December, and Escape returns focus to the period button. Paging from the header keeps keyboard focus on that control.
+
 | View | Leading navigation | Trailing action |
 | --- | --- | --- |
 | Month | Previous, year, month, next | Today |

@@ -4,6 +4,11 @@ export class Modal {
   readonly titleEl = document.createElement("div");
   readonly contentEl = document.createElement("div");
 
+  onOpen(): void {}
+  onClose(): void {}
+  open(): void { document.body.append(this.modalEl); this.onOpen(); }
+  close(): void { this.onClose(); this.modalEl.remove(); }
+
   constructor() {
     this.modalEl.append(this.titleEl, this.contentEl);
     this.titleEl.setText = (text: string) => { this.titleEl.textContent = text; };

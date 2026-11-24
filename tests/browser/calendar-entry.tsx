@@ -9,6 +9,7 @@ import { createTranslator } from "../../src/shared/i18n";
 import { CalendarApp } from "../../src/ui/calendar/calendar-app";
 import { WeekView } from "../../src/ui/calendar/week-view";
 import { LongPressGesture } from "../../src/ui/calendar/long-press";
+import { MiniCalendarModal } from "../../src/ui/modals/mini-calendar-modal";
 import { IntervalNoteListModal } from "../../src/ui/modals/interval-note-list-modal";
 import type { NoteSourceListener } from "../../src/core/note/note-source";
 
@@ -35,6 +36,7 @@ declare global {
     mountChronoTaskLayout: (width: number, locale: PluginLocale) => Promise<void>;
     chronoTaskActions: string[];
     mountChronoIntervalList: (locale: PluginLocale) => Promise<void>;
+    mountChronoMiniCalendar: (locale: PluginLocale, mobile: boolean) => void;
     chronoOpenedPath: string;
   }
 }
@@ -94,6 +96,15 @@ function sourceFixture(count: number) {
 }
 
 const frame = () => new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+
+window.mountChronoMiniCalendar = (locale, mobile) => {
+  document.body.classList.toggle("is-mobile", mobile);
+  document.body.hasClass = (name) => document.body.classList.contains(name);
+  new MiniCalendarModal({} as never, {
+    initialDate: { ...date, day: 1 }, today: date, weekStartDay: "monday",
+    translator: createTranslator(locale, "en-US"), onSelect: noAction,
+  }).open();
+};
 
 window.mountChronoIntervalList = async (locale) => {
   const fixture = sourceFixture(0);
