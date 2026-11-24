@@ -6,6 +6,7 @@ import { ObsidianNoteIndexCache } from "../../src/adapters/obsidian/obsidian-not
 import { selectWeekCalendar } from "../../src/features/calendar/week-calendar-query";
 import { createDefaultSettings, type PluginLocale } from "../../src/shared/settings";
 import { createTranslator } from "../../src/shared/i18n";
+import { HostEnvironmentProvider } from "../../src/ui/host-environment";
 import { CalendarApp } from "../../src/ui/calendar/calendar-app";
 import { WeekView } from "../../src/ui/calendar/week-view";
 import { LongPressGesture } from "../../src/ui/calendar/long-press";
@@ -32,7 +33,7 @@ interface BrowserMetrics {
 declare global {
   interface Window {
     runChronoBrowserBenchmark: (count: number) => Promise<BrowserMetrics>;
-    mountChronoCalendar: (locale: PluginLocale, width: number, eventTitles?: readonly string[], eventCount?: number) => Promise<void>;
+    mountChronoCalendar: (locale: PluginLocale, width: number, eventTitles?: readonly string[], eventCount?: number, ownerDocument?: Document) => Promise<void>;
     mountChronoTaskLayout: (width: number, locale: PluginLocale) => Promise<void>;
     chronoTaskActions: string[];
     mountChronoIntervalList: (locale: PluginLocale) => Promise<void>;
@@ -47,11 +48,11 @@ let gesture: LongPressGesture | null = null;
 const date = { year: 2026, month: 10, day: 20 } as const;
 const noAction = async () => undefined;
 
-function rootContainer(width: number): HTMLDivElement {
+function rootContainer(width: number, ownerDocument = document): HTMLDivElement {
   root?.unmount();
   currentIndex?.stop();
   gesture?.dispose();
-  const container = document.getElementById("calendar-fixture") as HTMLDivElement;
+  const container = ownerDocument.getElementById("calendar-fixture") as HTMLDivElement;
   container.replaceChildren();
   container.style.width = `${width}px`;
   root = createRoot(container);
@@ -200,8 +201,8 @@ window.runChronoBrowserBenchmark = async (count) => {
 
 };
 
-window.mountChronoCalendar = async (locale, width, eventTitles, eventCount) => {
-  rootContainer(width).classList.add("chrono-notes-view");
+window.mountChronoCalendar = async (locale, width, eventTitles, eventCount, ownerDocument = document) => {
+  rootContainer(width, ownerDocument).classList.add("chrono-notes-view");
   const fixture = sourceFixture(4);
   fixture.add("Daily/2026-10-20.md", "# Daily note\n- [x] Review notes\n- [ ] Prepare weekly plan 📅 2026-10-20");
   const index = currentIndex = new NoteIndex(fixture.source);
@@ -227,13 +228,13 @@ window.mountChronoCalendar = async (locale, width, eventTitles, eventCount) => {
     "END:VCALENDAR", "",
   ].join("\r\n") });
   await ics.refresh({ enabled: true, sources: ["Calendars/example.ics"], displayZone: "UTC" });
-  flushSync(() => root!.render(<CalendarApp noteIndex={index} icsEventIndex={ics}
+  flushSync(() => root!.render(<HostEnvironmentProvider document={ownerDocument}><CalendarApp noteIndex={index} icsEventIndex={ics}
     getSettings={() => settings} getTranslator={() => createTranslator(locale, "en-US")}
     onOpenPeriodic={noAction} onSetYearHeatmap={noAction} onSetStatisticDimension={noAction}
     onOpenPath={noAction} onCreateRange={() => undefined} onToggleTask={noAction}
     onRescheduleTask={noAction} onOpenTaskSource={noAction} onOpenDateContextMenu={() => undefined}
     navigationRequest={{ revision: 1, date, noteType: "daily", mode: "jump" }}
-  />));
+  /></HostEnvironmentProvider>));
   await frame();
   await frame();
 };

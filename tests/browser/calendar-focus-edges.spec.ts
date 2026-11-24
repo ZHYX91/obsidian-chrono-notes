@@ -152,3 +152,25 @@ test("forced colors distinguish selection from focus after keyboard navigation",
   await expect(selected).toHaveAttribute("aria-pressed", "true");
   expect(await selected.evaluate((button) => getComputedStyle(button, "::after").borderTopStyle)).toBe("solid");
 });
+
+test("leaving the picker in an existing popout keeps focus on the destination", async ({ page }) => {
+  await page.setContent(fixture.html);
+  await page.addScriptTag({ content: fixture.script });
+  const opened = page.waitForEvent("popup");
+  const host = await page.evaluateHandle(() => window.open("about:blank")!);
+  const popout = await opened;
+  await popout.setContent(fixture.html);
+  await page.evaluate((host) => window.mountChronoCalendar("en", 520, undefined, undefined, host.document), host);
+  await popout.getByRole("button", { name: "Week", exact: true }).click();
+  const trigger = popout.getByRole("button", { name: /^Choose a week:/ });
+  const picker = popout.getByRole("dialog");
+  await trigger.click();
+  await expect(picker.locator("[data-selected=true]")).toBeFocused();
+  await popout.keyboard.press("Tab");
+  await expect(picker).toHaveCount(0);
+  await expect(popout.getByRole("button", { name: "Next week", exact: true })).toBeFocused();
+  await trigger.click();
+  await popout.keyboard.press("Escape");
+  await expect(picker).toHaveCount(0);
+  await expect(trigger).toBeFocused();
+});

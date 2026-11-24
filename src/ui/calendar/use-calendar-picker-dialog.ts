@@ -36,23 +36,19 @@ export function useCalendarPickerDialog(
     };
     const handleFocusOut = (event: FocusEvent) => {
       const next = event.relatedTarget;
-      if (next instanceof Node && rootRef.current?.contains(next)) return;
-      if (next instanceof Node && anchorRef.current?.contains(next)) {
-        onClose();
-        return;
-      }
-      if (next instanceof Node && host.document.contains(next)) {
-        restorePreviousFocus = false;
-        onClose();
-      }
+      if (next === null || !("nodeType" in next)) return;
+      const node = next as Node;
+      if (root?.contains(node) || !host.document.contains(node)) return;
+      restorePreviousFocus = false;
+      onClose();
     };
     host.document.addEventListener("pointerdown", handlePointerDown);
     host.document.addEventListener("keydown", handleKeyDown);
-    host.document.addEventListener("focusout", handleFocusOut);
+    root?.addEventListener("focusout", handleFocusOut);
     return () => {
       host.document.removeEventListener("pointerdown", handlePointerDown);
       host.document.removeEventListener("keydown", handleKeyDown);
-      host.document.removeEventListener("focusout", handleFocusOut);
+      root?.removeEventListener("focusout", handleFocusOut);
       if (restorePreviousFocus && previousFocus !== null && host.document.contains(previousFocus)) {
         previousFocus.focus();
       }
