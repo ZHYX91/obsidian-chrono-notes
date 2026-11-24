@@ -143,8 +143,7 @@ describe("calendar period picker", () => {
     const selected = document.querySelectorAll(".chrono-notes-month-picker-grid .is-selected");
     expect(selected).toHaveLength(1);
     expect(selected[0]?.classList.contains("chrono-notes-quarter-picker-button")).toBe(true);
-    const october = document.querySelectorAll(".chrono-notes-month-picker-row")[3]?.querySelectorAll("button")[1];
-    expect(october?.classList.contains("is-selected")).toBe(false);
+    expect(document.querySelector('[aria-label="Select October"]')?.classList.contains("is-selected")).toBe(false);
   });
 
   it("uses accent text only for current and an outline only for selection", () => {
