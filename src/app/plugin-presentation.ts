@@ -129,5 +129,5 @@ function formatPeriodicType(
   noteType: PeriodicNoteType,
   t: Translator["t"],
 ): string {
-  return t(`pluginCommand.period.${noteType}`);
+  return t(`periodicNote.name.${noteType}`);
 }

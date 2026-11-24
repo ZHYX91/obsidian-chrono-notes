@@ -26,6 +26,10 @@ describe("note navbar presentation", () => {
 
     expect(formatHigherNoteLabel("quarterly", en)).toBe("Open quarterly note");
     expect(formatHigherNoteLabel("weekly", zhTw)).toBe("開啟週記");
+    expect(formatHigherNoteLabel("decadal", en)).toBe("Open decadal note");
+    expect(formatHigherNoteLabel("century", en)).toBe("Open century note");
+    expect(formatHigherNoteLabel("quarterly", createTranslator("fr-FR", "en").t))
+      .toBe("Ouvrir la note trimestrielle");
   });
 
   it("translates week labels while preserving the ISO week identity at New Year", () => {

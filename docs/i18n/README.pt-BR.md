@@ -42,6 +42,8 @@ Faça backup de `data.json` e preserve o arquivo. Substitua apenas os arquivos d
 
 O calendário principal, os seletores de mês e as janelas de data sempre usam o calendário gregoriano. Mudar o idioma traduz os meses e os dígitos, sem trocar o calendário. Use as extensões para adicionar informações de outros calendários.
 
+Para ir direto a um dia, selecione **Ir para uma data** na paleta de comandos e digite uma data do calendário gregoriano, como `2026-07-19`.
+
 **Antes de adicionar ICS:** o Chrono Notes lê arquivos locais, mas não busca assinaturas remotas nem expande eventos recorrentes com `RRULE` ou `RDATE`. Os eventos ignorados são contados; assim, um calendário que depende de recorrências pode parecer incompleto. Caminhos fora do Vault funcionam apenas no desktop.
 
 Configure os tipos de notas, os caminhos e os modelos; depois abra o calendário pelo ícone lateral ou pela paleta de comandos. **Um clique seleciona a data, mas não cria uma nota.** Clique duas vezes ou pressione Enter para abrir ou criar a nota. O botão direito abre o menu da data; se houver eventos ICS, esse menu permite consultar a lista completa. Ctrl/Cmd+clique ou o botão do meio abre a nota em uma nova aba. Ative as extensões e fontes ICS conforme necessário.

@@ -5,10 +5,17 @@ const fixture = createCalendarBrowserFixture();
 
 for (const [width, fontSize, locale] of [
   [356, 16, "en"], [320, 24, "de-DE"], [320, 24, "ru-RU"], [840, 16, "en"],
+  [320, 24, "ar"], [320, 24, "fa"], [320, 24, "he"], [320, 24, "hi"], [320, 24, "am"],
+  [320, 24, "es-ES"], [320, 24, "pt-BR"], [320, 24, "fr-FR"], [320, 24, "ja-JP"],
+  [320, 24, "ko-KR"], [320, 24, "zh-CN"], [320, 24, "zh-TW"], [320, 24, "vi-VN"],
 ] as const) {
   test(`range note rows fit their contents at ${width}px, ${fontSize}px ${locale} font`, async ({ page }) => {
     const { html, script } = await fixture;
     await page.setContent(html);
+    await page.evaluate((language) => {
+      document.documentElement.lang = language;
+      document.documentElement.dir = ["ar", "fa", "he"].includes(language) ? "rtl" : "ltr";
+    }, locale);
     // Host controls have a fixed input height and reserve space for the select arrow.
     await page.addStyleTag({ content: `
       body { font-size:${fontSize}px; --font-ui-small:${fontSize - 1}px; }
@@ -20,6 +27,13 @@ for (const [width, fontSize, locale] of [
     await page.evaluate((language) => window.mountChronoIntervalList(language), locale);
     const rows = page.locator(".chrono-notes-interval-list-item");
     await expect(rows).toHaveCount(13);
+    const sort = page.getByRole("combobox").filter({ has: page.locator('option[value="start-desc"]') });
+    const firstPath = rows.first().locator("small");
+    await expect(firstPath).toHaveText("Projects/Explicit range.md");
+    await sort.selectOption("start-desc");
+    await expect(firstPath).toHaveText(/\/Plan-22\.md$/);
+    await sort.selectOption("start-asc");
+    await expect(firstPath).toHaveText("Projects/Explicit range.md");
     const last = rows.last();
     for (const row of [rows.first(), last]) {
       const path = await row.locator("small").innerText();

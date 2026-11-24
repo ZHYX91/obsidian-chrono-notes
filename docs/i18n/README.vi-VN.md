@@ -42,6 +42,8 @@ Sao lưu và giữ lại `data.json`; chỉ thay các tệp của plugin. Chỉ 
 
 Lịch chính, bộ chọn tháng và hộp thoại ngày luôn dùng lịch Gregory. Đổi ngôn ngữ sẽ đổi tên tháng và cách hiển thị chữ số, không đổi hệ lịch. Hãy chọn tiện ích lịch riêng nếu cần hiển thị thêm thông tin từ lịch khác.
 
+Để đến thẳng một ngày, chọn **Chuyển đến ngày** trong bảng lệnh rồi nhập ngày dương lịch, chẳng hạn `2026-07-19`.
+
 **Trước khi thêm ICS:** Chrono Notes chỉ đọc tệp cục bộ, không tải lịch đăng ký từ xa và không mở rộng các sự kiện lặp có `RRULE` hoặc `RDATE`. Số sự kiện bỏ qua được báo lại; vì thế lịch phụ thuộc vào lặp lại có thể hiển thị thiếu. Đường dẫn ngoài Vault chỉ dùng được trên máy tính.
 
 Chọn loại ghi chú, đường dẫn và mẫu trong phần cài đặt Chrono Notes, rồi mở lịch bằng biểu tượng bên hoặc bảng lệnh. **Nhấp một lần chỉ chọn ngày, không tự tạo ghi chú.** Nhấp đúp hoặc nhấn Enter để mở hay tạo ghi chú. Nhấp phải để mở menu của ngày; nếu có sự kiện ICS, bạn có thể xem toàn bộ danh sách sự kiện từ menu này. Ctrl/Cmd+nhấp hoặc nhấp nút giữa sẽ mở ghi chú trong thẻ mới. Bật thêm lịch và nguồn ICS khi cần.

@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 
+import { parseDateInput } from "../../src/features/calendar/date-picker";
+
 import {
   MESSAGE_CATALOGS,
   createTranslator,
@@ -68,6 +70,19 @@ describe("resolvePluginLocale", () => {
 });
 
 describe("createTranslator", () => {
+  it("accepts all date examples shown in the jump dialog in every language", () => {
+    for (const locale of Object.keys(MESSAGE_CATALOGS) as (keyof MessageCatalogs)[]) {
+      const hint = createTranslator(locale, "en").t("dateModal.formats");
+      const examples = hint.match(/[0-9]+(?:[-/.][0-9]+)*/g) ?? [];
+      expect(new Set(examples).size, locale).toBe(4);
+      for (const example of examples) {
+        expect(parseDateInput(example), `${locale}: ${example}`).toEqual({
+          year: 2026, month: 7, day: 19,
+        });
+      }
+    }
+  });
+
   it("labels the automatic language choice as following Obsidian in every locale", () => {
     for (const catalog of Object.values(MESSAGE_CATALOGS)) {
       expect(catalog["settings.general.auto"]).toEqual(
