@@ -74,6 +74,11 @@ describe("calendar week picker", () => {
     expect(resolveWeekPickerTypeahead("", "x", 53)).toBeNull();
   });
 
+  it.each(["٣", "۳", "३", "３"])("accepts %s in either position of a week number", (key) => {
+    expect(resolveWeekPickerTypeahead("", key, 53)).toEqual({ buffer: "3", targetIndex: 2 });
+    expect(resolveWeekPickerTypeahead("3", key, 53)).toEqual({ buffer: "33", targetIndex: 32 });
+  });
+
   it.each([2, 3] as const)("follows the visual grid in RTL with %i columns", (columns) => {
     const navigate = (key: string, currentIndex = 20) => resolveWeekPickerNavigation({
       key, currentIndex, itemCount: 53, columns, direction: "rtl",

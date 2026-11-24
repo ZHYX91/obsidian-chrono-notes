@@ -174,3 +174,20 @@ test("leaving the picker in an existing popout keeps focus on the destination", 
   await expect(picker).toHaveCount(0);
   await expect(trigger).toBeFocused();
 });
+
+test("typing Arabic digits focuses the requested week without selecting it", async ({ page }) => {
+  await mountCalendar(page, "ar", 320);
+  await page.getByRole("button", { name: "الأسبوع", exact: true }).click();
+  const trigger = page.getByRole("button", { name: /^اختر أسبوعًا/ });
+  await expect(trigger).toHaveAttribute("aria-haspopup", "dialog");
+  await trigger.click();
+  const weeks = page.locator(".chrono-notes-week-picker-grid button");
+  const selected = page.locator(".chrono-notes-week-picker-grid [aria-pressed=true]");
+  await expect(selected).toHaveCount(1);
+  const original = await selected.getAttribute("data-week-index");
+  await selected.dispatchEvent("keydown", { key: "٣" });
+  await expect(weeks.nth(2)).toBeFocused();
+  await weeks.nth(2).dispatchEvent("keydown", { key: "٠" });
+  await expect(weeks.nth(29)).toBeFocused();
+  expect(await selected.getAttribute("data-week-index")).toBe(original);
+});
