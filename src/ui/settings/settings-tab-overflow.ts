@@ -10,7 +10,7 @@ export function attachSettingsTabOverflow(
   const earlier = makeButton(labels.earlier, "earlier");
   const later = makeButton(labels.later, "later");
   row.prepend(earlier);
-  let needsInitialReveal = true;
+  let followSelectedTab = true;
 
   function makeButton(label: string, side: string): HTMLButtonElement {
     const button = row.createEl("button");
@@ -36,7 +36,8 @@ export function attachSettingsTabOverflow(
     let target: HTMLButtonElement | undefined;
     for (const tab of tabs) {
       const distance = distanceToEdge(tab, viewport, right);
-      if (distance <= 0.5 || distance >= nearest) continue;
+      // Scroll extents are rounded to CSS pixels; label bounds can be fractional.
+      if (distance <= 1 || distance >= nearest) continue;
       nearest = distance;
       target = tab;
     }
@@ -75,6 +76,17 @@ export function attachSettingsTabOverflow(
     updateButtons();
   }
 
+  function onScroll(): void {
+    updateButtons();
+    const viewport = list.getBoundingClientRect();
+    const selected = activeTab.getBoundingClientRect();
+    if (!viewport.width) return;
+    // Keep following a visible selection on resize. Preserve a different page
+    // when the user has scrolled the selection out of view.
+    const visible = Math.min(selected.right, viewport.right) - Math.max(selected.left, viewport.left);
+    followSelectedTab = visible >= Math.min(selected.width, viewport.width) - 1;
+  }
+
   function onResize(): void {
     // Compare the natural span with the FULL row. Measuring the narrowed
     // scrollport here would keep the controls visible after a window resize.
@@ -82,21 +94,25 @@ export function attachSettingsTabOverflow(
     const last = tabs[tabs.length - 1]!.getBoundingClientRect();
     const span = Math.max(first.right, last.right) - Math.min(first.left, last.left);
     const width = row.getBoundingClientRect().width;
-    row.classList.toggle("has-overflow", width > 0 && span - width > 0.5);
+    row.classList.toggle("has-overflow", width > 0 && span - width > 1);
     updateButtons();
-    if (width > 0 && needsInitialReveal) {
+    if (width <= 0) return;
+    if (!row.classList.contains("has-overflow")) {
+      followSelectedTab = true;
+      return;
+    }
+    if (followSelectedTab) {
       const bounds = list.getBoundingClientRect();
       const active = activeTab.getBoundingClientRect();
-      if (active.left < bounds.left) list.scrollLeft += active.left - bounds.left;
-      else if (active.right > bounds.right) list.scrollLeft += active.right - bounds.right;
-      needsInitialReveal = false;
+      if (active.left < bounds.left && active.right < bounds.right) list.scrollLeft += active.left - bounds.left;
+      else if (active.right > bounds.right && active.left > bounds.left) list.scrollLeft += active.right - bounds.right;
       updateButtons();
     }
   }
 
   earlier.addEventListener("click", () => scroll(false));
   later.addEventListener("click", () => scroll(true));
-  list.addEventListener("scroll", updateButtons, { passive: true });
+  list.addEventListener("scroll", onScroll, { passive: true });
   const observer = ownerWindow?.ResizeObserver ? new ownerWindow.ResizeObserver(onResize) : null;
   observer?.observe(row);
   for (const tab of tabs) observer?.observe(tab);
@@ -104,6 +120,6 @@ export function attachSettingsTabOverflow(
 
   return () => {
     observer?.disconnect();
-    list.removeEventListener("scroll", updateButtons);
+    list.removeEventListener("scroll", onScroll);
   };
 }

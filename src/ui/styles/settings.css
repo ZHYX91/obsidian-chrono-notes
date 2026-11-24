@@ -122,6 +122,7 @@
 
 @media (pointer: coarse) {
   .chrono-notes-settings-tabs > button.chrono-notes-settings-tab {
+    min-inline-size: 44px;
     min-block-size: 44px;
   }
   .chrono-notes-settings-tab-row > button.chrono-notes-settings-tab-scroll {

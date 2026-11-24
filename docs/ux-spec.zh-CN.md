@@ -5,6 +5,8 @@ translation_status: source
 
 # Chrono Notes — 交互规范
 
+跨插件的交互与外观约定见[插件共同界面规范](https://github.com/ZHYX91/obsidian-property-order/blob/main/docs/shared-ui.zh-CN.md)。
+
 ## 1. 总体原则
 
 - 优先适配 Obsidian 侧边栏的窄宽度，也能在主区域扩展。

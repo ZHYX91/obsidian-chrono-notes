@@ -6,6 +6,8 @@ translation_status: synced
 
 # Chrono Notes — UX specification
 
+See the [shared plugin interface](https://github.com/ZHYX91/obsidian-property-order/blob/main/docs/shared-ui.md) for cross-plugin interaction and visual conventions.
+
 ## 1. Principles
 
 - Design for a narrow Obsidian sidebar first while scaling into a main pane.

@@ -169,6 +169,35 @@ test("the tutorial opens by keyboard and keeps readable line lengths on a wide s
 });
 
 for (const locale of ["en", "ar"] as const) {
+  test(`${locale}: shrinking a fitted row reveals its selection once and preserves manual browsing`, async ({ page }) => {
+    await page.setContent(fixture.html);
+    await page.addScriptTag({ content: fixture.script });
+    await page.evaluate((language) => window.mountChronoSettings(language, 900), locale);
+    const root = page.locator("#settings-fixture");
+    const earlier = page.locator('button[data-side="earlier"]');
+    const later = page.locator('button[data-side="later"]');
+    const last = page.getByRole("tab").last();
+    await last.click();
+    await expect(last).toHaveAttribute("aria-selected", "true");
+    await expect(earlier).toBeHidden();
+    await expect(later).toBeHidden();
+    const clippedWidth = () => page.evaluate(() => {
+      const state = window.captureChronoSettings();
+      return state.activeWidth - state.activeVisibleWidth;
+    });
+
+    await root.evaluate((element) => { element.style.width = "270px"; });
+    await expect(earlier).toBeVisible();
+    await expect.poll(clippedWidth).toBeLessThanOrEqual(1);
+    await earlier.click();
+    await expect(later).toBeVisible();
+    await expect.poll(clippedWidth).toBeGreaterThan(1);
+    await root.evaluate((element) => { element.style.width = "269px"; });
+    await page.evaluate(() => new Promise(requestAnimationFrame).then(() => new Promise(requestAnimationFrame)));
+    expect(await clippedWidth()).toBeGreaterThan(1);
+    await expect(last).toHaveAttribute("aria-selected", "true");
+  });
+
   test(`${locale}: reveals clipped settings tabs without switching the panel`, async ({ page }) => {
     await page.setContent(fixture.html);
     await page.addScriptTag({ content: fixture.script });
