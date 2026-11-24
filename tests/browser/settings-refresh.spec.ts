@@ -306,3 +306,23 @@ for (const scheme of ["light", "dark"] as const) {
     });
   }
 }
+
+test("hidden dropdown sizing preserves the intrinsic measurement without widening the settings pane", async ({ page }) => {
+  await page.setContent(fixture.html);
+  await page.addStyleTag({ content: ".dropdown.is-measuring {position:absolute;visibility:hidden;pointer-events:none;width:max-content!important;max-width:none!important}" });
+  await page.addScriptTag({ content: fixture.script });
+  await page.evaluate(() => window.mountChronoSettings("de-DE", 260));
+  await page.locator('[data-tab-id="extensions-and-integrations"]').click();
+  const result = await page.locator('[role="tabpanel"]').evaluate((panel) => {
+    const select = panel.querySelector("select")!;
+    const probe = select.cloneNode(false) as HTMLSelectElement;
+    probe.className = "dropdown is-measuring";
+    probe.setAttribute("aria-hidden", "true");
+    probe.tabIndex = -1;
+    probe.add(new Option("Lokalisiertes Kalenderformat ".repeat(5)));
+    select.after(probe);
+    return { width: panel.clientWidth, scroll: panel.scrollWidth, measured: probe.offsetWidth };
+  });
+  expect(result.measured).toBeGreaterThan(result.width);
+  expect(result.scroll).toBeLessThanOrEqual(result.width + 1);
+});

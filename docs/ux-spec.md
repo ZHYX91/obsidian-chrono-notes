@@ -160,3 +160,5 @@ The Settings panel renders template syntax, date/path formats and range recognit
 Each custom property format shows an example and a live preview or validation error alongside its input. Supported tokens are available in a disclosure. Each template file field shows a short instruction and one example in its empty input. The template engine is identified above the help. Periodic template placeholders and period date ranges have separate disclosures.
 
 Tutorial titles name the instructions or examples they reveal. Tutorials and read-only detail cards keep a neutral border and a light theme-accent tint when open or closed. The directional chevron and the line beside expanded content use the same theme accent. The line is on the left in LTR languages and the right in RTL languages. The summary shows keyboard focus and provides a touch target at least 44 CSS pixels high. Settings controls and status messages retain their own appearance.
+
+Settings fields use the visible row name and help text as their accessible name and description. Each toggle has one keyboard stop and reports its current value, including after a settings refresh.

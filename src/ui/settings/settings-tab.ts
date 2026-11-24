@@ -1,3 +1,4 @@
+import { connectNativeSettingFields } from "./native-setting-fields";
 import { clearSettingsGuideState, rememberSettingsGuides } from "./settings-guide";
 import {
   PluginSettingTab,
@@ -31,6 +32,7 @@ import { VaultPathSuggestionCatalog } from "./vault-path-suggest";
 export class ChronoNotesSettingTab extends PluginSettingTab {
   private static readonly TEXT_SAVE_DELAY_MS = 300;
 
+  private disconnectFields: (() => void) | null = null;
   private activeTab: SettingsTabId = "general";
   private readonly settingsSave: SettingsSaveCoordinator;
   private readonly vaultPathSuggestionCatalog: VaultPathSuggestionCatalog;
@@ -145,6 +147,7 @@ export class ChronoNotesSettingTab extends PluginSettingTab {
     }
     this.imperativeSectionCleanup = cleanup ?? null;
     if (settingsReadOnly) this.disableSettingsControls(panelEl);
+    this.disconnectFields = connectNativeSettingFields(panelEl, settingsReadOnly);
 
     if (focusTab !== null) {
       activeTabEl.focus({ preventScroll: true });
@@ -160,6 +163,8 @@ export class ChronoNotesSettingTab extends PluginSettingTab {
   }
 
   private cleanupImperativeSection(): void {
+    this.disconnectFields?.();
+    this.disconnectFields = null;
     this.tabLayoutCleanup?.();
     this.tabLayoutCleanup = null;
     const saveStatusCleanup = this.imperativeSaveStatusCleanup;
@@ -246,6 +251,7 @@ export class ChronoNotesSettingTab extends PluginSettingTab {
   private applySurfaceSemantics(): void {
     this.containerEl.addClass("chrono-notes-settings");
     this.containerEl.dir = this.translator.direction;
+    this.containerEl.lang = this.translator.locale;
   }
 
   private createSectionContext(surfaceRevision: number): SettingsSectionContext {
