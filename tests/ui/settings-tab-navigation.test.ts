@@ -24,8 +24,8 @@ describe("moveSettingsTab", () => {
     expect(moveSettingsTab("periodic", "End")).toBe("extensions-and-integrations");
   });
 
-  it("preserves the current tab for unrelated keys", () => {
-    expect(moveSettingsTab("ranges", "Enter")).toBe("ranges");
+  it("leaves unrelated keys to the focused control", () => {
+    expect(moveSettingsTab("ranges", "Enter")).toBeNull();
     expect(SETTINGS_TAB_IDS).toEqual([
       "general",
       "appearance",

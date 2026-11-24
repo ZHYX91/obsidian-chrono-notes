@@ -326,3 +326,22 @@ test("hidden dropdown sizing preserves the intrinsic measurement without widenin
   expect(result.measured).toBeGreaterThan(result.width);
   expect(result.scroll).toBeLessThanOrEqual(result.width + 1);
 });
+
+test("a repeated boundary key keeps the active tab and its scroll position", async ({ page }) => {
+  await page.setContent(fixture.html);
+  await page.addScriptTag({ content: fixture.script });
+  await page.evaluate(() => window.mountChronoSettings("en", 260));
+  await page.addStyleTag({ content: "#settings-fixture { height: 260px; overflow-y: auto; }" });
+  const last = page.getByRole("tab").last();
+  await last.click();
+  await page.locator("#settings-fixture").evaluate((container) => {
+    container.scrollTop = 0;
+    container.addEventListener("keydown", (event) => {
+      container.dataset.blocked = String(event.defaultPrevented);
+    });
+  });
+  await last.press("End");
+  await expect(last).toBeFocused();
+  await expect(page.locator("#settings-fixture")).toHaveAttribute("data-blocked", "true");
+  expect(await page.locator("#settings-fixture").evaluate((container) => container.scrollTop)).toBe(0);
+});

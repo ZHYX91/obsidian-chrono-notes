@@ -12,7 +12,7 @@ export function moveSettingsTab(
   current: SettingsTabId,
   key: string,
   direction: "ltr" | "rtl" = "ltr",
-): SettingsTabId {
+): SettingsTabId | null {
   const index = SETTINGS_TAB_IDS.indexOf(current);
   switch (key) {
     case "ArrowRight":
@@ -30,6 +30,6 @@ export function moveSettingsTab(
     case "End":
       return SETTINGS_TAB_IDS.at(-1) ?? current;
     default:
-      return current;
+      return null;
   }
 }
