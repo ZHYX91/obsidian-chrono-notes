@@ -20,6 +20,7 @@ const mocks = vi.hoisted(() => {
   };
 
   const state = {
+    notice: vi.fn<(message: string) => void>(),
     commands: [] as Array<{ readonly id: string; name: string }>,
     prefixCommands: false,
     removedCommands: [] as string[],
@@ -158,7 +159,7 @@ const mocks = vi.hoisted(() => {
   class MockTFolder {}
 
   class MockNotice {
-    constructor(_message: string) {}
+    constructor(message: string) { state.notice(message); }
   }
 
   class MockNoteSource {
@@ -744,6 +745,63 @@ describe("ChronoNotesPlugin lifecycle composition", () => {
     expect(plugin.icsEventIndex).toBeNull();
   });
 
+  it("reveals the calendar once when a newer request finishes first", async () => {
+    const plugin = createPlugin();
+    await plugin.onload();
+    const first = mocks.createDeferred<void>();
+    const second = mocks.createDeferred<void>();
+    const leaf = {
+      getViewState: () => ({ type: "chrono-notes-calendar" }),
+      setViewState: vi.fn().mockReturnValueOnce(first.promise).mockReturnValueOnce(second.promise),
+    };
+    Object.assign(plugin.app.workspace, { getRightLeaf: () => leaf });
+    const command = mocks.state.commands.find(({ id }) => id === "open-calendar") as {
+      id: string; name: string; callback(): void;
+    };
+    command.callback();
+    command.callback();
+    second.resolve();
+    await second.promise;
+    expect(plugin.app.workspace.revealLeaf).toHaveBeenCalledExactlyOnceWith(leaf);
+    first.resolve();
+    await first.promise;
+    expect(plugin.app.workspace.revealLeaf).toHaveBeenCalledTimes(1);
+    plugin.unload();
+  });
+
+  it("does not migrate settings from a delayed load after unload", async () => {
+    const pending = mocks.createDeferred<unknown>();
+    mocks.state.loadData.mockReturnValue(pending.promise);
+    const plugin = createPlugin();
+    const loading = plugin.onload();
+    plugin.unload();
+    pending.resolve({ schemaVersion: 15, firstUseGuideSeen: true });
+    await loading;
+    expect(mocks.state.saveData).not.toHaveBeenCalled();
+    expect(mocks.state.views).toHaveLength(0);
+  });
+
+  it.each(["unload", "repurpose"] as const)(
+    "does not reveal a stale calendar tab after %s while its view is opening", async (reason) => {
+      const plugin = createPlugin();
+      await plugin.onload();
+      const opening = mocks.createDeferred<void>();
+      let type = "chrono-notes-calendar";
+      const setViewState = vi.fn(() => opening.promise);
+      const leaf = { getViewState: () => ({ type }), setViewState };
+      Object.assign(plugin.app.workspace, { getRightLeaf: () => leaf });
+      const command = mocks.state.commands.find(({ id }) => id === "open-calendar") as { id: string; name: string; callback(): void };
+      command.callback();
+      expect(setViewState).toHaveBeenCalledOnce();
+      if (reason === "unload") plugin.unload();
+      else type = "markdown";
+      opening.resolve();
+      await opening.promise;
+      expect(plugin.app.workspace.revealLeaf).not.toHaveBeenCalled();
+      plugin.unload();
+    },
+  );
+
   it("persists a migrated released configuration before composing the runtime", async () => {
     mocks.state.loadData.mockResolvedValue({
       schemaVersion: 15,
@@ -1182,6 +1240,28 @@ describe("ChronoNotesPlugin lifecycle composition", () => {
     expect(mocks.state.removedViews).toEqual(["chrono-notes-calendar"]);
     expect(mocks.state.removedCommands).toHaveLength(mocks.state.commands.length);
     expect(mocks.state.removedSettingTabs).toEqual(mocks.state.settingTabs);
+  });
+
+  it("only reports the ICS refresh that owns the final result", async () => {
+    const settings = createDefaultSettings();
+    settings.ics = { enabled: true, sources: ["test.ics"] };
+    mocks.state.loadData.mockResolvedValue(settings);
+    const first = mocks.createDeferred<string>();
+    const second = mocks.createDeferred<string>();
+    mocks.state.icsRead.mockReturnValueOnce(first.promise).mockReturnValueOnce(second.promise);
+    const plugin = createPlugin();
+    await plugin.onload();
+    const before = mocks.state.notice.mock.calls.length;
+    const manual = plugin.refreshIcs();
+    await vi.waitFor(() => expect(mocks.state.icsRead).toHaveBeenCalledTimes(1));
+    const replacement = plugin.refreshIcs();
+    await manual;
+    expect(mocks.state.notice.mock.calls.slice(before)).toEqual([]);
+    first.resolve("BEGIN:VCALENDAR\r\nEND:VCALENDAR\r\n");
+    second.resolve("BEGIN:VCALENDAR\r\nEND:VCALENDAR\r\n");
+    await replacement;
+    expect(mocks.state.notice.mock.calls.slice(before)).toHaveLength(1);
+    plugin.unload();
   });
 
   it("keeps a late ICS refresh stopped after unload", async () => {

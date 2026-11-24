@@ -180,8 +180,8 @@ describe("WeekView task rescheduling", () => {
 
   it("resets task pages across week navigation and retains a reduced-data clamp", async () => {
     const snapshot = createParsedNoteIndexSnapshot({
-      "A.md": Array.from({ length: 205 }, (_, index) => `- [ ] A-${index} 📅 2026-07-22`).join("\n"),
-      "B.md": Array.from({ length: 205 }, (_, index) => `- [ ] B-${index} 📅 2026-07-29`).join("\n"),
+      "A.md": Array.from({ length: 201 }, (_, index) => `- [ ] A-${index} ⏳ 2026-07-22`).join("\n"),
+      "B.md": Array.from({ length: 101 }, (_, index) => `- [ ] B-${index} ⏳ 2026-07-29`).join("\n"),
     }, 1);
     const queryAt = (day: number) => selectWeekCalendar({ year: 2026, month: 7, day }, snapshot, DISABLED_ICS, {
       locale: "en-US", weekStartDay: "monday", today: { year: 2026, month: 7, day: 20 },

@@ -129,6 +129,14 @@ export function WeekView({
     () => query.days.filter((day) => isInteractiveCalendarYear(day.date.year)),
     [query.days],
   );
+  const dueDateOptions = useMemo(() => interactiveDays.map(({ date }) => {
+    const dateKey = formatLocalDateKey(date);
+    return (
+      <option key={dateKey} value={dateKey}>
+        {formatWeekDayVisualLabels(date, locale).full}
+      </option>
+    );
+  }), [interactiveDays, locale]);
   const visibleTasks = useMemo(() => query.tasks.map(({ task }) => task), [query.tasks]);
   const taskActions = useTaskActionFeedback(visibleTasks);
   const feedbackId = useId();
@@ -545,14 +553,7 @@ export function WeekView({
                         }
                       }}
                     >
-                      {interactiveDays.map((day) => {
-                        const dateKey = formatLocalDateKey(day.date);
-                        return (
-                          <option value={dateKey} key={dateKey}>
-                            {formatWeekDayVisualLabels(day.date, locale).full}
-                          </option>
-                        );
-                      })}
+                      {dueDateOptions}
                     </select>
                   ) : (
                     <time dateTime={occurrence.dateKey}>

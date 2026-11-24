@@ -41,7 +41,7 @@ export const CHRONO_NOTES_PROPERTY = "chrono-notes";
 export const CHRONO_NOTES_INTERVAL_VALUE = "interval";
 const COMPLETE_DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/u;
 const COMPLETE_DATE_TIME_PATTERN =
-  /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2}(?:[.,]\d+)?)?(?:Z|[+-]\d{2}(?::?\d{2})?)?$/u;
+  /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2}(?:[.,]\d+)?)?(?:Z|[+-](?:[01]\d|2[0-3])(?::?[0-5]\d)?)?$/u;
 
 export function parseNoteInterval(
   frontmatter: Readonly<Record<string, unknown>> | null,

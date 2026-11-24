@@ -1,4 +1,4 @@
-import type { EventRef, TAbstractFile, TFile, Vault } from "obsidian";
+import type { EventRef, TAbstractFile, TFile, TFolder, Vault } from "obsidian";
 
 import type {
   NoteSource,
@@ -33,12 +33,17 @@ export class ObsidianNoteSource implements NoteSource {
   subscribe(listener: NoteSourceListener): () => void {
     const refs: EventRef[] = [
       this.vault.on("create", (file) => {
-        if (isMarkdownFile(file)) listener({ type: "create", path: file.path });
+        if (isFolder(file)) listener({ type: "folder", removedFolder: null, paths: folderNotePaths(file) });
+        else if (isMarkdownFile(file)) listener({ type: "create", path: file.path });
       }),
       this.vault.on("modify", (file) => {
         if (isMarkdownFile(file)) listener({ type: "modify", path: file.path });
       }),
       this.vault.on("rename", (file, oldPath) => {
+        if (isFolder(file)) {
+          listener({ type: "folder", removedFolder: oldPath, paths: folderNotePaths(file) });
+          return;
+        }
         const wasMarkdown = hasMarkdownExtension(oldPath);
         const isMarkdown = isMarkdownFile(file);
         if (wasMarkdown && isMarkdown) {
@@ -50,7 +55,8 @@ export class ObsidianNoteSource implements NoteSource {
         }
       }),
       this.vault.on("delete", (file) => {
-        if (isMarkdownFile(file)) listener({ type: "delete", path: file.path });
+        if (isFolder(file)) listener({ type: "folder", removedFolder: file.path, paths: [] });
+        else if (isMarkdownFile(file)) listener({ type: "delete", path: file.path });
       }),
     ];
 
@@ -58,6 +64,27 @@ export class ObsidianNoteSource implements NoteSource {
       for (const ref of refs) this.vault.offref(ref);
     };
   }
+}
+
+function isFolder(file: TAbstractFile): file is TFolder {
+  return "children" in file && Array.isArray(file.children);
+}
+
+// A parent move may arrive before every child path has been updated by the
+// adapter. Build the destination from the reported parent and child names.
+function folderNotePaths(folder: TFolder): string[] {
+  const paths: string[] = [];
+  const pending = [{ folder, path: folder.path }];
+  while (pending.length > 0) {
+    const parent = pending.pop()!;
+    const prefix = parent.path === "/" || parent.path === "" ? "" : parent.path + "/";
+    for (const child of parent.folder.children) {
+      const path = prefix + child.name;
+      if (isFolder(child)) pending.push({ folder: child, path });
+      else if (isMarkdownFile(child)) paths.push(path);
+    }
+  }
+  return paths;
 }
 
 function fileMetadata(file: TFile): NoteSourceFile {

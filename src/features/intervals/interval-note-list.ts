@@ -1,4 +1,4 @@
-import { toDateTime, type LocalDate } from "../../core/periodic/periodic-date";
+import { compareLocalDate, toLocalDate, toDateTime, type LocalDate } from "../../core/periodic/periodic-date";
 import type { IntervalNoteItem } from "./interval-note-query";
 
 export type IntervalListScope = "all" | "month" | "year";
@@ -17,12 +17,9 @@ export function filterIntervalNoteItems(
 ): readonly IntervalNoteItem[] {
   const query = options.query.trim().toLocaleLowerCase();
   const reference = toDateTime(options.referenceDate);
-  const scopeStart = options.scope === "month"
-    ? reference.startOf("month")
-    : options.scope === "year" ? reference.startOf("year") : null;
-  const scopeEnd = options.scope === "month"
-    ? reference.endOf("month")
-    : options.scope === "year" ? reference.endOf("year") : null;
+  const period = options.scope === "all" ? null : options.scope;
+  const scopeStart = period === null ? null : toLocalDate(reference.startOf(period));
+  const scopeEnd = period === null ? null : toLocalDate(reference.endOf(period));
   const direction = options.sort === "start-desc" ? -1 : 1;
   const filtered = items.filter((item) => {
     if (query.length > 0) {
@@ -30,8 +27,8 @@ export function filterIntervalNoteItems(
       if (!haystack.includes(query)) return false;
     }
     return scopeStart === null || scopeEnd === null || (
-      toDateTime(item.end.date) >= scopeStart.startOf("day") &&
-      toDateTime(item.start.date) <= scopeEnd.startOf("day")
+      compareLocalDate(item.end.date, scopeStart) >= 0 &&
+      compareLocalDate(item.start.date, scopeEnd) <= 0
     );
   });
   filtered.sort((left, right) =>
