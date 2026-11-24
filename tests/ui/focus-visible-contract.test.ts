@@ -8,7 +8,7 @@ describe("plugin focus visibility", () => {
     const styles = readPluginStyles();
 
     expect(styles).toMatch(
-      /:is\(\s*\.chrono-notes-calendar,\s*\.chrono-notes-interval-list,\s*\.chrono-notes-navbar\s*\)\s*:is\(button, select\):focus-visible\s*\{[^}]*outline:\s*2px solid var\(--interactive-accent\);[^}]*outline-offset:\s*1px;/s,
+      /:where\(\s*\.chrono-notes-calendar,\s*\.chrono-notes-interval-list,\s*\.chrono-notes-navbar\s*\)\s*:is\(button, select\):focus-visible\s*\{[^}]*outline:\s*2px solid var\(--interactive-accent\);[^}]*outline-offset:\s*1px;/s,
     );
     expect(styles).toMatch(
       /\.chrono-notes-calendar button\.chrono-notes-day:focus-visible\s*\{[^}]*outline:\s*none;/s,

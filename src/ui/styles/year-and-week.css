@@ -143,6 +143,7 @@
   background: var(--background-modifier-hover);
 }
 
+.chrono-notes-weekly-note:focus-visible,
 .chrono-notes-week-day:focus-visible {
   outline: 2px solid var(--interactive-accent);
   outline-offset: 3px;
