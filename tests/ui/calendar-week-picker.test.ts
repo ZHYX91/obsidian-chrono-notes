@@ -103,6 +103,12 @@ describe("calendar week picker", () => {
     }));
 
     expect(markup.match(/data-week-index=/g)).toHaveLength(53);
+    const document = renderWeekPicker({
+      kind: "week", weekYear: 2026, weekNumber: 53,
+      weekStartDay: "monday", today: { year: 2026, month: 7, day: 20 },
+    });
+    expect(document.querySelectorAll('.chrono-notes-week-picker-grid button[tabindex="0"]')).toHaveLength(1);
+    expect(document.querySelector('.chrono-notes-week-picker-grid button[data-week-index="52"]')?.getAttribute("tabindex")).toBe("0");
     expect(markup).toContain("W01");
     expect(markup).toContain("12/29–1/4");
     expect(markup).toContain("W53");

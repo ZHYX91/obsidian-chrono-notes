@@ -39,6 +39,10 @@ describe("Note Navbar layout", () => {
     expect(navigation).toContain('className="chrono-notes-navbar-higher"');
   });
 
+  it("includes the represented period in the date picker's accessible name", () => {
+    expect(navbar).toContain('aria-label={`${messages.chooseDate}: ${formatNoteNavbarLabel(');
+  });
+
   it("retains icon access to higher notes in narrow editors", () => {
     expect(styles).toMatch(
       /@container \(max-width: 480px\)[\s\S]*?\.chrono-notes-navbar-higher span[^}]*\{[^}]*display:\s*none;/s,

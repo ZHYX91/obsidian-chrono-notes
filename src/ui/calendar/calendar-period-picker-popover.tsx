@@ -112,7 +112,7 @@ export function CalendarPeriodPickerPopover(
                   <PeriodTargetButton
                     key={item.month}
                     current={current}
-                    selected={item.month === month}
+                    selected={selectedQuarter === null && item.month === month}
                     ariaLabel={formatPeriodPickerTargetLabel(
                       targetLabel,
                       current,

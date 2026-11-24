@@ -285,7 +285,9 @@
   inset-block-start: 100%;
   inset-inline-end: 0;
   max-block-size: min(50vh, 360px);
-  min-inline-size: min(320px, 80vw);
+  inline-size: min(320px, 80vw, 100%);
+  max-inline-size: 100%;
+  min-inline-size: 0;
   overflow: auto;
   padding: 4px;
   pointer-events: auto;
@@ -391,6 +393,8 @@ body.is-mobile
 }
 
 .chrono-notes-interval-list-results {
+  padding: 4px;
+  scrollbar-gutter: stable;
   display: flex;
   flex-direction: column;
   gap: 3px;
@@ -399,6 +403,7 @@ body.is-mobile
 }
 
 .chrono-notes-interval-list-results > .chrono-notes-interval-list-item {
+  scroll-margin: 4px;
   align-items: center;
   background: transparent;
   border: 1px solid transparent;

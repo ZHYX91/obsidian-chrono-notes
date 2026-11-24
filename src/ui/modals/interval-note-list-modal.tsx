@@ -310,7 +310,7 @@ function IntervalNoteListContent({
   };
 
   return (
-    <div className="chrono-notes-interval-list">
+    <div className="chrono-notes-interval-list" dir={translator.direction}>
       <div className="chrono-notes-interval-list-toolbar">
         <span className="chrono-notes-interval-list-count">
           {formatIntervalListCount(items.length, t)}
