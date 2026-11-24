@@ -656,22 +656,22 @@ body.is-mobile .chrono-notes-index-details > summary {
 }
 
 @container (max-width: 360px) {
-  .chrono-notes-settings-panel .setting-item-info {
+  .chrono-notes-settings-panel :is(h3, .setting-item-info) {
     min-inline-size: 0;
     overflow-wrap: anywhere;
   }
 
-  .chrono-notes-settings-panel .setting-item:has(.setting-item-control > a) {
+  .chrono-notes-settings-panel .setting-item:has(.setting-item-control > :is(a, button)) {
     flex-direction: column;
     align-items: stretch;
   }
 
-  .chrono-notes-settings-panel .setting-item-control:has(> a) {
+  .chrono-notes-settings-panel .setting-item-control:has(> :is(a, button)) {
     flex-wrap: wrap;
     justify-content: start;
   }
 
-  .chrono-notes-settings-panel .setting-item-control:has(> a) > :is(button, a) {
+  .chrono-notes-settings-panel .setting-item-control:has(> :is(a, button)) > :is(button, a) {
     max-inline-size: 100%;
     block-size: auto;
     min-block-size: var(--input-height);
