@@ -51,7 +51,9 @@ async function expectPaintedFrame(page: Page, button: Locator, distance: number)
     ctx.fillRect(0, 0, 1, 1);
     return { colors, expected: pixel(0, 0) };
   }, { image, box, distance, accent });
-  for (const color of result.colors) expect(color).toEqual(result.expected);
+  for (const [index, color] of result.colors.entries()) {
+    expect(color, ["left", "right", "top", "bottom"][index]).toEqual(result.expected);
+  }
 }
 
 for (const [locale, width, columns] of [["en", 520, 5], ["ar", 252, 2]] as const) {

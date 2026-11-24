@@ -108,6 +108,7 @@
 }
 
 .chrono-notes-period-picker {
+  --chrono-notes-frame-space: 3px;
   background: var(--background-primary);
   border: 1px solid var(--background-modifier-border);
   border-radius: 6px;
@@ -161,6 +162,8 @@
   min-height: 30px;
   min-width: 0;
   padding: 3px 4px;
+  /* Every ancestor scroller must reveal the complete focused button. */
+  scroll-margin: var(--chrono-notes-frame-space);
 }
 
 .chrono-notes-period-picker button:focus-visible {
@@ -203,7 +206,6 @@
   container-type: inline-size;
   max-height: min(520px, calc(100dvh - 120px));
   overflow-y: auto;
-  scroll-padding: 3px;
 }
 
 .chrono-notes-long-period-picker .chrono-notes-period-picker-nav {
@@ -271,9 +273,7 @@
   grid-template-columns: repeat(3, minmax(0, 1fr));
   max-height: min(440px, calc(100vh - 132px));
   overflow-y: auto;
-  --chrono-notes-frame-space: 3px;
   padding: var(--chrono-notes-frame-space);
-  scroll-padding: var(--chrono-notes-frame-space);
   scrollbar-gutter: stable;
 }
 
