@@ -1,3 +1,4 @@
+import { isObservanceGroup, type ObservanceGroup } from "../core/calendar/observances";
 import {
   PERIODIC_NOTE_TYPES,
   type PeriodicNoteType,
@@ -81,6 +82,7 @@ export interface ChronoNotesSettings {
   weekStartDay: WeekStartDay;
   calendarExtensions: CalendarExtension[];
   holidayRegions: HolidayRegion[];
+  observances: ObservanceGroup[];
   showNoteIndicators: boolean;
   quarterNameMode: QuarterNameMode;
   fontSizeMode: FontSizeMode;
@@ -112,6 +114,7 @@ const DEFAULT_SETTINGS: Readonly<ChronoNotesSettings> = {
   schemaVersion: SETTINGS_SCHEMA_VERSION,
   locale: "auto",
   weekStartDay: "monday",
+  observances: [],
   calendarExtensions: ["chinese-lunar"],
   holidayRegions: ["cn", "sg"],
   showNoteIndicators: true,
@@ -144,6 +147,7 @@ const DEFAULT_SETTINGS: Readonly<ChronoNotesSettings> = {
 export function createDefaultSettings(): ChronoNotesSettings {
   return {
     ...DEFAULT_SETTINGS,
+    observances: [...DEFAULT_SETTINGS.observances],
     calendarExtensions: [...DEFAULT_SETTINGS.calendarExtensions],
     holidayRegions: [...DEFAULT_SETTINGS.holidayRegions],
     periodicNotes: clonePeriodicNotes(DEFAULT_SETTINGS.periodicNotes),
@@ -293,6 +297,7 @@ export function normalizeSettings(value: unknown): ChronoNotesSettings {
       isCalendarExtension,
       defaults.calendarExtensions,
     ).slice(0, 2),
+    observances: normalizeEnumList(value.observances, isObservanceGroup, defaults.observances),
     holidayRegions: normalizeEnumList(
       value.holidayRegions,
       isHolidayRegion,

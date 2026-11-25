@@ -1,3 +1,4 @@
+import type { ObservanceGroup } from "./observances";
 import type { LocalDate } from "../periodic/periodic-date";
 
 export type CalendarExtensionId =
@@ -15,7 +16,7 @@ export type CalendarExtensionEventKind = "festival" | "solar-term";
 export type CalendarExtensionTransition = "month" | "year-month";
 
 export interface CalendarExtensionEventSource {
-  readonly id: CalendarExtensionId;
+  readonly id: CalendarExtensionId | ObservanceGroup;
   readonly transitionTime: string | null;
 }
 
@@ -46,7 +47,7 @@ export function createCalendarExtensionEvent(
   id: string,
   kind: CalendarExtensionEventKind,
   text: string,
-  sourceId: CalendarExtensionId,
+  sourceId: CalendarExtensionId | ObservanceGroup,
   transitionTime: string | null = null,
 ): CalendarExtensionEvent {
   return Object.freeze({

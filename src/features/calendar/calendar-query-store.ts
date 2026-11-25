@@ -618,6 +618,7 @@ function calendarDayOptionsKey(
     periodicOptionsKey(options, options.daily),
     options.calendarExtensions,
     options.holidayRegions,
+    options.observances ?? [],
     "heatmap" in options ? options.heatmap : null,
   );
 }
