@@ -50,10 +50,12 @@ describe("ICS occurrence budget", () => {
     expect(snapshot.refreshedAt).toBe(42);
   });
 
-  it("lets a newer refresh supersede an older expansion at the fixed yield boundary", async () => {
-    const first = calendar(Array.from({ length: 65 }, (_, index) =>
+  it.each([
+    calendar(Array.from({ length: 65 }, (_, index) =>
       allDay(`old-${index}`, "20260101", "20260102")
-    ).flat());
+    ).flat()),
+    calendar(allDay("one-long-event", "20260101", "20270101")),
+  ])("lets a newer refresh supersede work during daily expansion", async (first) => {
     const second = calendar([
       ...allDay("new", "20260201", "20260202"),
     ]);

@@ -1,5 +1,5 @@
 import {
-  buildIcsDateIndex,
+  iterateIcsOccurrences,
   compareOccurrences,
   parseIcsCalendar,
   type IcsCalendarEvent,
@@ -206,38 +206,35 @@ export class IcsEventIndex {
     boolean,
   ] | null> {
     const mutable: Record<string, IcsEventOccurrence[]> = {};
-    let remaining = this.maxOccurrences;
+    let emitted = 0;
     let truncated = 0;
-
-    outer: for (let index = 0; index < events.length; index += 1) {
-      if (remaining === 0) {
-        remaining = -1;
-        truncated += events.length - index;
-        break;
-      }
-      const expanded = buildIcsDateIndex([events[index]!]);
-      truncated += expanded.truncatedEvents;
-      for (const dateKey in expanded.eventsByDate) {
-        if (remaining === 0) {
-          remaining = -1;
-          if (expanded.truncatedEvents === 0) truncated += 1;
-          truncated += events.length - index - 1;
+    let hitBudget = false;
+    outer: for (const [index, event] of events.entries()) {
+      const days = iterateIcsOccurrences(event);
+      let next = days.next();
+      while (!next.done) {
+        if (emitted === this.maxOccurrences) {
+          hitBudget = true;
+          truncated += events.length - index;
           break outer;
         }
-        (mutable[dateKey] ??= []).push(expanded.eventsByDate[dateKey]![0]!);
-        remaining -= 1;
+        if (emitted > 0 && emitted % 64 === 0) {
+          await new Promise<void>((resolve) => window.setTimeout(resolve));
+          if (signal.aborted) return null;
+        }
+        const [dateKey, occurrence] = next.value;
+        (mutable[dateKey] ??= []).push(occurrence);
+        emitted += 1;
+        next = days.next();
       }
-      if ((index & 63) === 63 && index + 1 < events.length) {
-        await new Promise<void>((resolve) => window.setTimeout(resolve));
-        if (signal.aborted) return null;
-      }
+      if (next.value) truncated += 1;
     }
 
     for (const occurrences of Object.values(mutable)) {
       occurrences.sort(compareOccurrences);
       Object.freeze(occurrences);
     }
-    return [Object.freeze(mutable), truncated, remaining < 0];
+    return [Object.freeze(mutable), truncated, hitBudget];
   }
 
   private async startRead(
