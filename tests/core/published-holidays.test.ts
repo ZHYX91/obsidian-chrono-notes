@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
 import { parseLocalDateKey } from "../../src/core/periodic/periodic-date";
+import { AMERICAS } from "../../src/core/calendar/holiday-data/americas";
+import { EAST_ASIA } from "../../src/core/calendar/holiday-data/east-asia";
+import { EUROPE } from "../../src/core/calendar/holiday-data/europe";
+import { SOUTH_AND_SOUTHEAST_ASIA } from "../../src/core/calendar/holiday-data/south-and-southeast-asia";
+import type { HolidaySchedule } from "../../src/core/calendar/holiday-data/schedule";
 import {
   getHolidayPublicationSource,
   getPublishedHolidayDay,
@@ -22,6 +27,22 @@ const counts: Record<PublishedHolidayRegion, readonly [number, number]> = {
 };
 
 describe("published holiday schedules", () => {
+  it.each([
+    ["mo", "pt"], ["jp", "ja"], ["kr", "ko"], ["br", "pt"], ["mx", "es"], ["ca-qc", "fr"],
+    ["de", "de"], ["fr", "fr"], ["es", "es"], ["ru", "ru"], ["at", "de"], ["pt", "pt"],
+    ["in", "hi"], ["vn", "vi"],
+  ] as const)("returns every local name supplied by %s in %s", (region, language) => {
+    const schedules = { ...EAST_ASIA, ...AMERICAS, ...EUROPE, ...SOUTH_AND_SOUTHEAST_ASIA };
+    const schedule: HolidaySchedule = schedules[region];
+    for (const entry of schedule.entries) {
+      const name = entry.names?.[language];
+      expect(name, entry.en).toMatch(/\S/u);
+      const actual = day(region, entry.dates[0]!, language);
+      if (entry.kind === "work") expect(actual.workday?.name).toBe(name);
+      else expect(actual.holidays.map(holiday => holiday.name)).toContain(name);
+    }
+  });
+
   it.each(PUBLISHED_HOLIDAY_REGIONS)("checks both complete civil years for %s", (region) => {
     const annualCounts: number[] = [];
     for (const year of [2026, 2027]) {
@@ -33,9 +54,22 @@ describe("published holiday schedules", () => {
       for (let month = 1; month <= 12; month++) {
         const length = new Date(Date.UTC(year, month, 0)).getUTCDate();
         for (let date = 1; date <= length; date++) {
-          const actual = getPublishedHolidayDay(region, { year, month, day: date }, "en");
+          const civilDate = { year, month, day: date };
+          const actual = getPublishedHolidayDay(region, civilDate, "en");
           count += actual.holidays.length + Number(actual.workday?.isWorkday === true);
           expect(new Set(actual.holidays.map((holiday) => holiday.name)).size).toBe(actual.holidays.length);
+          if (actual.holidays.length > 0 || actual.workday !== null) {
+            expect(getPublishedHolidayDay(region, civilDate, "sv-SE")).toEqual(actual);
+            for (const locale of ["zh-Hans", "zh-Hant"]) {
+              const translated = getPublishedHolidayDay(region, civilDate, locale);
+              expect(translated.holidays).toEqual(actual.holidays.map(holiday => ({
+                ...holiday, name: expect.stringMatching(/\p{Script=Han}/u),
+              })));
+              expect(translated.workday).toEqual(actual.workday && {
+                ...actual.workday, name: expect.stringMatching(/\p{Script=Han}/u),
+              });
+            }
+          }
         }
       }
       annualCounts.push(count);
@@ -105,6 +139,8 @@ describe("published holiday schedules", () => {
     expect(day("tw", "2027-12-31", "zh-Hant").workday).toEqual({ region: "tw", name: "補假", isWorkday: false });
     expect(day("jp", "2026-09-22", "ja-JP").holidays[0]?.name).toBe("国民の休日");
     expect(day("jp", "2026-05-06", "ja-JP").holidays[0]?.name).toBe("振替休日");
+    expect(day("jp", "2026-05-06", "ja_JP")).toEqual(day("jp", "2026-05-06", "ja"));
+    expect(day("mo", "2027-01-01", "pt-BR").holidays[0]?.name).toBe("Fraternidade Universal");
     expect(day("jp", "2026-05-06", "ar")).toEqual(day("jp", "2026-05-06", "en"));
     const result = day("jp", "2026-05-06");
     for (const value of [result, result.holidays, result.holidays[0], result.workday]) {

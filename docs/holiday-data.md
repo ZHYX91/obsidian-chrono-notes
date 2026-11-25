@@ -8,6 +8,8 @@ translation_status: synced
 
 Select the region whose holiday schedule you want to follow. Chrono Notes stores these dates in the plugin, so they work offline. Each selection follows the authority and scope listed below. Traditional festivals belong to the separate calendar extensions.
 
+Names follow the effective Chrono Notes interface language. Chinese interfaces display the matching script. A matching local language displays the original holiday name, including Portuguese for Macao and French for Québec. Other languages display the English name.
+
 ## Coverage by region
 
 | Calendar | Covered years | What appears | Official source |

@@ -1,10 +1,28 @@
 import { describe, expect, it } from "vitest";
 import { CalendarDecorationCache, selectCalendarDecorations } from "../../src/features/calendar/calendar-decoration-cache";
 import { getObservance } from "../../src/core/calendar/observances";
+import { selectObservanceEvents } from "../../src/features/calendar/calendar-observances";
 import { formatCalendarExtensionEventLabel } from "../../src/ui/calendar/calendar-day-presentation";
 import { createTranslator } from "../../src/shared/i18n";
 
 describe("cultural and religious observances", () => {
+  it.each([
+    ["western", { year: 2026, month: 4, day: 5 }, "easter", "fr"],
+    ["orthodox", { year: 2026, month: 4, day: 12 }, "easter", "ru"],
+    ["nowruz", { year: 2026, month: 3, day: 21 }, "nowruz", "fa"],
+    ["hebrew-feasts", { year: 2025, month: 9, day: 23 }, "roshHashanah", "he"],
+    ["ethiopian-new-year", { year: 2025, month: 9, day: 11 }, "enkutatash", "am"],
+  ] as const)("chooses the Chinese, native or English event name for %s", (group, date, event, native) => {
+    for (const [ui, content] of [
+      ["zh-Hans", "zh-CN"], ["zh-Hant", "zh-TW"], [native, native], ["ja-JP", "en"],
+    ] as const) {
+      const { t } = createTranslator("auto", content);
+      expect(selectObservanceEvents(date, ui, [group])).toMatchObject([{
+        id: `observance:${event}`, text: t(`observances.event.${event}`), sources: [{ id: group }],
+      }]);
+    }
+  });
+
   it("keeps optional observances out of date slots, holiday markers and unselected queries", () => {
     const cache = new CalendarDecorationCache();
     const date = { year: 2025, month: 4, day: 20 };
@@ -20,6 +38,20 @@ describe("cultural and religious observances", () => {
     expect(formatCalendarExtensionEventLabel(event, createTranslator("en", "en").t)).toContain("Orthodox");
     expect(cache.get(date, "en", [], []).calendarEvents).toEqual([]);
   });
+
+  it.each([["ru-RU", "Пасха"], ["fr-FR", "Pâques"]])(
+    "keeps the matching local name for shared Easter in either source order for %s", (locale, name) => {
+      const date = { year: 2025, month: 4, day: 20 };
+      const cache = new CalendarDecorationCache();
+      for (const groups of [["western", "orthodox"], ["orthodox", "western"]] as const) {
+        const days = cache.get(date, locale, [], [], groups);
+        expect(days.calendarEvents).toMatchObject([{
+          id: "observance:easter", text: name, sources: groups.map(id => ({ id })),
+        }]);
+        expect(selectCalendarDecorations(date, locale, [], [], groups).calendarEvents).toEqual(days.calendarEvents);
+      }
+    },
+  );
 
   it("keeps the Julian Paschal table distinct and shifts fixed feasts after 2100", () => {
     expect(getObservance({year: 2026, month: 4, day: 5}, "western")).toBe("easter");

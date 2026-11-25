@@ -2,7 +2,7 @@
 export interface HolidayEntry {
   readonly dates: readonly string[];
   readonly en: string;
-  readonly names?: Readonly<Record<string, string>>;
+  readonly names: Readonly<Record<"zh-CN" | "zh-TW", string> & Partial<Record<string, string>>>;
   readonly kind?: "rest" | "work" | "conditional";
 }
 

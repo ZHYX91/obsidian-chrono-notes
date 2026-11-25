@@ -4,8 +4,8 @@ import { EAST_ASIA } from "./holiday-data/east-asia";
 import { EUROPE } from "./holiday-data/europe";
 import { SOUTH_AND_SOUTHEAST_ASIA } from "./holiday-data/south-and-southeast-asia";
 import type { HolidayEntry, HolidaySchedule, PublishedHolidaySource } from "./holiday-data/schedule";
+import { calendarLanguageKey } from "./content-locale";
 import {
-  resolveRegionalHolidayLocale,
   type HolidayDataCoverage,
   type RegionalHoliday,
   type RegionalWorkday,
@@ -46,9 +46,8 @@ function dateIndex(region: PublishedHolidayRegion): ScheduleIndex {
 }
 
 function localizedName(entry: HolidayEntry, locale: string): string {
-  const chinese = resolveRegionalHolidayLocale(locale);
-  const key = chinese === "en" ? locale.toLowerCase().split("-")[0] : chinese;
-  return (key && entry.names?.[key]) || entry.en;
+  const key = calendarLanguageKey(locale);
+  return Object.hasOwn(entry.names, key) ? entry.names[key] ?? entry.en : entry.en;
 }
 
 export function getPublishedHolidayDay(
