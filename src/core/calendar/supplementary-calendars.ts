@@ -1,4 +1,5 @@
 import { compareLocalDate, toUtcDate, type LocalDate } from "../periodic/periodic-date";
+import { calendarLanguageKey } from "./content-locale";
 import type { CalendarExtensionResult } from "./calendar-extension";
 
 export type SupplementaryCalendarId = "japanese-era" | "french-republican" | "chol-qij";
@@ -16,6 +17,11 @@ const REPUBLICAN_MONTHS = [
   "vendémiaire", "brumaire", "frimaire", "nivôse", "pluviôse", "ventôse",
   "germinal", "floréal", "prairial", "messidor", "thermidor", "fructidor",
 ] as const;
+
+const REPUBLICAN_MONTHS_ZH = {
+  "zh-CN": ["葡月", "雾月", "霜月", "雪月", "雨月", "风月", "芽月", "花月", "牧月", "获月", "热月", "果月"],
+  "zh-TW": ["葡月", "霧月", "霜月", "雪月", "雨月", "風月", "芽月", "花月", "牧月", "獲月", "熱月", "果月"],
+} as const;
 
 // Contemporary K’iche’ spellings from Guatemala's Ministry of Culture,
 // Armonización de los calendarios mayas, cuadro 1. Keep the original day names.
@@ -74,7 +80,7 @@ function japaneseEraDay(date: LocalDate, formats: JapaneseEraFormatters, stamp: 
   };
 }
 
-function republicanDay(date: LocalDate, stamp: number): CalendarExtensionResult {
+function republicanDay(date: LocalDate, stamp: number, locale: string): CalendarExtensionResult {
   let year = date.year - REPUBLIC_START.year;
   const yearStart = (index: number) => Date.UTC(
     REPUBLIC_START.year + index, 8, REPUBLICAN_SEPTEMBER_STARTS[index],
@@ -83,22 +89,32 @@ function republicanDay(date: LocalDate, stamp: number): CalendarExtensionResult 
   const daysSinceNewYear = (stamp - yearStart(year)) / DAY_MILLIS;
   const month = Math.floor(daysSinceNewYear / 30);
   const day = daysSinceNewYear % 30 + 1;
-  const ordinal = day === 1 ? "1er" : String(day);
+  const language = calendarLanguageKey(locale);
   const label = REPUBLICAN_MONTHS[month];
-  const complementaryOrdinal = day === 1 ? "1er" : `${day}e`;
-  const dayAndMonth = label === undefined
-    ? `${complementaryOrdinal} jour complémentaire`
-    : `${ordinal} ${label}`;
-  const accessibilityText = `${dayAndMonth} an ${REPUBLICAN_YEARS[year]}`;
   const transition = day === 1 ? month === 0 ? "year-month" : "month" : null;
-  let dateText = day === 1 ? dayAndMonth : ordinal;
-  if (transition === "year-month") dateText = accessibilityText;
-  if (label === undefined) dateText = `${complementaryOrdinal} compl.`;
+  let dateText: string;
+  let accessibilityText: string;
+  if (language === "zh-CN" || language === "zh-TW") {
+    const monthName = REPUBLICAN_MONTHS_ZH[language][month];
+    const dayAndMonth = monthName === undefined
+      ? `${language === "zh-TW" ? "補充日" : "补充日"}第${day}日` : `${monthName}${day}日`;
+    accessibilityText = `共和${year === 0 ? "元" : year + 1}年${dayAndMonth}`;
+    dateText = day === 1 || monthName === undefined ? dayAndMonth : `${day}日`;
+  } else if (language === "fr") {
+    const ordinal = day === 1 ? "1er" : String(day);
+    const complementaryOrdinal = day === 1 ? "1er" : `${day}e`;
+    const dayAndMonth = label === undefined ? `${complementaryOrdinal} jour complémentaire` : `${ordinal} ${label}`;
+    accessibilityText = `${dayAndMonth} an ${REPUBLICAN_YEARS[year]}`;
+    dateText = label === undefined ? `${complementaryOrdinal} compl.` : day === 1 ? dayAndMonth : ordinal;
+  } else {
+    const dayAndMonth = label === undefined
+      ? `Complementary day ${day}` : `${day} ${label.charAt(0).toUpperCase()}${label.slice(1)}`;
+    accessibilityText = `${dayAndMonth}, Year ${REPUBLICAN_YEARS[year]}`;
+    dateText = day === 1 || label === undefined ? dayAndMonth : String(day);
+  }
   return {
-    dateText,
-    accessibilityText,
-    transition,
-    events: NO_EVENTS,
+    dateText: transition === "year-month" ? accessibilityText : dateText,
+    accessibilityText, transition, events: NO_EVENTS,
   };
 }
 
@@ -118,12 +134,18 @@ export function getSupplementaryCalendarDay(
     if (!formats) throw new RangeError("Japanese era calendar unavailable");
     return japaneseEraDay(date, formats, stamp);
   }
-  if (id === "french-republican") return republicanDay(date, stamp);
+  if (id === "french-republican") return republicanDay(date, stamp, locale);
   // Relative civil-day number, not elapsed time in the host time zone. The
   // continuous 13-by-20 count is anchored to Guatemala's 4 Ajpu’ on 2012-12-21.
   const offset = (stamp - FOUR_AJPU) / DAY_MILLIS;
   const number = 1 + modulo(3 + offset, 13);
   const name = CHOL_QIJ_DAYS[modulo(19 + offset, 20)];
-  const dateText = `${number} ${name}`;
-  return { dateText, accessibilityText: dateText, transition: null, events: NO_EVENTS };
+  const language = calendarLanguageKey(locale);
+  const chinese = language === "zh-CN" || language === "zh-TW";
+  const dateText = chinese ? `${number} · ${name}日` : `${number} ${name}`;
+  let accessibilityText = dateText;
+  if (chinese) accessibilityText = `日名 ${name}，${language === "zh-TW" ? "曆數" : "历数"} ${number}`;
+  else if (language === "es") accessibilityText = `Signo del día ${name}, número ${number}`;
+  else if (language !== "quc") accessibilityText = `Day sign ${name}, number ${number}`;
+  return { dateText, accessibilityText, transition: null, events: NO_EVENTS };
 }

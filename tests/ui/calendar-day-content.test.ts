@@ -5,6 +5,7 @@ import { describe, expect, it } from "vitest";
 import type { CalendarExtensionEvent } from "../../src/core/calendar/calendar-extension";
 import type { IcsEventOccurrence } from "../../src/core/calendar/ics-calendar";
 import type { CalendarDay } from "../../src/features/calendar/calendar-day-query";
+import { CalendarDecorationCache } from "../../src/features/calendar/calendar-decoration-cache";
 import { createTranslator } from "../../src/shared/i18n";
 import {
   CalendarDayCalendarDetails,
@@ -15,6 +16,18 @@ import { noteStatistics } from "../support/note-statistics";
 import { noteEmbeds } from "../support/note-embeds";
 
 describe("calendar day content", () => {
+  it("renders the cached lunar leap-month name in the interface's Chinese script", () => {
+    const date = { year: 2025, month: 7, day: 25 };
+    const cache = new CalendarDecorationCache();
+    for (const [locale, month] of [["zh-CN", "闰六月"], ["zh-MO", "閏六月"]] as const) {
+      const day = { ...emptyDay(), date, ...cache.get(date, locale, ["chinese-lunar"], []) };
+      const markup = renderToStaticMarkup(createElement(CalendarDayCalendarDetails, {
+        day, translator: createTranslator("auto", locale),
+      }));
+      expect(markup).toContain(`class="chrono-notes-calendar-extension-date">${month}</span>`);
+    }
+  });
+
   it.each(["7/19", "11/16", "L11/16"])(
     "keeps numeric groups intact with a wrap opportunity after the slash in %s",
     (dateText) => {

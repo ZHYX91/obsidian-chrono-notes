@@ -58,6 +58,8 @@ Horizontal arrows traverse periods in display order and respect RTL direction. V
 
 The primary calendar and note identity use Gregorian dates. The lunar library does not accept the historical reform gap from `1582-10-05` through `1582-10-14`. On those dates, only the Chinese lunar and Ganzhi dates and events that depend on that library are omitted; the original Gregorian date, note state, and other available calendars remain visible. Direct and cached queries use the same support boundary without shifting to a neighboring date or another calendar. Known unsupported dates are handled separately from programming errors; other conversion failures still propagate.
 
+The grid, festival row and full date use the effective plugin interface language. Simplified and Traditional Chinese have separate displays. Japanese, Korean and Vietnamese interfaces use the local names for their respective lunisolar calendars. Other interfaces use English when viewing those calendars. French Republican months have Chinese names. Indian Panchanga distinguishes the waxing and waning fortnights. Chol Q’ij retains all 20 K’iche’ day names and explains the sign and its number in Chinese, English or Spanish.
+
 | Calendar | Gregorian dates covered | Meaning of the displayed day |
 | --- | --- | --- |
 | Vietnamese lunar | 1976–2050 | Modern nationwide convention, with new moons and principal solar terms evaluated in UTC+7. Tết, the Hùng Kings’ commemoration and Mid-Autumn use regular lunar months. |

@@ -136,11 +136,14 @@ export function getEastAsianLunarDay(
     if (part.type === "year") return number.format(lunarDate.year);
     return part.value;
   }).join("");
-  const accessibilityText = format(full);
+  const chinese = locale === "zh-CN" || locale === "zh-TW";
+  const shortDay = chinese ? `${dayText}日` : dayText;
+  const shortMonthDay = chinese ? `${monthText}月${shortDay}` : format(monthDay);
+  const accessibilityText = chinese ? `${number.format(lunarDate.year)}年${shortMonthDay}` : format(full);
   const transition = lunarDate.day !== 1 ? null
     : lunarDate.month === 1 && !lunarDate.isLeapMonth ? "year-month" : "month";
   const dateText = transition === "year-month" ? accessibilityText
-    : transition === "month" ? format(monthDay) : dayText;
+    : transition === "month" ? shortMonthDay : shortDay;
   return {
     lunarDate,
     festival: festivalForDate(lunarDate, calendar),

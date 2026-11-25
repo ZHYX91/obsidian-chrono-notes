@@ -27,6 +27,7 @@ import {
   isSupplementaryCalendarDateSupported,
   isSupplementaryCalendarSupported,
 } from "../../core/calendar/supplementary-calendars";
+import { resolveContentLocale } from "../../core/calendar/content-locale";
 import { getJulianDay } from "../../core/calendar/julian";
 import type { LocalDate } from "../../core/periodic/periodic-date";
 import {
@@ -48,7 +49,16 @@ export interface CalendarExtensionDefinition extends CalendarExtensionProvider {
   ): CalendarExtensionResult;
 }
 
-export const CALENDAR_EXTENSION_DEFINITIONS: readonly CalendarExtensionDefinition[] =
+const LOCAL_LANGUAGES = {
+  "chinese-lunar": [], ganzhi: [], julian: ["ru"], coptic: ["ar"],
+  persian: ["fa"], ethiopic: ["am"], hebrew: ["he"], indian: ["hi"],
+  "islamic-civil": ["ar"], "islamic-umalqura": ["ar"],
+  "vietnamese-lunar": ["vi"], "korean-lunar": ["ko"],
+  "japanese-lunisolar": ["ja"], "japanese-era": ["ja"],
+  "french-republican": ["fr"], "chol-qij": ["quc", "es"], "indian-panchanga": ["hi"],
+} satisfies Record<CalendarExtensionId, string[]>;
+
+const definitions: readonly CalendarExtensionDefinition[] =
   Object.freeze([
     Object.freeze({
       id: "chinese-lunar",
@@ -156,6 +166,17 @@ export const CALENDAR_EXTENSION_DEFINITIONS: readonly CalendarExtensionDefinitio
       getDay: getIndianPanchangaDay,
     }),
   ]);
+
+export const CALENDAR_EXTENSION_DEFINITIONS: readonly CalendarExtensionDefinition[] =
+  Object.freeze(definitions.map(provider => {
+    const language = (locale: string) => resolveContentLocale(locale, LOCAL_LANGUAGES[provider.id]);
+    return Object.freeze({
+      ...provider,
+      isSupported: (locale: string) => provider.isSupported(language(locale)),
+      getDay: (date: LocalDate, locale: string, context?: LunarDateContext) =>
+        provider.getDay(date, language(locale), context),
+    });
+  }));
 
 const PROVIDERS = new Map<CalendarExtensionId, CalendarExtensionDefinition>(
   CALENDAR_EXTENSION_DEFINITIONS.map((provider) => [provider.id, provider]),

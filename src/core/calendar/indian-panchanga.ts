@@ -1,5 +1,6 @@
 import { compareLocalDate, toUtcDate, type LocalDate } from "../periodic/periodic-date";
 import type { CalendarExtensionResult } from "./calendar-extension";
+import { calendarLanguageKey } from "./content-locale";
 import { SUNRISE_TITHIS } from "./indian-panchanga-data";
 
 // IMD Rashtriya Panchang, 1948 Saka: tithi at sunrise at the adopted Central Station
@@ -37,10 +38,28 @@ export function getIndianPanchangaDay(date: LocalDate, locale: string): Calendar
   const tithi = SUNRISE_TITHIS[index];
   if (tithi === undefined) throw new Error("Missing published tithi");
 
-  const labels = /^hi(?:[-_]|$)/iu.test(locale) ? LABELS.hi : LABELS.en;
+  const language = calendarLanguageKey(locale);
+  const waxing = tithi <= 15;
+  const day = waxing ? tithi : tithi - 15;
+  if (language === "zh-CN" || language === "zh-TW") {
+    const half = waxing ? "白分" : "黑分";
+    const phase = waxing ? "望" : "朔";
+    const dateText = day === 15 ? `${half}十五（${phase}）` : `${half}第${day}日`;
+    const accessibilityText = language === "zh-TW" ? `日出時的太陰日：${dateText}` : `日出时的太阴日：${dateText}`;
+    return Object.freeze({ dateText, accessibilityText, events: EMPTY_EVENTS, transition: null });
+  }
+  const labels = language === "hi" ? LABELS.hi : LABELS.en;
   const name = labels.days[tithi === 30 ? 15 : (tithi - 1) % 15];
   if (name === undefined) throw new RangeError("Invalid published tithi");
   const half = tithi > 15 ? labels.waning : labels.waxing;
+  if (language !== "hi") {
+    const fortnight = waxing ? "Waxing" : "Waning";
+    const dateText = day === 15 ? (waxing ? "Full moon" : "New moon") : `${fortnight} ${day}`;
+    return Object.freeze({
+      dateText, accessibilityText: `${fortnight} fortnight, day ${day} (${half} ${name})`,
+      events: EMPTY_EVENTS, transition: null,
+    });
+  }
   return Object.freeze({
     dateText: tithi === 15 || tithi === 30 ? name : `${half} ${name}`,
     accessibilityText: `${half} ${labels.paksha} ${name}`,

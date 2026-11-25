@@ -62,6 +62,19 @@ describe("historical French Republican calendar", () => {
     expect(getSupplementaryCalendarDay(local(iso), "fr", "french-republican").accessibilityText).toBe(full);
   });
 
+  it.each(["1792-09-22", "1793-09-21"])("localizes regular and complementary dates on %s", (iso) => {
+    const day = (locale: string) => getSupplementaryCalendarDay(local(iso), locale, "french-republican");
+    const english = day("en");
+    expect(english.accessibilityText).toMatch(/year/i);
+    expect(day("ja-JP")).toEqual(english);
+    expect(day("fr-CA").accessibilityText).toBe(day("fr").accessibilityText);
+    for (const locale of ["zh-Hans", "zh-Hant"]) {
+      expect(day(locale).dateText).toMatch(/\p{Script=Han}/u);
+      expect(day(locale).accessibilityText).toMatch(/\p{Script=Han}/u);
+      expect(day(locale).transition).toBe(english.transition);
+    }
+  });
+
   it("keeps the primary national period bounded and handles the end of an ordinary month", () => {
     for (const iso of ["1792-09-21", "1806-01-01", "1871-05-16"]) {
       expect(isSupplementaryCalendarDateSupported(local(iso), "french-republican")).toBe(false);
@@ -88,7 +101,21 @@ describe("K’iche’ Chol Q’ij", () => {
     ["2012-12-22", "5 Imox"],
     ["2020-10-11", "8 B’atz’"],
   ])("matches recorded counts on %s", (iso, expected) => {
-    expect(getSupplementaryCalendarDay(local(iso), "es", "chol-qij").dateText).toBe(expected);
+    expect(getSupplementaryCalendarDay(local(iso), "quc-GT", "chol-qij").dateText).toBe(expected);
+  });
+
+  it("retains the K’iche’ day name while localizing the surrounding text", () => {
+    const day = (locale: string) => getSupplementaryCalendarDay(local("2012-12-21"), locale, "chol-qij");
+    expect(day("quc-GT").dateText).toBe("4 Ajpu’");
+    expect(day("en").accessibilityText).toContain("Ajpu’");
+    expect(day("ja")).toEqual(day("en"));
+    for (const locale of ["zh-Hans", "zh-Hant"]) {
+      const result = day(locale);
+      for (const label of [result.dateText, result.accessibilityText]) {
+        expect(label).toContain("Ajpu’");
+        expect(label).toMatch(/\p{Script=Han}/u);
+      }
+    }
   });
 
   it("returns each of the 260 day names and numbers once before the cycle repeats", () => {
@@ -96,10 +123,10 @@ describe("K’iche’ Chol Q’ij", () => {
     const start = Date.UTC(2012, 11, 21);
     for (let n = 0; n < 260; n++) {
       const iso = new Date(start + n * 86_400_000).toISOString();
-      seen.add(getSupplementaryCalendarDay(local(iso), "es", "chol-qij").dateText);
+      seen.add(getSupplementaryCalendarDay(local(iso), "quc-GT", "chol-qij").dateText);
     }
     expect(seen.size).toBe(260);
-    expect(getSupplementaryCalendarDay(local(new Date(start + 260 * 86_400_000).toISOString()), "es", "chol-qij").dateText)
+    expect(getSupplementaryCalendarDay(local(new Date(start + 260 * 86_400_000).toISOString()), "quc-GT", "chol-qij").dateText)
       .toBe("4 Ajpu’");
   });
 });

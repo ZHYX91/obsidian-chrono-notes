@@ -58,6 +58,23 @@ describe("Intl calendar extensions", () => {
     expect(ummAlQura.accessibilityText).toBe("Safar 9, 1448 AH");
   });
 
+  it.each([
+    ["coptic", { year: 2025, month: 9, day: 11 }, /科普特|殉/u, "1742年1月1日"],
+    ["ethiopic", { year: 2025, month: 9, day: 11 }, /恩|仁|慈/u, "2018年1月1日"],
+    ["ethiopic", { year: 1, month: 9, day: 11 }, /世/u, "5494年1月16日"],
+  ] as const)("spells out the Chinese era for %s on %j", (calendar, date, eraName, numericDate) => {
+    for (const locale of ["zh-CN", "zh-TW"]) {
+      const result = getIntlCalendarDay(date, locale, calendar);
+      expect(result.accessibilityText).toMatch(eraName);
+      expect(result.accessibilityText).toContain(numericDate);
+      expect(result.accessibilityText).not.toMatch(/AM|AA/u);
+      if (date.year === 2025) {
+        expect(result.transition).toBe("year-month");
+        expect(result.dateText).toBe(result.accessibilityText);
+      }
+    }
+  });
+
   it("falls back to English for an invalid locale without changing the calendar", () => {
     const day = getIntlCalendarDay(
       { year: 2026, month: 7, day: 23 },
