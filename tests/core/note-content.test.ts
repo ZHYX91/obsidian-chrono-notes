@@ -166,15 +166,17 @@ describe("note content derivation", () => {
 
   it("does not project impossible task marker dates into the task model", () => {
     const [task] = parseTasks(
-      "- [ ] Invalid dates 馃搮 2026-02-30 鈴?2026-13-01 馃洬 2026-00-10",
+      "- [ ] Invalid dates 📅 2026-02-30 ⏳ 2026-13-01 🛫 2026-00-10 ✅ 2026-04-31",
       "Tasks.md",
       0,
     );
 
     expect(task).toMatchObject({
+      text: "Invalid dates 📅 2026-02-30 ⏳ 2026-13-01 🛫 2026-00-10 ✅ 2026-04-31",
       dueDate: null,
       scheduledDate: null,
       startDate: null,
+      doneDate: null,
     });
   });
 

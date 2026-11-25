@@ -45,6 +45,17 @@ describe("task line rewriting", () => {
     expect(task(`- [ ] Read ${malformed}`).dueDate).toBeNull();
   });
 
+  it("keeps an impossible date as text and reschedules the first valid deadline", () => {
+    const invalid = "📅 2026-02-30";
+    const content = `- [ ] Correct ${invalid}, submit 📅 2026-03-01, review 📅 2026-03-04`;
+    const expected = task(content);
+    expect(expected.dueDate).toBe("2026-03-01");
+    expect(expected.text).toContain(invalid);
+    const rewritten = rescheduleTaskDueDateInContent(content, expected, { year: 2026, month: 3, day: 2 });
+    expect(rewritten).toEqual({ status: "updated", content: content.replace("2026-03-01", "2026-03-02") });
+    if (rewritten.status === "updated") expect(task(rewritten.content).dueDate).toBe("2026-03-02");
+  });
+
   it("does not write a date the task parser cannot read back", () => {
     const content = "- [ ] Finish 📅 9999-12-31";
     expect(rescheduleTaskDueDateInContent(content, task(content), { year: 10000, month: 1, day: 1 }))

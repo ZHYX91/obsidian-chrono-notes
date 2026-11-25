@@ -241,22 +241,35 @@ describe("persistent NoteIndex cache", () => {
     index.stop();
   });
 
-  it.each([2, 3, 4, 5, 6, 7])("clears parser-semantic schema %i and falls back to a complete scan", async (schema) => {
+  it.each([2, 3, 4, 5, 6, 7])("rejects historical parser schema %i before using its entries", (schema) => {
+    expect(parsePersistedNoteIndexSnapshot({ ...cached("old"), schema })).toBeNull();
+  });
+
+  it("rebuilds a schema-8 task with a missing deadline even when file metadata matches", async () => {
+    const content = "- [ ] Submit 📅 2026-02-30 📅 2026-03-01";
+    const file = { ...FILE, size: new TextEncoder().encode(content).byteLength };
     const source = new MetadataNoteSource();
-    source.files = [FILE];
-    source.read.mockResolvedValue("fresh");
-    const cache = new MemoryNoteIndexCache({ ...cached("old"), schema });
-    const index = new NoteIndex(source, { cache });
-
-    await index.start();
-
-    expect(cache.clear).toHaveBeenCalledTimes(1);
-    expect(source.read).toHaveBeenCalledTimes(1);
-    expect(index.get(FILE.path)).toMatchObject({
-      kind: "parsed",
-      note: { preview: "fresh" },
+    source.files = [file];
+    source.read.mockResolvedValue(content);
+    const entry = cached(content, file).entries[0]!;
+    // Version 8 consumed the invalid marker and cached the task without its later deadline.
+    const oldTask = { ...entry.note.tasks[0]!, text: "Submit", dueDate: null };
+    const cache = new MemoryNoteIndexCache({
+      schema: 8,
+      entries: [{ ...entry, note: { ...entry.note, tasks: [oldTask] } }],
     });
-    index.stop();
+    const index = new NoteIndex(source, { cache });
+    try {
+      await index.start();
+      expect(index.get(file.path)).toMatchObject({
+        kind: "parsed",
+        note: { tasks: [{ text: "Submit 📅 2026-02-30", dueDate: "2026-03-01" }] },
+      });
+      expect(cache.clear).toHaveBeenCalledOnce();
+      expect(source.read).toHaveBeenCalledExactlyOnceWith(file.path);
+    } finally {
+      index.stop();
+    }
   });
 
   it("falls back to a complete scan when cache loading fails", async () => {
