@@ -1,3 +1,5 @@
+import { compactMessageKeys } from "./compact-message-keys.mjs";
+
 export const artifactPaths = Object.freeze({
   directory: "dist",
   main: "dist/main.js",
@@ -31,14 +33,14 @@ export function createJavascriptBuildOptions({
     minify: production,
     outfile: artifactPaths.main,
     platform: "browser",
+    plugins: production ? [compactMessageKeys()] : [],
     sourcemap: production ? false : "inline",
     target: "es2022",
   };
 }
 
-// The complete 16-language bundle is about 1.8 MB. Keep bounded headroom for
-// maintained contracts, localization and fixes; review dependency growth with
-// the build metafile instead of trading away behavior for a few bytes.
+// Keep bounded headroom for the complete language catalogs and maintained
+// features. Review dependency growth using the production build metafile.
 export const productionJavascriptBudgetBytes = 1_900_000;
 
 // Published 0.1.2 production artifact before the multilingual 0.2.0 work.
