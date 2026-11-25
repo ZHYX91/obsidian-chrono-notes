@@ -2,12 +2,17 @@
 
 Notable changes to Chrono Notes are documented in this file. The repository's numeric Git tags are the evidence for released versions; an entry without a corresponding local tag remains unreleased even if the manifests already contain that version.
 
-## Unreleased
+## 0.9.3
 
 - Keep the full selection and keyboard focus frames visible when browsing centuries, switching calendar views, or choosing a week. Calendar selection remains visible in forced colors.
 - Moving or deleting a folder updates the calendar index even when the vault sends only a folder notification.
 - Open crowded week and month views and filter long range-note lists with less work. Hidden ranges stay available in the overflow list.
 - Ignore superseded calendar navigation and ICS refresh results. Disabling the plugin during startup also stops a late settings migration from saving.
+- Use the first valid task date when an earlier marker contains an impossible date. Rescheduling changes only the valid deadline, and upgrading rebuilds the old index.
+- Reuse the Markdown parse for notes without removable comments to reduce indexing and preview work.
+- Keep the calendar responsive while expanding long ICS events, with the existing limits and omission notices.
+- Keep the current settings panel selected while paging through narrow tabs, expose names and descriptions for settings controls, and keep invalid range limits from being saved.
+- Use clearer calendar, jump-to-date, and range-note labels in all 16 languages.
 
 ## 0.9.2
 
