@@ -202,7 +202,7 @@ React 日历视图复用已测试的数据模型；纯交互测试固定方向�
 
 1. 运行 `node scripts/check-holiday-coverage.mjs`，需要指定年度时使用 `--year YYYY`。
 2. 每次核验同步更新地区数据文件或 `holiday-coverage.ts` 历史记录中的官方发布状态、核验日期和一手来源。`unverified`、`available + not-published`、当前年缺失、下一年已发布但数据未补齐都必须阻断；下一年经一手来源确认尚未发布时保持 `unavailable` 并警告通过。
-3. 官方安排发布后，同一变更必须补齐 provider 日期、调休上班或依法顺延、普通覆盖日、未覆盖年、当地与英文名称、所选翻译及英文回退、递归冻结测试和发布状态，不能只改 coverage 或只改状态。
+3. 官方安排发布后，同一变更必须补齐 provider 日期、调休上班或依法顺延、普通覆盖日、未覆盖年、当地语言、简繁中文与英文名称，以及其他界面语言下的英文回退、递归冻结测试和发布状态，不能只改 coverage 或只改状态。
 4. 运行对应 provider 测试、`npm run holiday:check`、`npm run check` 和 `npm run release:check`。
 
 当前数据状态由 `npm run holiday:check` 的输出与源码记录共同决定，不在稳定文档硬编码将来会过期的测试数量。现有门禁预期新加坡当前年与下一年可用；中国大陆下一年仅在一手来源确认正式安排尚未发布时允许以带来源警告的 `unavailable` 状态继续，绝不预测。
