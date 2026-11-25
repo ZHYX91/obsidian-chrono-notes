@@ -160,7 +160,7 @@ test("leaving the picker in an existing popout keeps focus on the destination", 
   const host = await page.evaluateHandle(() => window.open("about:blank")!);
   const popout = await opened;
   await popout.setContent(fixture.html);
-  await page.evaluate((host) => window.mountChronoCalendar("en", 520, undefined, undefined, host.document), host);
+  await page.evaluate((host) => window.mountChronoCalendar("en", 520, { ownerDocument: host.document }), host);
   await popout.getByRole("button", { name: "Week", exact: true }).click();
   const trigger = popout.getByRole("button", { name: /^Choose a week:/ });
   const picker = popout.getByRole("dialog");

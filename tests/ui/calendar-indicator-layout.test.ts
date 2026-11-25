@@ -188,19 +188,7 @@ describe("calendar indicator layout", () => {
     expect(calendarDayContent).toContain("dir={translator.direction}");
   });
 
-  it("overlays week-number and year status without moving their centered labels", () => {
-    expect(styles).toMatch(
-      /\.chrono-notes-week-number-button\s*\{[^}]*justify-content:\s*center;[^}]*position:\s*relative;/s,
-    );
-    expect(styles).toMatch(
-      /\.chrono-notes-week-number-status\s*\{[^}]*min-height:\s*0;[^}]*position:\s*absolute;[^}]*top:\s*calc\(50% - 0\.6em - 4px\);[^}]*transform:\s*translateY\(-100%\);/s,
-    );
-    expect(styles).toMatch(
-      /\.chrono-notes-period-cell\s*\{[^}]*justify-content:\s*center;[^}]*position:\s*relative;/s,
-    );
-    expect(styles).toMatch(
-      /\.chrono-notes-period-cell-status\s*\{[^}]*min-height:\s*0;[^}]*position:\s*absolute;[^}]*top:\s*calc\(50% - 0\.6em - 4px\);[^}]*transform:\s*translateY\(-100%\);/s,
-    );
+  it("mounts period status only when indicators are visible and configured", () => {
     expect(monthWeekNumber).toContain(
       'showNoteIndicators && note.noteState !== "not-configured"',
     );

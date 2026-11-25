@@ -18,10 +18,28 @@
   position: relative;
 }
 
+/* Quarter and month entries share a baseline even when only one note type is enabled. */
+.chrono-notes-year-summary-row:has(> .chrono-notes-period-cell > .chrono-notes-period-cell-status),
+.chrono-notes-period-cell:has(> .chrono-notes-period-cell-status),
+.chrono-notes-week-number-button:has(> .chrono-notes-week-number-status) {
+  --chrono-notes-period-content-offset: 2px;
+}
+
+.chrono-notes-period-cell-status,
+.chrono-notes-week-number-status,
+.chrono-notes-period-cell-label,
+.chrono-notes-week-number-label {
+  translate: 0 var(--chrono-notes-period-content-offset, 0px);
+}
+
+.chrono-notes-period-cell-status {
+  inset-inline: 4px;
+}
+
+.chrono-notes-week-number-status,
 .chrono-notes-period-cell-status {
   align-items: center;
   display: flex;
-  inset-inline: 4px;
   justify-content: center;
   min-height: 0;
   min-width: 0;
@@ -31,6 +49,7 @@
   z-index: 1;
 }
 
+.chrono-notes-week-number-label,
 .chrono-notes-period-cell-label {
   line-height: 1.2;
   max-width: 100%;
@@ -49,6 +68,7 @@
   color: var(--chrono-notes-current-period-foreground);
 }
 
+.chrono-notes-week-number-status > .chrono-notes-calendar-indicator.is-top,
 .chrono-notes-period-cell-status > .chrono-notes-calendar-indicator.is-top {
   flex: 0 1 auto;
 }

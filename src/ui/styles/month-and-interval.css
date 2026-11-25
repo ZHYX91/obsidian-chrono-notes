@@ -552,33 +552,13 @@ body.is-mobile
 }
 
 .chrono-notes-week-number-status {
-  align-items: center;
-  display: flex;
   inset-inline: 2px;
-  justify-content: center;
-  min-height: 0;
-  min-width: 0;
-  position: absolute;
-  top: calc(50% - 0.6em - 4px);
-  transform: translateY(-100%);
-  z-index: 1;
-}
-
-.chrono-notes-week-number-status > .chrono-notes-calendar-indicator.is-top {
-  flex: 0 1 auto;
 }
 
 .chrono-notes-week-number-label {
   box-sizing: border-box;
   font-variant-numeric: tabular-nums;
   font-weight: var(--font-semibold);
-  line-height: 1.2;
-  max-width: 100%;
-  overflow: hidden;
-  position: relative;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  z-index: 1;
 }
 
 .chrono-notes-week-number-button.is-current-period

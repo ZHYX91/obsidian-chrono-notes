@@ -12,7 +12,7 @@ for (const width of [400, 600]) {
       await page.addStyleTag({ content: "body{margin:0} #calendar-fixture{padding:0;border:0;height:auto}" });
       await page.addScriptTag({ content: fixture.script });
       const title = "Review every outstanding project decision with the complete team before the next milestone";
-      await page.evaluate(({ locale, width, title }) => window.mountChronoCalendar(locale, width, [title, title]), {
+      await page.evaluate(({ locale, width, title }) => window.mountChronoCalendar(locale, width, { eventTitles: [title, title] }), {
         locale, width, title,
       });
       await page.getByRole("button", { name: locale === "en" ? "Week" : "الأسبوع", exact: true }).click();
