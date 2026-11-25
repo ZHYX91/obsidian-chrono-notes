@@ -25,8 +25,15 @@ export function useCalendarPickerDialog(
     }
 
     const handlePointerDown = (event: PointerEvent) => {
-      if (rootRef.current?.contains(event.target as Node)) return;
-      if (anchorRef.current?.contains(event.target as Node)) return;
+      const target = event.target as Node;
+      if (root?.contains(target)) return;
+      const anchor = anchorRef.current;
+      if (anchor?.contains(target)) {
+        // Keep focus in the dialog until its trigger's click can toggle it closed.
+        const trigger = anchor.querySelector('button[aria-expanded="true"]');
+        if (event.button === 0 && trigger?.contains(target)) event.preventDefault();
+        return;
+      }
       onClose();
     };
     const handleKeyDown = (event: KeyboardEvent) => {

@@ -135,7 +135,7 @@ export function YearView({
     [query.year, translator.locale],
   );
   const visiblePreview = previewEnabled &&
-    activePreview?.key.startsWith(`${String(query.year).padStart(4, "0")}-`)
+    activePreview?.cell.date.year === query.year
     ? activePreview
     : null;
 

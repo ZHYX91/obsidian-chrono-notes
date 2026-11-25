@@ -144,6 +144,27 @@ describe("YearView interactions", () => {
     expect(onSelect).toHaveBeenLastCalledWith("day", { year: 2026, month: 1, day: 9 });
   });
 
+  it.each([
+    ["quarter", false, '[data-period-kind="quarter"]', "999-Q1", "1000-Q1"],
+    ["month", false, '[data-period-kind="month"]', "999-01", "1000-01"],
+    ["day", true, '[data-date-key$="-01-01"]', "0999-01-01", "1000-01-01"],
+  ] as const)("keeps %s previews associated with the displayed year", async (
+    _kind, heatmap, selector, earlyTitle, laterTitle,
+  ) => {
+    for (const [year, title] of [[999, earlyTitle], [1000, laterTitle]] as const) {
+      await renderYear(getQuery(year), { heatmap });
+      expect(document.querySelector('[role="tooltip"]')).toBeNull();
+      const cell = container.querySelector<HTMLButtonElement>(selector)!;
+      await act(async () => cell.focus());
+      await act(async () => vi.advanceTimersByTime(250));
+      const id = cell.getAttribute("aria-describedby");
+      expect(id).toBeTruthy();
+      expect(document.getElementById(id!)?.querySelector(
+        ".chrono-notes-calendar-preview-date",
+      )?.textContent).toBe(title);
+    }
+  });
+
   it("cancels pending and active previews when disabled, hidden, or changing year", async () => {
     await renderYear(getQuery(2026));
     await hoverAndWait(getDay("2026-01-01"), 249);

@@ -45,6 +45,7 @@ describe("HostEnvironmentProvider", () => {
                 key: "2026-07-23",
                 anchor: anchor as unknown as HTMLElement,
                 cell: {
+                  date: { year: 2026, month: 7, day: 23 },
                   noteState: "missing",
                   preview: null,
                   embeds: {

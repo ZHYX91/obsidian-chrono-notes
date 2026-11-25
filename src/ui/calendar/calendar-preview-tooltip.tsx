@@ -10,7 +10,7 @@ import { createPortal } from "react-dom";
 import type { HeatmapMetric } from "../../core/statistics/heatmap";
 import type { NoteStatistics } from "../../core/note/note-statistics";
 import type { NoteEmbedStatistics } from "../../core/note/note-preview";
-import type { PeriodicNoteType } from "../../core/periodic/periodic-date";
+import type { LocalDate, PeriodicNoteType } from "../../core/periodic/periodic-date";
 import type {
   RegionalHoliday,
   RegionalWorkday,
@@ -35,6 +35,7 @@ import {
 } from "./calendar-preview-presentation";
 
 export interface CalendarPreviewCell {
+  readonly date: LocalDate;
   readonly noteState: string;
   readonly preview: string | null;
   readonly embeds?: NoteEmbedStatistics;
