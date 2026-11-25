@@ -17,7 +17,7 @@ Current wide and narrow calendar layouts, rendered from the plugin UI in a brows
 - Daily, weekly, monthly, quarterly, yearly, decadal, and century periodic notes with built-in or Templater templates.
 - A navigation bar above periodic notes to open adjacent notes, larger periods, selected dates, and the calendar.
 - Chinese lunar and Ganzhi calendar extensions, including solar terms and traditional festivals.
-- Persian (Solar Hijri), Ethiopic, Hebrew, Indian national (Saka), Islamic civil, and Umm al-Qura calendar extensions.
+- Julian, Coptic, Persian (Solar Hijri), Ethiopic, Hebrew, Indian national (Saka), Islamic civil, and Umm al-Qura calendar extensions.
 - Mainland China and Singapore holiday extensions.
 - Tasks, statistics, month and year heatmaps, note previews, task completion, and due-date adjustments.
 - Time-range note creation by date-range dragging, cross-week layouts, templates, and a searchable range-note list.

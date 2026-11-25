@@ -13,6 +13,8 @@ describe("calendar extension registry", () => {
     expect(CALENDAR_EXTENSION_DEFINITIONS.map(({ id }) => id)).toEqual([
       "chinese-lunar",
       "ganzhi",
+      "julian",
+      "coptic",
       "persian",
       "ethiopic",
       "hebrew",

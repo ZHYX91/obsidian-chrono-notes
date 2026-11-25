@@ -418,6 +418,8 @@ export function isWeekStartDay(value: unknown): value is WeekStartDay {
 export function isCalendarExtension(value: unknown): value is CalendarExtension {
   return value === "chinese-lunar" ||
     value === "ganzhi" ||
+    value === "julian" ||
+    value === "coptic" ||
     value === "persian" ||
     value === "ethiopic" ||
     value === "hebrew" ||
