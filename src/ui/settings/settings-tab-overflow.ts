@@ -11,6 +11,7 @@ export function attachSettingsTabOverflow(
   const later = makeButton(labels.later, "later");
   row.prepend(earlier);
   let followSelectedTab = true;
+  let automaticScrollPosition: number | null = null;
 
   function makeButton(label: string, side: string): HTMLButtonElement {
     const button = row.createEl("button");
@@ -77,7 +78,11 @@ export function attachSettingsTabOverflow(
   }
 
   function onScroll(): void {
+    const automatic = automaticScrollPosition !== null && Math.abs(list.scrollLeft - automaticScrollPosition) <= 1;
+    automaticScrollPosition = null;
     updateButtons();
+    // Panel content can narrow the strip before the earlier reveal event arrives.
+    if (automatic) return;
     const viewport = list.getBoundingClientRect();
     const selected = activeTab.getBoundingClientRect();
     if (!viewport.width) return;
@@ -88,6 +93,7 @@ export function attachSettingsTabOverflow(
   }
 
   function onResize(): void {
+    const positionBeforeMeasure = list.scrollLeft;
     // Compare the natural span with the FULL row. Measuring the narrowed
     // scrollport here would keep the controls visible after a window resize.
     const first = tabs[0]!.getBoundingClientRect();
@@ -99,15 +105,14 @@ export function attachSettingsTabOverflow(
     if (width <= 0) return;
     if (!row.classList.contains("has-overflow")) {
       followSelectedTab = true;
-      return;
-    }
-    if (followSelectedTab) {
+    } else if (followSelectedTab) {
       const bounds = list.getBoundingClientRect();
       const active = activeTab.getBoundingClientRect();
       if (active.left < bounds.left && active.right < bounds.right) list.scrollLeft += active.left - bounds.left;
       else if (active.right > bounds.right && active.left > bounds.left) list.scrollLeft += active.right - bounds.right;
       updateButtons();
     }
+    if (list.scrollLeft !== positionBeforeMeasure) automaticScrollPosition = list.scrollLeft;
   }
 
   earlier.addEventListener("click", () => scroll(false));
