@@ -22,7 +22,11 @@ NoteIndex is the sole derived note index. Query caches retain immutable index en
 
 `NoteIndexCacheWriter` serializes cache writes separately from query publication. An unchanged restart skips the write unless the local cache needs upgrading or compaction. After a live edit, the Obsidian adapter persists the affected paths.
 
+A folder notification updates all affected Markdown paths together. On a move, subscribers see the old descendants disappear with the index already marked as indexing when it discovers new paths. The index returns to ready after the pending reads finish.
+
 The year store prepares grid geometry and canonical paths once per request. An unrelated note edit checks the entries at those paths. Only month and week views subscribe to ICS updates. Selecting another day in the displayed week reuses the weekly query. When day details change, the query reuses the complete task list if the seven task buckets and the date used to calculate overdue status still match. The UI renders one page at a time and preserves the total count. Month selected-day details reuse the same queried day. Pending and error feedback is local interaction state keyed by complete task identity and cannot replace the indexed checkbox or due date.
+
+Month and week views allocate only the configured number of visible range-note lanes. Later ranges reuse the lowest available visible lane. The overflow list retains every hidden note in index order. Filtering the range list compares the dates written in the note, including for timestamps with an explicit offset.
 
 ## 4. Regression verification
 

@@ -293,7 +293,10 @@ describe("persistent NoteIndex cache", () => {
     index.stop();
   });
 
-  it("does not reuse a cached path modified while the cache is loading", async () => {
+  it.each([
+    { type: "modify", path: FILE.path },
+    { type: "folder", removedFolder: "Before", paths: [FILE.path] },
+  ] satisfies NoteSourceEvent[])("rereads a cached path after a buffered $type event", async (event) => {
     const source = new MetadataNoteSource();
     source.files = [FILE];
     source.read.mockResolvedValue("modified");
@@ -304,7 +307,7 @@ describe("persistent NoteIndex cache", () => {
 
     const starting = index.start();
     await vi.waitFor(() => expect(cache.load).toHaveBeenCalledTimes(1));
-    source.emit({ type: "modify", path: FILE.path });
+    source.emit(event);
     loading.resolve(cached("old"));
     await starting;
 

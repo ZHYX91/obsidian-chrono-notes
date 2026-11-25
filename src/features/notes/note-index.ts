@@ -675,6 +675,9 @@ export class NoteIndex {
         this.queueReadIntent(event.path, newRevision, true);
         break;
       }
+      case "folder":
+        this.applyFolderChange(event.removedFolder, event.paths);
+        break;
       case "delete": {
         this.initialKnownPaths?.delete(event.path);
         const revision = this.advanceRevision(event.path);
@@ -684,6 +687,50 @@ export class NoteIndex {
         break;
       }
     }
+  }
+
+  private applyFolderChange(removedFolder: string | null, paths: readonly string[]): void {
+    const removed = new Set<string>();
+    if (removedFolder !== null) {
+      const prefix = removedFolder + "/";
+      // An initial inventory can include notes which do not have a revision yet.
+      for (const path of this.revisions.keys()) if (path.startsWith(prefix)) removed.add(path);
+      if (this.initialKnownPaths !== null) {
+        for (const path of this.initialKnownPaths) if (path.startsWith(prefix)) removed.add(path);
+      }
+    }
+
+    // Stage the whole host event before calling any subscriber. Otherwise a move
+    // can briefly publish a ready index with neither the old nor the new notes.
+    for (const path of removed) {
+      this.initialKnownPaths?.delete(path);
+      const revision = this.advanceRevision(path);
+      this.invalidateAsyncWork(path);
+      this.pendingEventIntents.set(path, { kind: "missing", revision });
+      this.stageEntryRemoval(path);
+    }
+    let hasReads = false;
+    let hasDiscovery = false;
+    for (const path of paths) {
+      if (removedFolder === null && this.initialKnownPaths?.has(path)) continue;
+      this.initialKnownPaths?.add(path);
+      const revision = this.advanceRevision(path);
+      this.invalidateAsyncWork(path);
+      this.storeReadIntent(path, revision, removedFolder !== null);
+      hasReads = true;
+      if (!this.entries.has(path)) hasDiscovery = true;
+    }
+    if (removed.size === 0 && !hasReads) return;
+    this.scheduleEventFlush();
+    if (hasDiscovery) {
+      this.cancelReadinessCheckpoint?.();
+      this.cancelReadinessCheckpoint = null;
+    }
+    const readiness = hasDiscovery ? "indexing" : this.snapshot.readiness;
+    if (this.pendingRemovals.size > 0 || this.snapshot.readiness !== readiness) {
+      this.publish(this.pendingRemovals.size > 0, readiness);
+    }
+    this.notifyDiagnosticsListeners();
   }
 
   private invalidateAsyncWork(path: string): void {
@@ -696,13 +743,7 @@ export class NoteIndex {
     path: string,
     readiness: NoteIndexReadiness = this.snapshot.readiness,
   ): boolean {
-    this.cacheWriter.changed(path);
-    const previous = this.entries.get(path);
-    if (previous === undefined) return false;
-    this.entries.delete(path);
-    if (previous.kind === "error") this.errorCount -= 1;
-    this.documentFingerprints.delete(path);
-    this.pendingRemovals.set(path, null);
+    if (!this.stageEntryRemoval(path)) return false;
     const flush = this.scheduledEventFlush;
     if (flush === null || !flush.publishedRemoval || readiness !== this.snapshot.readiness) {
       if (flush !== null) flush.publishedRemoval = true;
@@ -715,20 +756,35 @@ export class NoteIndex {
     return true;
   }
 
+  private stageEntryRemoval(path: string): boolean {
+    this.cacheWriter.changed(path);
+    const previous = this.entries.get(path);
+    if (previous === undefined) return false;
+    this.entries.delete(path);
+    if (previous.kind === "error") this.errorCount -= 1;
+    this.documentFingerprints.delete(path);
+    this.pendingRemovals.set(path, null);
+    return true;
+  }
+
   private queueReadIntent(
     path: string,
     revision: number,
     forceParse: boolean,
   ): void {
     if (!this.entries.has(path)) this.markIndexing();
+    this.storeReadIntent(path, revision, forceParse);
+    this.notifyDiagnosticsListeners();
+    this.scheduleEventFlush();
+  }
+
+  private storeReadIntent(path: string, revision: number, forceParse: boolean): void {
     const pending = this.pendingEventIntents.get(path);
     this.pendingEventIntents.set(path, {
       kind: "read",
       revision,
       forceParse: forceParse || (pending?.kind === "read" && pending.forceParse),
     });
-    this.notifyDiagnosticsListeners();
-    this.scheduleEventFlush();
   }
 
   private queueMissingIntent(path: string, revision: number): void {
@@ -1532,6 +1588,14 @@ function reconcileStartupPaths(
         paths.delete(event.oldPath);
         paths.add(event.path);
         break;
+      case "folder": {
+        if (event.removedFolder !== null) {
+          const prefix = event.removedFolder + "/";
+          for (const path of paths) if (path.startsWith(prefix)) paths.delete(path);
+        }
+        for (const path of event.paths) paths.add(path);
+        break;
+      }
       case "delete":
         paths.delete(event.path);
         break;
@@ -1548,6 +1612,9 @@ function collectStartupDirtyPaths(events: readonly NoteSourceEvent[]): ReadonlyS
       case "modify":
       case "delete":
         paths.add(event.path);
+        break;
+      case "folder":
+        for (const path of event.paths) paths.add(path);
         break;
       case "rename":
         paths.add(event.oldPath);
