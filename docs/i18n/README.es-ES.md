@@ -14,6 +14,7 @@ Vistas actuales ancha y estrecha, generadas con la interfaz del plugin en un ent
 
 ![Chrono Notes · 340 px](../assets/chrono-notes-calendar-narrow-en.png)
 
+- También puedes consultar los calendarios lunares de Vietnam y Corea, el calendario antiguo y las eras de Japón, el calendario republicano francés, el Chol Q’ij k’iche’ de 260 días y los tithis al amanecer del almanaque nacional indio.
 - Vistas de semana, mes, año y siglo con indicadores de notas, tareas, estadísticas y vistas previas.
 - Notas diarias, semanales, mensuales, trimestrales, anuales, de década y de siglo, con plantillas integradas o Templater.
 - Navegación entre notas, progreso de tareas, mapas de calor y notas para un intervalo de fechas.

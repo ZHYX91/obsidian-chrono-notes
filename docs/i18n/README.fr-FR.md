@@ -14,6 +14,7 @@ Vues actuelles, large et étroite, rendues à partir de l’interface du module 
 
 ![Chrono Notes · 340 px](../assets/chrono-notes-calendar-narrow-en.png)
 
+- Vous pouvez aussi afficher les calendriers lunaires vietnamien et coréen, l’ancien calendrier et les ères du Japon, le calendrier républicain français, le cycle de 260 jours des K’iche’ et les tithis au lever du soleil de l’almanach national indien.
 - Vues par semaine, mois, année et siècle avec état des notes, tâches, statistiques et aperçus.
 - Notes quotidiennes, hebdomadaires, mensuelles, trimestrielles, annuelles, décennales et séculaires, avec modèles intégrés ou Templater.
 - Navigation entre les notes, suivi des tâches, cartes thermiques et notes créées sur une plage de dates.

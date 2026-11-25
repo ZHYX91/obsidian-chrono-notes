@@ -1,17 +1,12 @@
 import type { ObservanceGroup } from "./observance-groups";
 import type { LocalDate } from "../periodic/periodic-date";
 
-export type CalendarExtensionId =
-  | "chinese-lunar"
-  | "julian"
-  | "coptic"
-  | "ganzhi"
-  | "persian"
-  | "ethiopic"
-  | "hebrew"
-  | "indian"
-  | "islamic-civil"
-  | "islamic-umalqura";
+export const CALENDAR_EXTENSION_IDS = [
+  "chinese-lunar", "ganzhi", "julian", "coptic", "persian", "ethiopic", "hebrew", "indian",
+  "islamic-civil", "islamic-umalqura", "vietnamese-lunar", "korean-lunar", "japanese-lunisolar",
+  "japanese-era", "french-republican", "chol-qij", "indian-panchanga",
+] as const;
+export type CalendarExtensionId = typeof CALENDAR_EXTENSION_IDS[number];
 export type CalendarExtensionEventKind = "festival" | "solar-term";
 export type CalendarExtensionTransition = "month" | "year-month";
 

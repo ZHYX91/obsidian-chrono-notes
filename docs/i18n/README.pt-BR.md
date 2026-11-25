@@ -14,6 +14,7 @@ Layouts atuais largo e estreito, renderizados com a interface do plugin em um am
 
 ![Chrono Notes · 340 px](../assets/chrono-notes-calendar-narrow-en.png)
 
+- Também é possível consultar os calendários lunares do Vietnã e da Coreia, o antigo calendário e as eras do Japão, o calendário republicano francês, o ciclo de 260 dias dos k’iche’ e os tithis ao nascer do sol do almanaque nacional indiano.
 - Visões de semana, mês, ano e século com status das notas, tarefas, estatísticas e prévias.
 - Notas diárias, semanais, mensais, trimestrais, anuais, por década e por século, com modelos próprios ou Templater.
 - Navegação entre notas, progresso de tarefas, mapas de calor e notas de intervalos de datas.

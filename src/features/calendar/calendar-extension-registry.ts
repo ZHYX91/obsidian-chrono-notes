@@ -1,10 +1,11 @@
-import type {
-  CalendarExtensionDay,
-  CalendarExtensionEvent,
-  CalendarExtensionEventSource,
-  CalendarExtensionId,
-  CalendarExtensionProvider,
-  CalendarExtensionResult,
+import {
+  createCalendarExtensionEvent,
+  type CalendarExtensionDay,
+  type CalendarExtensionEvent,
+  type CalendarExtensionEventSource,
+  type CalendarExtensionId,
+  type CalendarExtensionProvider,
+  type CalendarExtensionResult,
 } from "../../core/calendar/calendar-extension";
 import {
   getChineseLunarDay,
@@ -19,19 +20,27 @@ import {
   isLunarDateSupported,
   type LunarDateContext,
 } from "../../core/calendar/lunar-date-context";
+import { getEastAsianLunarDay, isEastAsianLunarDateSupported } from "../../core/calendar/east-asian-lunar";
+import { getIndianPanchangaDay, isIndianPanchangaDateSupported } from "../../core/calendar/indian-panchanga";
+import {
+  getSupplementaryCalendarDay,
+  isSupplementaryCalendarDateSupported,
+  isSupplementaryCalendarSupported,
+} from "../../core/calendar/supplementary-calendars";
 import { getJulianDay } from "../../core/calendar/julian";
 import type { LocalDate } from "../../core/periodic/periodic-date";
 import {
   getIntlCalendarDay,
   isIntlCalendarSupported,
 } from "../../core/calendar/intl-calendar";
-import type { MessageKey } from "../../shared/i18n";
+import { createTranslator, type MessageKey } from "../../shared/i18n";
 
 export interface CalendarExtensionDefinition extends CalendarExtensionProvider {
   readonly labelKey: MessageKey;
   readonly descriptionKey: MessageKey;
   readonly usesLunarContext: boolean;
   isSupported(locale: string): boolean;
+  isDateSupported?(date: LocalDate): boolean;
   getDay(
     date: LocalDate,
     locale: string,
@@ -46,6 +55,7 @@ export const CALENDAR_EXTENSION_DEFINITIONS: readonly CalendarExtensionDefinitio
       labelKey: "settings.appearance.chineseLunar",
       descriptionKey: "settings.appearance.chineseLunarDesc",
       usesLunarContext: true,
+      isDateSupported: isLunarDateSupported,
       isSupported: () => true,
       getDay: (
         date: LocalDate,
@@ -60,6 +70,7 @@ export const CALENDAR_EXTENSION_DEFINITIONS: readonly CalendarExtensionDefinitio
       labelKey: "settings.appearance.ganzhi",
       descriptionKey: "settings.appearance.ganzhiDesc",
       usesLunarContext: true,
+      isDateSupported: isLunarDateSupported,
       isSupported: () => true,
       getDay: (
         date: LocalDate,
@@ -101,6 +112,49 @@ export const CALENDAR_EXTENSION_DEFINITIONS: readonly CalendarExtensionDefinitio
       isSupported: (locale: string) => isIntlCalendarSupported(id, locale),
       getDay: (date: LocalDate, locale: string) => getIntlCalendarDay(date, locale, id),
     })),
+    ...([
+      ["vietnamese-lunar", "vietnameseLunar"],
+      ["korean-lunar", "koreanLunar"],
+      ["japanese-lunisolar", "japaneseLunisolar"],
+    ] as const).map(([id, name]) => Object.freeze({
+      id,
+      labelKey: `settings.appearance.${name}` as const,
+      descriptionKey: `settings.appearance.${name}Desc` as const,
+      usesLunarContext: false,
+      isSupported: () => true,
+      isDateSupported: (date: LocalDate) => isEastAsianLunarDateSupported(date, id),
+      getDay: (date: LocalDate, locale: string): CalendarExtensionResult => {
+        const { t } = createTranslator("auto", locale);
+        const day = getEastAsianLunarDay(date, locale, id, (month) => t("calendar.lunarLeapMonth", { month }));
+        const { dateText, accessibilityText, transition, festival } = day;
+        const events = festival === null ? day.events : Object.freeze([
+          createCalendarExtensionEvent(`festival:${festival}`, "festival", t(`calendar.festival.${festival}`), id),
+        ]);
+        return { dateText, accessibilityText, transition, events };
+      },
+    })),
+    ...([
+      ["japanese-era", "japaneseEra"],
+      ["french-republican", "frenchRepublican"],
+      ["chol-qij", "cholQij"],
+    ] as const).map(([id, name]) => Object.freeze({
+      id,
+      labelKey: `settings.appearance.${name}` as const,
+      descriptionKey: `settings.appearance.${name}Desc` as const,
+      usesLunarContext: false,
+      isSupported: (locale: string) => isSupplementaryCalendarSupported(id, locale),
+      isDateSupported: (date: LocalDate) => isSupplementaryCalendarDateSupported(date, id),
+      getDay: (date: LocalDate, locale: string) => getSupplementaryCalendarDay(date, locale, id),
+    })),
+    Object.freeze({
+      id: "indian-panchanga",
+      labelKey: "settings.appearance.indianPanchanga",
+      descriptionKey: "settings.appearance.indianPanchangaDesc",
+      usesLunarContext: false,
+      isSupported: () => true,
+      isDateSupported: isIndianPanchangaDateSupported,
+      getDay: getIndianPanchangaDay,
+    }),
   ]);
 
 const PROVIDERS = new Map<CalendarExtensionId, CalendarExtensionDefinition>(
@@ -130,7 +184,7 @@ export function selectCalendarExtensionDay(
   const provider = PROVIDERS.get(id);
   if (provider === undefined) throw new Error(`Unknown calendar extension: ${id}`);
   if (!provider.isSupported(locale)) return null;
-  if (provider.usesLunarContext && !isLunarDateSupported(date)) return null;
+  if (provider.isDateSupported?.(date) === false) return null;
   return Object.freeze({ id, ...provider.getDay(date, locale, context) });
 }
 

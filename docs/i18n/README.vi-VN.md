@@ -14,6 +14,7 @@ Bố cục rộng và hẹp hiện tại, được dựng từ giao diện plugi
 
 ![Chrono Notes · 340 px](../assets/chrono-notes-calendar-narrow-en.png)
 
+- Có thể chọn âm lịch Việt Nam và Hàn Quốc, lịch cổ và niên hiệu Nhật Bản, lịch Cộng hòa Pháp, chu kỳ 260 ngày của người K’iche’ hoặc ngày trăng lúc bình minh theo niên lịch quốc gia Ấn Độ.
 - Xem lịch theo tuần, tháng, năm và thế kỷ, kèm trạng thái ghi chú, công việc, thống kê và xem trước.
 - Ghi chú ngày, tuần, tháng, quý, năm, thập kỷ và thế kỷ với mẫu tích hợp hoặc Templater.
 - Điều hướng giữa các ghi chú, theo dõi tiến độ công việc, bản đồ nhiệt và ghi chú cho khoảng ngày đã chọn.

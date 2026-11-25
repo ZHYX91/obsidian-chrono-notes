@@ -13,11 +13,11 @@ const UK_REGIONS = ["gb-eng-wls", "gb-sct", "gb-nir"];
 const CHINESE_CALENDARS = ["chinese-lunar", "ganzhi"];
 const LANGUAGE_PREFERENCES = new Map<string, CalendarPreferences>([
   ["en", { regions: ["us", ...UK_REGIONS, "sg"] }],
-  ["ja", { calendars: ["japanese-lunisolar"], regions: ["jp"], enableFirstCalendar: true, enableFirstRegion: true }],
+  ["ja", { calendars: ["japanese-lunisolar", "japanese-era"], regions: ["jp"], enableFirstCalendar: true, enableFirstRegion: true }],
   ["ko", { calendars: ["korean-lunar"], regions: ["kr"], enableFirstCalendar: true }],
   ["vi", { calendars: ["vietnamese-lunar"], regions: ["vn"], enableFirstCalendar: true }],
   ["de", { regions: ["de", "at"] }],
-  ["fr", { regions: ["fr", "ca-qc"] }],
+  ["fr", { calendars: ["french-republican"], regions: ["fr", "ca-qc"] }],
   ["es", { regions: ["es", "mx"] }],
   ["ru", { calendars: ["julian"], regions: ["ru"] }],
   ["ar", { calendars: ["islamic-civil", "islamic-umalqura"] }],
@@ -42,6 +42,9 @@ function getPreferences(languageTag: string): CalendarPreferences {
       (locale.script !== "Hans" && ["TW", "HK", "MO"].includes(locale.region ?? ""));
     const regions = traditional ? ["tw", "hk", "mo"] : ["cn", "sg"];
     return { calendars: CHINESE_CALENDARS, enableFirstCalendar: true, regions: preferRegion(regions, locale.region) };
+  }
+  if (locale.region === "GT" && (locale.language === "es" || locale.language === "quc")) {
+    return { calendars: ["chol-qij"] };
   }
   if (locale.language === "pt") {
     if (locale.region === "BR") return { regions: ["br"] };

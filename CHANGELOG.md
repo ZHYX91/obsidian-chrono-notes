@@ -4,6 +4,9 @@ Notable changes to Chrono Notes are documented in this file. The repository's nu
 
 ## Unreleased
 
+- Add Japanese kyūreki, Korean and Vietnamese lunisolar dates to the existing day cells. New Japanese-language vaults start with kyūreki and Japan’s public holidays.
+- Offer Japanese era dates, the historical French Republican calendar, the K’iche’ Chol Q’ij and the Indian national almanac’s published sunrise tithi.
+
 - Add 20 regional holiday schedules for 2026 and 2027, with source links, substitute dates, working weekends and clearly identified employer choices.
 
 - Initialize calendar choices once per new vault using the interface language. Existing vault preferences, including empty lists, persist across upgrades.
