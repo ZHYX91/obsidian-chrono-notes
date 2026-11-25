@@ -14,7 +14,7 @@ Aktuelle breite und schmale Kalenderansichten, mit der Plugin-Oberfläche in ein
 
 ![Chrono Notes · 340 px](../assets/chrono-notes-calendar-narrow-en.png)
 
-- Weitere Ansichten zeigen vietnamesische und koreanische Monddaten, den japanischen Lunisolarkalender und Ärenjahre, französische Revolutionsdaten, den 260-Tage-Zyklus der K’iche’ und die Tithis bei Sonnenaufgang aus dem indischen Staatsalmanach.
+- Weitere Ansichten zeigen vietnamesische und koreanische Monddaten, den japanischen Lunisolarkalender und Ärenjahre, französische Revolutionsdaten, den 260-Tage-Zyklus der K’iche’ und die Tithis bei Sonnenaufgang aus dem indischen Staatsalmanach. [Unterstützte Zeiträume](../calendar-boundaries.md#5-calendar-extension-date-support)
 - Kalenderansichten für Woche, Monat, Jahr und Jahrhundert mit Notizstatus, Aufgaben, Vorschau und Statistiken.
 - Tages-, Wochen-, Monats-, Quartals-, Jahres-, Jahrzehnt- und Jahrhundertnotizen mit eigenen Pfaden und Vorlagen, auch mit Templater.
 - Notiznavigation, Aufgabenfortschritt, Heatmaps und Notizen für einen ausgewählten Datumsbereich.
@@ -24,7 +24,7 @@ Aktuelle breite und schmale Kalenderansichten, mit der Plugin-Oberfläche in ein
 
 ## Voraussetzungen und Kompatibilität
 
-Obsidian 1.12.7 oder neuer auf Desktop oder Mobilgeräten. ICS-Dateien innerhalb des Vaults funktionieren plattformübergreifend; Pfade außerhalb des Vaults werden nur auf dem Desktop unterstützt. Zusätzliche Kalendersysteme hängen von den Daten der Laufzeitumgebung ab.
+Obsidian 1.12.7 oder neuer auf Desktop oder Mobilgeräten. ICS-Dateien innerhalb des Vaults funktionieren plattformübergreifend; Pfade außerhalb des Vaults werden nur auf dem Desktop unterstützt. Einige Kalender, darunter die japanische Ärenzählung, nutzen Kalenderdaten der Obsidian-Laufzeitumgebung.
 
 ## Installation
 
