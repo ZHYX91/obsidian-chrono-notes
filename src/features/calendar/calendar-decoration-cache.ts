@@ -33,6 +33,7 @@ import {
 } from "./holiday-region-registry";
 
 export interface CalendarDecorations {
+  readonly regionalDays: readonly RegionalHolidayProviderDay[];
   readonly calendarExtensions: readonly CalendarExtensionDay[];
   readonly calendarEvents: readonly CalendarExtensionEvent[];
   readonly holidays: readonly RegionalHoliday[];
@@ -87,6 +88,7 @@ export class CalendarDecorationCache {
     const result = Object.freeze({
       calendarExtensions: extensions,
       calendarEvents: mergeCalendarExtensionEvents(extensions, selectObservanceEvents(date, normalizedLocale, observances)),
+      regionalDays: regional.regionalDays,
       holidays: regional.holidays,
       workday: regional.workday,
       regionalMarker: regional.marker,
@@ -169,6 +171,7 @@ export function selectCalendarDecorations(
   return Object.freeze({
     calendarExtensions: extensions,
     calendarEvents: mergeCalendarExtensionEvents(extensions, selectObservanceEvents(date, locale, observances)),
+    regionalDays: regional.regionalDays,
     holidays: regional.holidays,
     workday: regional.workday,
     regionalMarker: regional.marker,

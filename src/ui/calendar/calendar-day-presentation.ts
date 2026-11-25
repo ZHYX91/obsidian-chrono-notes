@@ -7,6 +7,7 @@ import { hasIndexedPeriodicNote } from "../../features/calendar/indexed-periodic
 import type { Translator } from "../../shared/i18n";
 import { formatNoteTaskProgress } from "../note-task-progress-presentation";
 import { formatCalendarHeatmapMetric } from "./calendar-heatmap-presentation";
+import { formatRegionalDayDetails } from "./calendar-regional-presentation";
 import { formatCalendarIcsDayLabel } from "./calendar-ics-presentation";
 import { formatCalendarNoteState } from "./calendar-note-presentation";
 
@@ -32,7 +33,7 @@ export function formatCalendarDayLabel(
   options: CalendarDayLabelOptions,
   t: Translator["t"],
 ): string {
-  const regional = formatRegionalLabel(day, t);
+  const regional = formatRegionalDayDetails(day, "monthView", t);
   const icsLabel = formatCalendarIcsDayLabel(day.icsEvents, t);
   return [
     dateKey,
@@ -86,20 +87,4 @@ export function formatRegionalMarkerLabel(
   t: Translator["t"],
 ): string {
   return t(`monthView.regionalMarker.${kind}`);
-}
-
-function formatRegionalLabel(
-  day: Pick<CalendarDay, "holidays" | "workday">,
-  t: Translator["t"],
-): string | null {
-  if (day.holidays.length > 0) {
-    return t("monthView.publicHoliday", {
-      names: day.holidays
-        .map((holiday) => holiday.name)
-        .join(t("monthView.nameSeparator")),
-    });
-  }
-  return day.workday?.isWorkday === true
-    ? t("monthView.adjustedWorkday", { name: day.workday.name })
-    : null;
 }

@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
 
+import { CalendarDecorationCache, selectCalendarDecorations } from "../../src/features/calendar/calendar-decoration-cache";
+import { combineRegionalHolidayDays } from "../../src/features/calendar/holiday-region-registry";
+import { formatCalendarPreviewRegional } from "../../src/ui/calendar/calendar-preview-presentation";
 import type { MonthCalendarDay } from "../../src/features/calendar/month-calendar-query";
 import { createTranslator } from "../../src/shared/i18n";
 import {
@@ -22,6 +25,7 @@ function cell(overrides: Partial<MonthCalendarDay> = {}): MonthCalendarDay {
     calendarExtensions: [],
     calendarEvents: [],
     holidays: [],
+    regionalDays: [],
     workday: null,
     regionalMarker: null,
     icsEvents: [],
@@ -144,6 +148,55 @@ describe("calendar day presentation", () => {
         t,
       ),
     ).toBe("2026-07-14, note read error: permission denied, 0/1 task complete");
+  });
+
+  it("keeps work, rest and employer choices in the accessible and preview text", () => {
+    const t = createTranslator("en", "en").t;
+    const cache = new CalendarDecorationCache();
+    const cases = [
+      {
+        date: { year: 2026, month: 2, day: 28 },
+        regions: ["cn", "tw"] as const,
+        expected: ["Mainland China · adjusted workday: Spring Festival", "Taiwan (government offices) · public holiday: Peace Memorial Day"],
+        marker: { region: "cn", kind: "work" },
+      },
+      {
+        date: { year: 2027, month: 3, day: 26 },
+        regions: ["ca-qc", "de"] as const,
+        expected: ["Québec · Possible holiday: Good Friday (employer chooses Good Friday or Easter Monday)", "Germany (nationwide) · public holiday: Good Friday"],
+        marker: { region: "de", kind: "holiday" },
+      },
+    ];
+    for (const { date, regions, expected, marker } of cases) {
+      const direct = selectCalendarDecorations(date, "en", [], regions);
+      const cached = cache.get(date, "en", [], regions);
+      expect(cached).toEqual(direct);
+      for (const decorations of [direct, cached]) {
+        const day = cell({ ...decorations, date });
+        expect(day.regionalMarker).toEqual(marker);
+        const label = formatCalendarDayLabel("date", day, { includeCalendarExtensions: false }, t);
+        const preview = formatCalendarPreviewRegional(day, t);
+        for (const text of expected) {
+          expect(label).toContain(text);
+          expect(preview?.toLowerCase()).toContain(text.toLowerCase());
+        }
+      }
+    }
+  });
+
+  it("names both regions when two working Saturdays share the same description", () => {
+    const t = createTranslator("en", "en").t;
+    const combined = combineRegionalHolidayDays([
+      { region: "ru", holidays: [], workday: { region: "ru", name: "Working Saturday", isWorkday: true } },
+      { region: "vn", holidays: [], workday: { region: "vn", name: "Working Saturday", isWorkday: true } },
+    ]);
+    const day = cell({ ...combined, regionalMarker: combined.marker });
+    const preview = formatCalendarPreviewRegional(day, t);
+    const label = formatCalendarDayLabel("date", day, { includeCalendarExtensions: false }, t);
+    for (const region of ["Russia", "Vietnam (public sector)"]) {
+      expect(preview).toContain(`${region} · Adjusted workday: Working Saturday`);
+      expect(label).toContain(`${region} · adjusted workday: Working Saturday`);
+    }
   });
 
   it("formats Traditional Chinese adjusted workdays", () => {

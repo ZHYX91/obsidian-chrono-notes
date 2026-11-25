@@ -1,13 +1,8 @@
 import type { HeatmapMetric } from "../../core/statistics/heatmap";
-import type { RegionalHoliday, RegionalWorkday } from "../../core/calendar/regional-holidays";
+import { formatRegionalDayDetails, type RegionalDayPresentation } from "./calendar-regional-presentation";
 import type { Translator } from "../../shared/i18n";
 import type { PeriodicNoteType } from "../../core/periodic/periodic-date";
 import { formatCalendarHeatmapMetric } from "./calendar-heatmap-presentation";
-
-interface RegionalPreview {
-  readonly holidays?: readonly RegionalHoliday[];
-  readonly workday?: RegionalWorkday | null;
-}
 
 interface TaskProgress {
   readonly completed: number;
@@ -22,18 +17,10 @@ export function formatCalendarPreviewHeatmap(
 }
 
 export function formatCalendarPreviewRegional(
-  cell: RegionalPreview,
+  cell: RegionalDayPresentation,
   t: Translator["t"],
 ): string | null {
-  const holidays = cell.holidays ?? [];
-  if (holidays.length > 0) {
-    return t("calendarPreview.publicHoliday", {
-      names: holidays.map((holiday) => holiday.name).join(t("calendarPreview.nameSeparator")),
-    });
-  }
-  return cell.workday?.isWorkday === true
-    ? t("calendarPreview.adjustedWorkday", { name: cell.workday.name })
-    : null;
+  return formatRegionalDayDetails(cell, "calendarPreview", t);
 }
 
 export function formatCalendarPreviewTaskProgress(

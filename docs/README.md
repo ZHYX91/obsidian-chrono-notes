@@ -9,6 +9,7 @@ Start with the [project README](../README.md) for installation and everyday use.
 | Architecture | [Read](architecture.md) | [阅读](architecture.zh-CN.md) |
 | Testing strategy | [Read](testing-strategy.md) | [阅读](testing-strategy.zh-CN.md) |
 | Calendar boundaries | [Read](calendar-boundaries.md) | [阅读](calendar-boundaries.zh-CN.md) |
+| Regional holiday calendars | [Read](holiday-data.md) | [阅读](holiday-data.zh-CN.md) |
 | Query consistency | [Read](query-consistency.md) | [阅读](query-consistency.zh-CN.md) |
 
 [Contributing](../CONTRIBUTING.md) · [Security](../SECURITY.md) · [Changelog](../CHANGELOG.md)

@@ -17,7 +17,8 @@ Aktuelle breite und schmale Kalenderansichten, mit der Plugin-Oberfläche in ein
 - Kalenderansichten für Woche, Monat, Jahr und Jahrhundert mit Notizstatus, Aufgaben, Vorschau und Statistiken.
 - Tages-, Wochen-, Monats-, Quartals-, Jahres-, Jahrzehnt- und Jahrhundertnotizen mit eigenen Pfaden und Vorlagen, auch mit Templater.
 - Notiznavigation, Aufgabenfortschritt, Heatmaps und Notizen für einen ausgewählten Datumsbereich.
-- Erweiterbare Kalender: chinesischer Mondkalender, Ganzhi, persischer, äthiopischer, hebräischer, indischer und islamischer Kalender sowie Feiertage für China und Singapur.
+- Erweiterbare Kalender: chinesischer Mondkalender, Ganzhi, persischer, äthiopischer, hebräischer, indischer und islamischer Kalender.
+- Bis zu drei der 22 regionalen Feiertagskalender lassen sich gleichzeitig anzeigen. [Regionen und Geltungsbereich](../holiday-data.md)
 - Lokale ICS-Kalenderdateien werden ausschließlich gelesen. Datums- und Uhrzeitanzeigen von Obsidian-Eigenschaften lassen sich anpassen, ohne YAML-Werte zu verändern.
 
 ## Voraussetzungen und Kompatibilität

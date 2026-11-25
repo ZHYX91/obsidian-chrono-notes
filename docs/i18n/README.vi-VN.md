@@ -17,7 +17,8 @@ Bố cục rộng và hẹp hiện tại, được dựng từ giao diện plugi
 - Xem lịch theo tuần, tháng, năm và thế kỷ, kèm trạng thái ghi chú, công việc, thống kê và xem trước.
 - Ghi chú ngày, tuần, tháng, quý, năm, thập kỷ và thế kỷ với mẫu tích hợp hoặc Templater.
 - Điều hướng giữa các ghi chú, theo dõi tiến độ công việc, bản đồ nhiệt và ghi chú cho khoảng ngày đã chọn.
-- Hỗ trợ lịch âm Trung Quốc, can chi, lịch Ba Tư, Ethiopia, Do Thái, Ấn Độ, Hồi giáo và ngày nghỉ ở Trung Quốc đại lục, Singapore.
+- Hỗ trợ lịch âm Trung Quốc, can chi, lịch Ba Tư, Ethiopia, Do Thái, Ấn Độ, Hồi giáo.
+- Có thể chọn tối đa ba trong số 22 lịch nghỉ lễ theo khu vực. [Phạm vi từng khu vực](../holiday-data.md)
 - Đọc tệp ICS trên máy ở chế độ chỉ đọc. Có thể thay đổi cách hiển thị thuộc tính ngày mà không sửa giá trị YAML.
 
 ## Yêu cầu và khả năng tương thích

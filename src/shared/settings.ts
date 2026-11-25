@@ -1,3 +1,4 @@
+import { HOLIDAY_REGIONS, type RegionalHolidayRegion } from "../core/calendar/regional-holidays";
 import { isObservanceGroup, type ObservanceGroup } from "../core/calendar/observance-groups";
 import {
   PERIODIC_NOTE_TYPES,
@@ -46,7 +47,7 @@ export type PluginLocale =
   | "vi-VN";
 export type FixedPluginLocale = Exclude<PluginLocale, "auto">;
 export type CalendarExtension = CalendarExtensionId;
-export type HolidayRegion = "cn" | "sg";
+export type HolidayRegion = RegionalHolidayRegion;
 export type QuarterNameMode = "number" | "chinese";
 export type FontSizeMode = "follow-obsidian" | "follow-widget" | "immutable";
 export type TemplateEngine = "builtin" | "templater";
@@ -443,7 +444,7 @@ export function isCalendarExtension(value: unknown): value is CalendarExtension 
 }
 
 export function isHolidayRegion(value: unknown): value is HolidayRegion {
-  return value === "cn" || value === "sg";
+  return HOLIDAY_REGIONS.some(region => region === value);
 }
 
 export function isQuarterNameMode(value: unknown): value is QuarterNameMode {

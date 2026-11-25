@@ -9,7 +9,9 @@ describe("holiday coverage release diagnostics", () => {
   it("reports the verified schedules for the current and following years", () => {
     const report = createHolidayCoverageReport(2026);
 
-    expect(report).toEqual({
+    expect(report.entries).toHaveLength(44);
+    expect(report.entries.every(entry => entry.disposition === "available")).toBe(true);
+    expect({ ...report, entries: report.entries.filter(entry => entry.region === "cn" || entry.region === "sg") }).toEqual({
       currentYear: 2026,
       years: [2026, 2027],
       entries: [
