@@ -65,6 +65,8 @@ Holiday extensions implement only Mainland China public holidays/workday adjustm
 
 Cultural and religious observances have separate opt-in switches. Western feasts include Good Friday, Easter, Pentecost, Christmas and Advent Sunday. The old-calendar Orthodox option uses Julian fixed feasts and the Julian Paschal tables. The two conventions cover 1583–4099. Nowruz follows Persian Farvardin 1, Ethiopian New Year follows Meskerem 1, and the Jewish option marks the first daytime civil date of Rosh Hashanah, Yom Kippur and Passover. These events use the existing date-cell event list, preserve source names when they coincide, and do not set regional work/rest markers.
 
+First installation initializes only registered choices from the actual interface language tag. Chinese, Persian, Hebrew and Amharic start with their respective daily calendars when available; other languages start with available entries from their documented preset. Region recommendations only affect dropdown order. The Japanese preset may select Japan when its holiday provider is installed. Saved choices, including empty arrays, take precedence across devices, language changes and upgrades.
+
 ## 5. Documents, tasks, and statistics
 
 - Month displays persistent details for the selected day below the grid, including note status, task progress, configured calendar expressions, calendar events, regional holidays and all ICS events. Touch and keyboard users can read these details with hover previews disabled.

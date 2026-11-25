@@ -13,14 +13,14 @@ import {
 import { IcsEventIndex } from "../../src/features/calendar/ics-event-index";
 import { selectMonthCalendar } from "../../src/features/calendar/month-calendar-query";
 import { selectWeekCalendar } from "../../src/features/calendar/week-calendar-query";
-import { createDefaultSettings } from "../../src/shared/settings";
+import { createFirstInstallSettings } from "../../src/features/calendar/calendar-language-preferences";
 import { createParsedNoteIndexSnapshot } from "../support/note-index-snapshot";
 
 describe("calendar extension date boundaries", () => {
   it.each([false, true])(
     "keeps the complete Gregorian month and note data with default extensions (cached=%s)",
     (cached) => {
-      const settings = createDefaultSettings();
+      const settings = createFirstInstallSettings("zh-CN");
       const notes = createParsedNoteIndexSnapshot({
         "Daily/1582-10-10.md": "Historical note\n- [ ] Read the source",
       }, 1);

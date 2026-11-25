@@ -23,9 +23,9 @@ describe("settings", () => {
   it("creates independent mutable arrays and periodic note records", () => {
     const first = createDefaultSettings();
     const second = createDefaultSettings();
-    first.holidayRegions.pop();
+    first.holidayRegions.push("sg");
     first.periodicNotes.daily.pattern = "[Daily]/YYYY-MM-DD";
-    expect(second.holidayRegions).toEqual(["cn", "sg"]);
+    expect(second.holidayRegions).toEqual([]);
     expect(second.periodicNotes.daily.pattern).toBe("");
   });
 
@@ -384,6 +384,10 @@ describe("settings", () => {
       const migrated = migrateSettings({ schemaVersion });
       expect(migrated.schemaVersion).toBe(SETTINGS_SCHEMA_VERSION);
       const expected = createDefaultSettings();
+      if (schemaVersion < 21) {
+        expected.calendarExtensions = ["chinese-lunar"];
+        expected.holidayRegions = ["cn", "sg"];
+      }
       if (schemaVersion < 19) {
         for (const config of Object.values(expected.periodicNotes)) config.pathLocale = "en";
       }

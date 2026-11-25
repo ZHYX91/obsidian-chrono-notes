@@ -7,6 +7,7 @@ const mocks = vi.hoisted(() => ({
   buttonText: vi.fn(),
   buttonDisabled: vi.fn(),
   descriptions: vi.fn(),
+  dropdowns: new Map<string, { options: string[]; value: string | undefined }>(),
 }));
 
 vi.mock("obsidian", () => ({
@@ -25,13 +26,16 @@ vi.mock("obsidian", () => ({
     }
 
     addDropdown(configure: (dropdown: unknown) => void): this {
+      const state: { options: string[]; value: string | undefined } = { options: [], value: undefined };
       const dropdown = {
-        selectEl: { dataset: {} },
-        addOption: vi.fn(() => dropdown),
-        setValue: vi.fn(() => dropdown),
+        selectEl: { dataset: {} as Record<string, string> },
+        addOption(id: string) { state.options.push(id); return dropdown; },
+        setValue(id: string) { state.value = id; return dropdown; },
         onChange: vi.fn(() => dropdown),
       };
       configure(dropdown);
+      const control = dropdown.selectEl.dataset.chronoSettingsControl;
+      if (control !== undefined) mocks.dropdowns.set(control, state);
       return this;
     }
 
@@ -88,6 +92,41 @@ describe("extensions and integrations settings runtime", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.toggleChange = null;
+    mocks.dropdowns.clear();
+  });
+
+  it("orders choices without changing saved slots and retains an unavailable selected calendar", () => {
+    const settings = createDefaultSettings();
+    settings.holidayRegions = ["cn"];
+    settings.calendarExtensions = ["persian"];
+    const persistSettings = vi.fn();
+    const context = {
+      host: {
+        settings, isSettingsReadOnly: () => false, getIcsSnapshot: () => null,
+        subscribeIcs: () => () => undefined,
+      },
+      translator: createTranslator("auto", "zh-SG"),
+      persistSettings,
+      flushSettingsSaveOnBlur: vi.fn(),
+    } as unknown as SettingsSectionContext;
+    const support = vi.spyOn(Intl.DateTimeFormat.prototype, "resolvedOptions").mockReturnValue({
+      locale: "en", calendar: "gregory", numberingSystem: "latn", timeZone: "UTC",
+    });
+    try {
+      renderExtensionsAndIntegrationsSettingsSection(testDocument.createElement("div"), context);
+      const firstRegion = mocks.dropdowns.get("holiday-region-0");
+      expect(firstRegion?.options.slice(0, 3)).toEqual(["", "sg", "cn"]);
+      expect(firstRegion?.value).toBe("cn");
+      expect(mocks.dropdowns.get("holiday-region-1")?.options).not.toContain("cn");
+      const calendar = mocks.dropdowns.get("calendar-extension-0");
+      expect(calendar?.options).toContain("persian");
+      expect(calendar?.value).toBe("persian");
+      expect(mocks.dropdowns.get("calendar-extension-1")?.options).not.toContain("persian");
+      expect(persistSettings).not.toHaveBeenCalled();
+      expect(settings.calendarExtensions).toEqual(["persian"]);
+    } finally {
+      support.mockRestore();
+    }
   });
 
   it("persists an ICS toggle once and delegates its single refresh to the plugin", async () => {
@@ -103,7 +142,7 @@ describe("extensions and integrations settings runtime", () => {
         isSettingsReadOnly: () => false,
         refreshIcs,
       },
-      translator: { t: (key: string) => key },
+      translator: createTranslator("en", "en"),
       persistSettings,
       scheduleSettingsSave: vi.fn(),
       flushSettingsSave: vi.fn(),

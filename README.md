@@ -56,6 +56,8 @@ Back up and preserve `Vault/.obsidian/plugins/chrono-notes/data.json` when it ex
 3. Optionally enable calendar and holiday extensions or add local ICS sources.
 4. Click a date to select it; double-click or press Enter to open or create its periodic note. Right-click opens date actions; when ICS events exist, **View calendar events** shows the complete event list. On a touch screen, long-press a date to open its menu. If no menu appears, releasing your finger opens or creates the daily note. Long-pressing a week, month, or other period entry opens its note directly.
 
+On first use the plugin suggests extensions using the interface language. Choices are saved with the vault. Changing the language later keeps your calendars and holiday regions.
+
 The main calendar, month selectors, and date dialogs always use the Gregorian calendar. Changing the interface language translates month names and digits; it does not select a different calendar. Choose calendar extensions separately to show additional date information.
 
 To go directly to a day, run **Jump to date** from the command palette and enter a Gregorian date, for example `2026-07-19`.

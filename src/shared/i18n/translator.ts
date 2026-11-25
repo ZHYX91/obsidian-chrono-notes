@@ -10,6 +10,7 @@ import type {
 
 export interface Translator {
   readonly locale: SupportedLocale;
+  readonly languageTag: string;
   readonly direction: "ltr" | "rtl";
   readonly t: (key: MessageKey, parameters?: MessageParameters) => string;
 }
@@ -56,6 +57,7 @@ export function createTranslator(
   const locale = resolvePluginLocale(configuredLocale, hostLocale);
   return Object.freeze({
     locale,
+    languageTag: configuredLocale === "auto" ? hostLocale : configuredLocale,
     direction: locale === "ar" || locale === "fa" || locale === "he" ? "rtl" : "ltr",
     t: (key: MessageKey, parameters: MessageParameters = {}) => {
       const message = catalogs[locale][key];

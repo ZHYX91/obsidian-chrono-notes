@@ -835,6 +835,43 @@ describe("ChronoNotesPlugin lifecycle composition", () => {
     plugin.unload();
   });
 
+  it("writes first-install selections once, then preserves cleared slots across language changes and reloads", async () => {
+    mocks.state.loadData.mockResolvedValue(null);
+    mocks.state.appLanguage = "zh-HK";
+    const plugin = createPlugin();
+    await plugin.onload();
+    expect(mocks.state.saveData).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({
+      calendarExtensions: ["chinese-lunar"], holidayRegions: [],
+    }));
+
+    plugin.settings.calendarExtensions = [];
+    await plugin.saveSettings();
+    const stored = mocks.state.saveData.mock.lastCall?.[0];
+    plugin.unload();
+
+    mocks.state.appLanguage = "zh";
+    mocks.state.loadData.mockResolvedValue(stored);
+    const reopened = createPlugin();
+    await reopened.onload();
+    expect(reopened.settings.calendarExtensions).toEqual([]);
+    expect(mocks.state.saveData).toHaveBeenCalledTimes(2);
+    reopened.unload();
+  });
+
+  it.each([
+    { calendarExtensions: [], holidayRegions: [] },
+    { calendarExtensions: ["chinese-lunar"], holidayRegions: ["cn", "sg"] },
+    { calendarExtensions: ["hebrew", "persian"], holidayRegions: ["sg"] },
+  ])("preserves saved schema 20 selections without reapplying recommendations: %j", async (choices) => {
+    mocks.state.appLanguage = "ja";
+    mocks.state.loadData.mockResolvedValue({ schemaVersion: 20, ...choices });
+    const plugin = createPlugin();
+    await plugin.onload();
+    expect(plugin.settings).toMatchObject(choices);
+    expect(mocks.state.saveData).toHaveBeenCalledExactlyOnceWith(expect.objectContaining(choices));
+    plugin.unload();
+  });
+
   it("keeps migrated runtime settings usable when persistence fails", async () => {
     mocks.state.loadData.mockResolvedValue({
       schemaVersion: 16,
@@ -856,7 +893,7 @@ describe("ChronoNotesPlugin lifecycle composition", () => {
     expect(plugin.settings.schemaVersion).toBe(SETTINGS_SCHEMA_VERSION);
     expect(plugin.settings.periodicNotes.weekly.pattern).toBe("[Weekly]/GGGG-[W]WW");
     expect(error).toHaveBeenCalledWith(
-      "Chrono Notes: failed to persist migrated settings",
+      "Chrono Notes: failed to persist initialized settings",
       expect.any(Error),
     );
     plugin.unload();

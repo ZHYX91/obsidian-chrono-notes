@@ -2,14 +2,15 @@ import { OBSERVANCE_GROUPS } from "../../core/calendar/observance-groups";
 import { Setting, type ButtonComponent } from "obsidian";
 
 import {
-  CALENDAR_EXTENSION_DEFINITIONS,
+  type CalendarExtensionDefinition,
   isCalendarExtensionSupported,
   updateCalendarExtensionSlot,
 } from "../../features/calendar/calendar-extension-registry";
 import {
-  HOLIDAY_REGION_DEFINITIONS,
+  type HolidayRegionDefinition,
   updateHolidayRegionSlot,
 } from "../../features/calendar/holiday-region-registry";
+import { getCalendarOptionsForLanguage } from "../../features/calendar/calendar-language-preferences";
 import {
   isCalendarExtension,
   isHolidayRegion,
@@ -30,6 +31,7 @@ export function renderExtensionsAndIntegrationsSettingsSection(
   context: SettingsSectionContext,
 ): SettingsCleanup {
   const { t } = context.translator;
+  const options = getCalendarOptionsForLanguage(context.translator.languageTag);
 
   containerEl.createEl("h3", {
     text: t("settings.extensions.calendarExtensions"),
@@ -38,8 +40,8 @@ export function renderExtensionsAndIntegrationsSettingsSection(
     cls: "setting-item-description",
     text: t("settings.extensions.calendarExtensionsDesc"),
   });
-  addCalendarExtensionSlot(containerEl, 0, context);
-  addCalendarExtensionSlot(containerEl, 1, context);
+  addCalendarExtensionSlot(containerEl, 0, context, options.calendars);
+  addCalendarExtensionSlot(containerEl, 1, context, options.calendars);
 
   containerEl.createEl("h3", {
     text: t("settings.extensions.holidayExtensions"),
@@ -48,9 +50,9 @@ export function renderExtensionsAndIntegrationsSettingsSection(
     cls: "setting-item-description",
     text: t("settings.extensions.holidayExtensionsDesc"),
   });
-  addHolidayRegionSlot(containerEl, 0, context);
-  addHolidayRegionSlot(containerEl, 1, context);
-  addHolidayRegionSlot(containerEl, 2, context);
+  addHolidayRegionSlot(containerEl, 0, context, options.regions);
+  addHolidayRegionSlot(containerEl, 1, context, options.regions);
+  addHolidayRegionSlot(containerEl, 2, context, options.regions);
 
   containerEl.createEl("h3", { text: t("observances.title") });
   for (const group of OBSERVANCE_GROUPS) {
@@ -144,6 +146,7 @@ function addCalendarExtensionSlot(
   containerEl: HTMLElement,
   slot: 0 | 1,
   context: SettingsSectionContext,
+  definitions: readonly CalendarExtensionDefinition[],
 ): void {
   const { t } = context.translator;
   const selected = context.host.settings.calendarExtensions;
@@ -151,7 +154,7 @@ function addCalendarExtensionSlot(
   const usedByOtherSlot = selected[slot === 0 ? 1 : 0] ?? null;
   const definition = current === null
     ? null
-    : CALENDAR_EXTENSION_DEFINITIONS.find(({ id }) => id === current) ?? null;
+    : definitions.find(({ id }) => id === current) ?? null;
   const currentSupported = current === null ||
     isCalendarExtensionSupported(current, context.translator.locale);
 
@@ -169,7 +172,7 @@ function addCalendarExtensionSlot(
   setting.addDropdown((dropdown) => {
     dropdown.selectEl.dataset.chronoSettingsControl = `calendar-extension-${slot}`;
     dropdown.addOption("", t("settings.extensions.calendarExtensionNone"));
-    for (const extension of CALENDAR_EXTENSION_DEFINITIONS) {
+    for (const extension of definitions) {
       if (
         extension.id !== usedByOtherSlot &&
         (extension.id === current ||
@@ -195,6 +198,7 @@ function addHolidayRegionSlot(
   containerEl: HTMLElement,
   slot: 0 | 1 | 2,
   context: SettingsSectionContext,
+  definitions: readonly HolidayRegionDefinition[],
 ): void {
   const { t } = context.translator;
   const selected = context.host.settings.holidayRegions;
@@ -209,7 +213,7 @@ function addHolidayRegionSlot(
   new Setting(containerEl).setName(t(slotKeys[slot])).addDropdown((dropdown) => {
     dropdown.selectEl.dataset.chronoSettingsControl = `holiday-region-${slot}`;
     dropdown.addOption("", t("settings.extensions.holidayRegionNone"));
-    for (const definition of HOLIDAY_REGION_DEFINITIONS) {
+    for (const definition of definitions) {
       if (!usedByOtherSlots.has(definition.id)) {
         dropdown.addOption(definition.id, t(definition.labelKey));
       }
