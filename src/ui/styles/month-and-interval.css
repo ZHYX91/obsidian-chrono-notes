@@ -72,7 +72,7 @@
   overflow: hidden;
   padding: 0 5px;
   position: relative;
-  text-align: left;
+  text-align: start;
 }
 
 .chrono-notes-calendar button.chrono-notes-week-interval-item:not([data-task-state="none"]) {
@@ -82,7 +82,7 @@
 
 .chrono-notes-calendar button.chrono-notes-week-interval-item:not([data-task-state="none"])::after {
   background: color-mix(in srgb, var(--chrono-notes-interval-color) 68%, var(--background-primary));
-  border-radius: inherit;
+  border-radius: 2px;
   content: "";
   inline-size: var(--chrono-notes-interval-task-progress);
   inset-block: 0;
@@ -98,26 +98,6 @@
 
 .chrono-notes-calendar button.chrono-notes-week-interval-item:not([data-task-state="none"]):hover::after {
   background: color-mix(in srgb, var(--chrono-notes-interval-color) 80%, var(--background-primary));
-}
-
-.chrono-notes-calendar button.chrono-notes-week-interval-item[data-continues-before="true"]::after {
-  border-bottom-left-radius: 0;
-  border-top-left-radius: 0;
-}
-
-.chrono-notes-calendar button.chrono-notes-week-interval-item[data-continues-after="true"][data-task-state="complete"]::after {
-  border-bottom-right-radius: 0;
-  border-top-right-radius: 0;
-}
-
-.chrono-notes-calendar button.chrono-notes-interval-bar[data-continues-before="true"] {
-  border-bottom-left-radius: 0;
-  border-top-left-radius: 0;
-}
-
-.chrono-notes-calendar button.chrono-notes-interval-bar[data-continues-after="true"] {
-  border-bottom-right-radius: 0;
-  border-top-right-radius: 0;
 }
 
 .chrono-notes-calendar button.chrono-notes-interval-bar[data-color-index="0"] { --chrono-notes-interval-color: #4f7cac; }
@@ -173,24 +153,18 @@
   transform: translateY(-50%);
 }
 
-.chrono-notes-calendar button.chrono-notes-month-interval-item[data-continues-before="true"]::after {
-  border-bottom-left-radius: 0;
-  border-top-left-radius: 0;
+.chrono-notes-calendar button.chrono-notes-interval-bar[data-continues-before="true"],
+.chrono-notes-calendar button.chrono-notes-month-interval-item[data-continues-before="true"]::before,
+.chrono-notes-calendar button.chrono-notes-interval-bar[data-continues-before="true"]::after {
+  border-start-start-radius: 0;
+  border-end-start-radius: 0;
 }
 
-.chrono-notes-calendar button.chrono-notes-month-interval-item[data-continues-after="true"][data-task-state="complete"]::after {
-  border-bottom-right-radius: 0;
-  border-top-right-radius: 0;
-}
-
-.chrono-notes-calendar button.chrono-notes-month-interval-item[data-continues-before="true"]::before {
-  border-bottom-left-radius: 0;
-  border-top-left-radius: 0;
-}
-
-.chrono-notes-calendar button.chrono-notes-month-interval-item[data-continues-after="true"]::before {
-  border-bottom-right-radius: 0;
-  border-top-right-radius: 0;
+.chrono-notes-calendar button.chrono-notes-interval-bar[data-continues-after="true"],
+.chrono-notes-calendar button.chrono-notes-month-interval-item[data-continues-after="true"]::before,
+.chrono-notes-calendar button.chrono-notes-interval-bar[data-continues-after="true"][data-task-state="complete"]::after {
+  border-start-end-radius: 0;
+  border-end-end-radius: 0;
 }
 
 .chrono-notes-calendar button.chrono-notes-month-interval-item > span {
