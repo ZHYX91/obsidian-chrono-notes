@@ -1,4 +1,4 @@
-import type { ObservanceGroup } from "./observances";
+import type { ObservanceGroup } from "./observance-groups";
 import type { LocalDate } from "../periodic/periodic-date";
 
 export type CalendarExtensionId =

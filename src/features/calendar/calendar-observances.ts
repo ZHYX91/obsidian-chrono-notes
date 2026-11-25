@@ -2,7 +2,8 @@ import {
   createCalendarExtensionEvent,
   type CalendarExtensionEvent,
 } from "../../core/calendar/calendar-extension";
-import { getObservance, type ObservanceGroup } from "../../core/calendar/observances";
+import type { ObservanceGroup } from "../../core/calendar/observance-groups";
+import { getObservance } from "../../core/calendar/observances";
 import type { LocalDate } from "../../core/periodic/periodic-date";
 import { createTranslator } from "../../shared/i18n";
 

@@ -1,16 +1,9 @@
+import type { ObservanceGroup } from "./observance-groups";
 import { toUtcDate, type LocalDate } from "../periodic/periodic-date";
 import { toJulianDate } from "./julian";
 
-export const OBSERVANCE_GROUPS = [
-  "western", "orthodox", "nowruz", "hebrew-feasts", "ethiopian-new-year",
-] as const;
-export type ObservanceGroup = typeof OBSERVANCE_GROUPS[number];
 export type ObservanceName = "goodFriday" | "easter" | "pentecost" | "christmas" |
   "advent" | "nowruz" | "roshHashanah" | "yomKippur" | "passover" | "enkutatash";
-
-export function isObservanceGroup(value: unknown): value is ObservanceGroup {
-  return OBSERVANCE_GROUPS.some(group => group === value);
-}
 
 const DAY_MS = 86_400_000;
 const dateFormatters = new Map<string, Intl.DateTimeFormat>();

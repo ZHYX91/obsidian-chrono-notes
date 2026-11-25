@@ -1,4 +1,4 @@
-import type { ObservanceGroup } from "../../core/calendar/observances";
+import type { ObservanceGroup } from "../../core/calendar/observance-groups";
 import type {
   CalendarExtensionDay,
   CalendarExtensionEvent,

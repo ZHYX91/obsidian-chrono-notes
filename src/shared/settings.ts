@@ -1,4 +1,4 @@
-import { isObservanceGroup, type ObservanceGroup } from "../core/calendar/observances";
+import { isObservanceGroup, type ObservanceGroup } from "../core/calendar/observance-groups";
 import {
   PERIODIC_NOTE_TYPES,
   type PeriodicNoteType,

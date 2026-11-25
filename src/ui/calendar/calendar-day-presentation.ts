@@ -1,4 +1,4 @@
-import { isObservanceGroup } from "../../core/calendar/observances";
+import { isObservanceGroup } from "../../core/calendar/observance-groups";
 import type { CalendarExtensionEvent } from "../../core/calendar/calendar-extension";
 import type { CalendarDay } from "../../features/calendar/calendar-day-query";
 import { CALENDAR_EXTENSION_DEFINITIONS } from "../../features/calendar/calendar-extension-registry";

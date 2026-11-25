@@ -1,4 +1,4 @@
-import type { ObservanceGroup } from "../../core/calendar/observances";
+import type { ObservanceGroup } from "../../core/calendar/observance-groups";
 import { buildMonthGrid } from "../../core/calendar/month-grid";
 import type {
   LocalDate,

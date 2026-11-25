@@ -1,4 +1,4 @@
-import type { ObservanceGroup } from "../../core/calendar/observances";
+import type { ObservanceGroup } from "../../core/calendar/observance-groups";
 import { normalizeIntervalNoteFolder } from "../../core/note/interval-note-spec";
 import { getCalendarWeekIdentity } from "../../core/periodic/calendar-week";
 import {

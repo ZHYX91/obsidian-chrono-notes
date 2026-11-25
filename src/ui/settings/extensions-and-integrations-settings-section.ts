@@ -1,4 +1,4 @@
-import { OBSERVANCE_GROUPS } from "../../core/calendar/observances";
+import { OBSERVANCE_GROUPS } from "../../core/calendar/observance-groups";
 import { Setting, type ButtonComponent } from "obsidian";
 
 import {
