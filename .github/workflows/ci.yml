@@ -2,7 +2,10 @@ name: CI
 
 on:
   push:
+    branches: [main]
+    tags: ['**']
   pull_request:
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -40,7 +43,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Type-check, test, and build
+      - name: Type-check, test with coverage in UTC, and build
+        env:
+          TZ: UTC
         run: npm run check
 
       - name: Install Chromium for settings interaction tests
@@ -49,8 +54,10 @@ jobs:
       - name: Test settings interaction in Chromium
         run: npm run test:browser
 
-      - name: Test deterministic date behavior across time zones
-        run: npm run test:timezones
+      - name: Run the suite in the New York time zone
+        env:
+          TZ: America/New_York
+        run: npm test
 
       - name: Run the quick algorithmic benchmark gate
         run: npm run bench:quick
