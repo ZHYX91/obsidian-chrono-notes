@@ -42,6 +42,8 @@ Conservez et sauvegardez `data.json` ; remplacez uniquement les fichiers du modu
 
 Le calendrier principal, les sélecteurs de mois et les boîtes de dialogue de date utilisent toujours le calendrier grégorien. La langue change les noms des mois et les chiffres, pas le calendrier. Les extensions ajoutent séparément les informations d’autres calendriers.
 
+Pour accéder directement à un jour, choisissez **Aller à une date** dans la palette de commandes et saisissez une date du calendrier grégorien, par exemple `2026-07-19`.
+
 **Avant d’ajouter une source ICS :** Chrono Notes lit les fichiers locaux mais ne récupère pas d’abonnements distants et ne développe pas les répétitions `RRULE` ou `RDATE`. Les événements ignorés sont comptés ; un calendrier qui dépend de ces répétitions peut donc sembler incomplet. Les chemins hors du Vault ne sont utilisables que sur ordinateur.
 
 Choisissez les types de notes, leurs chemins et leurs modèles dans les paramètres de Chrono Notes, puis ouvrez le calendrier depuis le ruban ou la palette de commandes. **Un clic sélectionne une date sans créer de note.** Double-cliquez ou appuyez sur Entrée pour ouvrir ou créer la note. Un clic droit ouvre le menu de la date ; si des événements ICS sont présents, ce menu permet d’en consulter la liste complète. Ctrl/Cmd-clic ou clic central ouvre la note dans un nouvel onglet. Activez au besoin les sources ICS et les calendriers supplémentaires.

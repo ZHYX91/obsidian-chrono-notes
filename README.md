@@ -58,6 +58,8 @@ Back up and preserve `Vault/.obsidian/plugins/chrono-notes/data.json` when it ex
 
 The main calendar, month selectors, and date dialogs always use the Gregorian calendar. Changing the interface language translates month names and digits; it does not select a different calendar. Choose calendar extensions separately to show additional date information.
 
+To go directly to a day, run **Jump to date** from the command palette and enter a Gregorian date, for example `2026-07-19`.
+
 **Before adding ICS events:** Chrono Notes reads local calendar files, not remote subscriptions, and does not expand `RRULE` or `RDATE` recurring events. Skipped events are counted, so a calendar relying on recurrence may look incomplete. A source path outside the Vault is desktop-only.
 
 Select a date in Month view to read its note status, calendar details, holidays, and complete ICS event list with sources below the grid. When creation confirmation is enabled, the dialog shows the target path and any larger-period notes that will be created or kept.

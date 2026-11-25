@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 
+import { parseDateInput } from "../../src/features/calendar/date-picker";
+
 import {
   MESSAGE_CATALOGS,
   createTranslator,
@@ -68,6 +70,19 @@ describe("resolvePluginLocale", () => {
 });
 
 describe("createTranslator", () => {
+  it("accepts all date examples shown in the jump dialog in every language", () => {
+    for (const locale of Object.keys(MESSAGE_CATALOGS) as (keyof MessageCatalogs)[]) {
+      const hint = createTranslator(locale, "en").t("dateModal.formats");
+      const examples = hint.match(/[0-9]+(?:[-/.][0-9]+)*/g) ?? [];
+      expect(new Set(examples).size, locale).toBe(4);
+      for (const example of examples) {
+        expect(parseDateInput(example), `${locale}: ${example}`).toEqual({
+          year: 2026, month: 7, day: 19,
+        });
+      }
+    }
+  });
+
   it("labels the automatic language choice as following Obsidian in every locale", () => {
     for (const catalog of Object.values(MESSAGE_CATALOGS)) {
       expect(catalog["settings.general.auto"]).toEqual(
@@ -82,22 +97,21 @@ describe("createTranslator", () => {
   });
 
   it("interpolates English and both Chinese variants independently", () => {
-    expect(createTranslator("en", "zh-CN").t("calendar.previous", {
-      period: "month",
-    })).toBe("Previous month");
-    expect(createTranslator("zh-CN", "en").t("calendar.previous", {
-      period: "一个月",
-    })).toBe("上一个月");
-    expect(createTranslator("zh-TW", "en").t("calendar.previous", {
-      period: "一個月",
-    })).toBe("上一個月");
+    expect(createTranslator("en", "zh-CN").t("navbar.weekLabel", { week: 12 })).toBe("Week 12");
+    expect(createTranslator("zh-CN", "en").t("navbar.weekLabel", { week: 12 })).toBe("第12周");
+    expect(createTranslator("zh-TW", "en").t("navbar.weekLabel", { week: 12 })).toBe("第12週");
   });
 
-  it("keeps navigation and task actions meaningful after interpolation", () => {
+  it("uses the grammatical form of each calendar period in navigation and task actions", () => {
     const german = createTranslator("de-DE", "en");
-    for (const period of ["Woche", "Monat", "Jahr", "Jahrhundert"]) {
-      expect(german.t("calendar.previous", { period })).toBe(`Vorheriger Zeitraum: ${period}`);
-      expect(german.t("calendar.next", { period })).toBe(`Nächster Zeitraum: ${period}`);
+    for (const [period, previous, next] of [
+      ["week", "Vorherige Woche", "Nächste Woche"],
+      ["month", "Vorheriger Monat", "Nächster Monat"],
+      ["year", "Vorheriges Jahr", "Nächstes Jahr"],
+      ["century", "Vorheriges Jahrhundert", "Nächstes Jahrhundert"],
+    ] as const) {
+      expect(german.t(`calendar.previous.${period}`)).toBe(previous);
+      expect(german.t(`calendar.next.${period}`)).toBe(next);
     }
     expect(createTranslator("he", "en").t("weekView.toggleTask", {
       task: "Example", status: "Open",

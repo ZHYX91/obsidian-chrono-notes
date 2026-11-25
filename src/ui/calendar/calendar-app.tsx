@@ -542,18 +542,12 @@ export function CalendarApp({
       : viewMode === "month"
         ? monthHeatmapEnabled
         : false;
-  const periodLabel = t(`calendar.period.${viewMode}`);
   const primaryPickerKind = viewMode === "week" ? "week-year"
     : viewMode === "century" ? "century" : "year";
   const headerPeriodSelected = selectionKind === (primaryPickerKind === "week-year" ? "year" : primaryPickerKind) && (centuryQuery !== null
     ? selected.year >= centuryQuery.range.start.year && selected.year <= centuryQuery.range.end.year
     : selected.year === (viewMode === "week" ? headerWeek.weekYear : visibleMonth.year));
-  const heatmapPeriodLabel =
-    viewMode === "year"
-      ? t("calendar.heatmap.period.year")
-      : viewMode === "week"
-        ? t("calendar.heatmap.period.week")
-        : t("calendar.heatmap.period.month");
+  const heatmapLabel = t(`calendar.heatmap.toggle.${viewMode === "century" ? "month" : viewMode}`);
   const selectedPickerQuarter =
     selectionKind === "quarter" && selected.year === visibleMonth.year
       ? Math.floor((selected.month - 1) / 3) + 1
@@ -591,7 +585,7 @@ export function CalendarApp({
         <div className="chrono-notes-calendar-navigation">
           <button
             type="button"
-            aria-label={t("calendar.previous", { period: periodLabel })}
+            aria-label={t(`calendar.previous.${viewMode}`)}
             disabled={centuryQuery !== null && centuryQuery.range.start.year <= 1}
             onClick={() => showPeriod(-1)}
           >
@@ -754,7 +748,7 @@ export function CalendarApp({
           </div>
           <button
             type="button"
-            aria-label={t("calendar.next", { period: periodLabel })}
+            aria-label={t(`calendar.next.${viewMode}`)}
             disabled={centuryQuery !== null && centuryQuery.range.end.year >= 9999}
             onClick={() => showPeriod(1)}
           >
@@ -855,13 +849,9 @@ export function CalendarApp({
             <button
               type="button"
               className={`chrono-notes-heatmap-toggle${heatmapEnabled ? " is-active" : ""}`}
-              aria-label={t("calendar.heatmap.toggle", {
-                period: heatmapPeriodLabel,
-              })}
+              aria-label={heatmapLabel}
               aria-pressed={heatmapEnabled}
-              title={t("calendar.heatmap.toggle", {
-                period: heatmapPeriodLabel,
-              })}
+              title={heatmapLabel}
               onClick={() => {
                 if (viewMode === "year")
                   void onSetYearHeatmap(!settings.yearViewHeatmap);

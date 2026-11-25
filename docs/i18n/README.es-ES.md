@@ -42,6 +42,8 @@ Conserva una copia de `data.json` y reemplaza solo los archivos del plugin. Borr
 
 El calendario principal, los selectores de mes y los diálogos de fecha siempre usan el calendario gregoriano. Cambiar el idioma traduce los meses y los dígitos, pero no cambia el calendario. Las extensiones permiten añadir información de otros calendarios por separado.
 
+Para ir directamente a un día, elige **Ir a una fecha** en la paleta de comandos e introduce una fecha del calendario gregoriano, por ejemplo `2026-07-19`.
+
 **Antes de añadir ICS:** Chrono Notes lee archivos locales, pero no descarga suscripciones remotas ni desarrolla los eventos repetidos con `RRULE` o `RDATE`. Cuenta los eventos omitidos; por eso un calendario basado en recurrencias puede parecer incompleto. Las rutas fuera del Vault solo funcionan en escritorio.
 
 Configura los tipos de notas, sus rutas y plantillas, y abre el calendario desde la barra lateral o la paleta de comandos. **Un clic selecciona la fecha, pero no crea ninguna nota.** Haz doble clic o pulsa Intro para abrir o crear la nota. El clic derecho abre el menú de la fecha; si hay eventos ICS, puedes consultar la lista completa desde ese menú. Ctrl/Cmd-clic o clic central abre la nota en una pestaña nueva. Activa los calendarios, festivos y archivos ICS según los necesites.

@@ -42,6 +42,8 @@ Eine vorhandene `data.json` sichern und behalten; nur die drei Programmdateien e
 
 Hauptkalender, Monatsauswahl und Datumsdialoge verwenden immer den gregorianischen Kalender. Die Oberflächensprache ändert Monatsnamen und Ziffern, nicht das Kalendersystem. Zusätzliche Datumsinformationen wählen Sie über Kalendererweiterungen.
 
+Um direkt zu einem Tag zu wechseln, wählen Sie **Zu Datum springen** in der Befehlspalette und geben Sie ein gregorianisches Datum wie `2026-07-19` ein.
+
 **Vor dem Hinzufügen einer ICS-Datei:** Chrono Notes liest lokale Kalenderdateien, ruft aber keine Online-Abonnements ab und erweitert keine wiederkehrenden Ereignisse mit `RRULE` oder `RDATE`. Übersprungene Termine werden gezählt; Kalender mit Wiederholungsregeln können daher unvollständig aussehen. Pfade außerhalb des Vaults sind nur am Desktop verfügbar.
 
 Stellen Sie in Chrono Notes die gewünschten Notizarten, Pfade und Vorlagen ein und öffnen Sie den Kalender über die Seitenleiste oder Befehlspalette. **Ein Klick wählt ein Datum aus, erstellt aber keine Notiz.** Mit einem Doppelklick oder Enter öffnen oder erstellen Sie die Notiz. Ein Rechtsklick öffnet das Datumsmenü. Sind ICS-Termine vorhanden, können Sie dort die vollständige Terminliste öffnen. Strg/Befehl-Klick oder Mittelklick öffnet die Notiz in einem neuen Tab. Kalendererweiterungen und ICS-Quellen lassen sich bei Bedarf in den Einstellungen aktivieren.

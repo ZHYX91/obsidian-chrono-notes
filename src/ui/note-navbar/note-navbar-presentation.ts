@@ -37,22 +37,7 @@ export function formatPeriodicNoteName(
   noteType: PeriodicNoteType,
   t: Translator["t"],
 ): string {
-  switch (noteType) {
-    case "daily":
-      return t("navbar.period.daily");
-    case "weekly":
-      return t("navbar.period.weekly");
-    case "monthly":
-      return t("navbar.period.monthly");
-    case "quarterly":
-      return t("navbar.period.quarterly");
-    case "decadal":
-      return t("navbar.period.decadal");
-    case "century":
-      return t("navbar.period.century");
-    case "yearly":
-      return t("navbar.period.yearly");
-  }
+  return t(`periodicNote.name.${noteType}`);
 }
 
 export function formatNoteNavbarLabel(
