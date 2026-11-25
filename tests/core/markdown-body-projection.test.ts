@@ -1,9 +1,26 @@
-import { describe, expect, it } from "vitest";
+import { parser } from "@lezer/markdown";
+import { describe, expect, it, vi } from "vitest";
 
 import { projectMarkdownBody } from "../../src/core/document/markdown-body-projection";
 import { parseNote } from "../../src/core/note/parsed-note";
 
 describe("Markdown body projection", () => {
+  it.each([
+    ["ordinary Markdown", "- [ ] link to [one](one.md)"],
+    ["a delimiter inside inline code", "- [ ] document `<!--` syntax"],
+    ["a delimiter inside a fenced block", "```\n%%\n```"],
+    ["an escaped delimiter", String.raw`\%% literal`],
+  ])("parses unchanged Markdown once per note (%s)", (_label, prefix) => {
+    const parse = vi.spyOn(parser, "parse");
+    try {
+      const note = parseNote("Tasks.md", prefix + "\n- [ ] Submit 📅 2026-11-25");
+      expect(note.tasks.at(-1)).toMatchObject({ text: "Submit", dueDate: "2026-11-25" });
+      expect(parse).toHaveBeenCalledTimes(1);
+    } finally {
+      parse.mockRestore();
+    }
+  });
+
   it("preserves raw text and source lines while masking HTML comments", () => {
     const projection = projectMarkdownBody([
       "Visible",
