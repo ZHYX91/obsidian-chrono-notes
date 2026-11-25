@@ -169,6 +169,35 @@ test("the tutorial opens by keyboard and keeps readable line lengths on a wide s
 });
 
 for (const locale of ["en", "ar"] as const) {
+  test(`${locale}: shrinking a fitted row reveals its selection once and preserves manual browsing`, async ({ page }) => {
+    await page.setContent(fixture.html);
+    await page.addScriptTag({ content: fixture.script });
+    await page.evaluate((language) => window.mountChronoSettings(language, 900), locale);
+    const root = page.locator("#settings-fixture");
+    const earlier = page.locator('button[data-side="earlier"]');
+    const later = page.locator('button[data-side="later"]');
+    const last = page.getByRole("tab").last();
+    await last.click();
+    await expect(last).toHaveAttribute("aria-selected", "true");
+    await expect(earlier).toBeHidden();
+    await expect(later).toBeHidden();
+    const clippedWidth = () => page.evaluate(() => {
+      const state = window.captureChronoSettings();
+      return state.activeWidth - state.activeVisibleWidth;
+    });
+
+    await root.evaluate((element) => { element.style.width = "270px"; });
+    await expect(earlier).toBeVisible();
+    await expect.poll(clippedWidth).toBeLessThanOrEqual(1);
+    await earlier.click();
+    await expect(later).toBeVisible();
+    await expect.poll(clippedWidth).toBeGreaterThan(1);
+    await root.evaluate((element) => { element.style.width = "269px"; });
+    await page.evaluate(() => new Promise(requestAnimationFrame).then(() => new Promise(requestAnimationFrame)));
+    expect(await clippedWidth()).toBeGreaterThan(1);
+    await expect(last).toHaveAttribute("aria-selected", "true");
+  });
+
   test(`${locale}: reveals clipped settings tabs without switching the panel`, async ({ page }) => {
     await page.setContent(fixture.html);
     await page.addScriptTag({ content: fixture.script });
@@ -230,4 +259,89 @@ test.describe("touch settings tabs", () => {
     expect(target?.width).toBeGreaterThanOrEqual(44);
     expect(target?.height).toBeGreaterThanOrEqual(44);
   });
+});
+
+for (const scheme of ["light", "dark"] as const) {
+  for (const forcedColors of ["none", "active"] as const) {
+    test(`paints the selected underline separately from keyboard focus in ${scheme} with forced colors ${forcedColors}`, async ({ page }) => {
+      await page.emulateMedia({ colorScheme: scheme, forcedColors });
+      await page.setContent(fixture.html);
+      await page.addStyleTag({ content: `
+        :root { color-scheme: light dark; --background-primary: light-dark(white, #1c1c1c);
+          --text-normal: light-dark(#222, #ddd); --interactive-accent: light-dark(#9873f7, #8a5cf5); }
+        body { background: var(--background-primary); }
+      ` });
+      await page.addScriptTag({ content: fixture.script });
+      await page.evaluate(() => window.mountChronoSettings("en", 720));
+      const tabs = page.getByRole("tab");
+      await page.keyboard.press("Tab");
+      await tabs.nth(1).focus();
+      await expect(tabs.nth(1)).toBeFocused();
+      await expect(tabs.first()).toHaveAttribute("aria-selected", "true");
+
+      const screenshot = (await page.screenshot({ scale: "css" })).toString("base64");
+      const [selected, focused, idle] = await page.evaluate(async (png) => {
+        const image = new Image();
+        image.src = "data:image/png;base64," + png;
+        await image.decode();
+        const canvas = document.createElement("canvas");
+        canvas.width = image.width;
+        canvas.height = image.height;
+        const ctx = canvas.getContext("2d")!;
+        ctx.drawImage(image, 0, 0);
+        return Array.from(document.querySelectorAll('[role=tab]')).slice(0, 3).map((button) => {
+          const bounds = button.getBoundingClientRect();
+          const x = Math.floor(bounds.left + bounds.width / 2);
+          const pixel = (y: number) => Array.from(ctx.getImageData(x, Math.floor(y), 1, 1).data);
+          return { bottom: [pixel(bounds.bottom - 0.5), pixel(bounds.bottom - 1.5)],
+            top: pixel(bounds.top + 0.5), interior: pixel(bounds.top + 4.5) };
+        });
+      }, screenshot);
+      expect(selected!.bottom[0]).toEqual(selected!.bottom[1]);
+      for (let edge = 0; edge < 2; edge++) {
+        expect(selected!.bottom[edge]).not.toEqual(idle!.bottom[edge]);
+      }
+      expect(focused!.top).not.toEqual(focused!.interior);
+      expect(idle!.top).toEqual(idle!.interior);
+    });
+  }
+}
+
+test("hidden dropdown sizing preserves the intrinsic measurement without widening the settings pane", async ({ page }) => {
+  await page.setContent(fixture.html);
+  await page.addStyleTag({ content: ".dropdown.is-measuring {position:absolute;visibility:hidden;pointer-events:none;width:max-content!important;max-width:none!important}" });
+  await page.addScriptTag({ content: fixture.script });
+  await page.evaluate(() => window.mountChronoSettings("de-DE", 260));
+  await page.locator('[data-tab-id="extensions-and-integrations"]').click();
+  const result = await page.locator('[role="tabpanel"]').evaluate((panel) => {
+    const select = panel.querySelector("select")!;
+    const probe = select.cloneNode(false) as HTMLSelectElement;
+    probe.className = "dropdown is-measuring";
+    probe.setAttribute("aria-hidden", "true");
+    probe.tabIndex = -1;
+    probe.add(new Option("Lokalisiertes Kalenderformat ".repeat(5)));
+    select.after(probe);
+    return { width: panel.clientWidth, scroll: panel.scrollWidth, measured: probe.offsetWidth };
+  });
+  expect(result.measured).toBeGreaterThan(result.width);
+  expect(result.scroll).toBeLessThanOrEqual(result.width + 1);
+});
+
+test("a repeated boundary key keeps the active tab and its scroll position", async ({ page }) => {
+  await page.setContent(fixture.html);
+  await page.addScriptTag({ content: fixture.script });
+  await page.evaluate(() => window.mountChronoSettings("en", 260));
+  await page.addStyleTag({ content: "#settings-fixture { height: 260px; overflow-y: auto; }" });
+  const last = page.getByRole("tab").last();
+  await last.click();
+  await page.locator("#settings-fixture").evaluate((container) => {
+    container.scrollTop = 0;
+    container.addEventListener("keydown", (event) => {
+      container.dataset.blocked = String(event.defaultPrevented);
+    });
+  });
+  await last.press("End");
+  await expect(last).toBeFocused();
+  await expect(page.locator("#settings-fixture")).toHaveAttribute("data-blocked", "true");
+  expect(await page.locator("#settings-fixture").evaluate((container) => container.scrollTop)).toBe(0);
 });

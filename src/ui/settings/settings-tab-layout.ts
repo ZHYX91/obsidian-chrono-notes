@@ -61,9 +61,9 @@ export function createSettingsTabLayout(
         event.key,
         getComputedStyle(tabListEl).direction === "rtl" ? "rtl" : "ltr",
       );
-      if (next === tab.id) return;
+      if (next === null) return;
       event.preventDefault();
-      onSelect(next);
+      if (next !== tab.id) onSelect(next);
     });
     return buttonEl;
   });

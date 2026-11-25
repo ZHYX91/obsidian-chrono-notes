@@ -1,3 +1,4 @@
+import { connectNativeSettingFields } from "../settings/native-setting-fields";
 import { Modal, Setting, type App } from "obsidian";
 
 import type { IntervalNoteSpec } from "../../core/note/interval-note-spec";
@@ -12,6 +13,7 @@ import {
 } from "./creation-modal-presentation";
 
 export class ConfirmIntervalNoteModal extends Modal {
+  private disconnectFields: (() => void) | null = null;
   private settled = false;
   private suppressFutureConfirmation = false;
   private resolveResult: ((decision: NoteCreationConfirmationDecision) => void) | null = null;
@@ -60,9 +62,12 @@ export class ConfirmIntervalNoteModal extends Modal {
       .addButton((button) => {
         button.setButtonText(messages.create).setCta().onClick(() => this.finish(true));
       });
+    this.disconnectFields = connectNativeSettingFields(this.contentEl);
   }
 
   override onClose(): void {
+    this.disconnectFields?.();
+    this.disconnectFields = null;
     this.contentEl.empty();
     if (!this.settled) this.finish(false);
   }

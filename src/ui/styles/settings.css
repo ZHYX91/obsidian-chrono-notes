@@ -22,12 +22,8 @@
   cursor: var(--cursor, default);
 }
 
-.chrono-notes-settings-tab-row.has-overflow > button.chrono-notes-settings-tab-scroll {
+.chrono-notes-settings-tab-row.has-overflow > button.chrono-notes-settings-tab-scroll:not(:disabled) {
   display: inline-flex;
-}
-
-.chrono-notes-settings-tab-scroll:disabled {
-  visibility: hidden;
 }
 
 .chrono-notes-settings-tab-scroll::before {
@@ -95,9 +91,19 @@
   font-weight: inherit;
   block-size: auto;
   min-block-size: 34px;
-  margin: 0 0 -1px !important;
+  margin: 0 !important;
   padding: 7px 12px !important;
   white-space: nowrap;
+}
+
+@media (forced-colors: active) {
+  .chrono-notes-settings-tabs {
+    --interactive-accent: Highlight;
+  }
+
+  .chrono-notes-settings-tabs > button.chrono-notes-settings-tab[aria-selected="false"] {
+    border-block-end-color: Canvas !important;
+  }
 }
 
 .chrono-notes-settings-tabs > button.chrono-notes-settings-tab:focus-visible {
@@ -126,6 +132,7 @@
 
 @media (pointer: coarse) {
   .chrono-notes-settings-tabs > button.chrono-notes-settings-tab {
+    min-inline-size: 44px;
     min-block-size: 44px;
   }
   .chrono-notes-settings-tab-row > button.chrono-notes-settings-tab-scroll {
@@ -634,5 +641,41 @@ body.is-mobile .chrono-notes-index-details > summary {
     border-bottom: 0;
     grid-column: 1 / -1;
     width: auto;
+  }
+}
+
+[data-chrono-notes-native-fields] .checkbox-container:has(> input:focus-visible) {
+  outline: var(--toggle-s-border-width, 2px) solid var(--background-modifier-border-focus);
+}
+
+/* Keep the host's intrinsic dropdown measurement out of the settings scroll area. */
+.chrono-notes-settings select.dropdown.is-measuring {
+  position: fixed;
+  inset-block-start: 0;
+  inset-inline-end: 0;
+}
+
+@container (max-width: 360px) {
+  .chrono-notes-settings-panel :is(h3, .setting-item-info) {
+    min-inline-size: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .chrono-notes-settings-panel .setting-item:has(.setting-item-control > :is(a, button)) {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .chrono-notes-settings-panel .setting-item-control:has(> :is(a, button)) {
+    flex-wrap: wrap;
+    justify-content: start;
+  }
+
+  .chrono-notes-settings-panel .setting-item-control:has(> :is(a, button)) > :is(button, a) {
+    max-inline-size: 100%;
+    block-size: auto;
+    min-block-size: var(--input-height);
+    white-space: normal;
+    overflow-wrap: anywhere;
   }
 }

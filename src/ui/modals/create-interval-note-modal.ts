@@ -1,3 +1,4 @@
+import { connectNativeSettingFields } from "../settings/native-setting-fields";
 import { Modal, Notice, Setting, type App } from "obsidian";
 
 import {
@@ -11,6 +12,7 @@ import type { Translator } from "../../shared/i18n";
 import { getCreationModalMessages } from "./creation-modal-presentation";
 
 export class CreateIntervalNoteModal extends Modal {
+  private disconnectFields: (() => void) | null = null;
   private startValue: string;
   private endValue: string;
   private settled = false;
@@ -58,9 +60,12 @@ export class CreateIntervalNoteModal extends Modal {
       .addButton((button) => {
         button.setButtonText(messages.continue).setCta().onClick(() => this.submit());
       });
+    this.disconnectFields = connectNativeSettingFields(this.contentEl);
   }
 
   override onClose(): void {
+    this.disconnectFields?.();
+    this.disconnectFields = null;
     this.signal?.removeEventListener("abort", this.abort);
     this.contentEl.empty();
     if (this.settled) return;
