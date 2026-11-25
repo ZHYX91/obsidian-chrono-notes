@@ -15,6 +15,8 @@ export interface WeekPickerTypeaheadResult {
 
 const THREE_COLUMN_MIN_WIDTH = 360;
 const PAGE_ROW_COUNT = 5;
+// Decimal keys used by the supported interface languages, independent of the current locale.
+const WEEK_DIGITS = ["0123456789", "٠١٢٣٤٥٦٧٨٩", "۰۱۲۳۴۵۶۷۸۹", "०१२३४५६७८९", "０１２３４５６７８９"];
 
 export function getWeekPickerColumnCount(width: number): WeekPickerColumnCount {
   return width >= THREE_COLUMN_MIN_WIDTH ? 3 : 2;
@@ -69,17 +71,19 @@ export function resolveWeekPickerTypeahead(
   key: string,
   itemCount: number,
 ): WeekPickerTypeaheadResult | null {
-  if (!/^\d$/.test(key)) return null;
-  const nextBuffer = `${currentBuffer}${key}`.slice(-2);
+  if (key.length !== 1) return null;
+  const digits = WEEK_DIGITS.find((system) => system.includes(key));
+  if (digits === undefined) return null;
+  const digit = digits.indexOf(key);
+  const nextBuffer = `${currentBuffer}${digit}`.slice(-2);
   const parsed = Number(nextBuffer);
-  const fallback = Number(key);
   const targetWeek = parsed >= 1 && parsed <= itemCount
     ? parsed
-    : fallback >= 1 && fallback <= itemCount
-      ? fallback
+    : digit >= 1 && digit <= itemCount
+      ? digit
       : null;
   return Object.freeze({
-    buffer: targetWeek === fallback ? key : nextBuffer,
+    buffer: targetWeek === digit ? String(digit) : nextBuffer,
     targetIndex: targetWeek === null ? null : targetWeek - 1,
   });
 }

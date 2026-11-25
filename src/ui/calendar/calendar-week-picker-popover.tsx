@@ -88,6 +88,9 @@ export function CalendarWeekPickerPopover(
     })),
     [formatLabels, weeks],
   );
+  const [focusedWeekIndex, setFocusedWeekIndex] = useState(() =>
+    Math.max(0, weekItems.findIndex((item) => item.weekNumber === weekNumber)),
+  );
 
   useEffect(() => {
     if (kind !== "week") return undefined;
@@ -128,6 +131,7 @@ export function CalendarWeekPickerPopover(
     const target = rootRef.current?.querySelector<HTMLButtonElement>(
       `[data-week-index="${index}"]`,
     );
+    setFocusedWeekIndex(index);
     target?.focus();
     target?.scrollIntoView({ block: "nearest" });
   };
@@ -204,7 +208,9 @@ export function CalendarWeekPickerPopover(
                 ].filter(Boolean).join(" ")}
                 data-selected={String(selected)}
                 data-week-index={index}
+                tabIndex={index === focusedWeekIndex ? 0 : -1}
                 aria-current={current ? "true" : undefined}
+                onFocus={() => setFocusedWeekIndex(index)}
                 aria-label={formatPeriodPickerTargetLabel(
                   item.labels.selectAccessible,
                   current,

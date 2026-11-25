@@ -20,8 +20,14 @@
   margin-top: 8px;
   min-height: 0;
   overflow: auto;
-  padding-inline-end: 6px;
+  /* Outer selection and keyboard focus extend up to 5px beyond a cell. */
+  --chrono-notes-frame-space: 6px;
+  padding: var(--chrono-notes-frame-space);
   scrollbar-gutter: stable;
+}
+
+.chrono-notes-long-period .chrono-notes-period-cell {
+  scroll-margin: var(--chrono-notes-frame-space);
 }
 
 .chrono-notes-long-period-group {

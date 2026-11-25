@@ -74,6 +74,11 @@ describe("calendar week picker", () => {
     expect(resolveWeekPickerTypeahead("", "x", 53)).toBeNull();
   });
 
+  it.each(["٣", "۳", "३", "３"])("accepts %s in either position of a week number", (key) => {
+    expect(resolveWeekPickerTypeahead("", key, 53)).toEqual({ buffer: "3", targetIndex: 2 });
+    expect(resolveWeekPickerTypeahead("3", key, 53)).toEqual({ buffer: "33", targetIndex: 32 });
+  });
+
   it.each([2, 3] as const)("follows the visual grid in RTL with %i columns", (columns) => {
     const navigate = (key: string, currentIndex = 20) => resolveWeekPickerNavigation({
       key, currentIndex, itemCount: 53, columns, direction: "rtl",
@@ -103,6 +108,12 @@ describe("calendar week picker", () => {
     }));
 
     expect(markup.match(/data-week-index=/g)).toHaveLength(53);
+    const document = renderWeekPicker({
+      kind: "week", weekYear: 2026, weekNumber: 53,
+      weekStartDay: "monday", today: { year: 2026, month: 7, day: 20 },
+    });
+    expect(document.querySelectorAll('.chrono-notes-week-picker-grid button[tabindex="0"]')).toHaveLength(1);
+    expect(document.querySelector('.chrono-notes-week-picker-grid button[data-week-index="52"]')?.getAttribute("tabindex")).toBe("0");
     expect(markup).toContain("W01");
     expect(markup).toContain("12/29–1/4");
     expect(markup).toContain("W53");

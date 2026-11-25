@@ -8,7 +8,7 @@
 @import "./long-period.css";
 @import "./calendar-ux.css";
 
-:is(
+:where(
   .chrono-notes-calendar,
   .chrono-notes-interval-list,
   .chrono-notes-navbar

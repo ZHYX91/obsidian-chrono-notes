@@ -29,3 +29,39 @@
   }
 }
 
+
+/* In forced colors, shadows disappear. Keep selection and keyboard focus independently visible. */
+@media (forced-colors: active) {
+  .chrono-notes-calendar :is(
+    .chrono-notes-day, .chrono-notes-week-day, .chrono-notes-weekly-note,
+    .chrono-notes-week-number-button, .chrono-notes-period-cell, .chrono-notes-year-heatmap-day
+  ):is(.is-selected, .is-range-start, .is-range-end) {
+    outline: 2px solid Highlight;
+    outline-offset: 0;
+
+    &:focus-visible {
+      outline: 6px double Highlight;
+    }
+  }
+
+  .chrono-notes-day:is(.is-selected, .is-range-start, .is-range-end):focus-visible::before {
+    outline: none;
+  }
+
+  .chrono-notes-period-picker button.is-selected {
+    position: relative;
+  }
+
+  .chrono-notes-period-picker button.is-selected::after {
+    border: 2px solid Highlight;
+    border-radius: inherit;
+    content: "";
+    inset: 0;
+    pointer-events: none;
+    position: absolute;
+  }
+
+  .chrono-notes-view-mode button.is-active {
+    text-decoration: underline;
+  }
+}

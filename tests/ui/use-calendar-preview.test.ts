@@ -121,6 +121,15 @@ describe("useCalendarPreview", () => {
     expect(container.textContent).toBe("retained");
   });
 
+  it("dismisses an active preview with Escape without moving focus", async () => {
+    await renderProbe(true, true);
+    await showPreview("dismiss-on-escape");
+    await act(async () => {
+      document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true, cancelable: true }));
+    });
+    expect(container.textContent).toBe("none");
+  });
+
   it("can hide the active preview without cancelling pending work", async () => {
     await renderProbe(true, false);
     await act(async () => {

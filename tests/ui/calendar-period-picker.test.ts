@@ -134,6 +134,19 @@ describe("calendar period picker", () => {
     );
   });
 
+  it("does not mark the month selected when its quarter is selected", () => {
+    const document = renderPicker({
+      kind: "month", year: 2026, month: 10,
+      today: { year: 2026, month: 7, day: 20 },
+      selectedQuarter: 4,
+    });
+    const selected = document.querySelectorAll(".chrono-notes-month-picker-grid .is-selected");
+    expect(selected).toHaveLength(1);
+    expect(selected[0]?.classList.contains("chrono-notes-quarter-picker-button")).toBe(true);
+    const october = document.querySelectorAll(".chrono-notes-month-picker-row")[3]?.querySelectorAll("button")[1];
+    expect(october?.classList.contains("is-selected")).toBe(false);
+  });
+
   it("uses accent text only for current and an outline only for selection", () => {
     const baseRule = styles.match(
       /\.chrono-notes-period-picker button\s*\{([^}]*)\}/s,
@@ -181,10 +194,11 @@ function renderPicker(input: Readonly<{
   year: number;
   month: number;
   today: Readonly<{ year: number; month: number; day: number }>;
+  selectedQuarter?: number | null;
 }>) {
   const markup = renderWithTestHost(createElement(CalendarPeriodPickerPopover, {
     ...input,
-    selectedQuarter: null,
+    selectedQuarter: input.selectedQuarter ?? null,
     quarterNameMode: "number",
     anchorRef: { current: null },
     translator: createTranslator("en", "en"),

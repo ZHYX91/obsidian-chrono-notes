@@ -351,6 +351,37 @@ describe("imperative settings cleanup", () => {
     rangeCleanup();
   });
 
+  it.each(["monthViewLimit", "weekViewLimit"] as const)("saves only complete positive integers in %s", (field) => {
+    const context = createContext();
+    const root = document.createElement("div");
+    const cleanup = renderRangeSettingsSection(root, context);
+    const inputs = Array.from(root.querySelectorAll("input")).filter(input => input.inputMode === "numeric");
+    expect(inputs).toHaveLength(2);
+    const input = inputs[field === "monthViewLimit" ? 0 : 1]!;
+    const change = (value: string): void => {
+      input.value = value;
+      input.dispatchEvent(new window.Event("input"));
+    };
+    try {
+      for (const value of ["1", "2", "12", "999"]) {
+        change(value);
+        expect(context.host.settings.rangeNotes[field]).toBe(Number(value));
+        expect(input.getAttribute("aria-invalid")).toBe("false");
+      }
+      for (const value of ["", "0", "0.5", "1.5", "-1", "+2", " 2", "2 ", "2e2", "Infinity", "9007199254740992"]) {
+        change(value);
+        expect(input.getAttribute("aria-invalid")).toBe("true");
+        expect(context.host.settings.rangeNotes[field]).toBe(999);
+        input.dispatchEvent(new window.Event("blur"));
+        expect(input.value).toBe("999");
+        expect(input.hasAttribute("aria-invalid")).toBe(false);
+      }
+      expect(context.scheduleSettingsSave).toHaveBeenCalledTimes(4);
+    } finally {
+      cleanup();
+    }
+  });
+
   it("closes range, custom scan, and template suggestions exactly once", () => {
     const context = createContext();
 

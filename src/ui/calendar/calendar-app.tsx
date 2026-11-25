@@ -611,6 +611,7 @@ export function CalendarApp({
               aria-label={viewMode === "week"
                 ? `${t("calendar.chooseWeekYear")}: ${headerWeek.weekYear}`
                 : t(PICKER_TITLES[primaryPickerKind])}
+              aria-haspopup="dialog"
               aria-expanded={openPeriodPicker === primaryPickerKind}
               aria-pressed={headerPeriodSelected}
               onClick={() => {
@@ -635,6 +636,7 @@ export function CalendarApp({
                     : ""
                 }`}
                 aria-label={t("calendar.chooseMonth")}
+                aria-haspopup="dialog"
                 aria-expanded={openPeriodPicker === "month"}
                 aria-pressed={selectionKind === "month"}
                 onClick={() =>
@@ -667,6 +669,7 @@ export function CalendarApp({
                   selectionKind === "week" ? " is-selected" : ""
                 }`}
                 aria-label={`${t("calendar.chooseWeek")}: ${weekPickerLabels.accessible}`}
+                aria-haspopup="dialog"
                 aria-expanded={openPeriodPicker === "week"}
                 aria-pressed={selectionKind === "week"}
                 title={weekPickerLabels.accessible}

@@ -56,6 +56,16 @@ for (const [width, fontSize, locale] of [
     const results = page.locator(".chrono-notes-interval-list-results");
     await last.focus();
     expect(await results.evaluate((list) => list.scrollTop)).toBeGreaterThan(0);
+    const focusClearance = await last.evaluate((button) => {
+      const port = button.closest<HTMLElement>(".chrono-notes-interval-list-results")!;
+      const bounds = port.getBoundingClientRect();
+      const item = button.getBoundingClientRect();
+      const left = bounds.left + port.clientLeft;
+      const top = bounds.top + port.clientTop;
+      return Math.min(item.left - left, item.top - top,
+        left + port.clientWidth - item.right, top + port.clientHeight - item.bottom);
+    });
+    expect(focusClearance).toBeGreaterThanOrEqual(3);
     expect(await results.evaluate((list) => list.scrollWidth - list.clientWidth)).toBeLessThanOrEqual(1);
     await last.press("Enter");
     expect(await page.evaluate(() => window.chronoOpenedPath)).toBe(await last.locator("small").innerText());

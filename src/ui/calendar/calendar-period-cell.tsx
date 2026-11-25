@@ -71,6 +71,7 @@ export function CalendarPeriodCell({
       onAuxClick={(event) => {
         if (event.button !== 1) return;
         event.preventDefault();
+        onSelect();
         open("tab");
       }}
       onKeyDown={(event) => {

@@ -17,6 +17,7 @@ export function useCalendarPickerDialog(
       ? activeElement
       : null;
     const root = rootRef.current;
+    let restorePreviousFocus = true;
     const selected = root?.querySelector<HTMLElement>('[data-selected="true"]');
     (selected ?? root?.querySelector<HTMLElement>("button"))?.focus();
     if (scrollSelected) {
@@ -33,12 +34,22 @@ export function useCalendarPickerDialog(
       event.preventDefault();
       onClose();
     };
+    const handleFocusOut = (event: FocusEvent) => {
+      const next = event.relatedTarget;
+      if (next === null || !("nodeType" in next)) return;
+      const node = next as Node;
+      if (root?.contains(node) || !host.document.contains(node)) return;
+      restorePreviousFocus = false;
+      onClose();
+    };
     host.document.addEventListener("pointerdown", handlePointerDown);
     host.document.addEventListener("keydown", handleKeyDown);
+    root?.addEventListener("focusout", handleFocusOut);
     return () => {
       host.document.removeEventListener("pointerdown", handlePointerDown);
       host.document.removeEventListener("keydown", handleKeyDown);
-      if (previousFocus !== null && host.document.contains(previousFocus)) {
+      root?.removeEventListener("focusout", handleFocusOut);
+      if (restorePreviousFocus && previousFocus !== null && host.document.contains(previousFocus)) {
         previousFocus.focus();
       }
     };

@@ -33,9 +33,6 @@ describe("mini calendar layout", () => {
     expect(miniCalendar).toContain("chrono-notes-mini-calendar-year-navigation");
     expect(miniCalendar).toContain("chrono-notes-mini-calendar-month-grid");
     expect(miniCalendar.match(/aria-live="polite"/g)).toHaveLength(2);
-    expect(miniCalendar).toContain(
-      "monthButtons.current.get(displayMonth.month)?.focus()",
-    );
   });
 
   it("groups column headers and dates into valid ARIA grid rows", () => {

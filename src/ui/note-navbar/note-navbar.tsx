@@ -183,8 +183,12 @@ function NoteNavbar({ path, host }: Readonly<{ path: string; host: NoteNavbarHos
             <button
               type="button"
               className="chrono-notes-navbar-label"
-              aria-label={messages.chooseDate}
-              title={messages.chooseDate}
+              aria-label={`${messages.chooseDate}: ${formatNoteNavbarLabel(
+                context.date, context.noteType, translator, settings.weekStartDay,
+              )}`}
+              title={`${messages.chooseDate}: ${formatNoteNavbarLabel(
+                context.date, context.noteType, translator, settings.weekStartDay,
+              )}`}
               onClick={() => host.pickDate(context.date.year < 1 ? { year: 1, month: 1, day: 1 } : context.date, (date) =>
                 host.openPeriodic(date, context.noteType, "default"))}
             >

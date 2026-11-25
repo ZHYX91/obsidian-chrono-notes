@@ -88,6 +88,17 @@ export function useCalendarPreview<Cell extends CalendarPreviewCell>({
 
   useEffect(() => clearPreviewTimer, [clearPreviewTimer]);
   useEffect(() => {
+    if (activePreview === null) return undefined;
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== "Escape" || event.defaultPrevented) return;
+      event.preventDefault();
+      event.stopPropagation();
+      dismissPreview();
+    };
+    host.document.addEventListener("keydown", handleKeyDown);
+    return () => host.document.removeEventListener("keydown", handleKeyDown);
+  }, [activePreview, dismissPreview, host.document]);
+  useEffect(() => {
     if (dismissOnDisable && shouldDismissCalendarPreview(enabled))
       dismissPreview();
   }, [dismissOnDisable, dismissPreview, enabled]);

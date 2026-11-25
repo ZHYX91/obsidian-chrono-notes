@@ -225,13 +225,28 @@ function addPositiveIntegerSetting(
   context: SettingsSectionContext,
 ): void {
   new Setting(containerEl).setName(name).addText((text) => {
+    let lastValidValue = current;
     text.setValue(String(current)).onChange((value) => {
-      const parsed = Number(value);
-      if (!Number.isFinite(parsed) || parsed <= 0) return;
-      onChange(Math.floor(parsed));
+      const parsed = parsePositiveIntegerInput(value);
+      text.inputEl.setAttribute("aria-invalid", String(parsed === null));
+      if (parsed === null) return;
+      lastValidValue = parsed;
+      onChange(parsed);
       context.scheduleSettingsSave();
     });
     text.inputEl.inputMode = "numeric";
+    text.inputEl.addEventListener("blur", () => {
+      const parsed = parsePositiveIntegerInput(text.inputEl.value);
+      if (parsed === null) text.setValue(String(lastValidValue));
+      text.inputEl.removeAttribute("aria-invalid");
+    });
     context.flushSettingsSaveOnBlur(text.inputEl);
   });
+}
+
+/** Accept only complete positive integers; never silently truncate user input. */
+function parsePositiveIntegerInput(value: string): number | null {
+  if (!/^[1-9]\d*$/u.test(value)) return null;
+  const parsed = Number(value);
+  return Number.isSafeInteger(parsed) ? parsed : null;
 }
