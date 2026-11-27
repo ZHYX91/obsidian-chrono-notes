@@ -122,6 +122,9 @@ describe("holiday coverage release diagnostics", () => {
     ["hk", "https://www.1823.gov.hk/en/hong-kong-public-holidays-ical"],
     ["jp", "https://www8.cao.go.jp/chosei/shukujitsu/gaiyou.html"],
     ["kr", "https://astro.kasi.re.kr/kor/life/post/calendarData?year=2028"],
+    ["sg", "https://www.mom.gov.sg/employment-practices/public-holidays"],
+    ["mo", "https://www.gov.mo/en/public-holidays/year-2027/"],
+    ["es", "https://www.boe.es/buscar/act.php?id=BOE-A-1983-20906#art45"],
   ] as const)("keeps verified nonpublication for %s a warning only in the following year", (region, sourceUrl) => {
     const expected = {
       region,

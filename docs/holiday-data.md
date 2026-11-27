@@ -39,7 +39,7 @@ Names follow the effective Chrono Notes interface language. Chinese interfaces d
 
 ¹ The Mainland China historical records also include 29 and 30 December 2001, both adjusted working days for New Year 2002. The rest of 2001 has no records.
 
-As of 27 November 2026, the official 2028 schedules for Japan, Hong Kong and South Korea are not yet available. Japan expects publication in February 2027; Hong Kong expects it around May 2027. South Korea’s preliminary almanac is not used. Taiwan’s 2028 government office calendar is also pending, with publication due by 30 June 2027 under the issuing agency’s rule. The 31 December 2027 substitute for New Year 2028 stays in the 2027 calendar.
+As of 27 November 2026, the official 2028 schedules for Japan, Hong Kong and South Korea are not yet available. Japan expects publication in February 2027; Hong Kong expects it around May 2027. South Korea’s preliminary almanac is not used. Taiwan’s 2028 government office calendar is also pending, with publication due by 30 June 2027 under the issuing agency’s rule. The 31 December 2027 substitute for New Year 2028 stays in the 2027 calendar. Singapore, Macao and Spain also have no official 2028 schedule in the sources used here. Singapore’s Ministry of Manpower publishes by the third quarter of the preceding year; Spain’s nationwide comparison needs the annual BOE table for all 19 jurisdictions. Macao’s separate mandatory-holiday list does not replace its broader public-holiday schedule.
 
 ## Checking a date
 

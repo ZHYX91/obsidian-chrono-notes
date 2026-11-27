@@ -177,6 +177,12 @@ export const EUROPE = {
         verifiedOn: "2026-11-25",
         sourceUrl: "https://www.boe.es/diario_boe/txt.php?id=BOE-A-2026-21254",
       },
+      // The BOE annual table currently ends in 2027. Article 45.4 governs the regional submission cycle.
+      2028: {
+        status: "not-published",
+        verifiedOn: "2026-11-27",
+        sourceUrl: "https://www.boe.es/buscar/act.php?id=BOE-A-1983-20906#art45",
+      },
     },
     entries: [
       { dates: ["2026-01-01", "2027-01-01"], en: "New Year’s Day", names: { "es": "Año Nuevo", "zh-CN": "元旦", "zh-TW": "元旦" } },

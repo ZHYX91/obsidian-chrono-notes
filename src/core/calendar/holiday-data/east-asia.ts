@@ -241,6 +241,12 @@ export const EAST_ASIA = {
         verifiedOn: "2026-11-25",
         sourceUrl: "https://www.gov.mo/en/public-holidays/year-2027/",
       },
+      // The government portal currently ends in 2027; this region uses the broader public holiday table, not the separate mandatory list.
+      2028: {
+        status: "not-published",
+        verifiedOn: "2026-11-27",
+        sourceUrl: "https://www.gov.mo/en/public-holidays/year-2027/",
+      },
     },
     entries: [
       {
