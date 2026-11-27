@@ -2,18 +2,16 @@
 
 Notable changes to Chrono Notes are documented in this file. The repository's numeric Git tags are the evidence for released versions; an entry without a corresponding local tag remains unreleased even if the manifests already contain that version.
 
-## Unreleased
+## 0.10.0
 
-- Add Japanese kyūreki, Korean and Vietnamese lunisolar dates to the existing day cells. New Japanese-language vaults start with kyūreki and Japan’s public holidays.
-- Offer Japanese era dates, the historical French Republican calendar, the K’iche’ Chol Q’ij and the Indian national almanac’s published sunrise tithi.
-
-- Add 20 regional holiday schedules for 2026 and 2027, with source links, substitute dates, working weekends and clearly identified employer choices.
-
-- Initialize calendar choices once per new vault using the interface language. Existing vault preferences, including empty lists, persist across upgrades.
-
-- Choose cultural and religious observances independently of date displays and regional holidays.
-
-- Display Julian old-style or Coptic dates alongside Gregorian notes.
+- Show Julian, Coptic, Japanese lunisolar and era, Korean lunar, Vietnamese lunar, French Republican, K’iche’ Chol Q’ij, and Indian Panchanga dates alongside Gregorian notes. Each display follows its documented calendar and date range.
+- Choose cultural and religious observances independently of calendar dates and regional holidays. Selected-day details name the calendar or observance behind each entry.
+- Add 20 official regional holiday schedules for 2026 and 2027, including substitute days, adjusted working days, and employer choices where applicable. Add Japan’s official holiday history from 1955 and verified 2028 dates for supported regions, including Germany’s nationwide holidays. The calendar identifies years with incomplete coverage.
+- Use the Obsidian interface language to initialize calendar choices on first install. Japanese-language vaults start with Japanese lunisolar dates and Japanese public holidays. Upgrades preserve existing choices, including empty selections.
+- Keep Chinese lunar and Ganzhi dates continuous across the October 1582 Gregorian reform without changing Gregorian note dates.
+- Dismiss month and week pickers reliably, and keep the correct period in previews for early years.
+- Align period labels with their note indicators and display range continuation on the correct side in right-to-left calendars.
+- Reduce the bundle space used by repeated keys across the 16 interface translations.
 
 ## 0.9.3
 
