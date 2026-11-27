@@ -12,6 +12,7 @@ import { findPeriodicNotePathMatch } from "../core/periodic/periodic-note-path";
 import { normalizeIntervalNoteFolder } from "../core/note/interval-note-spec";
 import type { NoteTask } from "../core/note/note-tasks";
 import { IcsEventIndex, type IcsEventIndexSnapshot } from "../features/calendar/ics-event-index";
+import { createFirstInstallSettings } from "../features/calendar/calendar-language-preferences";
 import { notifyListeners } from "../features/notify-listeners";
 import { resolveNoteCreationConfirmation } from "../features/notes/note-creation-confirmation";
 import { assertNoteCreationActive } from "../features/notes/note-creation-lifecycle";
@@ -153,18 +154,17 @@ export default class ChronoNotesPlugin extends Plugin {
     const loaded: unknown = await this.loadData();
     if (!this.isRuntimeCurrent(runtimeRevision)) return;
     this.settingsReadOnly = isFutureSettingsSchema(loaded);
-    const migrationRequired = isSettingsMigrationRequired(loaded);
-    const migrated = migrateSettings(
-      loaded,
-      createTranslator("auto", getLanguage()).locale,
-    );
-    this.settings = normalizeSettings(migrated);
+    const firstInstall = loaded == null;
+    const hostLanguage = getLanguage();
+    this.settings = firstInstall
+      ? createFirstInstallSettings(hostLanguage)
+      : normalizeSettings(migrateSettings(loaded, createTranslator("auto", hostLanguage).locale));
     this.persistedSettings = normalizeSettings(this.settings);
-    if (!migrationRequired) return;
+    if (!firstInstall && !isSettingsMigrationRequired(loaded)) return;
     try {
       await this.saveData(this.persistedSettings);
     } catch (error) {
-      console.error("Chrono Notes: failed to persist migrated settings", error);
+      console.error("Chrono Notes: failed to persist initialized settings", error);
     }
   }
 

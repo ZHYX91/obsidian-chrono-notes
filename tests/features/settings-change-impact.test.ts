@@ -153,7 +153,8 @@ describe("getSettingsChangeImpact", () => {
   it("treats ordered provider and source lists as semantic", () => {
     const previous = createDefaultSettings();
     const providers = createDefaultSettings();
-    providers.holidayRegions.reverse();
+    previous.holidayRegions = ["cn", "sg"];
+    providers.holidayRegions = ["sg", "cn"];
     expect(getSettingsChangeImpact(previous, providers).calendar).toBe(true);
 
     const sources = createDefaultSettings();

@@ -24,7 +24,7 @@ export type {
   PropertyTimeDisplayFormat,
 } from "../core/properties/property-date-display";
 
-export const SETTINGS_SCHEMA_VERSION = 20;
+export const SETTINGS_SCHEMA_VERSION = 21;
 
 export type PluginLocale =
   | "auto"
@@ -115,8 +115,8 @@ const DEFAULT_SETTINGS: Readonly<ChronoNotesSettings> = {
   locale: "auto",
   weekStartDay: "monday",
   observances: [],
-  calendarExtensions: ["chinese-lunar"],
-  holidayRegions: ["cn", "sg"],
+  calendarExtensions: [],
+  holidayRegions: [],
   showNoteIndicators: true,
   quarterNameMode: "number",
   fontSizeMode: "immutable",
@@ -241,6 +241,15 @@ const SETTINGS_MIGRATIONS: Readonly<Record<number, SettingsMigration>> = {
   18: (settings) => addSettingsFields(settings, 19, {}),
   19: (settings) => addSettingsFields(settings, 20, {
     createMissingPeriodicNotesFromLinks: DEFAULT_SETTINGS.createMissingPeriodicNotesFromLinks,
+  }),
+  // Missing or malformed selections used these effective defaults before schema 21.
+  // Existing arrays, including an explicit empty selection, keep their exact order.
+  20: (settings) => ({
+    ...settings,
+    schemaVersion: 21,
+    calendarExtensions: Array.isArray(settings.calendarExtensions)
+      ? settings.calendarExtensions : ["chinese-lunar"],
+    holidayRegions: Array.isArray(settings.holidayRegions) ? settings.holidayRegions : ["cn", "sg"],
   }),
 };
 
