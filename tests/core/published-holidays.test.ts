@@ -26,6 +26,10 @@ const counts: Record<PublishedHolidayRegion, readonly [number, number]> = {
   in: [18, 17], vn: [17, 15], at: [13, 13], pt: [13, 13], mx: [7, 8], "ca-qc": [9, 9],
 };
 
+const verified2028Counts: Partial<Record<PublishedHolidayRegion, number>> = {
+  us: 10, "gb-eng-wls": 8, "gb-sct": 9, "gb-nir": 10, fr: 11,
+};
+
 describe("published holiday schedules", () => {
   it.each([
     ["mo", "pt"], ["jp", "ja"], ["kr", "ko"], ["br", "pt"], ["mx", "es"], ["ca-qc", "fr"],
@@ -43,9 +47,10 @@ describe("published holiday schedules", () => {
     }
   });
 
-  it.each(PUBLISHED_HOLIDAY_REGIONS)("checks both complete civil years for %s", (region) => {
+  it.each(PUBLISHED_HOLIDAY_REGIONS)("checks every covered civil year for %s", (region) => {
     const annualCounts: number[] = [];
-    for (const year of [2026, 2027]) {
+    const count2028 = verified2028Counts[region];
+    for (const year of count2028 === undefined ? [2026, 2027] : [2026, 2027, 2028]) {
       expect(getPublishedHolidayYearCoverage(region, year)).toBe("available");
       expect(getHolidayPublicationSource(region, year)).toMatchObject({
         status: "published", sourceUrl: expect.stringMatching(/^https:\/\//),
@@ -74,10 +79,12 @@ describe("published holiday schedules", () => {
       }
       annualCounts.push(count);
     }
-    expect(annualCounts).toEqual(counts[region]);
-    expect(getPublishedHolidayYearCoverage(region, 2028)).toBe("unavailable");
-    expect(getHolidayPublicationSource(region, 2028)).toBeNull();
-    expect(day(region, "2028-01-01")).toEqual({ holidays: [], workday: null });
+    expect(annualCounts).toEqual(count2028 === undefined ? counts[region] : [...counts[region], count2028]);
+    if (count2028 === undefined) {
+      expect(getPublishedHolidayYearCoverage(region, 2028)).toBe("unavailable");
+      expect(getHolidayPublicationSource(region, 2028)).toBeNull();
+      expect(day(region, "2028-01-01")).toEqual({ holidays: [], workday: null });
+    }
   });
 
   it("retains observed dates and distinct jurisdictions", () => {
@@ -92,6 +99,19 @@ describe("published holiday schedules", () => {
     expect(day("br", "2027-02-09").holidays).toEqual([]);
     expect(day("mo", "2027-02-09").holidays).toEqual([]);
     expect(day("mo", "2027-02-05").holidays).toEqual([]);
+  });
+
+  it("keeps 2028 substitute days and regional differences distinct", () => {
+    expect(day("us", "2028-01-01").holidays).toEqual([]);
+    expect(day("us", "2028-11-10").holidays[0]?.name).toBe("Veterans Day (observed)");
+    expect(day("us", "2028-11-11").holidays).toEqual([]);
+    expect(day("gb-eng-wls", "2028-01-03", "zh-TW").holidays[0]?.name).toBe("元旦（補假）");
+    expect(day("gb-eng-wls", "2028-01-04").holidays).toEqual([]);
+    expect(day("gb-sct", "2028-01-04").holidays[0]?.name).toBe("2nd January (substitute day)");
+    expect(day("gb-sct", "2028-04-17").holidays).toEqual([]);
+    expect(day("gb-nir", "2028-04-17").holidays[0]?.name).toBe("Easter Monday");
+    expect(day("gb-eng-wls", "2028-12-26").holidays[0]?.name).toBe("Boxing Day");
+    expect(day("fr", "2028-06-05", "fr").holidays[0]?.name).toBe("Lundi de Pentecôte");
   });
 
   it("separates local and employer-specific alternatives from nationwide dates", () => {
