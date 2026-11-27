@@ -36,9 +36,9 @@ import { formatShortMonthLabels } from "../date-presentation";
 import { useHostEnvironment } from "../host-environment";
 import { bindLongPress, type LongPressGesture } from "./long-press";
 import { CalendarPreviewTooltip } from "./calendar-preview-tooltip";
-import type { CalendarPreviewCell } from "./calendar-preview-tooltip";
 import {
   createDailyCalendarPreview,
+  type PeriodicCalendarPreviewCell,
 } from "./calendar-period-preview";
 import { useCalendarPreview } from "./use-calendar-preview";
 import {
@@ -126,7 +126,7 @@ export function YearView({
     previewId,
     schedulePreview,
     dismissPreview,
-  } = useCalendarPreview<CalendarPreviewCell>({
+  } = useCalendarPreview<PeriodicCalendarPreviewCell>({
     enabled: previewEnabled,
     dismissOnDisable: true,
   });
@@ -338,7 +338,7 @@ interface LazyQuarterProps {
   ) => void;
   readonly onSchedulePreview: (
     key: string,
-    cell: CalendarPreviewCell,
+    cell: PeriodicCalendarPreviewCell,
     anchor: HTMLButtonElement,
   ) => void;
   readonly onDismissPreview: () => void;

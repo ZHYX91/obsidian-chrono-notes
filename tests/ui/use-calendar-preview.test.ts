@@ -25,7 +25,6 @@ const EMPTY_STATISTICS: NoteStatistics = Object.freeze({
 });
 
 const PREVIEWABLE_CELL: TestPreviewCell = Object.freeze({
-  date: { year: 2026, month: 7, day: 20 },
   noteState: "existing",
   preview: "Preview",
   statistics: EMPTY_STATISTICS,

@@ -3,9 +3,8 @@ import { canOpenOrCreateIndexedPeriodicNote, type IndexedPeriodicNote } from "..
 import type { NoteOpenTarget } from "../../features/periodic/periodic-note-commands";
 import type { Translator } from "../../shared/i18n";
 import { CalendarNoteIndicator } from "./calendar-note-indicator";
-import { createPeriodicCalendarPreview } from "./calendar-period-preview";
+import { createPeriodicCalendarPreview, type PeriodicCalendarPreviewCell } from "./calendar-period-preview";
 import { getPeriodicSelectionKind } from "./calendar-selection";
-import type { CalendarPreviewCell } from "./calendar-preview-tooltip";
 import { bindLongPress, type LongPressGesture } from "./long-press";
 import { formatCalendarPeriodLabel } from "./calendar-note-presentation";
 
@@ -26,7 +25,7 @@ export interface CalendarPeriodCellProps {
   readonly weekStartDay: WeekStartDay;
   readonly activePreviewKey: string | null;
   readonly previewId: string;
-  readonly onSchedulePreview: (key: string, cell: CalendarPreviewCell, anchor: HTMLButtonElement) => void;
+  readonly onSchedulePreview: (key: string, cell: PeriodicCalendarPreviewCell, anchor: HTMLButtonElement) => void;
   readonly onDismissPreview: () => void;
   readonly longPress: LongPressGesture;
 }

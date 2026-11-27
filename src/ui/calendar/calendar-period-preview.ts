@@ -12,6 +12,7 @@ import type { IndexedPeriodicNote } from "../../features/calendar/indexed-period
 import type { CalendarPreviewCell } from "./calendar-preview-tooltip";
 
 export interface PeriodicCalendarPreviewCell extends CalendarPreviewCell {
+  readonly date: LocalDate;
   readonly periodicNoteType: PeriodicNoteType;
   readonly previewTitle: string;
   readonly previewSubtitle: string | null;
