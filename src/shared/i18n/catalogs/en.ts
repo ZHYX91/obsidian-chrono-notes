@@ -419,6 +419,7 @@ export const EN_MESSAGES = {
   "holiday.region.mx": "Mexico (federal)",
   "holiday.region.pt": "Portugal (nationwide)",
   "holiday.region.ca-qc": "Québec",
+  "holiday.coverage.incomplete": "Complete holiday schedules are unavailable for {year} in {regions}.",
   "holiday.conditional": "Possible holiday: {names}",
   "settings.appearance.chineseLunar": "Chinese lunar calendar",
   "settings.appearance.chineseLunarDesc": "Show lunar dates, solar terms, and traditional festivals.",

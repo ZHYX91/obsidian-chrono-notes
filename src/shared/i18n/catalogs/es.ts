@@ -515,6 +515,7 @@ export const ES_MESSAGES: MessageCatalog = Object.freeze({
   "holiday.region.mx": "México (descanso obligatorio federal)",
   "holiday.region.pt": "Portugal (nacional)",
   "holiday.region.ca-qc": "Quebec",
+  "holiday.coverage.incomplete": "Faltan los calendarios completos de festivos de {year} para estas regiones: {regions}.",
   "holiday.conditional": "Posible festivo: {names}",
   "settings.appearance.chineseLunar": "Calendario lunar chino",
   "settings.appearance.chineseLunarDesc": "Muestra fechas lunares, términos solares y festivales tradicionales.",

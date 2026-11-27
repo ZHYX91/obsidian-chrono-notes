@@ -20,6 +20,13 @@
   position: relative;
 }
 
+.chrono-notes-holiday-coverage {
+  color: var(--text-muted);
+  font-size: var(--chrono-notes-font-small);
+  margin-block: 0.35em;
+  overflow-wrap: anywhere;
+}
+
 .chrono-notes-calendar[data-font-size-mode="follow-obsidian"] {
   --chrono-notes-font-header: var(--font-ui-medium);
   --chrono-notes-font-normal: var(--font-ui-small);

@@ -139,6 +139,22 @@ describe("calendar extension date boundaries", () => {
     expect(cached.calendarExtensions).toEqual(direct);
   });
 
+  it.each([
+    [4, "九月初八", "癸亥", "1582年9月24日"],
+    [15, "九月十九", "甲戌", "1582年10月5日"],
+  ] as const)("anchors lunar, Ganzhi and Julian to the same Gregorian day on October %i, 1582",
+    (day, lunar, ganzhi, julian) => {
+      const date = { year: 1582, month: 10, day };
+      for (const id of ["chinese-lunar", "ganzhi"] as const) {
+        const selected = [id, "julian"] as const;
+        const direct = selectCalendarExtensionDays(date, "zh-CN", selected);
+        const cached = new CalendarDecorationCache().get(date, "zh-CN", selected, []);
+        expect(cached.calendarExtensions).toEqual(direct);
+        expect(direct[0]?.accessibilityText).toContain(id === "chinese-lunar" ? lunar : ganzhi + "日");
+        expect(direct[1]?.accessibilityText).toBe(julian);
+      }
+    });
+
   it("does not hide unexpected lunar conversion failures", () => {
     const failure = new Error("Unexpected lunar conversion failure");
     const convert = vi.spyOn(Solar, "fromYmd").mockImplementation(() => { throw failure; });

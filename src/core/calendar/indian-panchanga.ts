@@ -54,9 +54,8 @@ export function getIndianPanchangaDay(date: LocalDate, locale: string): Calendar
   const half = tithi > 15 ? labels.waning : labels.waxing;
   if (language !== "hi") {
     const fortnight = waxing ? "Waxing" : "Waning";
-    const dateText = day === 15 ? (waxing ? "Full moon" : "New moon") : `${fortnight} ${day}`;
     return Object.freeze({
-      dateText, accessibilityText: `${fortnight} fortnight, day ${day} (${half} ${name})`,
+      dateText: `${fortnight} ${day}`, accessibilityText: `${fortnight} fortnight, day ${day} (${half} ${name})`,
       events: EMPTY_EVENTS, transition: null,
     });
   }

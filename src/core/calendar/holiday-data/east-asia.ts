@@ -468,10 +468,22 @@ export const EAST_ASIA = {
     entries: [
       { dates: ["2026-01-01", "2027-01-01"], en: "New Year’s Day", names: { "ko": "1월 1일", "zh-CN": "元旦", "zh-TW": "元旦" } },
       { dates: ["2026-08-15", "2027-08-15"], en: "Liberation Day", names: { "ko": "광복절", "zh-CN": "光复节", "zh-TW": "光復節" } },
+      // The public holiday regulations distinguish the preceding day, feast and following day.
+      // https://www.mpm.go.kr/english/system/infoService/bizService03/
       {
-        dates: ["2026-02-16", "2026-02-17", "2026-02-18", "2027-02-06", "2027-02-07", "2027-02-08"],
+        dates: ["2026-02-16", "2027-02-06"],
+        en: "Day before Seollal",
+        names: { "ko": "설날 전날", "zh-CN": "韩国春节前一日", "zh-TW": "韓國春節前一日" },
+      },
+      {
+        dates: ["2026-02-17", "2027-02-07"],
         en: "Seollal",
         names: { "ko": "설날", "zh-CN": "韩国春节", "zh-TW": "韓國春節" },
+      },
+      {
+        dates: ["2026-02-18", "2027-02-08"],
+        en: "Day after Seollal",
+        names: { "ko": "설날 다음 날", "zh-CN": "韩国春节翌日", "zh-TW": "韓國春節翌日" },
       },
       {
         dates: ["2026-08-17", "2027-08-16"],
@@ -481,9 +493,19 @@ export const EAST_ASIA = {
       },
       { dates: ["2026-03-01", "2027-03-01"], en: "Independence Movement Day", names: { "ko": "3.1절", "zh-CN": "三一独立运动纪念日", "zh-TW": "三一獨立運動紀念日" } },
       {
-        dates: ["2026-09-24", "2026-09-25", "2026-09-26", "2027-09-14", "2027-09-15", "2027-09-16"],
+        dates: ["2026-09-24", "2027-09-14"],
+        en: "Day before Chuseok",
+        names: { "ko": "추석 전날", "zh-CN": "秋夕前一日", "zh-TW": "秋夕前一日" },
+      },
+      {
+        dates: ["2026-09-25", "2027-09-15"],
         en: "Chuseok",
         names: { "ko": "추석", "zh-CN": "秋夕（韩国中秋节）", "zh-TW": "秋夕（韓國中秋節）" },
+      },
+      {
+        dates: ["2026-09-26", "2027-09-16"],
+        en: "Day after Chuseok",
+        names: { "ko": "추석 다음 날", "zh-CN": "秋夕翌日", "zh-TW": "秋夕翌日" },
       },
       {
         dates: ["2026-03-02"],

@@ -417,6 +417,7 @@ export const ZH_CN_MESSAGES = {
   "holiday.region.mx": "墨西哥（联邦）",
   "holiday.region.pt": "葡萄牙（全国）",
   "holiday.region.ca-qc": "加拿大魁北克",
+  "holiday.coverage.incomplete": "{regions}的 {year} 年节假日安排尚未完整收录。",
   "holiday.conditional": "可能放假：{names}",
   "settings.appearance.chineseLunar": "中国农历",
   "settings.appearance.chineseLunarDesc": "显示农历日期、节气和传统节日。",

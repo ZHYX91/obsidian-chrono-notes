@@ -113,6 +113,32 @@ describe("calendar settings refresh", () => {
     expect(document.activeElement).toBe(current);
   });
 
+  it("shows one coverage notice for missing regions and visible civil years", async () => {
+    const settings = createDefaultSettings();
+    settings.locale = "en";
+    settings.weekStartDay = "monday";
+    settings.holidayRegions = ["jp", "sg"];
+    const props = getProps(settings, {});
+    const notice = () => container.querySelector(".chrono-notes-holiday-coverage");
+    const jump = async (year: number, month: number, day: number, revision: number) => {
+      await render({ ...props, navigationRequest: {
+        date: { year, month, day }, revision, noteType: "daily", mode: "jump",
+      } });
+    };
+    await jump(2027, 1, 4, 1);
+    expect(notice()).toBeNull();
+    await jump(2027, 12, 31, 2);
+    expect(notice()?.textContent).toBe("Complete holiday schedules are unavailable for 2028 in Japan, Singapore.");
+    const modes = container.querySelectorAll<HTMLButtonElement>(".chrono-notes-view-mode button");
+    await act(async () => modes[0]!.click());
+    expect(notice()?.textContent).toContain("2028 in Japan, Singapore");
+    await act(async () => modes[2]!.click());
+    expect(notice()).toBeNull();
+    settings.holidayRegions = [];
+    await jump(2028, 1, 1, 3);
+    expect(notice()).toBeNull();
+  });
+
   async function render(props: CalendarAppProps): Promise<void> {
     await act(async () => root.render(createElement(CalendarApp, props)));
   }

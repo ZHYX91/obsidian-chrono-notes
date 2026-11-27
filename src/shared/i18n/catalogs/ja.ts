@@ -514,6 +514,7 @@ export const JA_MESSAGES: MessageCatalog = Object.freeze({
   "holiday.region.mx": "メキシコ（連邦）",
   "holiday.region.pt": "ポルトガル（全国）",
   "holiday.region.ca-qc": "ケベック州",
+  "holiday.coverage.incomplete": "{regions}の{year}年の祝日データはすべてそろっていません。",
   "holiday.conditional": "休日となる場合あり：{names}",
   "settings.appearance.chineseLunar": "中国旧暦",
   "settings.appearance.chineseLunarDesc": "旧暦の日付、二十四節気、伝統行事を表示します。",

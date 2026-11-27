@@ -20,7 +20,7 @@ import type { IcsEventOccurrence } from "../../core/calendar/ics-calendar";
 import type { Translator } from "../../shared/i18n";
 import { useHostEnvironment } from "../host-environment";
 import { placeCalendarPreview } from "./calendar-preview";
-import { formatCalendarExtensionEventLabel } from "./calendar-day-presentation";
+import { formatCalendarExtensionDateLabel, formatCalendarExtensionEventLabel } from "./calendar-day-presentation";
 import { formatCalendarIcsDayLabel } from "./calendar-ics-presentation";
 import {
   formatCalendarPreviewError,
@@ -176,7 +176,7 @@ function CalendarExtensionContent({ cell, t }: Readonly<{
           data-calendar-extension-id={extension.id}
           key={extension.id}
         >
-          {extension.accessibilityText}
+          {formatCalendarExtensionDateLabel(extension, t)}
         </div>
       ))}
       {events.map((event) => (

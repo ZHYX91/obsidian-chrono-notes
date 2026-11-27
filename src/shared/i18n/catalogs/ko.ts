@@ -514,6 +514,7 @@ export const KO_MESSAGES: MessageCatalog = Object.freeze({
   "holiday.region.mx": "멕시코(연방)",
   "holiday.region.pt": "포르투갈(전국)",
   "holiday.region.ca-qc": "퀘벡",
+  "holiday.coverage.incomplete": "{regions}의 {year}년 공휴일 일정이 모두 수록되어 있지 않습니다.",
   "holiday.conditional": "휴일이 될 수 있음: {names}",
   "settings.appearance.chineseLunar": "중국 음력",
   "settings.appearance.chineseLunarDesc": "음력 날짜, 절기, 전통 명절을 표시합니다.",

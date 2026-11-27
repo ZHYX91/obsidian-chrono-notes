@@ -13,8 +13,9 @@ describe("IMD Panchanga tithi at Central Station sunrise", () => {
     [2026, 3, 22, "Waxing 4", "Shukla Chaturthi"],
     [2026, 4, 20, "Waxing 3", "Shukla Tritiya"], [2026, 4, 21, "Waxing 5", "Shukla Panchami"],
     [2026, 5, 4, "Waning 3", "Krishna Tritiya"], [2026, 5, 5, "Waning 3", "Krishna Tritiya"],
-    [2026, 6, 15, "New moon", "Amavasya"], [2026, 6, 16, "Waxing 2", "Shukla Dvitiya"],
-    [2026, 11, 24, "Full moon", "Purnima"], [2026, 11, 25, "Waning 1", "Krishna Pratipada"],
+    [2026, 6, 15, "Waning 15", "Amavasya"], [2026, 6, 16, "Waxing 2", "Shukla Dvitiya"],
+    [2026, 6, 29, "Waxing 15", "Purnima"], [2026, 6, 30, "Waxing 15", "Purnima"],
+    [2026, 11, 24, "Waxing 15", "Purnima"], [2026, 11, 25, "Waning 1", "Krishna Pratipada"],
     [2027, 3, 21, "Waxing 14", "Shukla Chaturdashi"],
   ] as const)("reads %i-%i-%i from the published sunrise table", (year, month, day, dateText, localName) => {
     const date = { year, month, day };
