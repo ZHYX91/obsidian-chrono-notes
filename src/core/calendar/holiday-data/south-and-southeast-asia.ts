@@ -17,6 +17,11 @@ export const SOUTH_AND_SOUTHEAST_ASIA = {
         verifiedOn: "2026-11-25",
         sourceUrl: "https://utilities.cept.gov.in/dop/pdfbind.ashx?id=15435",
       },
+      2028: {
+        status: "not-published",
+        verifiedOn: "2026-11-27",
+        sourceUrl: "https://www.csir.res.in/en/Notification/holidays-be-observed-central-government-offices-during-year-2027-reg",
+      },
     },
     entries: [
       { dates: ["2026-01-26", "2027-01-26"], en: "Republic Day", names: { "hi": "गणतंत्र दिवस", "zh-CN": "共和国日", "zh-TW": "共和國日" } },
@@ -44,6 +49,8 @@ export const SOUTH_AND_SOUTHEAST_ASIA = {
     ],
   },
   // Vietnamese public employees on a five-day week; omit ordinary weekends from contiguous breaks.
+  // The labour law amendment adds the 27 July holiday starting in 2027.
+  // https://baochinhphu.vn/quoc-hoi-dong-y-bo-sung-2-ngay-nghi-le-duoc-huong-nguyen-luong-102261121121448218.htm
   // The 2026 New Year exchange and Vietnamese Culture Day supplemented the annual announcement.
   // https://en.baochinhphu.vn/govt-approves-4-day-break-for-2026-new-year-holiday-111251225145321864.htm
   // https://en.baochinhphu.vn/viet-nam-to-have-two-public-holidays-in-april-111260306171800163.htm
@@ -59,6 +66,11 @@ export const SOUTH_AND_SOUTHEAST_ASIA = {
         status: "published",
         verifiedOn: "2026-11-25",
         sourceUrl: "https://en.baochinhphu.vn/viet-nam-announces-2027-public-holiday-schedule-111261012155048477.htm",
+      },
+      2028: {
+        status: "not-published",
+        verifiedOn: "2026-11-27",
+        sourceUrl: "https://baochinhphu.vn/nghi-tet-am-lich-2027-keo-dai-7-ngay-nghi-quoc-khanh-4-ngay-102261010095648278.htm",
       },
     },
     entries: [
@@ -86,6 +98,11 @@ export const SOUTH_AND_SOUTHEAST_ASIA = {
         dates: ["2026-09-01", "2026-09-02", "2027-09-02", "2027-09-03"],
         en: "National Day holiday",
         names: { "vi": "Nghỉ lễ Quốc khánh", "zh-CN": "国庆假期", "zh-TW": "國慶假期" },
+      },
+      {
+        dates: ["2027-07-27"],
+        en: "National Gratitude Day (War Invalids and Martyrs Day)",
+        names: { "vi": "Ngày Tổ quốc tri ân – Ngày Thương binh, liệt sĩ", "zh-CN": "国家感恩日（伤残军人与烈士纪念日）", "zh-TW": "國家感恩日（傷殘軍人與烈士紀念日）" },
       },
       { dates: ["2026-11-24", "2027-11-24"], en: "Vietnamese Culture Day", names: { "vi": "Ngày Văn hóa Việt Nam", "zh-CN": "越南文化日", "zh-TW": "越南文化日" } },
       {

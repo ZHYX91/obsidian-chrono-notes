@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { describe, expect, it } from "vitest";
 import { parseLocalDateKey } from "../../src/core/periodic/periodic-date";
 import { AMERICAS } from "../../src/core/calendar/holiday-data/americas";
@@ -23,11 +24,11 @@ const counts: Record<PublishedHolidayRegion, readonly [number, number]> = {
   tw: [22, 24], hk: [17, 17], mo: [20, 20], jp: [18, 17], kr: [22, 24],
   us: [11, 12], br: [9, 9], "gb-eng-wls": [8, 8], "gb-sct": [10, 9],
   "gb-nir": [10, 10], de: [9, 9], fr: [11, 11], es: [8, 9], ru: [18, 21],
-  in: [18, 17], vn: [17, 15], at: [13, 13], pt: [13, 13], mx: [7, 8], "ca-qc": [9, 9],
+  in: [18, 17], vn: [17, 16], at: [13, 13], pt: [13, 13], mx: [7, 8], "ca-qc": [9, 9],
 };
 
 const verified2028Counts: Partial<Record<PublishedHolidayRegion, number>> = {
-  us: 10, "gb-eng-wls": 8, "gb-sct": 9, "gb-nir": 10, fr: 11, at: 13, br: 9, "ca-qc": 9, pt: 13,
+  us: 10, "gb-eng-wls": 8, "gb-sct": 9, "gb-nir": 10, fr: 11, at: 13, br: 9, "ca-qc": 9, pt: 13, de: 9,
 };
 
 describe("published holiday schedules", () => {
@@ -100,6 +101,54 @@ describe("published holiday schedules", () => {
     expect(day("br", "2027-02-09").holidays).toEqual([]);
     expect(day("mo", "2027-02-09").holidays).toEqual([]);
     expect(day("mo", "2027-02-05").holidays).toEqual([]);
+  });
+
+  it("matches every row of the Japanese Cabinet Office archive through 2027", () => {
+    // Independent digest of the official CSV mapped to ISO-date + space + unmodified Japanese name.
+    const rows: string[] = [];
+    for (let year = 1955; year <= 2027; year++) {
+      expect(getPublishedHolidayYearCoverage("jp", year)).toBe("available");
+      expect(getHolidayPublicationSource("jp", year)?.status).toBe("published");
+      for (let stamp = Date.UTC(year, 0, 1); stamp < Date.UTC(year + 1, 0, 1); stamp += 86_400_000) {
+        const key = new Date(stamp).toISOString().slice(0, 10);
+        for (const { name } of day("jp", key, "ja").holidays) {
+          let csvName = name;
+          if (name === "振替休日" || name === "国民の休日") csvName = "休日";
+          if (key === "2019-05-01" || key === "2019-10-22") csvName = "休日（祝日扱い）";
+          rows.push(key + " " + csvName);
+        }
+      }
+    }
+    expect(rows).toHaveLength(1067);
+    expect(createHash("sha256").update(rows.join("\n")).digest("hex"))
+      .toBe("19d50a4fb1d3becc92b881f32813b844a38dd4106f132e50b79329fd43ed0307");
+    expect(getPublishedHolidayYearCoverage("jp", 1954)).toBe("unavailable");
+  });
+
+  it("preserves Japan’s historic holiday names, transfers and one-off celebrations", () => {
+    expect(day("jp", "1955-01-01", "ja").holidays[0]?.name).toBe("元日");
+    expect(day("jp", "1959-04-10", "zh-TW").holidays[0]?.name).toBe("皇太子婚禮");
+    expect(day("jp", "1987-05-04", "ja").workday).toEqual({ region: "jp", name: "振替休日", isWorkday: false });
+    expect(day("jp", "1988-05-04", "ja").holidays[0]?.name).toBe("国民の休日");
+    expect(day("jp", "1989-02-24", "fr").holidays[0]?.name).toBe("State funeral of Emperor Shōwa");
+    expect(day("jp", "2019-04-30", "ja").holidays[0]?.name).toBe("国民の休日");
+    expect(day("jp", "2019-05-01", "ja").holidays[0]?.name).toBe("天皇の即位の日");
+    expect(day("jp", "2019-10-22", "zh-CN").holidays[0]?.name).toBe("即位礼正殿之仪");
+    expect(day("jp", "2021-07-23", "ja").holidays[0]?.name).toBe("スポーツの日");
+    expect(day("jp", "2021-10-11").holidays).toEqual([]);
+    expect(day("jp", "2025-05-05", "ja").holidays[0]?.name).toBe("こどもの日");
+  });
+
+  it("includes exactly the nationwide German holidays in 2028", () => {
+    for (const [key, name] of [
+      ["2028-01-01", "Neujahr"], ["2028-04-14", "Karfreitag"], ["2028-04-17", "Ostermontag"],
+      ["2028-05-01", "Tag der Arbeit"], ["2028-05-25", "Christi Himmelfahrt"], ["2028-06-05", "Pfingstmontag"],
+      ["2028-10-03", "Tag der Deutschen Einheit"], ["2028-12-25", "Erster Weihnachtsfeiertag"],
+      ["2028-12-26", "Zweiter Weihnachtsfeiertag"],
+    ] as const) expect(day("de", key, "de-DE").holidays[0]?.name).toBe(name);
+    for (const key of ["2028-01-03", "2028-06-15", "2028-06-17", "2028-12-24"]) {
+      expect(day("de", key).holidays).toEqual([]);
+    }
   });
 
   it("keeps 2028 substitute days and regional differences distinct", () => {
@@ -182,6 +231,15 @@ describe("published holiday schedules", () => {
     expect(day("in", "2027-08-15").holidays.map((h) => h.name)).toEqual(["Independence Day", "Eid-e-Milad"]);
     expect(day("in", "2026-04-14").holidays[0]?.name).toContain("Ambedkar");
     expect(day("vn", "2026-11-24", "vi-VN").holidays[0]?.name).toBe("Ngày Văn hóa Việt Nam");
+    expect(day("vn", "2026-07-27", "vi-VN").holidays).toEqual([]);
+    expect(day("vn", "2027-07-27", "vi-VN").holidays[0]?.name)
+      .toBe("Ngày Tổ quốc tri ân – Ngày Thương binh, liệt sĩ");
+    expect(day("vn", "2027-07-27", "es-ES").holidays[0]?.name)
+      .toBe("National Gratitude Day (War Invalids and Martyrs Day)");
+    expect(day("vn", "2027-07-27", "zh-CN").holidays[0]?.name)
+      .toBe("国家感恩日（伤残军人与烈士纪念日）");
+    expect(day("vn", "2027-07-27", "zh-TW").holidays[0]?.name)
+      .toBe("國家感恩日（傷殘軍人與烈士紀念日）");
     for (const [region, date] of [["vn", "2026-01-10"], ["vn", "2026-08-22"], ["ru", "2027-02-20"]] as const) {
       const working = day(region, date);
       expect(working.holidays).toEqual([]);

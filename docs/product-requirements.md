@@ -61,7 +61,7 @@ The date cell owns the only calendar hover/focus preview. Calendar-extension chi
 
 ### 4.2 Holiday extensions
 
-Users may select up to three of the 22 regional holiday schedules independently of their calendar extensions. Every schedule covers 2026 and 2027. Mainland China also includes historical records. The [regional holiday reference](holiday-data.md) lists the years, jurisdiction, employee scope and official sources for each schedule. Dates outside a region’s coverage carry no marker from that region.
+Users may select up to three of the 22 regional holiday schedules independently of their calendar extensions. Every schedule covers 2026 and 2027. Mainland China and Japan also include historical records. The [regional holiday reference](holiday-data.md) lists the years, jurisdiction, employee scope and official sources for each schedule. Only recorded dates can receive regional markers, including individual cross-year dates in an otherwise uncovered year.
 
 The order of the three region slots controls names and ordinary holiday markers. An adjusted working day takes priority in the single visible badge. Conditional holidays, such as Québec’s Easter alternatives, carry a qualification and do not create an unconditional day-off badge. Marker text follows the interface language. Simplified and Traditional Chinese interfaces display the corresponding Chinese holiday name. An interface matching a local language of the schedule displays its local name. All other interfaces display the English name. Cultural observances use the same rule for their respective traditions.
 

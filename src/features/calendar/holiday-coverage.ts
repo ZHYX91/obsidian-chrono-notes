@@ -49,6 +49,11 @@ const HOLIDAY_PUBLICATION_RECORDS: Readonly<
       "https://www.forestry.gov.cn/lyj/1/szxx/20261105/695102.html",
       "2026-11-09",
     ),
+    2028: publicationVerification(
+      "not-published",
+      "https://www.forestry.gov.cn/lyj/1/szxx/20261105/695102.html",
+      "2026-11-27",
+    ),
   }),
   sg: Object.freeze({
     2026: publicationVerification(
