@@ -223,6 +223,7 @@ export function CalendarApp({
     dismissOnDisable: true,
   });
   const calendarExtensionKey = settings.calendarExtensions.join("\u0000");
+  const observanceKey = settings.observances.join("\u0000");
   const holidayRegionKey = settings.holidayRegions.join("\u0000");
   const rangeCreationConfigured =
     normalizeIntervalNoteFolder(settings.rangeNotes.folder).length > 0;
@@ -241,6 +242,7 @@ export function CalendarApp({
         locale,
         weekStartDay: settings.weekStartDay,
         calendarExtensions: Object.freeze([...settings.calendarExtensions]),
+        observances: Object.freeze([...settings.observances]),
         holidayRegions: Object.freeze([...settings.holidayRegions]),
         heatmap: monthHeatmapEnabled
           ? Object.freeze({
@@ -260,6 +262,7 @@ export function CalendarApp({
       monthHeatmapEnabled,
       calendarExtensionKey,
       holidayRegionKey,
+      observanceKey,
       settings.periodicNotes.daily.enabled,
       settings.periodicNotes.daily.pattern,
       settings.periodicNotes.daily.pathLocale,
@@ -295,6 +298,7 @@ export function CalendarApp({
         weekStartDay: settings.weekStartDay,
         today: Object.freeze({ ...today }),
         calendarExtensions: Object.freeze([...settings.calendarExtensions]),
+        observances: Object.freeze([...settings.observances]),
         holidayRegions: Object.freeze([...settings.holidayRegions]),
         daily: Object.freeze({ ...settings.periodicNotes.daily }),
         weekly: Object.freeze({ ...settings.periodicNotes.weekly }),
@@ -306,6 +310,7 @@ export function CalendarApp({
       decorationCache,
       calendarExtensionKey,
       holidayRegionKey,
+      observanceKey,
       selectedWeek,
       settings.periodicNotes.daily.enabled,
       settings.periodicNotes.daily.pattern,

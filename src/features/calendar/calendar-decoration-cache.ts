@@ -1,3 +1,5 @@
+import type { ObservanceGroup } from "../../core/calendar/observance-groups";
+import { selectObservanceEvents } from "./calendar-observances";
 import type {
   CalendarExtensionDay,
   CalendarExtensionEvent,
@@ -64,10 +66,11 @@ export class CalendarDecorationCache {
     locale: string,
     calendarExtensions: readonly CalendarExtension[],
     holidayRegions: readonly HolidayRegion[],
+    observances: readonly ObservanceGroup[] = [],
   ): CalendarDecorations {
     const normalizedLocale = normalizeLocale(locale);
     const dateKey = formatLocalDateKey(date);
-    const key = createCacheKey(dateKey, normalizedLocale, calendarExtensions, holidayRegions);
+    const key = JSON.stringify([dateKey, normalizedLocale, calendarExtensions, holidayRegions, observances]);
     const existing = this.entries.get(key);
     if (existing !== undefined) {
       this.entries.delete(key);
@@ -83,7 +86,7 @@ export class CalendarDecorationCache {
       this.getRegionalDay(date, dateKey, normalizedLocale, region)));
     const result = Object.freeze({
       calendarExtensions: extensions,
-      calendarEvents: mergeCalendarExtensionEvents(extensions),
+      calendarEvents: mergeCalendarExtensionEvents(extensions, selectObservanceEvents(date, normalizedLocale, observances)),
       holidays: regional.holidays,
       workday: regional.workday,
       regionalMarker: regional.marker,
@@ -159,30 +162,17 @@ export function selectCalendarDecorations(
   locale: string,
   calendarExtensions: readonly CalendarExtension[],
   holidayRegions: readonly HolidayRegion[],
+  observances: readonly ObservanceGroup[] = [],
 ): CalendarDecorations {
   const extensions = selectCalendarExtensionDays(date, locale, calendarExtensions);
   const regional = selectRegionalHolidayDay(date, locale, holidayRegions);
   return Object.freeze({
     calendarExtensions: extensions,
-    calendarEvents: mergeCalendarExtensionEvents(extensions),
+    calendarEvents: mergeCalendarExtensionEvents(extensions, selectObservanceEvents(date, locale, observances)),
     holidays: regional.holidays,
     workday: regional.workday,
     regionalMarker: regional.marker,
   });
-}
-
-function createCacheKey(
-  dateKey: string,
-  locale: string,
-  calendarExtensions: readonly CalendarExtension[],
-  holidayRegions: readonly HolidayRegion[],
-): string {
-  return JSON.stringify([
-    dateKey,
-    locale,
-    calendarExtensions,
-    holidayRegions,
-  ]);
 }
 
 function touchEntry<T>(entries: Map<string, T>, key: string): T | undefined {

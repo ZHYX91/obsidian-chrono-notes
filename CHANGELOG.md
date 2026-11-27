@@ -4,6 +4,8 @@ Notable changes to Chrono Notes are documented in this file. The repository's nu
 
 ## Unreleased
 
+- Choose cultural and religious observances independently of date displays and regional holidays.
+
 - Display Julian old-style or Coptic dates alongside Gregorian notes.
 
 ## 0.9.3

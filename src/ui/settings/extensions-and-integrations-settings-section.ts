@@ -1,3 +1,4 @@
+import { OBSERVANCE_GROUPS } from "../../core/calendar/observance-groups";
 import { Setting, type ButtonComponent } from "obsidian";
 
 import {
@@ -50,6 +51,17 @@ export function renderExtensionsAndIntegrationsSettingsSection(
   addHolidayRegionSlot(containerEl, 0, context);
   addHolidayRegionSlot(containerEl, 1, context);
   addHolidayRegionSlot(containerEl, 2, context);
+
+  containerEl.createEl("h3", { text: t("observances.title") });
+  for (const group of OBSERVANCE_GROUPS) {
+    new Setting(containerEl).setName(t(`observances.group.${group}`)).addToggle(toggle => {
+      toggle.setValue(context.host.settings.observances.includes(group)).onChange(async enabled => {
+        const other = context.host.settings.observances.filter(value => value !== group);
+        context.host.settings.observances = enabled ? [...other, group] : other;
+        await context.persistSettings();
+      });
+    });
+  }
 
   const settings = context.host.settings.ics;
   containerEl.createEl("h3", { text: t("settings.ics.title") });

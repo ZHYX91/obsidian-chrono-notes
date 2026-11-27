@@ -1,3 +1,4 @@
+import type { ObservanceGroup } from "../../core/calendar/observance-groups";
 import { normalizeIntervalNoteFolder } from "../../core/note/interval-note-spec";
 import { getCalendarWeekIdentity } from "../../core/periodic/calendar-week";
 import {
@@ -38,6 +39,7 @@ export interface WeekCalendarQueryOptions {
   readonly today: LocalDate;
   readonly calendarExtensions: readonly CalendarExtension[];
   readonly holidayRegions: readonly HolidayRegion[];
+  readonly observances?: readonly ObservanceGroup[];
   readonly daily: PeriodicNoteRule;
   readonly weekly: PeriodicNoteRule;
   readonly rangeNotes: Readonly<RangeNoteSettings>;

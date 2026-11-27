@@ -136,6 +136,7 @@ export function selectCalendarExtensionDay(
 
 export function mergeCalendarExtensionEvents(
   extensions: readonly CalendarExtensionDay[],
+  extraEvents: readonly CalendarExtensionEvent[] = [],
 ): readonly CalendarExtensionEvent[] {
   const merged = new Map<string, {
     kind: CalendarExtensionEvent["kind"];
@@ -143,8 +144,10 @@ export function mergeCalendarExtensionEvents(
     sources: CalendarExtensionEventSource[];
   }>();
 
-  for (const extension of extensions) {
-    for (const event of extension.events) {
+  const groups = extensions.map(extension => extension.events);
+  if (extraEvents.length > 0) groups.push(extraEvents);
+  for (const group of groups) {
+    for (const event of group) {
       const existing = merged.get(event.id);
       if (existing === undefined) {
         merged.set(event.id, {

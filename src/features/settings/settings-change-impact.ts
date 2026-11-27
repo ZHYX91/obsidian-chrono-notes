@@ -37,6 +37,7 @@ export function getSettingsChangeImpact(
       previous.locale !== next.locale ||
       previous.weekStartDay !== next.weekStartDay ||
       !sameArray(previous.calendarExtensions, next.calendarExtensions) ||
+      !sameArray(previous.observances, next.observances) ||
       !sameArray(previous.holidayRegions, next.holidayRegions) ||
       previous.showNoteIndicators !== next.showNoteIndicators ||
       previous.quarterNameMode !== next.quarterNameMode ||
@@ -75,6 +76,7 @@ function sameSettings(
     left.locale === right.locale &&
     left.weekStartDay === right.weekStartDay &&
     sameArray(left.calendarExtensions, right.calendarExtensions) &&
+    sameArray(left.observances, right.observances) &&
     sameArray(left.holidayRegions, right.holidayRegions) &&
     left.showNoteIndicators === right.showNoteIndicators &&
     left.quarterNameMode === right.quarterNameMode &&

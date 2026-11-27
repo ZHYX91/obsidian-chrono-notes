@@ -1,3 +1,4 @@
+import type { ObservanceGroup } from "../../core/calendar/observance-groups";
 import { buildMonthGrid } from "../../core/calendar/month-grid";
 import type {
   LocalDate,
@@ -28,6 +29,7 @@ export interface MonthCalendarQueryOptions {
   readonly weekStartDay: WeekStartDay;
   readonly calendarExtensions: readonly CalendarExtension[];
   readonly holidayRegions: readonly HolidayRegion[];
+  readonly observances?: readonly ObservanceGroup[];
   readonly heatmap: Readonly<{
     dimension: StatisticDisplayDimension;
     valueStep: number;

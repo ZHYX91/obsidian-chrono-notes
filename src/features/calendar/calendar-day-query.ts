@@ -1,3 +1,4 @@
+import type { ObservanceGroup } from "../../core/calendar/observance-groups";
 import type {
   CalendarExtensionDay,
   CalendarExtensionEvent,
@@ -36,6 +37,7 @@ export interface CalendarDayQueryOptions {
   readonly weekStartDay: WeekStartDay;
   readonly calendarExtensions: readonly CalendarExtension[];
   readonly holidayRegions: readonly HolidayRegion[];
+  readonly observances?: readonly ObservanceGroup[];
   readonly heatmap: Readonly<{
     dimension: StatisticDisplayDimension;
     valueStep: number;
@@ -72,11 +74,13 @@ export function selectCalendarDay(
     options.locale,
     options.calendarExtensions,
     options.holidayRegions,
+    options.observances,
   ) ?? selectCalendarDecorations(
     date,
     options.locale,
     options.calendarExtensions,
     options.holidayRegions,
+    options.observances,
   );
   const icsEvents = icsSnapshot.enabled
     ? (icsSnapshot.eventsByDate[formatLocalDateKey(date)] ?? EMPTY_ICS_EVENTS)
