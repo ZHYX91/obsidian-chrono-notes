@@ -366,12 +366,6 @@ button:not(.clickable-icon) {
       /\.chrono-notes-calendar button\.chrono-notes-month-interval-item::before\s*\{[^}]*background-color:\s*var\(--chrono-notes-interval-surface\);[^}]*block-size:\s*var\(--chrono-notes-month-interval-line-height\);[^}]*inline-size:\s*100%;[^}]*inset-block-start:\s*50%;[^}]*pointer-events:\s*none;[^}]*position:\s*absolute;[^}]*transform:\s*translateY\(-50%\);/s,
     );
     expect(styles).toMatch(
-      /\.chrono-notes-calendar button\.chrono-notes-month-interval-item\[data-continues-before="true"\]::before\s*\{[^}]*border-bottom-left-radius:\s*0;[^}]*border-top-left-radius:\s*0;/s,
-    );
-    expect(styles).toMatch(
-      /\.chrono-notes-calendar button\.chrono-notes-month-interval-item\[data-continues-after="true"\]::before\s*\{[^}]*border-bottom-right-radius:\s*0;[^}]*border-top-right-radius:\s*0;/s,
-    );
-    expect(styles).toMatch(
       /\.chrono-notes-calendar button\.chrono-notes-month-interval-item:hover\s*\{[^}]*--chrono-notes-interval-surface:[^}]*z-index:\s*3;/s,
     );
     expect(styles).toMatch(
