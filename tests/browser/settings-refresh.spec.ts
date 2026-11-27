@@ -76,6 +76,46 @@ for (const tab of ["periodic", "ranges"] as const) {
   });
 }
 
+test("settings tab paging arrows meet the 44 × 44 touch target in LTR and RTL", async ({ browser }) => {
+  const context = await browser.newContext({
+    viewport: { width: 390, height: 844 },
+    isMobile: true,
+    hasTouch: true,
+  });
+  try {
+    const page = await context.newPage();
+    await page.setContent(fixture.html);
+    await page.addScriptTag({ content: fixture.script });
+    for (const locale of ["en", "ar"] satisfies PluginLocale[]) {
+      await page.evaluate((locale) => window.mountChronoSettings(locale, 260), locale);
+      const geometry = await page.evaluate(() => {
+        const row = document.querySelector<HTMLElement>(".chrono-notes-settings-tab-row")!;
+        row.classList.add("has-overflow");
+        const buttons = Array.from(row.querySelectorAll<HTMLButtonElement>(".chrono-notes-settings-tab-scroll"));
+        // Make both ends measurable; this test concerns the target geometry, not scroll state.
+        buttons.forEach((button) => { button.disabled = false; });
+        return {
+          coarse: matchMedia("(pointer: coarse)").matches,
+          direction: getComputedStyle(row.querySelector(".chrono-notes-settings-tabs")!).direction,
+          arrows: buttons.map((button) => {
+            const rect = button.getBoundingClientRect();
+            return { width: rect.width, height: rect.height };
+          }),
+        };
+      });
+      expect(geometry.coarse).toBe(true);
+      expect(geometry.direction).toBe(locale === "ar" ? "rtl" : "ltr");
+      expect(geometry.arrows).toHaveLength(2);
+      for (const [index, rect] of geometry.arrows.entries()) {
+        expect(rect.width, locale + " arrow " + index + " width").toBeGreaterThanOrEqual(44);
+        expect(rect.height, locale + " arrow " + index + " height").toBeGreaterThanOrEqual(44);
+      }
+    }
+  } finally {
+    await context.close();
+  }
+});
+
 for (const locale of ["en", "fa", "ar", "he"] satisfies PluginLocale[]) {
   test(`${locale}: keeps the active tab and dropdown focus through saving and refresh`, async ({ page }, testInfo) => {
     const errors: string[] = [];
