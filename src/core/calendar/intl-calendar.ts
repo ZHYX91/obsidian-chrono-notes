@@ -65,12 +65,29 @@ export function getIntlCalendarDay(
       ? "month-day"
       : "day";
 
+  const full = formatFullDate(currentDate, calendar, locale);
   return Object.freeze({
-    dateText: getFormatter(calendar, locale, style).format(currentDate),
+    dateText: style === "full" ? full : getFormatter(calendar, locale, style).format(currentDate),
     events: EMPTY_EVENTS,
     transition,
-    accessibilityText: getFormatter(calendar, locale, "full").format(currentDate),
+    accessibilityText: full,
   });
+}
+
+function formatFullDate(date: Date, calendar: IntlCalendarId, locale: string): string {
+  const formatter = getFormatter(calendar, locale, "full");
+  if ((locale !== "zh-CN" && locale !== "zh-TW") || (calendar !== "coptic" && calendar !== "ethiopic")) {
+    return formatter.format(date);
+  }
+  // ICU can leave these era names in Latin initials even in a Chinese date.
+  const traditional = locale === "zh-TW";
+  return formatter.formatToParts(date).map(part => {
+    if (part.type !== "era") return part.value;
+    if (calendar === "coptic" && part.value === "AM") return traditional ? "殉道紀元" : "殉道纪元";
+    if (calendar === "ethiopic" && part.value === "AM") return traditional ? "恩典紀元" : "恩典纪元";
+    if (calendar === "ethiopic" && part.value === "AA") return traditional ? "創世紀元" : "创世纪元";
+    return part.value;
+  }).join("");
 }
 
 export function clearIntlCalendarFormatterCache(): void {

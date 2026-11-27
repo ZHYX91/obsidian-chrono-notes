@@ -80,6 +80,17 @@ describe("settings", () => {
     }).calendarExtensions).toEqual(["ethiopic", "hebrew"]);
   });
 
+  it.each([
+    "vietnamese-lunar", "korean-lunar", "japanese-lunisolar", "japanese-era",
+    "french-republican", "chol-qij", "indian-panchanga",
+  ])("preserves the saved %s display in either slot", (id) => {
+    for (const selected of [[id, "julian"], ["julian", id]]) {
+      const settings = normalizeSettings({ calendarExtensions: selected });
+      expect(settings.calendarExtensions).toEqual(selected);
+      expect(normalizeSettings(settings).calendarExtensions).toEqual(selected);
+    }
+  });
+
   it("normalizes independent note-creation confirmation flags", () => {
     expect(
       normalizeSettings({

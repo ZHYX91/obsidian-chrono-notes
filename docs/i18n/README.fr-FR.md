@@ -14,6 +14,7 @@ Vues actuelles, large et étroite, rendues à partir de l’interface du module 
 
 ![Chrono Notes · 340 px](../assets/chrono-notes-calendar-narrow-en.png)
 
+- Vous pouvez aussi afficher les calendriers lunaires vietnamien et coréen, l’ancien calendrier et les ères du Japon, le calendrier républicain français, le cycle de 260 jours des K’iche’ et les tithis au lever du soleil de l’almanach national indien. [Dates couvertes](../calendar-boundaries.md#5-calendar-extension-date-support)
 - Vues par semaine, mois, année et siècle avec état des notes, tâches, statistiques et aperçus.
 - Notes quotidiennes, hebdomadaires, mensuelles, trimestrielles, annuelles, décennales et séculaires, avec modèles intégrés ou Templater.
 - Navigation entre les notes, suivi des tâches, cartes thermiques et notes créées sur une plage de dates.
@@ -23,7 +24,7 @@ Vues actuelles, large et étroite, rendues à partir de l’interface du module 
 
 ## Prérequis et compatibilité
 
-Obsidian 1.12.7 ou plus récent, sur ordinateur ou mobile. Les fichiers ICS du coffre sont utilisables partout ; les chemins extérieurs au coffre sont réservés aux ordinateurs. Les autres calendriers dépendent des données disponibles dans l'environnement d'Obsidian.
+Obsidian 1.12.7 ou plus récent, sur ordinateur ou mobile. Les fichiers ICS du coffre sont utilisables partout ; les chemins extérieurs au coffre sont réservés aux ordinateurs. Certains calendriers, dont les ères japonaises, utilisent les données fournies par l’environnement d’Obsidian.
 
 ## Installation
 

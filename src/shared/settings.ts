@@ -7,7 +7,7 @@ import {
 } from "../core/periodic/periodic-date";
 import { migrateLuxonDateFormatToMoment } from "../core/periodic/moment-format";
 import type { StatisticDisplayDimension } from "../core/statistics/heatmap";
-import type { CalendarExtensionId } from "../core/calendar/calendar-extension";
+import { CALENDAR_EXTENSION_IDS, type CalendarExtensionId } from "../core/calendar/calendar-extension";
 import {
   isPropertyDateDisplayFormat,
   isPropertyTimeDisplayFormat,
@@ -430,17 +430,10 @@ export function isWeekStartDay(value: unknown): value is WeekStartDay {
   return value === "monday" || value === "sunday";
 }
 
+const calendarExtensionIds: ReadonlySet<string> = new Set(CALENDAR_EXTENSION_IDS);
+
 export function isCalendarExtension(value: unknown): value is CalendarExtension {
-  return value === "chinese-lunar" ||
-    value === "ganzhi" ||
-    value === "julian" ||
-    value === "coptic" ||
-    value === "persian" ||
-    value === "ethiopic" ||
-    value === "hebrew" ||
-    value === "indian" ||
-    value === "islamic-civil" ||
-    value === "islamic-umalqura";
+  return typeof value === "string" && calendarExtensionIds.has(value);
 }
 
 export function isHolidayRegion(value: unknown): value is HolidayRegion {

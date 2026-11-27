@@ -14,6 +14,7 @@ Layouts atuais largo e estreito, renderizados com a interface do plugin em um am
 
 ![Chrono Notes · 340 px](../assets/chrono-notes-calendar-narrow-en.png)
 
+- Também é possível consultar os calendários lunares do Vietnã e da Coreia, o antigo calendário e as eras do Japão, o calendário republicano francês, o ciclo de 260 dias dos k’iche’ e os tithis ao nascer do sol do almanaque nacional indiano. [Períodos disponíveis](../calendar-boundaries.md#5-calendar-extension-date-support)
 - Visões de semana, mês, ano e século com status das notas, tarefas, estatísticas e prévias.
 - Notas diárias, semanais, mensais, trimestrais, anuais, por década e por século, com modelos próprios ou Templater.
 - Navegação entre notas, progresso de tarefas, mapas de calor e notas de intervalos de datas.
@@ -23,7 +24,7 @@ Layouts atuais largo e estreito, renderizados com a interface do plugin em um am
 
 ## Requisitos e compatibilidade
 
-Requer Obsidian 1.12.7 ou posterior, no computador ou celular. Arquivos ICS dentro do Vault funcionam nas plataformas compatíveis; caminhos fora do Vault só funcionam no computador. Calendários alternativos dependem dos dados do ambiente.
+Requer Obsidian 1.12.7 ou posterior, no computador ou celular. Arquivos ICS dentro do Vault funcionam nas plataformas compatíveis; caminhos fora do Vault só funcionam no computador. Alguns calendários, incluindo o das eras japonesas, usam dados fornecidos pelo ambiente de execução do Obsidian.
 
 ## Instalação
 

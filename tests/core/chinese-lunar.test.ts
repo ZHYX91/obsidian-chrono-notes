@@ -117,15 +117,17 @@ describe("getChineseLunarDay", () => {
       });
   });
 
-  it("preserves leap-month identity and shows the month name on its first day", () => {
-    expect(getChineseLunarDay({ year: 2025, month: 7, day: 25 }, "zh-CN"))
+  it.each([
+    ["zh-Hans-MO", "闰六月"], ["zh-TW", "閏六月"], ["zh-MO", "閏六月"],
+  ])("shows the leap month name in the script of %s", (locale, name) => {
+    expect(getChineseLunarDay({ year: 2025, month: 7, day: 25 }, locale))
       .toMatchObject({
         lunarMonth: 6,
         lunarDay: 1,
         isLeapMonth: true,
-        lunarMonthName: "闰六月",
+        lunarMonthName: name,
         lunarDayName: "初一",
-        dateText: "闰六月",
+        dateText: name,
         events: [],
         transition: "month",
       });

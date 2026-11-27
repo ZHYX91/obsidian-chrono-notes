@@ -12,6 +12,7 @@ Current wide and narrow calendar layouts, rendered from the plugin UI in a brows
 
 ![Chrono Notes · 340 px](https://raw.githubusercontent.com/ZHYX91/obsidian-chrono-notes/main/docs/assets/chrono-notes-calendar-narrow-en.png)
 
+- Vietnamese and Korean lunar dates, Japan’s old calendar and era years, the French Republican calendar, the K’iche’ 260-day count, and sunrise tithis from India’s national almanac. [Supported dates](https://github.com/ZHYX91/obsidian-chrono-notes/blob/main/docs/calendar-boundaries.md#5-calendar-extension-date-support)
 - A century view grouped by decade, with the same periodic-note cells, indicators and interactions as the year overview.
 - Year, month, and week calendar views with note state, tasks, holidays, local ICS events, and time-range notes.
 - Daily, weekly, monthly, quarterly, yearly, decadal, and century periodic notes with built-in or Templater templates.
@@ -31,7 +32,7 @@ Your notes and plugin settings remain in your Obsidian Vault. Chrono Notes reads
 
 - Obsidian 1.12.7 or later on desktop or mobile.
 - Local ICS sources inside the Vault work across supported platforms; explicitly configured paths outside the Vault are desktop-only.
-- Optional non-Gregorian calendars depend on the calendar data provided by the Obsidian runtime and are omitted safely when unavailable.
+- Some calendars, including Japanese era years, use the calendar data supplied by Obsidian’s runtime.
 
 ## Installation
 

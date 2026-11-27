@@ -23,6 +23,20 @@ describe("calendar language preferences", () => {
     expect(settings.holidayRegions).toEqual(language === "ja" && availableRegion ? [availableRegion.id] : []);
   });
 
+  it.each([
+    ["ja", ["japanese-lunisolar", "japanese-era"], ["japanese-lunisolar"]],
+    ["ko-KR", ["korean-lunar"], ["korean-lunar"]],
+    ["vi-VN", ["vietnamese-lunar"], ["vietnamese-lunar"]],
+    ["hi-IN", ["indian", "indian-panchanga"], []],
+    ["fr-CA", ["french-republican"], []],
+    ["es-GT", ["chol-qij"], []],
+    ["quc-GT", ["chol-qij"], []],
+  ] as const)("separates suggested options from one-time defaults for %s", (locale, ranked, enabled) => {
+    const options = getCalendarOptionsForLanguage(locale);
+    expect(options.calendars.slice(0, ranked.length).map(({ id }) => id)).toEqual(ranked);
+    expect(createFirstInstallSettings(locale).calendarExtensions).toEqual(enabled);
+  });
+
   it("omits unsupported calendars when initializing", () => {
     const support = vi.spyOn(Intl.DateTimeFormat.prototype, "resolvedOptions").mockReturnValue({
       locale: "en", calendar: "gregory", numberingSystem: "latn", timeZone: "UTC",

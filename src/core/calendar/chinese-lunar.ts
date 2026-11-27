@@ -47,9 +47,12 @@ function buildChineseLunarDay(context: LunarDateContext): ChineseLunarDay {
   const lunarMonth = Math.abs(signedMonth);
   const lunarDay = lunar.getDay();
   const isLeapMonth = signedMonth < 0;
-  const chinese = I18n.getLanguage() !== "en";
+  const language = I18n.getLanguage();
+  const chinese = language !== "en";
   const lunarMonthName = chinese
-    ? `${lunar.getMonthInChinese()}月`
+    ? `${language === "cht" && isLeapMonth
+        ? lunar.getMonthInChinese().replace(/^闰/u, "閏")
+        : lunar.getMonthInChinese()}月`
     : `${isLeapMonth ? "Leap lunar month" : "Lunar month"} ${lunarMonth}`;
   const lunarDayName = chinese ? lunar.getDayInChinese() : `day ${lunarDay}`;
   const localizedPrimaryFestivals = [...lunar.getFestivals()];

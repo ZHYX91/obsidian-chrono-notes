@@ -1,5 +1,7 @@
 import { I18n } from "lunar-typescript";
 
+import { calendarLanguageKey } from "./content-locale";
+
 type LunarLanguage = "chs" | "cht" | "en";
 
 const EN_SOLAR_TERM_NAMES: Readonly<Record<string, string>> = Object.freeze({
@@ -189,16 +191,9 @@ export function localizeLunarFestivalName(name: string, locale: string): string 
 }
 
 function resolveLunarLanguage(locale: string): LunarLanguage {
-  const normalized = locale.toLowerCase();
-  if (normalized === "cht") return "cht";
-  if (normalized === "chs") return "chs";
-  if (normalized === "en") return "en";
-  if (
-    normalized.startsWith("zh-tw") ||
-    normalized.startsWith("zh-hk") ||
-    normalized.includes("hant")
-  ) return "cht";
-  if (normalized.startsWith("zh")) return "chs";
+  const language = calendarLanguageKey(locale);
+  if (language === "cht" || language === "zh-TW") return "cht";
+  if (language === "chs" || language === "zh-CN") return "chs";
   return "en";
 }
 

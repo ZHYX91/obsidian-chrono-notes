@@ -397,6 +397,8 @@ import type { App, PluginManifest } from "obsidian";
 import { openObsidianPluginSettings } from "../../src/adapters/obsidian/obsidian-plugin-settings";
 import type { ChronoRuntime } from "../../src/app/chrono-runtime";
 import ChronoNotesPlugin from "../../src/app/plugin";
+import { selectCalendarDay } from "../../src/features/calendar/calendar-day-query";
+import { getCalendarOptionsForLanguage } from "../../src/features/calendar/calendar-language-preferences";
 import { createDefaultSettings, SETTINGS_SCHEMA_VERSION } from "../../src/shared/settings";
 import { createTemplaterLifecycle } from "../support/templater-lifecycle";
 
@@ -856,6 +858,63 @@ describe("ChronoNotesPlugin lifecycle composition", () => {
     expect(reopened.settings.calendarExtensions).toEqual([]);
     expect(mocks.state.saveData).toHaveBeenCalledTimes(2);
     reopened.unload();
+  });
+
+  it("shows kyureki and a Japanese holiday on first use, then keeps both cleared on a different-language host", async () => {
+    let data: string | null = null;
+    mocks.state.loadData.mockImplementation(async () => data === null ? null : JSON.parse(data));
+    mocks.state.saveData.mockImplementation(async (settings) => { data = JSON.stringify(settings); });
+    mocks.state.appLanguage = "ja";
+
+    const dayInVault = (plugin: ChronoNotesPlugin) => {
+      const notes = plugin.noteIndex?.getSnapshot();
+      const ics = plugin.getIcsSnapshot();
+      if (!notes || !ics) throw new Error("Calendar indexes were not initialized");
+      return selectCalendarDay({ year: 2026, month: 9, day: 22 }, notes, ics, {
+        ...plugin.settings,
+        locale: plugin.getTranslator().locale,
+        daily: plugin.settings.periodicNotes.daily,
+        heatmap: null,
+      });
+    };
+    const japanese = createPlugin();
+    await japanese.onload();
+    expect(mocks.state.saveData).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({
+      calendarExtensions: ["japanese-lunisolar"], holidayRegions: ["jp"], observances: [],
+    }));
+    expect(dayInVault(japanese)).toMatchObject({
+      calendarExtensions: [{ id: "japanese-lunisolar", dateText: "12" }],
+      holidays: [{ region: "jp", name: "国民の休日" }],
+      regionalMarker: { kind: "holiday", region: "jp" },
+    });
+
+    japanese.settings.calendarExtensions = [];
+    japanese.settings.holidayRegions = [];
+    await japanese.saveSettings();
+    japanese.unload();
+    mocks.state.appLanguage = "zh-MO";
+    const reopened = createPlugin();
+    await reopened.onload();
+    expect(dayInVault(reopened)).toMatchObject({
+      calendarExtensions: [], holidays: [], regionalMarker: null,
+    });
+    expect(mocks.state.saveData).toHaveBeenCalledTimes(2);
+    reopened.unload();
+  });
+
+  it.each([
+    ["zh-MO", ["mo", "tw", "hk"]],
+    ["zh-HK", ["hk", "tw", "mo"]],
+    ["zh-TW", ["tw", "hk", "mo"]],
+  ] as const)("orders Traditional Chinese region choices using the host's raw %s tag", async (hostLocale, expected) => {
+    mocks.state.appLanguage = hostLocale;
+    const plugin = createPlugin();
+    await plugin.onload();
+    const translator = plugin.getTranslator();
+    expect(translator.locale).toBe("zh-TW");
+    expect(getCalendarOptionsForLanguage(translator.languageTag).regions.slice(0, 3).map(({ id }) => id))
+      .toEqual(expected);
+    plugin.unload();
   });
 
   it.each([
