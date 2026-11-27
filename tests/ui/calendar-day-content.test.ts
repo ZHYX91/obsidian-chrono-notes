@@ -201,6 +201,7 @@ function emptyDay(): CalendarDay {
     calendarExtensions: [],
     calendarEvents: [],
     holidays: [],
+    regionalDays: [],
     workday: null,
     regionalMarker: null,
     icsEvents: [],

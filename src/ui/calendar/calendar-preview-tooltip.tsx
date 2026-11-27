@@ -11,10 +11,7 @@ import type { HeatmapMetric } from "../../core/statistics/heatmap";
 import type { NoteStatistics } from "../../core/note/note-statistics";
 import type { NoteEmbedStatistics } from "../../core/note/note-preview";
 import type { PeriodicNoteType } from "../../core/periodic/periodic-date";
-import type {
-  RegionalHoliday,
-  RegionalWorkday,
-} from "../../core/calendar/regional-holidays";
+import type { RegionalDayPresentation } from "./calendar-regional-presentation";
 import type {
   CalendarExtensionDay,
   CalendarExtensionEvent,
@@ -34,7 +31,7 @@ import {
   getCalendarPreviewStateText,
 } from "./calendar-preview-presentation";
 
-export interface CalendarPreviewCell {
+export interface CalendarPreviewCell extends RegionalDayPresentation {
   readonly noteState: string;
   readonly preview: string | null;
   readonly embeds?: NoteEmbedStatistics;
@@ -43,8 +40,6 @@ export interface CalendarPreviewCell {
   readonly previewSubtitle?: string | null;
   readonly errorMessage?: string;
   readonly heatmap?: HeatmapMetric | null;
-  readonly holidays?: readonly RegionalHoliday[];
-  readonly workday?: RegionalWorkday | null;
   readonly calendarExtensions?: readonly CalendarExtensionDay[];
   readonly calendarEvents?: readonly CalendarExtensionEvent[];
   readonly icsEvents?: readonly IcsEventOccurrence[];

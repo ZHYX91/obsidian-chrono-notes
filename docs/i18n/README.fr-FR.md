@@ -17,7 +17,8 @@ Vues actuelles, large et étroite, rendues à partir de l’interface du module 
 - Vues par semaine, mois, année et siècle avec état des notes, tâches, statistiques et aperçus.
 - Notes quotidiennes, hebdomadaires, mensuelles, trimestrielles, annuelles, décennales et séculaires, avec modèles intégrés ou Templater.
 - Navigation entre les notes, suivi des tâches, cartes thermiques et notes créées sur une plage de dates.
-- Calendriers chinois, persan, éthiopien, hébraïque, indien et islamiques, ainsi que les jours fériés de Chine et de Singapour.
+- Calendriers chinois, persan, éthiopien, hébraïque, indien et islamiques.
+- Vous pouvez choisir jusqu’à trois calendriers parmi les 22 calendriers régionaux de jours fériés. [Couverture par région](../holiday-data.md)
 - Fichiers ICS locaux en lecture seule et formats d'affichage des propriétés Date et Date et heure sans modifier le YAML.
 
 ## Prérequis et compatibilité

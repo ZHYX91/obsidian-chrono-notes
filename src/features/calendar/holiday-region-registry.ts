@@ -1,3 +1,4 @@
+import { getPublishedHolidayDay, getPublishedHolidayYearCoverage, PUBLISHED_HOLIDAY_REGIONS, type PublishedHolidayRegion } from "../../core/calendar/published-holidays";
 import type {
   HolidayDataCoverage,
   RegionalHoliday,
@@ -30,12 +31,14 @@ export interface HolidayRegionDefinition {
   readonly id: HolidayRegion;
   readonly labelKey:
     | "settings.appearance.mainlandChina"
-    | "settings.appearance.singapore";
+    | "settings.appearance.singapore"
+    | `holiday.region.${PublishedHolidayRegion}`;
   getDay(date: LocalDate, locale: string): HolidayRegionDay;
   getYearCoverage(year: number): HolidayDataCoverage;
 }
 
 export interface SelectedRegionalHolidayDay {
+  readonly regionalDays: readonly RegionalHolidayProviderDay[];
   readonly holidays: readonly RegionalHoliday[];
   readonly workday: RegionalWorkday | null;
   readonly marker: RegionalMarker | null;
@@ -61,12 +64,25 @@ export const HOLIDAY_REGION_DEFINITIONS: readonly HolidayRegionDefinition[] = Ob
     },
     getYearCoverage: getSingaporeHolidayYearCoverage,
   }),
+  ...PUBLISHED_HOLIDAY_REGIONS.map((id) => Object.freeze({
+    id,
+    labelKey: `holiday.region.${id}` as const,
+    getDay: (date: LocalDate, locale: string) => getPublishedHolidayDay(id, date, locale),
+    getYearCoverage: (year: number) => getPublishedHolidayYearCoverage(id, year),
+  })),
 ]);
 
 const PROVIDERS = new Map<HolidayRegion, HolidayRegionDefinition>(
   HOLIDAY_REGION_DEFINITIONS.map((definition) => [definition.id, definition]),
 );
 const EMPTY_HOLIDAYS: readonly RegionalHoliday[] = Object.freeze([]);
+const EMPTY_REGIONAL_DAYS: readonly RegionalHolidayProviderDay[] = Object.freeze([]);
+
+export function getHolidayRegionDefinition(region: HolidayRegion): HolidayRegionDefinition {
+  const definition = PROVIDERS.get(region);
+  if (definition === undefined) throw new Error(`Unknown holiday region: ${region}`);
+  return definition;
+}
 
 export function selectRegionalHolidayDay(
   date: LocalDate,
@@ -82,9 +98,7 @@ export function selectRegionalHolidayProviderDay(
   locale: string,
   region: HolidayRegion,
 ): RegionalHolidayProviderDay {
-  const provider = PROVIDERS.get(region);
-  if (provider === undefined) throw new Error(`Unknown holiday region: ${region}`);
-  return Object.freeze({ region, ...provider.getDay(date, locale) });
+  return Object.freeze({ region, ...getHolidayRegionDefinition(region).getDay(date, locale) });
 }
 
 export function combineRegionalHolidayDays(
@@ -93,18 +107,22 @@ export function combineRegionalHolidayDays(
   const holidays: RegionalHoliday[] = [];
   let workday: RegionalWorkday | null = null;
   let marker: RegionalMarker | null = null;
-  let workMarker: RegionalMarker | null = null;
+  const active: RegionalHolidayProviderDay[] = [];
 
   for (const day of selected) {
+    if (day.holidays.length === 0 && day.workday === null) continue;
+    active.push(day);
     const id = day.region;
     holidays.push(...day.holidays);
-    if (day.workday !== null) workday = day.workday;
+    if (day.workday && (!workday || (!workday.isWorkday && day.workday.isWorkday))) {
+      workday = day.workday;
+    }
 
-    if (day.workday?.isWorkday === true && workMarker === null) {
-      workMarker = Object.freeze({ kind: "work", region: id });
+    if (day.workday?.isWorkday === true && marker?.kind !== "work") {
+      marker = Object.freeze({ kind: "work", region: id });
     } else if (marker === null && day.workday?.isWorkday === false) {
       marker = Object.freeze({ kind: "rest", region: id });
-    } else if (marker === null && day.holidays.length > 0) {
+    } else if (marker === null && day.holidays.some(holiday => !holiday.conditional)) {
       marker = Object.freeze({ kind: "holiday", region: id });
     }
   }
@@ -112,7 +130,8 @@ export function combineRegionalHolidayDays(
   return Object.freeze({
     holidays: holidays.length === 0 ? EMPTY_HOLIDAYS : Object.freeze(holidays),
     workday,
-    marker: workMarker ?? marker,
+    marker,
+    regionalDays: active.length > 0 ? Object.freeze(active) : EMPTY_REGIONAL_DAYS,
   });
 }
 

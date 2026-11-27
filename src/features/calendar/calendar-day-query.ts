@@ -30,7 +30,7 @@ import {
   type IndexedPeriodicNote,
   type PeriodicNoteRule,
 } from "./indexed-periodic-note";
-import type { RegionalMarker } from "./holiday-region-registry";
+import type { RegionalHolidayProviderDay, RegionalMarker } from "./holiday-region-registry";
 
 export interface CalendarDayQueryOptions {
   readonly locale: string;
@@ -47,6 +47,7 @@ export interface CalendarDayQueryOptions {
 }
 
 export interface CalendarDay extends IndexedPeriodicNote {
+  readonly regionalDays: readonly RegionalHolidayProviderDay[];
   readonly calendarExtensions: readonly CalendarExtensionDay[];
   readonly calendarEvents: readonly CalendarExtensionEvent[];
   readonly holidays: readonly RegionalHoliday[];
@@ -90,6 +91,7 @@ export function selectCalendarDay(
     ...indexed,
     calendarExtensions: decorations.calendarExtensions,
     calendarEvents: decorations.calendarEvents,
+    regionalDays: decorations.regionalDays,
     holidays: decorations.holidays,
     workday: decorations.workday,
     regionalMarker: decorations.regionalMarker,

@@ -1,3 +1,4 @@
+import { getHolidayPublicationSource } from "../../core/calendar/published-holidays";
 import type { HolidayDataCoverage } from "../../core/calendar/regional-holidays";
 import type { HolidayRegion } from "../../shared/settings";
 import { HOLIDAY_REGION_DEFINITIONS } from "./holiday-region-registry";
@@ -35,7 +36,7 @@ export interface HolidayCoverageReport {
 }
 
 const HOLIDAY_PUBLICATION_RECORDS: Readonly<
-  Record<HolidayRegion, Readonly<Partial<Record<number, HolidayPublicationVerification>>>>
+  Record<"cn" | "sg", Readonly<Partial<Record<number, HolidayPublicationVerification>>>>
 > = Object.freeze({
   cn: Object.freeze({
     2026: publicationVerification(
@@ -129,7 +130,9 @@ function findPublicationVerification(
   region: HolidayRegion,
   year: number,
 ): HolidayPublicationVerification | null {
-  return HOLIDAY_PUBLICATION_RECORDS[region][year] ?? null;
+  return region === "cn" || region === "sg"
+    ? HOLIDAY_PUBLICATION_RECORDS[region][year] ?? null
+    : getHolidayPublicationSource(region, year);
 }
 
 function publicationVerification(

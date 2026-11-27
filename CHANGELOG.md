@@ -4,6 +4,8 @@ Notable changes to Chrono Notes are documented in this file. The repository's nu
 
 ## Unreleased
 
+- Add 20 regional holiday schedules for 2026 and 2027, with source links, substitute dates, working weekends and clearly identified employer choices.
+
 - Initialize calendar choices once per new vault using the interface language. Existing vault preferences, including empty lists, persist across upgrades.
 
 - Choose cultural and religious observances independently of date displays and regional holidays.

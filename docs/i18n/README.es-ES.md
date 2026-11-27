@@ -17,7 +17,8 @@ Vistas actuales ancha y estrecha, generadas con la interfaz del plugin en un ent
 - Vistas de semana, mes, año y siglo con indicadores de notas, tareas, estadísticas y vistas previas.
 - Notas diarias, semanales, mensuales, trimestrales, anuales, de década y de siglo, con plantillas integradas o Templater.
 - Navegación entre notas, progreso de tareas, mapas de calor y notas para un intervalo de fechas.
-- Calendarios lunar chino, Ganzhi, persa, etíope, hebreo, indio e islámico; festivos de China continental y Singapur.
+- Calendarios lunar chino, Ganzhi, persa, etíope, hebreo, indio e islámico.
+- Puedes elegir hasta tres de los 22 calendarios regionales de festivos. [Cobertura por región](../holiday-data.md)
 - Archivos ICS locales de solo lectura y formatos de fecha personalizables sin alterar los valores YAML.
 
 ## Requisitos y compatibilidad

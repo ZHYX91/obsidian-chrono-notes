@@ -47,8 +47,18 @@ describe("calendar language preferences", () => {
     expect(unknown.locale).toBe("en");
     expect(getCalendarOptionsForLanguage(unknown.languageTag).regions)
       .toEqual(HOLIDAY_REGION_DEFINITIONS);
-    expect(getCalendarOptionsForLanguage("pt").regions).toEqual(HOLIDAY_REGION_DEFINITIONS);
-    expect(getCalendarOptionsForLanguage("pt-PT").regions).toEqual(HOLIDAY_REGION_DEFINITIONS);
+  });
+
+  it.each([
+    ["de", ["de", "at"]], ["de-AT", ["at", "de"]],
+    ["fr", ["fr", "ca-qc"]], ["fr-CA", ["ca-qc", "fr"]],
+    ["es", ["es", "mx"]], ["es-MX", ["mx", "es"]],
+    ["pt", ["pt"]], ["pt-PT", ["pt"]], ["pt-BR", ["br"]],
+  ] as const)("prioritizes published regional options for %s without selecting them", (locale, preferred) => {
+    const offered = getCalendarOptionsForLanguage(locale).regions.map(({ id }) => id);
+    const available = preferred.filter((id) => HOLIDAY_REGION_DEFINITIONS.some((item) => String(item.id) === id));
+    expect(offered.slice(0, available.length)).toEqual(available);
+    expect(createFirstInstallSettings(locale).holidayRegions).toEqual([]);
   });
 
   it("orders only existing providers and retains all remaining choices in registry order", () => {
@@ -58,6 +68,9 @@ describe("calendar language preferences", () => {
       ({ id }) => id !== "islamic-civil" && id !== "islamic-umalqura",
     ));
     expect(getCalendarOptionsForLanguage("hi").calendars[0]?.id).toBe("indian");
+    if (CALENDAR_EXTENSION_DEFINITIONS.some(({ id }) => String(id) === "indian-panchanga")) {
+      expect(getCalendarOptionsForLanguage("hi").calendars[1]?.id).toBe("indian-panchanga");
+    }
     expect(createFirstInstallSettings("hi").calendarExtensions).toEqual([]);
   });
 });

@@ -17,7 +17,8 @@ Layouts atuais largo e estreito, renderizados com a interface do plugin em um am
 - Visões de semana, mês, ano e século com status das notas, tarefas, estatísticas e prévias.
 - Notas diárias, semanais, mensais, trimestrais, anuais, por década e por século, com modelos próprios ou Templater.
 - Navegação entre notas, progresso de tarefas, mapas de calor e notas de intervalos de datas.
-- Calendários lunar chinês, Ganzhi, persa, etíope, hebraico, indiano e islâmico, além de feriados da China continental e de Singapura.
+- Calendários lunar chinês, Ganzhi, persa, etíope, hebraico, indiano e islâmico.
+- É possível escolher até três dos 22 calendários regionais de feriados. [Cobertura por região](../holiday-data.md)
 - Fontes ICS locais somente para leitura e exibição ajustável de datas sem alterar o YAML.
 
 ## Requisitos e compatibilidade

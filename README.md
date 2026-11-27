@@ -18,7 +18,7 @@ Current wide and narrow calendar layouts, rendered from the plugin UI in a brows
 - A navigation bar above periodic notes to open adjacent notes, larger periods, selected dates, and the calendar.
 - Chinese lunar and Ganzhi calendar extensions, including solar terms and traditional festivals.
 - Julian, Coptic, Persian (Solar Hijri), Ethiopic, Hebrew, Indian national (Saka), Islamic civil, and Umm al-Qura calendar extensions.
-- Mainland China and Singapore holiday extensions.
+- Choose up to three of [22 regional holiday schedules](https://github.com/ZHYX91/obsidian-chrono-notes/blob/main/docs/holiday-data.md). Every schedule covers 2026 and 2027.
 - Tasks, statistics, month and year heatmaps, note previews, task completion, and due-date adjustments.
 - Time-range note creation by date-range dragging, cross-week layouts, templates, and a searchable range-note list.
 - Local, read-only ICS calendar sources.

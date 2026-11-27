@@ -568,6 +568,7 @@ function monthDay(date: LocalDate, inCurrentMonth: boolean): MonthCalendarDay {
     calendarExtensions: Object.freeze([]),
     calendarEvents: Object.freeze([]),
     holidays: Object.freeze([]),
+    regionalDays: [],
     workday: null,
     regionalMarker: null,
     icsEvents: Object.freeze([]),

@@ -1,10 +1,18 @@
+import { resolveContentLocale, type ChineseContentLocale } from "./content-locale";
+
 export type HolidayDataCoverage = "available" | "unavailable";
-type RegionalHolidayRegion = "cn" | "sg";
-export type RegionalHolidayLocale = "en" | "zh-CN" | "zh-TW";
+export const HOLIDAY_REGIONS = [
+  "cn", "sg", "tw", "hk", "mo", "jp", "kr", "vn", "us",
+  "gb-eng-wls", "gb-sct", "gb-nir", "de", "at", "fr", "ca-qc", "es", "mx", "br", "pt", "ru", "in",
+] as const;
+
+export type RegionalHolidayRegion = typeof HOLIDAY_REGIONS[number];
+export type RegionalHolidayLocale = "en" | ChineseContentLocale;
 
 export interface RegionalHoliday {
   readonly region: RegionalHolidayRegion;
   readonly name: string;
+  readonly conditional?: true;
 }
 
 export interface RegionalWorkday {
@@ -13,18 +21,6 @@ export interface RegionalWorkday {
   readonly isWorkday: boolean;
 }
 
-/**
- * Regional providers may expose a small curated name set, but never a
- * region-by-UI-language translation matrix. Chinese variants use their
- * explicit names; every other unsupported locale falls back to English.
- */
 export function resolveRegionalHolidayLocale(locale: string): RegionalHolidayLocale {
-  const normalized = locale.toLowerCase();
-  if (
-    normalized.startsWith("zh-tw") ||
-    normalized.startsWith("zh-hk") ||
-    normalized.includes("hant")
-  ) return "zh-TW";
-  if (normalized.startsWith("zh")) return "zh-CN";
-  return "en";
+  return resolveContentLocale(locale, []);
 }
