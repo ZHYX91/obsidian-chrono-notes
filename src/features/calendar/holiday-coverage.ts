@@ -61,6 +61,11 @@ const HOLIDAY_PUBLICATION_RECORDS: Readonly<
       "https://www.mom.gov.sg/newsroom/press-releases/2026/0618-public-holidays-for-2027",
       "2026-10-18",
     ),
+    2028: publicationVerification(
+      "not-published",
+      "https://www.mom.gov.sg/employment-practices/public-holidays",
+      "2026-11-27",
+    ),
   }),
 });
 

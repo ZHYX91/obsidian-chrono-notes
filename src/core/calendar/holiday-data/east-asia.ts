@@ -15,6 +15,11 @@ export const EAST_ASIA = {
         verifiedOn: "2026-11-25",
         sourceUrl: "https://www.dgpa.gov.tw/information?pid=12983&uid=82",
       },
+      2028: {
+        status: "not-published",
+        verifiedOn: "2026-11-27",
+        sourceUrl: "https://www.dgpa.gov.tw/informationlist?uid=30",
+      },
     },
     entries: [
       { dates: ["2026-01-01", "2027-01-01"], en: "Founding Day", names: { "zh-CN": "开国纪念日", "zh-TW": "開國紀念日" } },
@@ -98,6 +103,11 @@ export const EAST_ASIA = {
       2027: {
         status: "published",
         verifiedOn: "2026-11-25",
+        sourceUrl: "https://www.1823.gov.hk/en/hong-kong-public-holidays-ical",
+      },
+      2028: {
+        status: "not-published",
+        verifiedOn: "2026-11-27",
         sourceUrl: "https://www.1823.gov.hk/en/hong-kong-public-holidays-ical",
       },
     },
@@ -229,6 +239,12 @@ export const EAST_ASIA = {
       2027: {
         status: "published",
         verifiedOn: "2026-11-25",
+        sourceUrl: "https://www.gov.mo/en/public-holidays/year-2027/",
+      },
+      // The government portal currently ends in 2027; this region uses the broader public holiday table, not the separate mandatory list.
+      2028: {
+        status: "not-published",
+        verifiedOn: "2026-11-27",
         sourceUrl: "https://www.gov.mo/en/public-holidays/year-2027/",
       },
     },
@@ -428,6 +444,11 @@ export const EAST_ASIA = {
         verifiedOn: "2026-11-25",
         sourceUrl: "https://www8.cao.go.jp/chosei/shukujitsu/gaiyou.html",
       },
+      2028: {
+        status: "not-published",
+        verifiedOn: "2026-11-27",
+        sourceUrl: "https://www8.cao.go.jp/chosei/shukujitsu/gaiyou.html",
+      },
     },
     entries: [
       { dates: ["2026-01-01", "2027-01-01"], en: "New Year’s Day", names: { "ja": "元日", "zh-CN": "元旦", "zh-TW": "元旦" } },
@@ -463,6 +484,11 @@ export const EAST_ASIA = {
         status: "published",
         verifiedOn: "2026-11-25",
         sourceUrl: "https://astro.kasi.re.kr/kor/life/post/calendarData?year=2027",
+      },
+      2028: {
+        status: "not-published",
+        verifiedOn: "2026-11-27",
+        sourceUrl: "https://astro.kasi.re.kr/kor/life/post/calendarData?year=2028",
       },
     },
     entries: [
