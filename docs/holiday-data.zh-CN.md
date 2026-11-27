@@ -18,7 +18,7 @@ translation_status: source
 | 台湾 | 2026–2027 | 政府行政机关办公日历，包括补假。民间企业按适用规定安排。 | [人事行政总处开放数据](https://data.gov.tw/dataset/14718) |
 | 香港 | 2026–2027 | 政府公布的具名公众假期及补假。普通星期日不另加假期标签。 | [1823 公众假期数据](https://www.1823.gov.hk/en/hong-kong-public-holidays-ical) |
 | 澳门 | 2026–2027 | 采用政府年表中的“公众假期”。公共行政当局工作人员专享的豁免上班日、半日假及补假不计入。 | [2026](https://www.gov.mo/en/public-holidays/year-2026/) · [2027](https://www.gov.mo/en/public-holidays/year-2027/) |
-| 日本 | 2026–2027 | 国民祝日、法定补假，以及两个祝日之间依法放假的日期。 | [内阁府](https://www8.cao.go.jp/chosei/shukujitsu/gaiyou.html) |
+| 日本 | 1955–2027 | 按内阁府历史表收录国民祝日、法定补假、两个祝日之间的假日和皇室典礼临时假日，保留历史名称及 2020、2021 年奥运期间调整的日期。 | [内阁府 CSV](https://www8.cao.go.jp/chosei/shukujitsu/syukujitsu.csv) · [祝日法](https://www8.cao.go.jp/chosei/shukujitsu/gaiyou.html) · [皇室典礼](https://www8.cao.go.jp/chosei/shukujitsu/sokuigaiyou.pdf) |
 | 韩国 | 2026–2027 | 公众假日及替代公休日，含劳动节、制宪节。 | [韩国天文研究院年历](https://astro.kasi.re.kr/kor/life/post/calendarData?year=2027) · [2026 年修订](https://www.korea.net/Government/Briefing-Room/Press-Releases/view?articleId=2016796&insttCode=A260225&type=N) |
 | 越南 | 2026–2027 | 按实行五天工作制的公共部门日程，包括调休补班。企业可另行安排春节和国庆假期。 | [2026](https://en.baochinhphu.vn/ministry-of-home-affairs-announces-2026-holiday-schedule-111251017163421877.htm) · [2027](https://en.baochinhphu.vn/viet-nam-announces-2027-public-holiday-schedule-111261012155048477.htm) |
 | 印度 | 2026–2027 | 德里／新德里的中央政府行政机关公告假日。职员个人选休的假日另按规定办理。 | [2026](https://dda.gov.in/sites/default/files/employee-corner/holidays_2026.pdf) · [2026 年宰牲节改期](https://www.pib.gov.in/PressReleasePage.aspx?PRID=2264022) · [2027](https://utilities.cept.gov.in/dop/pdfbind.ashx?id=15435) |
@@ -29,7 +29,7 @@ translation_status: source
 | 英国（英格兰和威尔士） | 2026–2028 | 英格兰与威尔士共用的银行假日日程。 | [英国政府](https://www.gov.uk/bank-holidays#england-and-wales) |
 | 英国（苏格兰） | 2026–2028 | 苏格兰银行假日，含 2026 年 6 月 15 日的一次性假日。 | [英国政府](https://www.gov.uk/bank-holidays#scotland) |
 | 英国（北爱尔兰） | 2026–2028 | 北爱尔兰银行假日，含圣帕特里克节。 | [英国政府](https://www.gov.uk/bank-holidays#northern-ireland) |
-| 德国 | 2026–2027 | 所有联邦州共有的法定假日。 | [德国联邦银行年历](https://www.bundesbank.de/de/aufgaben/unbarer-zahlungsverkehr/target/feiertagskalender-2027-749314) |
+| 德国 | 2026–2028 | 所有联邦州共有的法定假日。 | [德国联邦银行年历](https://www.bundesbank.de/de/aufgaben/unbarer-zahlungsverkehr/target/feiertagskalender-2027-749314) · [联邦劳动部全国假日说明](https://www.bmas.de/DE/Service/Publikationen/Broschueren/a711-arbeitsrecht.html) · [欧洲央行 2028 年日期](https://www.ecb.europa.eu/ecb/contacts/working-hours/html/index.en.html) |
 | 奥地利 | 2026–2028 | 全国法定公众假日。 | [全国节假日表](https://www.wien.gv.at/inhalt/feiertage) |
 | 法国 | 2026–2028 | 法国本土通用假日。个别地区和海外属地另有当地假日。 | [官方 2026 年数据](https://calendrier.api.gouv.fr/jours-feries/metropole/2026.json) · [2027](https://calendrier.api.gouv.fr/jours-feries/metropole/2027.json) · [2028](https://calendrier.api.gouv.fr/jours-feries/metropole/2028.json) |
 | 西班牙 | 2026–2027 | 官方劳动日历中全部自治区和两个自治市共同放假的日期。 | [2026 年官方公报](https://www.boe.es/diario_boe/txt.php?id=BOE-A-2025-21667) · [2027 年官方公报](https://www.boe.es/diario_boe/txt.php?id=BOE-A-2026-21254) |
@@ -38,10 +38,12 @@ translation_status: source
 
 ¹ 中国大陆的历史记录还包括 2001 年 12 月 29 日和 30 日，两天都是 2002 年元旦假期的补班日。2001 年其他日期没有记录。
 
+日本假期表取自内阁府[国民祝日数据集（CC BY）](https://data.e-gov.go.jp/data/dataset/cao_20190522_0002/resource/d9ad35a5-6c9c-4127-bdbe-aa138fdffe42)，按节名整理日期并提供译名。
+
 截至 2026 年 11 月 27 日，日本、香港和韩国尚未公布 2028 年的正式假日安排。日本预计于 2027 年 2 月公布，香港预计于 2027 年 5 月左右公布。韩国的预览版年历不作为数据来源。台湾 2028 年政府机关办公日历尚未公布，依规定应于 2027 年 6 月 30 日前公告；2028 年元旦在 2027 年 12 月 31 日的补假仍计入 2027 年。新加坡、澳门和西班牙也尚无本插件采用的 2028 年正式日程。新加坡人力部通常在上一年第三季度结束前发布；西班牙需以《国家官方公报》年度表核对全部 19 个地区。澳门的强制性假日表不能代替覆盖范围更广的公众假期表。
 
 ## 如何核对日期
 
-先看地区和公历年份。例如，2027 年中秋节是 9 月 15 日，台湾行政机关当天放假，香港公众假期则是 9 月 16 日。美国联邦雇员的 2028 年元旦补休落在 2027 年 12 月 31 日。超出覆盖年份时，日历不会显示该地区的节假日标签。
+先看地区和公历年份。例如，2027 年中秋节是 9 月 15 日，台湾行政机关当天放假，香港公众假期则是 9 月 16 日。美国联邦雇员的 2028 年元旦补休落在 2027 年 12 月 31 日。日历只为已收录的日期显示节假日标签。有些年份只收录了相邻年份安排涉及的个别日期，全年数据仍未收齐。
 
 如果主管机关更改日期，反馈时请附上官方公告、地区、公历日期及预期名称。维护者会一并更新节日、补假、补班及来源核验记录。每年的数据检查覆盖当年和次年。[年度维护说明](testing-strategy.zh-CN.md)

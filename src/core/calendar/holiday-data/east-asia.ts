@@ -1,3 +1,4 @@
+import { JAPAN } from "./japan";
 import type { HolidaySchedule } from "./schedule";
 
 export const EAST_ASIA = {
@@ -431,46 +432,7 @@ export const EAST_ASIA = {
       },
     ],
   },
-  // The Cabinet Office distinguishes article 3(2) substitutes from article 3(3) days between holidays.
-  "jp": {
-    sources: {
-      2026: {
-        status: "published",
-        verifiedOn: "2026-11-25",
-        sourceUrl: "https://www8.cao.go.jp/chosei/shukujitsu/gaiyou.html",
-      },
-      2027: {
-        status: "published",
-        verifiedOn: "2026-11-25",
-        sourceUrl: "https://www8.cao.go.jp/chosei/shukujitsu/gaiyou.html",
-      },
-      2028: {
-        status: "not-published",
-        verifiedOn: "2026-11-27",
-        sourceUrl: "https://www8.cao.go.jp/chosei/shukujitsu/gaiyou.html",
-      },
-    },
-    entries: [
-      { dates: ["2026-01-01", "2027-01-01"], en: "New Year’s Day", names: { "ja": "元日", "zh-CN": "元旦", "zh-TW": "元旦" } },
-      { dates: ["2026-01-12", "2027-01-11"], en: "Coming of Age Day", names: { "ja": "成人の日", "zh-CN": "成人节", "zh-TW": "成人節" } },
-      { dates: ["2026-02-11", "2027-02-11"], en: "National Foundation Day", names: { "ja": "建国記念の日", "zh-CN": "建国纪念日", "zh-TW": "建國紀念日" } },
-      { dates: ["2026-02-23", "2027-02-23"], en: "Emperor’s Birthday", names: { "ja": "天皇誕生日", "zh-CN": "天皇诞辰", "zh-TW": "天皇誕辰" } },
-      { dates: ["2026-03-20", "2027-03-21"], en: "Vernal Equinox Day", names: { "ja": "春分の日", "zh-CN": "春分日", "zh-TW": "春分日" } },
-      { dates: ["2026-04-29", "2027-04-29"], en: "Shōwa Day", names: { "ja": "昭和の日", "zh-CN": "昭和之日", "zh-TW": "昭和之日" } },
-      { dates: ["2026-05-03", "2027-05-03"], en: "Constitution Memorial Day", names: { "ja": "憲法記念日", "zh-CN": "宪法纪念日", "zh-TW": "憲法紀念日" } },
-      { dates: ["2026-05-04", "2027-05-04"], en: "Greenery Day", names: { "ja": "みどりの日", "zh-CN": "绿之日", "zh-TW": "綠之日" } },
-      { dates: ["2026-05-05", "2027-05-05"], en: "Children’s Day", names: { "ja": "こどもの日", "zh-CN": "儿童节", "zh-TW": "兒童節" } },
-      { dates: ["2026-05-06", "2027-03-22"], en: "Substitute holiday", names: { "ja": "振替休日", "zh-CN": "补假", "zh-TW": "補假" }, kind: "rest" },
-      { dates: ["2026-07-20", "2027-07-19"], en: "Marine Day", names: { "ja": "海の日", "zh-CN": "海之日", "zh-TW": "海之日" } },
-      { dates: ["2026-08-11", "2027-08-11"], en: "Mountain Day", names: { "ja": "山の日", "zh-CN": "山之日", "zh-TW": "山之日" } },
-      { dates: ["2026-09-21", "2027-09-20"], en: "Respect for the Aged Day", names: { "ja": "敬老の日", "zh-CN": "敬老日", "zh-TW": "敬老日" } },
-      { dates: ["2026-09-22"], en: "Citizens’ Holiday", names: { "ja": "国民の休日", "zh-CN": "国民休假日", "zh-TW": "國民休假日" } },
-      { dates: ["2026-09-23", "2027-09-23"], en: "Autumnal Equinox Day", names: { "ja": "秋分の日", "zh-CN": "秋分日", "zh-TW": "秋分日" } },
-      { dates: ["2026-10-12", "2027-10-11"], en: "Sports Day", names: { "ja": "スポーツの日", "zh-CN": "体育日", "zh-TW": "體育日" } },
-      { dates: ["2026-11-03", "2027-11-03"], en: "Culture Day", names: { "ja": "文化の日", "zh-CN": "文化日", "zh-TW": "文化日" } },
-      { dates: ["2026-11-23", "2027-11-23"], en: "Labor Thanksgiving Day", names: { "ja": "勤労感謝の日", "zh-CN": "勤劳感谢日", "zh-TW": "勤勞感謝日" } },
-    ],
-  },
+  jp: JAPAN,
   // The 2026 almanac predates the amendment that added Labour Day and Constitution Day.
   // https://www.korea.net/Government/Briefing-Room/Press-Releases/view?articleId=2016796&insttCode=A260225&type=N
   "kr": {

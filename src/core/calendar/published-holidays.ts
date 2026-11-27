@@ -79,7 +79,10 @@ export function getPublishedHolidayYearCoverage(
   region: PublishedHolidayRegion,
   year: number,
 ): HolidayDataCoverage {
-  return dateIndex(region).years.has(year) ? "available" : "unavailable";
+  // A substitute date can fall outside the years whose full schedules were reviewed.
+  const schedule: HolidaySchedule = schedules[region];
+  return schedule.sources[year]?.status === "published" && dateIndex(region).years.has(year)
+    ? "available" : "unavailable";
 }
 
 export function getHolidayPublicationSource(
