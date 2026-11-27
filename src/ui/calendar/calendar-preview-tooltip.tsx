@@ -51,9 +51,9 @@ export interface CalendarPreviewCell {
   readonly statistics: NoteStatistics;
 }
 
-export interface ActiveCalendarPreview {
+export interface ActiveCalendarPreview<Cell extends CalendarPreviewCell = CalendarPreviewCell> {
   readonly key: string;
-  readonly cell: CalendarPreviewCell;
+  readonly cell: Cell;
   readonly anchor: HTMLElement;
 }
 

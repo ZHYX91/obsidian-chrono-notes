@@ -114,6 +114,28 @@ test("view buttons paint their own focus frame before and after wrapping", async
   await expectPaintedFrame(page, buttons.last(), 2);
 });
 
+test("a pointer can close the open picker or switch directly to its neighbour", async ({ page }) => {
+  await mountCalendar(page, "en", 520);
+  const year = page.locator(".chrono-notes-calendar-picker-trigger").first();
+  const month = page.getByRole("button", { name: "Choose a month", exact: true });
+  const picker = page.getByRole("dialog");
+
+  await year.click();
+  await expect(picker.locator('[data-selected="true"]')).toBeFocused();
+  await year.click();
+  await expect(picker).toHaveCount(0);
+  await expect(year).toBeFocused();
+
+  await year.click();
+  await month.click();
+  await expect(year).toHaveAttribute("aria-expanded", "false");
+  await expect(month).toHaveAttribute("aria-expanded", "true");
+  await expect(picker.locator('[data-selected="true"]')).toBeFocused();
+  await page.keyboard.press("Escape");
+  await expect(picker).toHaveCount(0);
+  await expect(month).toBeFocused();
+});
+
 test("week picker scrolls the full keyboard frame into view at both ends", async ({ page }) => {
   await mountCalendar(page, "en", 520);
   await page.locator(".chrono-notes-view-mode").getByRole("button", { name: "Week", exact: true }).click();

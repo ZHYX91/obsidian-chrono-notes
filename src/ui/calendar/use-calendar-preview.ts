@@ -24,7 +24,7 @@ export interface UseCalendarPreviewOptions<
 }
 
 export interface CalendarPreviewController<Cell extends CalendarPreviewCell> {
-  readonly activePreview: ActiveCalendarPreview | null;
+  readonly activePreview: ActiveCalendarPreview<Cell> | null;
   readonly activePreviewKey: string | null;
   readonly previewId: string;
   readonly schedulePreview: (
@@ -44,7 +44,7 @@ export function useCalendarPreview<Cell extends CalendarPreviewCell>({
 }: UseCalendarPreviewOptions<Cell>): CalendarPreviewController<Cell> {
   const host = useHostEnvironment();
   const [activePreview, setActivePreview] =
-    useState<ActiveCalendarPreview | null>(null);
+    useState<ActiveCalendarPreview<Cell> | null>(null);
   const previewTimer = useRef<number | null>(null);
   const suppressPreviewUntil = useRef(0);
   const previewId = useId();
