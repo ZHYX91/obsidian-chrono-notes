@@ -2,6 +2,8 @@ import type { LocalDate } from "../periodic/periodic-date";
 
 export type CalendarExtensionId =
   | "chinese-lunar"
+  | "julian"
+  | "coptic"
   | "ganzhi"
   | "persian"
   | "ethiopic"

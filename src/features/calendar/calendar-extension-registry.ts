@@ -19,6 +19,7 @@ import {
   isLunarDateSupported,
   type LunarDateContext,
 } from "../../core/calendar/lunar-date-context";
+import { getJulianDay } from "../../core/calendar/julian";
 import type { LocalDate } from "../../core/periodic/periodic-date";
 import {
   getIntlCalendarDay,
@@ -68,7 +69,16 @@ export const CALENDAR_EXTENSION_DEFINITIONS: readonly CalendarExtensionDefinitio
         ? getGanzhiDay(date, locale)
         : getGanzhiDayFromContext(context, locale),
     }),
+    Object.freeze({
+      id: "julian",
+      labelKey: "settings.appearance.julian",
+      descriptionKey: "settings.appearance.julianDesc",
+      usesLunarContext: false,
+      isSupported: () => true,
+      getDay: getJulianDay,
+    }),
     ...([
+      ["coptic", "settings.appearance.coptic", "settings.appearance.copticDesc"],
       ["persian", "settings.appearance.persian", "settings.appearance.persianDesc"],
       ["ethiopic", "settings.appearance.ethiopic", "settings.appearance.ethiopicDesc"],
       ["hebrew", "settings.appearance.hebrew", "settings.appearance.hebrewDesc"],

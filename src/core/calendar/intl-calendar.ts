@@ -8,6 +8,7 @@ import {
 } from "../periodic/periodic-date";
 
 export const INTL_CALENDAR_IDS = [
+  "coptic",
   "persian",
   "ethiopic",
   "hebrew",

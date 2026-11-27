@@ -2,6 +2,10 @@
 
 Notable changes to Chrono Notes are documented in this file. The repository's numeric Git tags are the evidence for released versions; an entry without a corresponding local tag remains unreleased even if the manifests already contain that version.
 
+## Unreleased
+
+- Display Julian old-style or Coptic dates alongside Gregorian notes.
+
 ## 0.9.3
 
 - Keep the full selection and keyboard focus frames visible when browsing centuries, switching calendar views, or choosing a week. Calendar selection remains visible in forced colors.
