@@ -17,7 +17,7 @@ for (const locale of ["en", "ar"] as const) {
       await page.setContent(fixture.html);
       await page.addStyleTag({ content: "body{margin:0} #calendar-fixture{padding:0;border:0;height:auto}" });
       await page.addScriptTag({ content: fixture.script });
-      await page.evaluate(({ locale, titles, count }) => window.mountChronoCalendar(locale, 559, titles, count), {
+      await page.evaluate(({ locale, titles, count }) => window.mountChronoCalendar(locale, 559, { eventTitles: titles, eventCount: count }), {
         locale, titles: longTitles, count,
       });
       const selected = page.locator(".chrono-notes-day.is-selected");
@@ -48,7 +48,7 @@ for (const width of [320, 360, 600]) {
       await page.setContent(fixture.html);
       await page.addStyleTag({ content: "body{margin:0} #calendar-fixture{padding:0;border:0;height:auto}" });
       await page.addScriptTag({ content: fixture.script });
-      await page.evaluate(({ locale, width, titles }) => window.mountChronoCalendar(locale, width, titles), {
+      await page.evaluate(({ locale, width, titles }) => window.mountChronoCalendar(locale, width, { eventTitles: titles }), {
         locale, width, titles: longTitles,
       });
       const selected = page.locator(".chrono-notes-day.is-selected");

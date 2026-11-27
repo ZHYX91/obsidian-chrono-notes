@@ -4,7 +4,7 @@ import { NoteIndex } from "../../src/features/notes/note-index";
 import { IcsEventIndex } from "../../src/features/calendar/ics-event-index";
 import { ObsidianNoteIndexCache } from "../../src/adapters/obsidian/obsidian-note-index-cache";
 import { selectWeekCalendar } from "../../src/features/calendar/week-calendar-query";
-import { createDefaultSettings, type PluginLocale } from "../../src/shared/settings";
+import { createDefaultSettings, type ChronoNotesSettings, type PluginLocale } from "../../src/shared/settings";
 import { createTranslator } from "../../src/shared/i18n";
 import { HostEnvironmentProvider } from "../../src/ui/host-environment";
 import { CalendarApp } from "../../src/ui/calendar/calendar-app";
@@ -30,10 +30,17 @@ interface BrowserMetrics {
   readonly maxLongTaskMs: number;
 }
 
+interface CalendarFixtureOptions {
+  readonly eventTitles?: readonly string[];
+  readonly eventCount?: number;
+  readonly ownerDocument?: Document;
+  readonly configure?: (settings: ChronoNotesSettings, addNote: (path: string, markdown: string) => void) => void;
+}
+
 declare global {
   interface Window {
     runChronoBrowserBenchmark: (count: number) => Promise<BrowserMetrics>;
-    mountChronoCalendar: (locale: PluginLocale, width: number, eventTitles?: readonly string[], eventCount?: number, ownerDocument?: Document) => Promise<void>;
+    mountChronoCalendar: (locale: PluginLocale, width: number, options?: CalendarFixtureOptions) => Promise<void>;
     mountChronoTaskLayout: (width: number, locale: PluginLocale) => Promise<void>;
     chronoTaskActions: string[];
     mountChronoIntervalList: (locale: PluginLocale) => Promise<void>;
@@ -201,12 +208,11 @@ window.runChronoBrowserBenchmark = async (count) => {
 
 };
 
-window.mountChronoCalendar = async (locale, width, eventTitles, eventCount, ownerDocument = document) => {
+window.mountChronoCalendar = async (locale, width, options = {}) => {
+  const { eventTitles, eventCount, ownerDocument = document, configure } = options;
   rootContainer(width, ownerDocument).classList.add("chrono-notes-view");
   const fixture = sourceFixture(4);
   fixture.add("Daily/2026-10-20.md", "# Daily note\n- [x] Review notes\n- [ ] Prepare weekly plan 📅 2026-10-20");
-  const index = currentIndex = new NoteIndex(fixture.source);
-  await index.start();
   const settings = createDefaultSettings();
   settings.locale = locale;
   settings.periodicNotes.daily.enabled = true;
@@ -215,6 +221,9 @@ window.mountChronoCalendar = async (locale, width, eventTitles, eventCount, owne
   settings.periodicNotes.daily.pattern = "[Daily]/YYYY-MM-DD";
   settings.periodicNotes.weekly.pattern = "[Weeks]/GGGG-[W]WW";
   settings.periodicNotes.monthly.pattern = "[Months]/YYYY-MM";
+  configure?.(settings, fixture.add);
+  const index = currentIndex = new NoteIndex(fixture.source);
+  await index.start();
   const eventBlocks = [["BEGIN:VEVENT", "UID:team-review",
     "DTSTART:20261020T090000Z", "DTEND:20261020T093000Z", "SUMMARY:Team review",
     "END:VEVENT"], ["BEGIN:VEVENT", "UID:project-plan", "DTSTART;VALUE=DATE:20261020",
