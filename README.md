@@ -19,6 +19,7 @@ Current wide and narrow calendar layouts, rendered from the plugin UI in a brows
 - A navigation bar above periodic notes to open adjacent notes, larger periods, selected dates, and the calendar.
 - Chinese lunar and Ganzhi calendar extensions, including solar terms and traditional festivals.
 - Julian, Coptic, Persian (Solar Hijri), Ethiopic, Hebrew, Indian national (Saka), Islamic civil, and Umm al-Qura calendar extensions.
+- In **Extensions & integrations**, you can also enable Western Christian feasts, old-calendar Orthodox feasts, Nowruz, Jewish holidays and Ethiopian New Year independently.
 - Choose up to three of [22 regional holiday schedules](https://github.com/ZHYX91/obsidian-chrono-notes/blob/main/docs/holiday-data.md). Every schedule covers 2026 and 2027.
 - Tasks, statistics, month and year heatmaps, note previews, task completion, and due-date adjustments.
 - Time-range note creation by date-range dragging, cross-week layouts, templates, and a searchable range-note list.
@@ -127,7 +128,7 @@ Settings cover periodic-note paths and templates, calendar and holiday extension
 ## Limitations
 
 - ICS sources are local read-only files; remote calendar subscriptions are not fetched directly. One refresh reads at most 32 configured sources by default and reports any excess sources as omitted. Recurring `RRULE`/`RDATE` events are currently skipped and counted instead of being expanded. Events with invalid or unsupported time-zone definitions are also skipped and reported. [Supported ICS time zones](https://github.com/ZHYX91/obsidian-chrono-notes/blob/main/docs/calendar-boundaries.md)
-- Holiday availability depends on verified official data. Unpublished future schedules are shown as unavailable rather than predicted.
+- Month and Week show the year and affected regions when the plugin has an incomplete holiday schedule. Individual holiday records remain visible.
 - Calendar extensions change the display only. Note names, date navigation, and task dates still use the Gregorian calendar. Extensions that Obsidian's runtime cannot provide are hidden.
 - Mobile interactions and layouts can vary with the Obsidian app, device, and input method.
 

@@ -85,6 +85,9 @@ export function getChinaHolidayDay(date: LocalDate, locale: string): ChinaHolida
 }
 
 export function getChinaHolidayYearCoverage(year: number): HolidayDataCoverage {
+  // Two December 2001 work swaps belong to the following New Year holiday.
+  // Individual records remain visible, but this is not a complete annual schedule.
+  if (year === 2001) return "unavailable";
   if (year === 2027) return "available";
   const cached = yearCoverage.get(year);
   if (cached !== undefined) return cached;

@@ -458,6 +458,7 @@ export const AR_MESSAGES = Object.freeze({
   "holiday.region.mx": "المكسيك (فدرالية)",
   "holiday.region.pt": "البرتغال (وطنية)",
   "holiday.region.ca-qc": "كيبيك",
+  "holiday.coverage.incomplete": "لا تتوفر جداول عطلات كاملة لعام {year} في المناطق التالية: {regions}.",
   "holiday.conditional": "عطلة محتملة: {names}",
   "settings.appearance.chineseLunar": "التقويم القمري الصيني",
   "settings.appearance.chineseLunarDesc": "عرض التواريخ القمرية والمصطلحات الشمسية والمهرجانات التقليدية.",

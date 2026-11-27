@@ -1,7 +1,7 @@
 import type { MonthCalendarDay } from "../../features/calendar/month-calendar-query";
 import { formatLocalDateKey } from "../../core/periodic/periodic-date";
 import type { Translator } from "../../shared/i18n";
-import { formatCalendarExtensionEventLabel } from "./calendar-day-presentation";
+import { formatCalendarExtensionDateLabel, formatCalendarExtensionEventLabel } from "./calendar-day-presentation";
 import { formatCalendarIcsDayLabel } from "./calendar-ics-presentation";
 import { formatCalendarNoteState } from "./calendar-note-presentation";
 import { formatCalendarPreviewRegional, formatCalendarPreviewTaskProgress } from "./calendar-preview-presentation";
@@ -21,7 +21,9 @@ export function MonthSelectedDayDetails({ day, translator }: Readonly<{
       {day.statistics.taskTotal > 0 ? <p>{formatCalendarPreviewTaskProgress({
         completed: day.statistics.taskCompleted, total: day.statistics.taskTotal,
       }, t)}</p> : null}
-      {day.calendarExtensions.map((extension) => <p key={extension.id}>{extension.accessibilityText}</p>)}
+      {day.calendarExtensions.map((extension) => (
+        <p key={extension.id}>{formatCalendarExtensionDateLabel(extension, t)}</p>
+      ))}
       {regional === null ? null : <p>{regional}</p>}
       {day.calendarEvents.length > 0 ? <ul>{day.calendarEvents.map((event) => (
         <li key={event.id}>{formatCalendarExtensionEventLabel(event, t)}</li>

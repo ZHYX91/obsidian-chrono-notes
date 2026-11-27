@@ -49,6 +49,15 @@ describe("Intl calendar extensions", () => {
     expect(newMonth.dateText).toContain("۱");
   });
 
+  it.each(["en", "zh-CN", "zh-TW", "ar"])("displays the first Coptic year at the change of era in %s", (locale) => {
+    const copticDay = (day: number) => getIntlCalendarDay({ year: 284, month: 8, day }, locale, "coptic");
+    expect(copticDay(28).transition).toBeNull();
+    const epoch = copticDay(29);
+    expect(epoch.transition).toBe("year-month");
+    expect(epoch.dateText).toBe(epoch.accessibilityText);
+    expect(copticDay(30).transition).toBeNull();
+  });
+
   it("keeps civil and Umm al-Qura Islamic calculations distinct", () => {
     const date = { year: 2026, month: 7, day: 23 };
     const civil = getIntlCalendarDay(date, "en", "islamic-civil");

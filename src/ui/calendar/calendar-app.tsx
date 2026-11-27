@@ -50,6 +50,7 @@ import { getCurrentLocalDate } from "../../shared/local-date-clock";
 import type { ChronoNotesSettings } from "../../shared/settings";
 import { getCalendarFontVariables } from "./calendar-font-size";
 import { LongPressGesture } from "./long-press";
+import { CalendarHolidayCoverage } from "./calendar-holiday-coverage";
 import { CalendarPreviewTooltip } from "./calendar-preview-tooltip";
 import type { CalendarPreviewCell } from "./calendar-preview-tooltip";
 import { YearView } from "./year-view";
@@ -420,7 +421,8 @@ export function CalendarApp({
     ),
     [formatWeekPickerLabels, headerWeek],
   );
-  const activeQuery = monthQuery ?? weekQuery ?? yearQuery ?? centuryQuery;
+  const dayQuery = monthQuery ?? weekQuery;
+  const activeQuery = dayQuery ?? yearQuery ?? centuryQuery;
   const weekdayLabels = useMemo(
     () => formatNarrowWeekdayLabels(locale, settings.weekStartDay),
     [locale, settings.weekStartDay],
@@ -868,6 +870,10 @@ export function CalendarApp({
           </div>
         )}
       </div>
+      {dayQuery !== null && (
+        <CalendarHolidayCoverage query={dayQuery} heatmap={monthHeatmapEnabled}
+          regions={settings.holidayRegions} translator={translator} />
+      )}
       {centuryQuery !== null ? (
         <CenturyView query={centuryQuery} translator={translator} today={today}
           revealRequest={centuryRevealRequest}

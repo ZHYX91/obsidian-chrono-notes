@@ -426,6 +426,7 @@ export const FA_MESSAGES = Object.freeze({
   "holiday.region.mx": "مکزیک (فدرال)",
   "holiday.region.pt": "پرتغال (سراسری)",
   "holiday.region.ca-qc": "کبک",
+  "holiday.coverage.incomplete": "تقویم کامل تعطیلات سال {year} برای این مناطق در دسترس نیست: {regions}.",
   "holiday.conditional": "تعطیلی احتمالی: {names}",
   "settings.appearance.chineseLunar": "تقویم قمری چینی",
   "settings.appearance.chineseLunarDesc": "تاریخ های قمری، اصطلاحات شمسی، و جشنواره های سنتی را نشان دهید.",

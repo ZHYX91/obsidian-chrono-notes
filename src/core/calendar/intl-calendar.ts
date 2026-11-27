@@ -22,6 +22,7 @@ export type IntlCalendarId = typeof INTL_CALENDAR_IDS[number];
 type FormatStyle = "day" | "month-day" | "full";
 
 interface CalendarIdentity {
+  readonly era: string | null;
   readonly year: string;
   readonly month: string;
 }
@@ -54,7 +55,7 @@ export function getIntlCalendarDay(
   const previousDate = new Date(currentDate.getTime() - 86_400_000);
   const currentIdentity = getCalendarIdentity(currentDate, calendar, locale);
   const previousIdentity = getCalendarIdentity(previousDate, calendar, locale);
-  const transition = currentIdentity.year !== previousIdentity.year
+  const transition = currentIdentity.era !== previousIdentity.era || currentIdentity.year !== previousIdentity.year
     ? "year-month"
     : currentIdentity.month !== previousIdentity.month
       ? "month"
@@ -101,6 +102,7 @@ function getCalendarIdentity(
 ): CalendarIdentity {
   const parts = getFormatter(calendar, locale, "full").formatToParts(date);
   return Object.freeze({
+    era: getPart(parts, "era"),
     year: getPart(parts, "year") ?? getPart(parts, "relatedYear") ?? "",
     month: getPart(parts, "month") ?? "",
   });

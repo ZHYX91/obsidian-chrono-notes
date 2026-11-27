@@ -199,6 +199,18 @@ describe("calendar day presentation", () => {
     }
   });
 
+  it.each([[7, "巴西（全国）"], [16, "墨西哥（联邦）"]] as const)(
+    "identifies the source of Independence Day on September %i with Brazil and Mexico enabled",
+    (dayOfMonth, region) => {
+      const date = { year: 2026, month: 9, day: dayOfMonth };
+      const day = cell(selectCalendarDecorations(date, "zh-CN", [], ["br", "mx"]));
+      const t = createTranslator("zh-CN", "en").t;
+      const detail = `${region} · 公共假日：独立日`;
+      expect(formatCalendarPreviewRegional(day, t)).toBe(detail);
+      expect(formatCalendarDayLabel("date", day, { includeCalendarExtensions: true }, t)).toContain(detail);
+    },
+  );
+
   it("formats Traditional Chinese adjusted workdays", () => {
     const t = createTranslator("zh-TW", "en").t;
 

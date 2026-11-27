@@ -34,6 +34,8 @@ describe("getChinaHolidayDay", () => {
   });
 
   it("exposes annual coverage independently from an individual holiday", () => {
+    expect(getChinaHolidayYearCoverage(2001)).toBe("unavailable");
+    expect(getChinaHolidayDay({ year: 2001, month: 12, day: 29 }, "zh-CN").workday?.isWorkday).toBe(true);
     expect(getChinaHolidayYearCoverage(2026)).toBe("available");
     expect(getChinaHolidayYearCoverage(2027)).toBe("available");
     expect(getChinaHolidayYearCoverage(2028)).toBe("unavailable");

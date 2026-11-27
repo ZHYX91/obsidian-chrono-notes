@@ -515,6 +515,7 @@ export const FR_MESSAGES: MessageCatalog = Object.freeze({
   "holiday.region.mx": "Mexique (jours fériés fédéraux)",
   "holiday.region.pt": "Portugal (jours fériés nationaux)",
   "holiday.region.ca-qc": "Québec",
+  "holiday.coverage.incomplete": "Les calendriers des jours fériés pour {year} sont incomplets pour les régions suivantes : {regions}.",
   "holiday.conditional": "Congé possible : {names}",
   "settings.appearance.chineseLunar": "Calendrier lunaire chinois",
   "settings.appearance.chineseLunarDesc": "Affiche les dates lunaires, les périodes solaires et les fêtes traditionnelles.",

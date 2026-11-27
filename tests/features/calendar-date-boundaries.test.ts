@@ -50,11 +50,10 @@ describe("calendar extension date boundaries", () => {
         notePath: "Daily/1582-10-10.md",
         noteState: "has-body",
         statistics: { taskTotal: 1 },
-        calendarExtensions: [],
-        calendarEvents: [],
+        calendarExtensions: [{ id: "chinese-lunar", accessibilityText: expect.stringContaining("九月十四") }],
       });
-      expect(days[3]?.calendarExtensions.map(({ id }) => id)).toEqual(["chinese-lunar"]);
-      expect(days[14]?.calendarExtensions.map(({ id }) => id)).toEqual(["chinese-lunar"]);
+      expect(days.map((day) => day.calendarExtensions.map(({ id }) => id)))
+        .toEqual(Array.from({ length: 31 }, () => ["chinese-lunar"]));
 
       const week = selectWeekCalendar(
         { year: 1582, month: 10, day: 10 }, notes, ics.getSnapshot(),
@@ -63,7 +62,7 @@ describe("calendar extension date boundaries", () => {
       expect(week.days.find((day) => day.date.day === 10)).toMatchObject({
         notePath: "Daily/1582-10-10.md",
         noteState: "has-body",
-        calendarExtensions: [],
+        calendarExtensions: [{ id: "chinese-lunar", accessibilityText: expect.stringContaining("九月十四") }],
       });
     },
   );
@@ -108,25 +107,6 @@ describe("calendar extension date boundaries", () => {
     }
   });
 
-  it.each(["chinese-lunar", "ganzhi"] as const)(
-    "omits only %s on every unsupported date and retains the other extension",
-    (extension) => {
-      const cache = new CalendarDecorationCache();
-      for (let day = 5; day <= 14; day += 1) {
-        const date = { year: 1582, month: 10, day };
-        const expected = selectCalendarExtensionDays(date, "en", ["persian"]);
-        expect(selectCalendarExtensionDay(date, "en", extension)).toBeNull();
-        expect(selectCalendarExtensionDays(date, "en", [extension, "persian"]))
-          .toEqual(expected);
-        const direct = selectCalendarDecorations(date, "en", [extension, "persian"], []);
-        const cached = cache.get(date, "en", [extension, "persian"], []);
-        expect(cached).toEqual(direct);
-        expect(cached.calendarExtensions).toEqual(expected);
-        expect(cache.get(date, "en", [extension, "persian"], [])).toBe(cached);
-      }
-    },
-  );
-
   it.each([
     { year: 1582, month: 10, day: 4 },
     { year: 1582, month: 10, day: 15 },
@@ -138,6 +118,36 @@ describe("calendar extension date boundaries", () => {
     expect(direct.map(({ id }) => id)).toEqual(selected);
     expect(cached.calendarExtensions).toEqual(direct);
   });
+
+  it.each([
+    [4, "九月初八", "癸亥", "1582年9月24日"],
+    [5, "九月初九", "甲子", "1582年9月25日"],
+    [6, "九月初十", "乙丑", "1582年9月26日"],
+    [7, "九月十一", "丙寅", "1582年9月27日"],
+    [8, "九月十二", "丁卯", "1582年9月28日"],
+    [9, "九月十三", "戊辰", "1582年9月29日"],
+    [10, "九月十四", "己巳", "1582年9月30日"],
+    [11, "九月十五", "庚午", "1582年10月1日"],
+    [12, "九月十六", "辛未", "1582年10月2日"],
+    [13, "九月十七", "壬申", "1582年10月3日"],
+    [14, "九月十八", "癸酉", "1582年10月4日"],
+    [15, "九月十九", "甲戌", "1582年10月5日"],
+  ] as const)("anchors lunar, Ganzhi and Julian to the same Gregorian day on October %i, 1582",
+    (day, lunar, ganzhi, julian) => {
+      const date = { year: 1582, month: 10, day };
+      for (const id of ["chinese-lunar", "ganzhi"] as const) {
+        const selected = [id, "julian"] as const;
+        const direct = selectCalendarExtensionDays(date, "zh-CN", selected);
+        expect(selectCalendarExtensionDay(date, "zh-CN", id)).toEqual(direct[0]);
+        const cache = new CalendarDecorationCache();
+        const cached = cache.get(date, "zh-CN", selected, []);
+        expect(cached).toEqual(selectCalendarDecorations(date, "zh-CN", selected, []));
+        expect(cached.calendarExtensions).toEqual(direct);
+        expect(cache.get(date, "zh-CN", selected, [])).toBe(cached);
+        expect(direct[0]?.accessibilityText).toContain(id === "chinese-lunar" ? lunar : ganzhi + "日");
+        expect(direct[1]?.accessibilityText).toBe(julian);
+      }
+    });
 
   it("does not hide unexpected lunar conversion failures", () => {
     const failure = new Error("Unexpected lunar conversion failure");

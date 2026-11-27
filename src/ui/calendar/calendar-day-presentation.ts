@@ -1,5 +1,5 @@
 import { isObservanceGroup } from "../../core/calendar/observance-groups";
-import type { CalendarExtensionEvent } from "../../core/calendar/calendar-extension";
+import type { CalendarExtensionDay, CalendarExtensionEvent, CalendarExtensionId } from "../../core/calendar/calendar-extension";
 import type { CalendarDay } from "../../features/calendar/calendar-day-query";
 import { CALENDAR_EXTENSION_DEFINITIONS } from "../../features/calendar/calendar-extension-registry";
 import type { RegionalMarkerKind } from "../../features/calendar/holiday-region-registry";
@@ -39,9 +39,7 @@ export function formatCalendarDayLabel(
     dateKey,
     ...(options.includeCalendarExtensions
       ? [
-          ...day.calendarExtensions.map(
-            (extension) => extension.accessibilityText,
-          ),
+          ...day.calendarExtensions.map((extension) => formatCalendarExtensionDateLabel(extension, t)),
           ...day.calendarEvents.map((event) =>
             formatCalendarExtensionEventLabel(event, t)),
         ]
@@ -58,17 +56,23 @@ export function formatCalendarDayLabel(
   ].join(t("calendar.itemSeparator"));
 }
 
+function calendarName(id: CalendarExtensionId, t: Translator["t"]): string {
+  const definition = CALENDAR_EXTENSION_DEFINITIONS.find((provider) => provider.id === id);
+  return definition === undefined ? id : t(definition.labelKey);
+}
+
+export function formatCalendarExtensionDateLabel(day: CalendarExtensionDay, t: Translator["t"]): string {
+  return `${calendarName(day.id, t)} · ${day.accessibilityText}`;
+}
+
 export function formatCalendarExtensionEventLabel(
   event: CalendarExtensionEvent,
   t: Translator["t"],
 ): string {
   const sources = event.sources.map((source) => {
-    const definition = CALENDAR_EXTENSION_DEFINITIONS.find(
-      ({ id }) => id === source.id,
-    );
     const sourceName = isObservanceGroup(source.id)
       ? t(`observances.group.${source.id}`)
-      : definition === undefined ? source.id : t(definition.labelKey);
+      : calendarName(source.id, t);
     return source.transitionTime === null
       ? sourceName
       : t("calendar.calendarEventSourceTransition", {

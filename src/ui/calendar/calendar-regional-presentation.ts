@@ -22,10 +22,7 @@ export function formatRegionalDayDetails(
     for (const area of areas) {
       const detail = describeRegionDay(area.holidays, area.workday, context, t);
       if (detail) {
-        const label = areas.length === 1
-          ? detail
-          : `${t(getHolidayRegionDefinition(area.region).labelKey)} · ${detail}`;
-        descriptions.push(label);
+        descriptions.push(`${t(getHolidayRegionDefinition(area.region).labelKey)} · ${detail}`);
       }
     }
     return descriptions.join(t("calendar.itemSeparator")) || null;

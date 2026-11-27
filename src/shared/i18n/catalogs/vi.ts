@@ -514,6 +514,7 @@ export const VI_MESSAGES: MessageCatalog = Object.freeze({
   "holiday.region.mx": "Mexico (liên bang)",
   "holiday.region.pt": "Bồ Đào Nha (toàn quốc)",
   "holiday.region.ca-qc": "Québec",
+  "holiday.coverage.incomplete": "Chưa có lịch nghỉ lễ đầy đủ cho năm {year} tại các khu vực sau: {regions}.",
   "holiday.conditional": "Có thể được nghỉ: {names}",
   "settings.appearance.chineseLunar": "Âm lịch Trung Quốc",
   "settings.appearance.chineseLunarDesc": "Hiển thị ngày âm lịch, tiết khí và lễ hội truyền thống.",

@@ -112,6 +112,25 @@ describe("published holiday schedules", () => {
     ]);
   });
 
+  it.each([
+    ["2026-02-16", ["Day before Seollal", "Seollal", "Day after Seollal"]],
+    ["2027-02-06", ["Day before Seollal", "Seollal", "Day after Seollal"]],
+    ["2026-09-24", ["Day before Chuseok", "Chuseok", "Day after Chuseok"]],
+    ["2027-09-14", ["Day before Chuseok", "Chuseok", "Day after Chuseok"]],
+  ] as const)("distinguishes the feast from its surrounding public holidays starting %s", (start, names) => {
+    const dates = names.map((_, index) => {
+      const date = new Date(start + "T00:00:00Z");
+      date.setUTCDate(date.getUTCDate() + index);
+      return date.toISOString().slice(0, 10);
+    });
+    expect(dates.map(date => day("kr", date).holidays[0]?.name)).toEqual(names);
+    for (const locale of ["ko", "zh-CN", "zh-TW"]) {
+      const labels = dates.map(date => day("kr", date, locale).holidays[0]?.name);
+      expect(new Set(labels).size).toBe(3);
+      expect(labels).not.toContain(undefined);
+    }
+  });
+
   it("applies the authorities’ additions, date changes and working-day swaps", () => {
     expect(day("kr", "2026-05-01", "ko-KR").holidays[0]?.name).toBe("노동절");
     expect(day("kr", "2026-07-17", "ko-KR").holidays[0]?.name).toBe("제헌절");

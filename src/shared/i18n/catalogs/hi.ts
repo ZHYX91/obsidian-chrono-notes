@@ -426,6 +426,7 @@ export const HI_MESSAGES = Object.freeze({
   "holiday.region.mx": "मेक्सिको (संघीय)",
   "holiday.region.pt": "पुर्तगाल (राष्ट्रव्यापी)",
   "holiday.region.ca-qc": "क्यूबेक",
+  "holiday.coverage.incomplete": "{year} के लिए इन क्षेत्रों की पूरी अवकाश सूची उपलब्ध नहीं है: {regions}।",
   "holiday.conditional": "संभावित अवकाश: {names}",
   "settings.appearance.chineseLunar": "चीनी चंद्र कैलेंडर",
   "settings.appearance.chineseLunarDesc": "चंद्र तिथियाँ, सौर तिथियाँ और पारंपरिक त्यौहार दिखाएँ।",

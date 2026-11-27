@@ -426,6 +426,7 @@ export const AM_MESSAGES = Object.freeze({
   "holiday.region.mx": "ሜክሲኮ (ፌዴራል)",
   "holiday.region.pt": "ፖርቱጋል (በመላው አገር)",
   "holiday.region.ca-qc": "ኩቤክ",
+  "holiday.coverage.incomplete": "ለ{year} ዓመት የተሟላ የበዓላት መርሐ ግብር ለእነዚህ ክልሎች አልተካተተም፦ {regions}።",
   "holiday.conditional": "የዕረፍት ቀን ሊሆን ይችላል፦ {names}",
   "settings.appearance.chineseLunar": "የቻይንኛ የጨረቃ ቀን መቁጠሪያ",
   "settings.appearance.chineseLunarDesc": "የጨረቃ ቀኖችን፣ የፀሃይ ቃላትን እና ባህላዊ በዓላትን አሳይ።",

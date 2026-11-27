@@ -517,6 +517,7 @@ export const RU_MESSAGES: MessageCatalog = Object.freeze({
   "holiday.region.mx": "Мексика (федеральные)",
   "holiday.region.pt": "Португалия (общенациональные)",
   "holiday.region.ca-qc": "Квебек",
+  "holiday.coverage.incomplete": "Полные календари праздников на {year} год недоступны для следующих регионов: {regions}.",
   "holiday.conditional": "Возможный выходной: {names}",
   "settings.appearance.chineseLunar": "Китайский лунный календарь",
   "settings.appearance.chineseLunarDesc": "Показывает лунные даты, солнечные сезоны и традиционные праздники.",

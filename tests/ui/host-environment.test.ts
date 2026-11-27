@@ -114,9 +114,9 @@ describe("HostEnvironmentProvider", () => {
     const renderedPreview = secondaryDocument.querySelector("#owner-preview");
     expect(renderedPreview).not.toBeNull();
     expect(renderedPreview?.textContent)
-      .toContain("Lunar month 5, day 23");
+      .toContain("Chinese lunar calendar · Lunar month 5, day 23");
     expect(renderedPreview?.textContent)
-      .toContain("Year BingWu, month YiWei, day RenWu");
+      .toContain("Ganzhi calendar · Year BingWu, month YiWei, day RenWu");
     expect(renderedPreview?.textContent)
       .toContain(
         "Minor Heat; sources: Chinese lunar calendar, Ganzhi calendar (transition 09:56)",

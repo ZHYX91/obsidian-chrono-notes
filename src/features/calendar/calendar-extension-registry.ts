@@ -17,7 +17,6 @@ import {
 } from "../../core/calendar/ganzhi";
 import {
   createLunarDateContext,
-  isLunarDateSupported,
   type LunarDateContext,
 } from "../../core/calendar/lunar-date-context";
 import { getEastAsianLunarDay, isEastAsianLunarDateSupported } from "../../core/calendar/east-asian-lunar";
@@ -65,7 +64,6 @@ const definitions: readonly CalendarExtensionDefinition[] =
       labelKey: "settings.appearance.chineseLunar",
       descriptionKey: "settings.appearance.chineseLunarDesc",
       usesLunarContext: true,
-      isDateSupported: isLunarDateSupported,
       isSupported: () => true,
       getDay: (
         date: LocalDate,
@@ -80,7 +78,6 @@ const definitions: readonly CalendarExtensionDefinition[] =
       labelKey: "settings.appearance.ganzhi",
       descriptionKey: "settings.appearance.ganzhiDesc",
       usesLunarContext: true,
-      isDateSupported: isLunarDateSupported,
       isSupported: () => true,
       getDay: (
         date: LocalDate,
@@ -187,8 +184,7 @@ export function selectCalendarExtensionDays(
   locale: string,
   selected: readonly CalendarExtensionId[],
 ): readonly CalendarExtensionDay[] {
-  const needsLunarContext = isLunarDateSupported(date) &&
-    selected.some((id) => PROVIDERS.get(id)?.usesLunarContext);
+  const needsLunarContext = selected.some((id) => PROVIDERS.get(id)?.usesLunarContext);
   const context = needsLunarContext ? createLunarDateContext(date) : undefined;
   return Object.freeze(selected.flatMap((id) => {
     const day = selectCalendarExtensionDay(date, locale, id, context);

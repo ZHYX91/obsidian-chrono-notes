@@ -434,6 +434,7 @@ export const HE_MESSAGES = Object.freeze({
   "holiday.region.mx": "מקסיקו (פדרלי)",
   "holiday.region.pt": "פורטוגל (כלל המדינה)",
   "holiday.region.ca-qc": "קוויבק",
+  "holiday.coverage.incomplete": "לוחות חגים מלאים לשנת {year} אינם זמינים עבור האזורים הבאים: {regions}.",
   "holiday.conditional": "יום חופש אפשרי: {names}",
   "settings.appearance.chineseLunar": "לוח ירח סיני",
   "settings.appearance.chineseLunarDesc": "הצג תאריכי ירח, מונחי שמש ופסטיבלים מסורתיים.",
