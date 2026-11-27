@@ -42,6 +42,10 @@ translation_status: source
 
 截至 2026 年 11 月 27 日，日本、香港和韩国尚未公布 2028 年的正式假日安排。日本预计于 2027 年 2 月公布，香港预计于 2027 年 5 月左右公布。韩国的预览版年历不作为数据来源。台湾 2028 年政府机关办公日历尚未公布，依规定应于 2027 年 6 月 30 日前公告；2028 年元旦在 2027 年 12 月 31 日的补假仍计入 2027 年。新加坡、澳门和西班牙也尚无本插件采用的 2028 年正式日程。新加坡人力部通常在上一年第三季度结束前发布；西班牙需以《国家官方公报》年度表核对全部 19 个地区。澳门的强制性假日表不能代替覆盖范围更广的公众假期表。
 
+[中国大陆 2028 年放假调休安排](https://www.forestry.gov.cn/lyj/1/szxx/20261105/695102.html)、[俄罗斯联邦调休令](https://www.cbr.ru/other/holidays/)、[印度德里／新德里中央政府机关法定假日表](https://www.csir.res.in/en/Notification/holidays-be-observed-central-government-offices-during-year-2027-reg)和[越南公共部门假日安排](https://baochinhphu.vn/nghi-tet-am-lich-2027-keo-dai-7-ngay-nghi-quoc-khanh-4-ngay-102261010095648278.htm)均待公布。越南 2027 年数据已按 2027 年 3 月 1 日生效的[《劳动法》修正案](https://baochinhphu.vn/quoc-hoi-dong-y-bo-sung-2-ngay-nghi-le-duoc-huong-nguyen-luong-102261121121448218.htm)收录 7 月 27 日。
+
+墨西哥[宪法修正令](https://dof.gob.mx/nota_detalle.php?codigo=5789357&fecha=02/06/2026)将 2028 年联邦及地方司法选举定于 6 月 4 日。需确认当天是否为全国强制休息日，再将 2028 年标为已覆盖。[《联邦劳动法》第 74 条第九款](https://www.diputados.gob.mx/LeyesBiblio/pdf/LFT.pdf) · [《联邦选举法》第 22 条](https://sidj.ine.mx/restWSsidj-nc/app/doc/7/20/1)
+
 ## 如何核对日期
 
 先看地区和公历年份。例如，2027 年中秋节是 9 月 15 日，台湾行政机关当天放假，香港公众假期则是 9 月 16 日。美国联邦雇员的 2028 年元旦补休落在 2027 年 12 月 31 日。日历只为已收录的日期显示节假日标签。有些年份只收录了相邻年份安排涉及的个别日期，全年数据仍未收齐。

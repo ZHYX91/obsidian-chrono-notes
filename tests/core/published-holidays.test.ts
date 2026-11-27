@@ -24,7 +24,7 @@ const counts: Record<PublishedHolidayRegion, readonly [number, number]> = {
   tw: [22, 24], hk: [17, 17], mo: [20, 20], jp: [18, 17], kr: [22, 24],
   us: [11, 12], br: [9, 9], "gb-eng-wls": [8, 8], "gb-sct": [10, 9],
   "gb-nir": [10, 10], de: [9, 9], fr: [11, 11], es: [8, 9], ru: [18, 21],
-  in: [18, 17], vn: [17, 15], at: [13, 13], pt: [13, 13], mx: [7, 8], "ca-qc": [9, 9],
+  in: [18, 17], vn: [17, 16], at: [13, 13], pt: [13, 13], mx: [7, 8], "ca-qc": [9, 9],
 };
 
 const verified2028Counts: Partial<Record<PublishedHolidayRegion, number>> = {
@@ -212,6 +212,15 @@ describe("published holiday schedules", () => {
     expect(day("in", "2027-08-15").holidays.map((h) => h.name)).toEqual(["Independence Day", "Eid-e-Milad"]);
     expect(day("in", "2026-04-14").holidays[0]?.name).toContain("Ambedkar");
     expect(day("vn", "2026-11-24", "vi-VN").holidays[0]?.name).toBe("Ngày Văn hóa Việt Nam");
+    expect(day("vn", "2026-07-27", "vi-VN").holidays).toEqual([]);
+    expect(day("vn", "2027-07-27", "vi-VN").holidays[0]?.name)
+      .toBe("Ngày Tổ quốc tri ân – Ngày Thương binh, liệt sĩ");
+    expect(day("vn", "2027-07-27", "es-ES").holidays[0]?.name)
+      .toBe("National Gratitude Day (War Invalids and Martyrs Day)");
+    expect(day("vn", "2027-07-27", "zh-CN").holidays[0]?.name)
+      .toBe("国家感恩日（伤残军人与烈士纪念日）");
+    expect(day("vn", "2027-07-27", "zh-TW").holidays[0]?.name)
+      .toBe("國家感恩日（傷殘軍人與烈士紀念日）");
     for (const [region, date] of [["vn", "2026-01-10"], ["vn", "2026-08-22"], ["ru", "2027-02-20"]] as const) {
       const working = day(region, date);
       expect(working.holidays).toEqual([]);

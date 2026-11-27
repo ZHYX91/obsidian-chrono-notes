@@ -125,6 +125,10 @@ describe("holiday coverage release diagnostics", () => {
     ["sg", "https://www.mom.gov.sg/employment-practices/public-holidays"],
     ["mo", "https://www.gov.mo/en/public-holidays/year-2027/"],
     ["es", "https://www.boe.es/buscar/act.php?id=BOE-A-1983-20906#art45"],
+    ["cn", "https://www.forestry.gov.cn/lyj/1/szxx/20261105/695102.html"],
+    ["ru", "https://www.cbr.ru/other/holidays/"],
+    ["in", "https://www.csir.res.in/en/Notification/holidays-be-observed-central-government-offices-during-year-2027-reg"],
+    ["vn", "https://baochinhphu.vn/nghi-tet-am-lich-2027-keo-dai-7-ngay-nghi-quoc-khanh-4-ngay-102261010095648278.htm"],
   ] as const)("keeps verified nonpublication for %s a warning only in the following year", (region, sourceUrl) => {
     const expected = {
       region,

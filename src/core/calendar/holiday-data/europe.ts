@@ -220,6 +220,11 @@ export const EUROPE = {
         verifiedOn: "2026-11-25",
         sourceUrl: "https://publication.pravo.gov.ru/document/0001202609180037",
       },
+      2028: {
+        status: "not-published",
+        verifiedOn: "2026-11-27",
+        sourceUrl: "https://www.cbr.ru/other/holidays/",
+      },
     },
     entries: [
       {
