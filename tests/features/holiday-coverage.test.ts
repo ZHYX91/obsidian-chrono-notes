@@ -117,6 +117,25 @@ describe("holiday coverage release diagnostics", () => {
     },
   );
 
+  it.each([
+    ["hk", "https://www.1823.gov.hk/en/hong-kong-public-holidays-ical"],
+    ["jp", "https://www8.cao.go.jp/chosei/shukujitsu/gaiyou.html"],
+    ["kr", "https://astro.kasi.re.kr/kor/life/post/calendarData?year=2028"],
+  ] as const)("keeps verified nonpublication for %s a warning only in the following year", (region, sourceUrl) => {
+    const expected = {
+      region,
+      year: 2028,
+      coverage: "unavailable",
+      publication: { status: "not-published", verifiedOn: "2026-11-27", sourceUrl },
+    };
+    expect(createHolidayCoverageReport(2027).warnings).toContainEqual({
+      ...expected, disposition: "warning",
+    });
+    expect(createHolidayCoverageReport(2028).blocking).toContainEqual({
+      ...expected, disposition: "blocking",
+    });
+  });
+
   it("still blocks when an unavailable year becomes current", () => {
     const report = createHolidayCoverageReport(2028);
 

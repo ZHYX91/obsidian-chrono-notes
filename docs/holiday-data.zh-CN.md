@@ -30,13 +30,15 @@ translation_status: source
 | 英国（苏格兰） | 2026–2028 | 苏格兰银行假日，含 2026 年 6 月 15 日的一次性假日。 | [英国政府](https://www.gov.uk/bank-holidays#scotland) |
 | 英国（北爱尔兰） | 2026–2028 | 北爱尔兰银行假日，含圣帕特里克节。 | [英国政府](https://www.gov.uk/bank-holidays#northern-ireland) |
 | 德国 | 2026–2027 | 所有联邦州共有的法定假日。 | [德国联邦银行年历](https://www.bundesbank.de/de/aufgaben/unbarer-zahlungsverkehr/target/feiertagskalender-2027-749314) |
-| 奥地利 | 2026–2027 | 全国法定公众假日。 | [全国节假日表](https://www.wien.gv.at/inhalt/feiertage) |
+| 奥地利 | 2026–2028 | 全国法定公众假日。 | [全国节假日表](https://www.wien.gv.at/inhalt/feiertage) |
 | 法国 | 2026–2028 | 法国本土通用假日。个别地区和海外属地另有当地假日。 | [官方 2026 年数据](https://calendrier.api.gouv.fr/jours-feries/metropole/2026.json) · [2027](https://calendrier.api.gouv.fr/jours-feries/metropole/2027.json) · [2028](https://calendrier.api.gouv.fr/jours-feries/metropole/2028.json) |
 | 西班牙 | 2026–2027 | 官方劳动日历中全部自治区和两个自治市共同放假的日期。 | [2026 年官方公报](https://www.boe.es/diario_boe/txt.php?id=BOE-A-2025-21667) · [2027 年官方公报](https://www.boe.es/diario_boe/txt.php?id=BOE-A-2026-21254) |
 | 葡萄牙 | 2026–2027 | 全国法定假日。依当地传统，耶稣受难日可改在复活节期间的另一天休假。 | [《劳动法典》第 234 条](https://diariodarepublica.pt/dr/legislacao-consolidada/lei/2009-34546475-46746675) |
 | 俄罗斯 | 2026–2027 | 联邦法定假日及政府对五天工作制安排的休息日调换和周末补班。 | [2026 年调休令](https://publication.pravo.gov.ru/document/0001202509240023) · [2027 年调休令](https://publication.pravo.gov.ru/document/0001202609180037) |
 
 ¹ 中国大陆的历史记录还包括 2001 年 12 月 29 日和 30 日，两天都是 2002 年元旦假期的补班日。2001 年其他日期没有记录。
+
+截至 2026 年 11 月 27 日，日本、香港和韩国尚未公布 2028 年的正式假日安排。日本预计于 2027 年 2 月公布，香港预计于 2027 年 5 月左右公布。韩国的预览版年历不作为数据来源。
 
 ## 如何核对日期
 

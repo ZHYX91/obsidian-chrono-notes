@@ -31,13 +31,15 @@ Names follow the effective Chrono Notes interface language. Chinese interfaces d
 | Scotland (UK) | 2026–2028 | Scottish bank holidays, including the one-off holiday on 15 June 2026. | [GOV.UK](https://www.gov.uk/bank-holidays#scotland) |
 | Northern Ireland (UK) | 2026–2028 | Northern Ireland bank holidays, including St Patrick’s Day. | [GOV.UK](https://www.gov.uk/bank-holidays#northern-ireland) |
 | Germany | 2026–2027 | Public holidays common to every federal state. | [Bundesbank calendar](https://www.bundesbank.de/de/aufgaben/unbarer-zahlungsverkehr/target/feiertagskalender-2027-749314) |
-| Austria | 2026–2027 | Nationwide statutory public holidays. | [National holiday calendar](https://www.wien.gv.at/inhalt/feiertage) |
+| Austria | 2026–2028 | Nationwide statutory public holidays. | [National holiday calendar](https://www.wien.gv.at/inhalt/feiertage) |
 | France | 2026–2028 | The general calendar for metropolitan France. Additional local and overseas holidays have their own schedules. | [Official 2026 data](https://calendrier.api.gouv.fr/jours-feries/metropole/2026.json) · [2027](https://calendrier.api.gouv.fr/jours-feries/metropole/2027.json) · [2028](https://calendrier.api.gouv.fr/jours-feries/metropole/2028.json) |
 | Spain | 2026–2027 | Labour holidays observed across all autonomous communities and both autonomous cities in the annual official table. | [2026 gazette](https://www.boe.es/diario_boe/txt.php?id=BOE-A-2025-21667) · [2027 gazette](https://www.boe.es/diario_boe/txt.php?id=BOE-A-2026-21254) |
 | Portugal | 2026–2027 | Nationwide mandatory holidays. Good Friday may be observed on another locally significant day at Easter. | [Labour Code, article 234](https://diariodarepublica.pt/dr/legislacao-consolidada/lei/2009-34546475-46746675) |
 | Russia | 2026–2027 | Federal nonworking holidays and government-ordered transfers for the five-day working week. | [2026 transfer order](https://publication.pravo.gov.ru/document/0001202509240023) · [2027 transfer order](https://publication.pravo.gov.ru/document/0001202609180037) |
 
 ¹ The Mainland China historical records also include 29 and 30 December 2001, both adjusted working days for New Year 2002. The rest of 2001 has no records.
+
+As of 27 November 2026, the official 2028 schedules for Japan, Hong Kong and South Korea are not yet available. Japan expects publication in February 2027; Hong Kong expects it around May 2027. South Korea’s preliminary almanac is not used.
 
 ## Checking a date
 

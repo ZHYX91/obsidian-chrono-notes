@@ -27,7 +27,7 @@ const counts: Record<PublishedHolidayRegion, readonly [number, number]> = {
 };
 
 const verified2028Counts: Partial<Record<PublishedHolidayRegion, number>> = {
-  us: 10, "gb-eng-wls": 8, "gb-sct": 9, "gb-nir": 10, fr: 11,
+  us: 10, "gb-eng-wls": 8, "gb-sct": 9, "gb-nir": 10, fr: 11, at: 13,
 };
 
 describe("published holiday schedules", () => {
@@ -82,7 +82,8 @@ describe("published holiday schedules", () => {
     expect(annualCounts).toEqual(count2028 === undefined ? counts[region] : [...counts[region], count2028]);
     if (count2028 === undefined) {
       expect(getPublishedHolidayYearCoverage(region, 2028)).toBe("unavailable");
-      expect(getHolidayPublicationSource(region, 2028)).toBeNull();
+      const source = getHolidayPublicationSource(region, 2028);
+      if (source !== null) expect(source.status).toBe("not-published");
       expect(day(region, "2028-01-01")).toEqual({ holidays: [], workday: null });
     }
   });
@@ -112,6 +113,13 @@ describe("published holiday schedules", () => {
     expect(day("gb-nir", "2028-04-17").holidays[0]?.name).toBe("Easter Monday");
     expect(day("gb-eng-wls", "2028-12-26").holidays[0]?.name).toBe("Boxing Day");
     expect(day("fr", "2028-06-05", "fr").holidays[0]?.name).toBe("Lundi de Pentecôte");
+  });
+
+  it("shows Austria’s nationwide schedule without inventing a weekend substitute", () => {
+    expect(day("at", "2028-01-01", "de-AT").holidays[0]?.name).toBe("Neujahr");
+    expect(day("at", "2028-01-03").holidays).toEqual([]);
+    expect(day("at", "2028-04-17", "de-AT").holidays[0]?.name).toBe("Ostermontag");
+    expect(day("at", "2028-06-15", "zh-TW").holidays[0]?.name).toBe("基督聖體節");
   });
 
   it("separates local and employer-specific alternatives from nationwide dates", () => {

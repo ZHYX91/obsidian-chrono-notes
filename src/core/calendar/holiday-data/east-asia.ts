@@ -100,6 +100,11 @@ export const EAST_ASIA = {
         verifiedOn: "2026-11-25",
         sourceUrl: "https://www.1823.gov.hk/en/hong-kong-public-holidays-ical",
       },
+      2028: {
+        status: "not-published",
+        verifiedOn: "2026-11-27",
+        sourceUrl: "https://www.1823.gov.hk/en/hong-kong-public-holidays-ical",
+      },
     },
     entries: [
       {
@@ -428,6 +433,11 @@ export const EAST_ASIA = {
         verifiedOn: "2026-11-25",
         sourceUrl: "https://www8.cao.go.jp/chosei/shukujitsu/gaiyou.html",
       },
+      2028: {
+        status: "not-published",
+        verifiedOn: "2026-11-27",
+        sourceUrl: "https://www8.cao.go.jp/chosei/shukujitsu/gaiyou.html",
+      },
     },
     entries: [
       { dates: ["2026-01-01", "2027-01-01"], en: "New Year’s Day", names: { "ja": "元日", "zh-CN": "元旦", "zh-TW": "元旦" } },
@@ -463,6 +473,11 @@ export const EAST_ASIA = {
         status: "published",
         verifiedOn: "2026-11-25",
         sourceUrl: "https://astro.kasi.re.kr/kor/life/post/calendarData?year=2027",
+      },
+      2028: {
+        status: "not-published",
+        verifiedOn: "2026-11-27",
+        sourceUrl: "https://astro.kasi.re.kr/kor/life/post/calendarData?year=2028",
       },
     },
     entries: [
