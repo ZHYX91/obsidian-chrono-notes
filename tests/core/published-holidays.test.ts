@@ -27,7 +27,7 @@ const counts: Record<PublishedHolidayRegion, readonly [number, number]> = {
 };
 
 const verified2028Counts: Partial<Record<PublishedHolidayRegion, number>> = {
-  us: 10, "gb-eng-wls": 8, "gb-sct": 9, "gb-nir": 10, fr: 11, at: 13,
+  us: 10, "gb-eng-wls": 8, "gb-sct": 9, "gb-nir": 10, fr: 11, at: 13, br: 9, "ca-qc": 9, pt: 13,
 };
 
 describe("published holiday schedules", () => {
@@ -113,6 +113,21 @@ describe("published holiday schedules", () => {
     expect(day("gb-nir", "2028-04-17").holidays[0]?.name).toBe("Easter Monday");
     expect(day("gb-eng-wls", "2028-12-26").holidays[0]?.name).toBe("Boxing Day");
     expect(day("fr", "2028-06-05", "fr").holidays[0]?.name).toBe("Lundi de Pentecôte");
+  });
+
+  it("keeps statutory scope and cross-year substitutes in the 2028 rollover", () => {
+    expect(day("br", "2028-11-20", "pt-BR").holidays[0]?.name)
+      .toBe("Dia Nacional de Zumbi e da Consciência Negra");
+    expect(day("br", "2028-02-29").holidays).toEqual([]);
+    expect(day("ca-qc", "2028-04-14").holidays[0]?.conditional).toBe(true);
+    expect(day("ca-qc", "2028-04-17").holidays[0]?.conditional).toBe(true);
+    expect(day("ca-qc", "2028-07-01", "fr-CA").holidays[0]?.name).toBe("Fête du Canada");
+    expect(day("ca-qc", "2028-07-03").holidays).toEqual([]);
+    expect(day("pt", "2028-06-15", "pt-PT").holidays[0]?.name).toBe("Corpo de Deus");
+    expect(day("pt", "2028-04-14").holidays[0]?.name)
+      .toBe("Good Friday (may be observed on another local Easter date)");
+    expect(day("tw", "2027-12-31", "zh-TW").holidays[0]?.name).toBe("補假");
+    expect(day("tw", "2028-01-01").holidays).toEqual([]);
   });
 
   it("shows Austria’s nationwide schedule without inventing a weekend substitute", () => {

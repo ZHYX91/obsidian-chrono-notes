@@ -15,6 +15,11 @@ export const EAST_ASIA = {
         verifiedOn: "2026-11-25",
         sourceUrl: "https://www.dgpa.gov.tw/information?pid=12983&uid=82",
       },
+      2028: {
+        status: "not-published",
+        verifiedOn: "2026-11-27",
+        sourceUrl: "https://www.dgpa.gov.tw/informationlist?uid=30",
+      },
     },
     entries: [
       { dates: ["2026-01-01", "2027-01-01"], en: "Founding Day", names: { "zh-CN": "开国纪念日", "zh-TW": "開國紀念日" } },

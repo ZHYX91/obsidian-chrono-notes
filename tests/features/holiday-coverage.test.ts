@@ -118,6 +118,7 @@ describe("holiday coverage release diagnostics", () => {
   );
 
   it.each([
+    ["tw", "https://www.dgpa.gov.tw/informationlist?uid=30"],
     ["hk", "https://www.1823.gov.hk/en/hong-kong-public-holidays-ical"],
     ["jp", "https://www8.cao.go.jp/chosei/shukujitsu/gaiyou.html"],
     ["kr", "https://astro.kasi.re.kr/kor/life/post/calendarData?year=2028"],
