@@ -16,6 +16,8 @@ Existing periodic notes can use any capitalization of the Markdown extension. Fo
 
 Filename/path locale is a stable identity setting for each period, separate from interface and template/display locale. Missing `pathLocale` means English. The schema-19 upgrade pins the effective previous locale for every period, including localized digits, and preserves explicitly configured path locales. Formatting and parsing use the same numbering system. Changing the interface language afterwards does not change filename identity. Each period displays its own path language; check its preview and existing filenames before changing it. A change affects lookup and creation without automatically renaming or migrating existing notes.
 
+Week navigation keeps the selected weekday when it exists in the interactive calendar (years 1–9999). In a partial first or last week it selects the nearest supported day in that week. The arrows, week number picker and week-year picker follow the same rule. Selecting a week does not change the underlying weekly note’s anchor.
+
 Larger-note cascading returns a structured created, existing or failed result for each target. Failure does not undo the opened primary note or successful larger notes; later enabled periods are still attempted. The interface presents one localized partial-success notice listing created, preserved and failed targets with error details, without representing partial failure as failure to create the primary note.
 
 Configuration validation does not migrate or rename existing notes. Users with invalid rules must correct the pattern and independently confirm which dates their existing files belong to.
