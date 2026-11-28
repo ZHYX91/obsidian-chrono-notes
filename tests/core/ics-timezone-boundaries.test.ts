@@ -62,6 +62,13 @@ describe("ICS embedded timezone validation", () => {
     ["invalid date", fixedObservance.map((line) => line.replace("19700101", "20260230"))],
     ["invalid clock", fixedObservance.map((line) => line.replace("T000000", "T250000"))],
     ["UTC DTSTART", fixedObservance.map((line) => line.replace("T000000", "T000000Z"))],
+    ["numeric offset on DTSTART", fixedObservance.map((line) => line.replace("T000000", "T000000-0500"))],
+    ["trailing data on RDATE", [...fixedObservance.slice(0, -1),
+      "RDATE:20260301T000000,20270301T000000junk", "END:STANDARD"]],
+    ["trailing data on TZOFFSETFROM", fixedObservance.map((line) =>
+      line.replace("TZOFFSETFROM:+0800", "TZOFFSETFROM:+080030junk"))],
+    ["trailing data on TZOFFSETTO", fixedObservance.map((line) =>
+      line.replace("TZOFFSETTO:+0800", "TZOFFSETTO:+080030junk"))],
     ["date-only DTSTART", fixedObservance.map((line) =>
       line.replace("DTSTART:19700101T000000", "DTSTART;VALUE=DATE:19700101"))],
     ["TZID on DTSTART", fixedObservance.map((line) =>
@@ -106,6 +113,16 @@ describe("ICS embedded timezone validation", () => {
     ]);
     expectUnsupported(result, 2);
     expect(result.events).toHaveLength(1);
+  });
+
+  it("accepts valid fields with quoted colons and folded recurrence dates", () => {
+    const result = parse(zone("Custom/Folded", [
+      "BEGIN:STANDARD", 'DTSTART;X-ORIGIN="urn:calendar:local":19700101T000000',
+      "TZOFFSETFROM:+080030", "TZOFFSETTO:+080030",
+      'RDATE;X-ORIGIN="urn:calendar:local":20260301T000000,', " 20270301T000000", "END:STANDARD",
+    ]), event("folded", ";TZID=Custom/Folded:20260701T090000"));
+    expect(result.skippedUnsupportedTimezone).toBe(0);
+    expect(start(result, "folded")).toBe("2026-07-01T00:59:30.000Z");
   });
 
   it("preserves second-precision UTC offsets", () => {

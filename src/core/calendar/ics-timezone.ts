@@ -1,6 +1,8 @@
 import ICAL from "ical.js";
 import { DateTime } from "luxon";
 
+import { getIcsPropertyValue } from "./ics-event-input";
+
 // These are source-wide upper bounds on candidate work and transition candidates.
 // Reserve the complete upper bound before expanding a zone: rejecting a dense
 // rule must leave the budget available to ordinary zones in the same source.
@@ -71,12 +73,24 @@ export class IcsTimezoneBudget {
   }
 }
 
-export function preserveIcsTimezoneRules(unfolded: string): string {
+export function prepareIcsTimezoneProperties(unfolded: string): string {
   let timezoneDepth = 0;
   return unfolded.split(/\r\n|\n|\r/u).map((line) => {
     if (/^BEGIN:VTIMEZONE\s*$/iu.test(line)) timezoneDepth += 1;
     if (/^END:VTIMEZONE\s*$/iu.test(line)) timezoneDepth -= 1;
-    if (timezoneDepth <= 0 || !/^RRULE[;:]/iu.test(line)) return line;
+    if (timezoneDepth <= 0) return line;
+    // ICAL.parse truncates extra characters on wall times and second-precision offsets.
+    // Keep the existing per-zone failure path by preserving a malformed property's
+    // name with a type that readObservance rejects.
+    const name = /^(DTSTART|RDATE|TZOFFSETFROM|TZOFFSETTO)(?=[;:])/iu.exec(line)?.[1]?.toUpperCase();
+    if (name !== undefined) {
+      const value = getIcsPropertyValue(line) ?? "";
+      const valid = name === "DTSTART" ? /^\d{8}T\d{6}$/u.test(value)
+        : name === "RDATE" ? /^\d{8}T\d{6}(?:,\d{8}T\d{6})*$/u.test(value)
+        : /^[+-]\d{4}(?:\d{2})?$/u.test(value);
+      return valid ? line : `${name};VALUE=TEXT:`;
+    }
+    if (!/^RRULE[;:]/iu.test(line)) return line;
     // ICAL.parse otherwise validates/normalizes recurrence values before we
     // can isolate a bad timezone (including silently changing INTERVAL=0).
     // Keep the original property as escaped TEXT in this parse only; no design

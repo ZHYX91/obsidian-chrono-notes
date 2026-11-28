@@ -23,7 +23,7 @@ translation_status: source
 
 单条日程的属性损坏时，该日程计入无效数量，同一文件中的其他日程仍可导入。已取消的日程优先忽略。其余带 `RRULE` 或 `RDATE` 的日程计入跳过的重复日程，即使规则值有误。事件的日期、日期时间和时长都要符合完整的 ICS 字段格式。数字形式的 UTC 偏移量或多余的尾部字符会使该日程无效。组件的开始和结束标记不匹配时，整个文件仍可能无法导入。
 
-内嵌 `VTIMEZONE` 只接受唯一的 `TZID` 和完整有效的 `STANDARD`/`DAYLIGHT` 定义。`DTSTART` 与每个 `RDATE` 值必须是合法的本地 `DATE-TIME`，不带 `Z` 或 `TZID`；`TZOFFSETFROM`/`TZOFFSETTO` 支持合法的秒精度偏移。已找到的内嵌定义如果重复、无效、包含任一非法转换规则或超出预算，不能回退到 IANA 或 UTC；只跳过依赖该时区的事件，并计入 `skippedUnsupportedTimezone`。其他事件继续处理。
+内嵌 `VTIMEZONE` 只接受唯一的 `TZID` 和完整有效的 `STANDARD`/`DAYLIGHT` 定义。`DTSTART` 与每个 `RDATE` 值必须是合法的本地 `DATE-TIME`，不带 `Z` 或 `TZID`；`TZOFFSETFROM`/`TZOFFSETTO` 支持合法的秒精度偏移。已找到的内嵌定义如果重复、无效、包含任一非法转换规则或超出预算，不能回退到 IANA 或 UTC；只跳过依赖该时区的事件，并计入 `skippedUnsupportedTimezone`。其他事件继续处理。 预先校验完整的时间与偏移量字段，避免解析过程截掉多余的数字偏移或尾部文字。
 
 时区转换的 `RRULE` 只接受 `FREQ=YEARLY`，支持正 `INTERVAL`、互斥的 `COUNT` 或 UTC `UNTIL`，以及 `BYMONTH`、`BYMONTHDAY`、`BYYEARDAY`、`BYDAY`、`BYHOUR`、`BYMINUTE`、`BYSECOND`、`BYSETPOS`。`WKST` 校验后可接受；`BYWEEKNO`、非年度频率、未知或重复的规则字段不受支持。`DTSTART`、`RDATE` 每个逗号分隔值与年度规则生成的转换合并去重，跨年 `RDATE` 不得丢失。编译范围依据使用同一 `TZID` 的事件起止日期、名义时长终点及其下一年，限于 `0000–9999`。冲突转换或重叠的本地转换窗口不猜测偏移。
 
