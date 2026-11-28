@@ -34,6 +34,8 @@ Under RFC 5545 section 3.3.6, duration weeks and days are added as calendar unit
 
 Under RFC 5545 section 3.6.1, a DATE-TIME event without `DTEND` or `DURATION` is a point and is not extended by a minute. The index places it exactly once on its start date in the display zone, including when it starts precisely at midnight. All-day events without end fields still last one calendar day, and all-day end dates remain exclusive.
 
+A timed event continues only on civil dates that exist in its display zone. For example, a timed event crossing the Apia date-line change appears on 29 and 31 December 2011. An all-day date range can still include 30 December.
+
 Explicit equal or reversed `DTEND`, zero or negative `DURATION`, simultaneous end fields and mismatched date types remain isolated by the existing invalid-event rules. This does not add recurring-event expansion or change existing ICS input and event-span limits.
 
 The index accepts only events whose occupied display-zone dates are within `0000–9999`. If duration arithmetic or time-zone conversion moves the start date or last occupied date outside that range, the event counts toward `skippedInvalid`; valid events in the same and other sources continue indexing, and the refresh completes. An exclusive end exactly at midnight on `10000-01-01` can still represent the final valid day, `9999-12-31`, and must not be rejected as an overflow.
