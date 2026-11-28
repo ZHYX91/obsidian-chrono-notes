@@ -617,16 +617,6 @@
     padding: 4px;
   }
 
-  .chrono-notes-today {
-    font-size: 0;
-    padding-inline: 7px !important;
-  }
-
-  .chrono-notes-today::after {
-    content: "•";
-    font-size: var(--font-ui-medium);
-  }
-
   .chrono-notes-month-grid {
     grid-template-columns: 34px var(--chrono-notes-week-date-gap) repeat(7, minmax(25px, 1fr));
   }
