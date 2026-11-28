@@ -9,7 +9,10 @@
   .chrono-notes-today {
     font-size: var(--chrono-notes-font-small);
     line-height: normal;
-    padding-inline: 6px !important;
+  }
+
+  .chrono-notes-calendar .chrono-notes-calendar-header > button.chrono-notes-today {
+    padding-inline: 6px;
   }
 
   .chrono-notes-today::after {
