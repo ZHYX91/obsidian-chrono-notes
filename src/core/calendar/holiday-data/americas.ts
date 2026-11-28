@@ -88,7 +88,8 @@ export const AMERICAS = {
     ],
   },
   // Federal Labour Law art. 74. Only federal ordinary election days are nationwide.
-  // https://www.imss.gob.mx/sites/all/statics/pdf/leyes/4107_LFT.pdf
+  // https://www.diputados.gob.mx/LeyesBiblio/pdf/LFT.pdf#page=23
+  // Only the seven recurring nationwide dates are included for 2028; full coverage is unverified.
   "mx": {
     sources: {
       2026: {
@@ -103,25 +104,25 @@ export const AMERICAS = {
       },
     },
     entries: [
-      { dates: ["2026-01-01", "2027-01-01"], en: "New Year’s Day", names: { "es": "Año Nuevo", "zh-CN": "元旦", "zh-TW": "元旦" } },
+      { dates: ["2026-01-01", "2027-01-01", "2028-01-01"], en: "New Year’s Day", names: { "es": "Año Nuevo", "zh-CN": "元旦", "zh-TW": "元旦" } },
       {
-        dates: ["2026-02-02", "2027-02-01"],
+        dates: ["2026-02-02", "2027-02-01", "2028-02-07"],
         en: "Constitution Day (observed)",
         names: { "es": "Día de la Constitución (descanso obligatorio)", "zh-CN": "宪法日（法定休假日）", "zh-TW": "憲法日（法定休假日）" },
       },
       {
-        dates: ["2026-03-16", "2027-03-15"],
+        dates: ["2026-03-16", "2027-03-15", "2028-03-20"],
         en: "Benito Juárez’s Birthday (observed)",
         names: { "es": "Natalicio de Benito Juárez (descanso obligatorio)", "zh-CN": "贝尼托·胡亚雷斯诞辰（法定休假日）", "zh-TW": "貝尼托・胡亞雷斯誕辰（法定休假日）" },
       },
-      { dates: ["2026-05-01", "2027-05-01"], en: "Labour Day", names: { "es": "Día del Trabajo", "zh-CN": "劳动节", "zh-TW": "勞動節" } },
-      { dates: ["2026-09-16", "2027-09-16"], en: "Independence Day", names: { "es": "Día de la Independencia", "zh-CN": "独立日", "zh-TW": "獨立日" } },
+      { dates: ["2026-05-01", "2027-05-01", "2028-05-01"], en: "Labour Day", names: { "es": "Día del Trabajo", "zh-CN": "劳动节", "zh-TW": "勞動節" } },
+      { dates: ["2026-09-16", "2027-09-16", "2028-09-16"], en: "Independence Day", names: { "es": "Día de la Independencia", "zh-CN": "独立日", "zh-TW": "獨立日" } },
       {
-        dates: ["2026-11-16", "2027-11-15"],
+        dates: ["2026-11-16", "2027-11-15", "2028-11-20"],
         en: "Revolution Day (observed)",
         names: { "es": "Día de la Revolución (descanso obligatorio)", "zh-CN": "革命纪念日（法定休假日）", "zh-TW": "革命紀念日（法定休假日）" },
       },
-      { dates: ["2026-12-25", "2027-12-25"], en: "Christmas Day", names: { "es": "Navidad", "zh-CN": "圣诞节", "zh-TW": "聖誕節" } },
+      { dates: ["2026-12-25", "2027-12-25", "2028-12-25"], en: "Christmas Day", names: { "es": "Navidad", "zh-CN": "圣诞节", "zh-TW": "聖誕節" } },
       { dates: ["2027-06-06"], en: "Federal election day", names: { "es": "Jornada electoral federal", "zh-CN": "联邦选举日", "zh-TW": "聯邦選舉日" } },
     ],
   },

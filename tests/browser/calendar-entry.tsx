@@ -13,6 +13,7 @@ import { LongPressGesture } from "../../src/ui/calendar/long-press";
 import { MiniCalendarModal } from "../../src/ui/modals/mini-calendar-modal";
 import { IntervalNoteListModal } from "../../src/ui/modals/interval-note-list-modal";
 import type { NoteSourceListener } from "../../src/core/note/note-source";
+import type { LocalDate } from "../../src/core/periodic/periodic-date";
 
 interface BrowserMetrics {
   readonly count: number;
@@ -34,6 +35,7 @@ interface CalendarFixtureOptions {
   readonly eventTitles?: readonly string[];
   readonly eventCount?: number;
   readonly ownerDocument?: Document;
+  readonly navigationDate?: LocalDate;
   readonly configure?: (settings: ChronoNotesSettings, addNote: (path: string, markdown: string) => void) => void;
 }
 
@@ -242,7 +244,7 @@ window.mountChronoCalendar = async (locale, width, options = {}) => {
     onOpenPeriodic={noAction} onSetYearHeatmap={noAction} onSetStatisticDimension={noAction}
     onOpenPath={noAction} onCreateRange={() => undefined} onToggleTask={noAction}
     onRescheduleTask={noAction} onOpenTaskSource={noAction} onOpenDateContextMenu={() => undefined}
-    navigationRequest={{ revision: 1, date, noteType: "daily", mode: "jump" }}
+    navigationRequest={{ revision: 1, date: options.navigationDate ?? date, noteType: "daily", mode: "jump" }}
   /></HostEnvironmentProvider>));
   await frame();
   await frame();

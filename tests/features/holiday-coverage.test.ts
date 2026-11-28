@@ -144,6 +144,16 @@ describe("holiday coverage release diagnostics", () => {
     });
   });
 
+  it("keeps the incomplete Mexico calendar a release blocker", () => {
+    expect(createHolidayCoverageReport(2027).blocking).toContainEqual({
+      region: "mx",
+      year: 2028,
+      coverage: "unavailable",
+      publication: null,
+      disposition: "blocking",
+    });
+  });
+
   it("still blocks when an unavailable year becomes current", () => {
     const report = createHolidayCoverageReport(2028);
 
