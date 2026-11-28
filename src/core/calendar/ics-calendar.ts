@@ -6,7 +6,7 @@ import { separateIcsEvents } from "./ics-event-input";
 import {
   createIcsEmbeddedTimezone,
   IcsTimezoneBudget,
-  preserveIcsTimezoneRules,
+  prepareIcsTimezoneProperties,
   resolveIcsEmbeddedTime,
   type IcsEmbeddedTime,
   type IcsEmbeddedTimezone,
@@ -97,7 +97,7 @@ export function parseIcsCalendar(
   }
   const normalized = unfolded.startsWith("\uFEFF") ? unfolded.slice(1) : unfolded;
   const input = separateIcsEvents(normalized);
-  const parsed: unknown = ICAL.parse(preserveIcsTimezoneRules(input.calendar));
+  const parsed: unknown = ICAL.parse(prepareIcsTimezoneProperties(input.calendar));
   if (!isJCalComponent(parsed)) {
     throw new Error("ICS source must contain exactly one calendar component");
   }

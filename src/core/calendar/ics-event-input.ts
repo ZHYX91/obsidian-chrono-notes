@@ -73,10 +73,14 @@ function parseEventProperties(lines: readonly string[]): EventInput {
 // RFC 5545 duration components have a fixed order. Weeks stand alone.
 const DURATION = /^[+-]?P(?:\d+W|\d+D|(?:\d+D)?T(?:\d+H(?:\d+M(?:\d+S)?)?|\d+M(?:\d+S)?|\d+S))$/u;
 
+export function getIcsPropertyValue(line: string): string | undefined {
+  // A quoted parameter may contain colons before the property value.
+  return /^(?:[^":]|"[^"]*")*:(.*)$/u.exec(line)?.[1];
+}
+
 function validTimeField(line: string, property: InstanceType<typeof ICAL.Property>): boolean {
-  // jCal may already have dropped an offset or trailing data. A colon inside
-  // a quoted parameter belongs to the header, not to the property value.
-  const raw = /^(?:[^":]|"[^"]*")*:(.*)$/u.exec(line)?.[1];
+  // jCal may already have dropped an offset or trailing data.
+  const raw = getIcsPropertyValue(line);
   if (raw === undefined) return false;
   if (property.name === "duration") return property.type === "duration" && DURATION.test(raw);
   const tzid = property.getFirstParameter("tzid");
