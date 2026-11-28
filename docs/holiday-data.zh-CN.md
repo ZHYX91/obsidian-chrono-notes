@@ -24,7 +24,7 @@ translation_status: source
 | 印度 | 2026–2027 | 德里／新德里的中央政府行政机关公告假日。职员个人选休的假日另按规定办理。 | [2026](https://dda.gov.in/sites/default/files/employee-corner/holidays_2026.pdf) · [2026 年宰牲节改期](https://www.pib.gov.in/PressReleasePage.aspx?PRID=2264022) · [2027](https://utilities.cept.gov.in/dop/pdfbind.ashx?id=15435) |
 | 美国 | 2026–2028 | 适用周一至周五工作制的联邦雇员假日。补休日可能落在上一个公历年。 | [联邦人事管理局](https://www.opm.gov/policy-data-oversight/pay-leave/federal-holidays/) |
 | 加拿大魁北克省 | 2026–2028 | 按省劳动标准。复活节期间，雇主在耶稣受难日与复活节星期一中选一天，两天的名称都会注明这一条件。 | [魁北克劳动标准委员会](https://www.cnesst.gouv.qc.ca/fr/conditions-travail/conges/jours-feries/liste-jours-feries) |
-| 墨西哥 | 2026–2027 | 联邦强制休息日，含 2027 年 6 月 6 日联邦选举。州级选举仅适用于当地。 | [《联邦劳动法》第 74 条](https://www.imss.gob.mx/sites/all/statics/pdf/leyes/4107_LFT.pdf) · [2027 年选举](https://ine.mx/elecciones-2027/) |
+| 墨西哥 | 2026–2027 | 联邦强制休息日，含 2027 年 6 月 6 日联邦选举。州级选举仅适用于当地。 | [《联邦劳动法》第 74 条](https://www.diputados.gob.mx/LeyesBiblio/pdf/LFT.pdf#page=23) · [2027 年选举](https://ine.mx/elecciones-2027/) |
 | 巴西 | 2026–2028 | 联邦法律规定的九个全国固定假日。狂欢节、地方宗教假日及联邦机关自行安排的休假另计。 | [第 662 号法](https://www2.camara.leg.br/legin/fed/lei/1940-1949/lei-662-6-abril-1949-347136-normaatualizada-pl.html) · [第 6802 号法](https://www.planalto.gov.br/ccivil_03/leis/l6802.htm) · [第 14759 号法](https://www2.camara.leg.br/legin/fed/lei/2023/lei-14759-21-dezembro-2023-795091-publicacaooriginal-170522-pl.html) |
 | 英国（英格兰和威尔士） | 2026–2028 | 英格兰与威尔士共用的银行假日日程。 | [英国政府](https://www.gov.uk/bank-holidays#england-and-wales) |
 | 英国（苏格兰） | 2026–2028 | 苏格兰银行假日，含 2026 年 6 月 15 日的一次性假日。 | [英国政府](https://www.gov.uk/bank-holidays#scotland) |
@@ -44,7 +44,7 @@ translation_status: source
 
 [中国大陆 2028 年放假调休安排](https://www.forestry.gov.cn/lyj/1/szxx/20261105/695102.html)、[俄罗斯联邦调休令](https://www.cbr.ru/other/holidays/)、[印度德里／新德里中央政府机关法定假日表](https://www.csir.res.in/en/Notification/holidays-be-observed-central-government-offices-during-year-2027-reg)和[越南公共部门假日安排](https://baochinhphu.vn/nghi-tet-am-lich-2027-keo-dai-7-ngay-nghi-quoc-khanh-4-ngay-102261010095648278.htm)均待公布。越南 2027 年数据已按 2027 年 3 月 1 日生效的[《劳动法》修正案](https://baochinhphu.vn/quoc-hoi-dong-y-bo-sung-2-ngay-nghi-le-duoc-huong-nguyen-luong-102261121121448218.htm)收录 7 月 27 日。
 
-墨西哥[宪法修正令](https://dof.gob.mx/nota_detalle.php?codigo=5789357&fecha=02/06/2026)将 2028 年联邦及地方司法选举定于 6 月 4 日。需确认当天是否为全国强制休息日，再将 2028 年标为已覆盖。[《联邦劳动法》第 74 条第九款](https://www.diputados.gob.mx/LeyesBiblio/pdf/LFT.pdf) · [《联邦选举法》第 22 条](https://sidj.ine.mx/restWSsidj-nc/app/doc/7/20/1)
+墨西哥日历已收录《联邦劳动法》第 74 条规定的 2028 年七个每年适用的全国强制休息日。墨西哥[宪法修正令](https://dof.gob.mx/nota_detalle.php?codigo=5789357&fecha=02/06/2026)将 2028 年联邦及地方司法选举定于 6 月 4 日。需确认当天是否为全国强制休息日，再将 2028 年标为已覆盖。[《联邦劳动法》第 74 条第九款](https://www.diputados.gob.mx/LeyesBiblio/pdf/LFT.pdf) · [《联邦选举法》第 22 条](https://sidj.ine.mx/restWSsidj-nc/app/doc/7/20/1)
 
 ## 如何核对日期
 

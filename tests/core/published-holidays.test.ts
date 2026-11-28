@@ -85,8 +85,29 @@ describe("published holiday schedules", () => {
       expect(getPublishedHolidayYearCoverage(region, 2028)).toBe("unavailable");
       const source = getHolidayPublicationSource(region, 2028);
       if (source !== null) expect(source.status).toBe("not-published");
-      expect(day(region, "2028-01-01")).toEqual({ holidays: [], workday: null });
+      if (region !== "mx") expect(day(region, "2028-01-01")).toEqual({ holidays: [], workday: null });
     }
+  });
+
+  it("shows exactly the seven recurring Mexico dates without claiming full 2028 coverage", () => {
+    const days = [];
+    for (let date = new Date(Date.UTC(2028, 0, 1)); date.getUTCFullYear() === 2028; date.setUTCDate(date.getUTCDate() + 1)) {
+      const key = date.toISOString().slice(0, 10);
+      const actual = day("mx", key, "es-MX");
+      expect(actual.workday).toBeNull();
+      if (actual.holidays.length > 0) days.push([key, actual.holidays.map(holiday => holiday.name)]);
+    }
+    expect(days).toEqual([
+      ["2028-01-01", ["Año Nuevo"]],
+      ["2028-02-07", ["Día de la Constitución (descanso obligatorio)"]],
+      ["2028-03-20", ["Natalicio de Benito Juárez (descanso obligatorio)"]],
+      ["2028-05-01", ["Día del Trabajo"]],
+      ["2028-09-16", ["Día de la Independencia"]],
+      ["2028-11-20", ["Día de la Revolución (descanso obligatorio)"]],
+      ["2028-12-25", ["Navidad"]],
+    ]);
+    expect(day("mx", "2028-09-16", "zh-TW").holidays[0]?.name).toBe("獨立日");
+    expect(getPublishedHolidayYearCoverage("mx", 2028)).toBe("unavailable");
   });
 
   it("retains observed dates and distinct jurisdictions", () => {
