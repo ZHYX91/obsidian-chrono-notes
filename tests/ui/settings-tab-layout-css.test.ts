@@ -22,17 +22,17 @@ describe("settings tab layout CSS", () => {
 
   it("resets theme button chrome without erasing the active indicator", () => {
     expect(styles).toMatch(
-      /\.chrono-notes-settings-tabs > button\.chrono-notes-settings-tab\s*\{[^}]*appearance:\s*none !important;[^}]*background:\s*transparent !important;[^}]*border:\s*0 !important;[^}]*border-block-end:\s*2px solid transparent !important;[^}]*border-radius:\s*0 !important;/s,
+      /\.chrono-notes-settings-tabs > button\.chrono-notes-settings-tab\s*\{[^}]*appearance:\s*none;[^}]*background:\s*transparent;[^}]*border:\s*0;[^}]*border-block-end:\s*2px solid transparent;[^}]*border-radius:\s*0;/s,
     );
     expect(styles).toMatch(
-      /\.chrono-notes-settings-tabs > button\.chrono-notes-settings-tab\.is-active,[\s\S]*?\{[^}]*border-block-end-color:\s*var\(--interactive-accent\) !important;[^}]*color:\s*var\(--text-normal\) !important;[^}]*font-weight:\s*var\(--font-semibold\) !important;/s,
+      /\.chrono-notes-settings-tabs > button\.chrono-notes-settings-tab\.is-active,[\s\S]*?\{[^}]*border-block-end-color:\s*var\(--interactive-accent\);[^}]*color:\s*var\(--text-normal\);[^}]*font-weight:\s*var\(--font-semibold\);/s,
     );
     expect(styles).not.toContain("border-bottom-color");
   });
 
   it("grows with interface text while preserving coarse-pointer targets", () => {
     expect(styles).toMatch(
-      /\.chrono-notes-settings-tabs > button\.chrono-notes-settings-tab\s*\{[^}]*font-size:\s*var\(--font-ui-small\) !important;[^}]*block-size:\s*auto;[^}]*min-block-size:\s*34px;[^}]*white-space:\s*nowrap;/s,
+      /\.chrono-notes-settings-tabs > button\.chrono-notes-settings-tab\s*\{[^}]*font-size:\s*var\(--font-ui-small\);[^}]*block-size:\s*auto;[^}]*min-block-size:\s*34px;[^}]*white-space:\s*nowrap;/s,
     );
     expect(styles).toMatch(
       /@media \(pointer:\s*coarse\)[\s\S]*?\.chrono-notes-settings-tab\s*\{[^}]*min-block-size:\s*44px;/s,
