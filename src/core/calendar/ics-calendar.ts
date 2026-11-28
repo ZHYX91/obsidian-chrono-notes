@@ -245,13 +245,6 @@ function embeddedTimezoneCoverage(
   return years;
 }
 
-function startOfDisplayDay(date: LocalDate, zone: string): number {
-  return DateTime.fromObject(
-    { year: date.year, month: date.month, day: date.day },
-    { zone },
-  ).startOf("day").toMillis();
-}
-
 function parseEvent(
   component: InstanceType<typeof ICAL.Component>,
   source: string,
@@ -489,6 +482,7 @@ export function* iterateIcsOccurrences(
 ): Generator<readonly [string, IcsEventOccurrence], boolean> {
   const endDate = getInclusiveEndDate(event);
   let date = event.start.date;
+  let sortTimestamp = event.start.timestamp;
   if (compareLocalDate(date, endDate) > 0) return false;
   for (let index = 0; index < MAX_EVENT_SPAN_DAYS; index += 1) {
     const startsOnDate = index === 0;
@@ -504,10 +498,16 @@ export function* iterateIcsOccurrences(
       continuesBefore: !startsOnDate,
       continuesAfter: !endsOnDate,
       timeLabel: !event.isAllDay && startsOnDate ? formatTime(event.start.timeMinutes ?? 0) : null,
-      sortTimestamp: startsOnDate ? event.start.timestamp : startOfDisplayDay(date, event.start.zone),
+      sortTimestamp,
     })];
     if (endsOnDate) return false;
-    date = shiftPeriod(date, "daily", 1, "monday");
+    // Timed continuations follow actual civil days in the display zone. DATE
+    // events carry the UTC arithmetic zone and retain their zone-free labels.
+    const next = DateTime.fromMillis(sortTimestamp, { zone: event.start.zone })
+      .startOf("day").plus({ days: 1 }).startOf("day");
+    if (!next.isValid) throw new RangeError("Invalid ICS occurrence day");
+    date = toLocalDate(next);
+    sortTimestamp = next.toMillis();
   }
   return true;
 }

@@ -280,6 +280,25 @@ describe("ICS calendar parsing", () => {
     expect(Object.isFrozen(result.eventsByDate["2026-05-08"])).toBe(true);
   });
 
+  it("projects timed events only onto days present in the display zone", () => {
+    const parsed = parseIcsCalendar([
+      "BEGIN:VCALENDAR",
+      "BEGIN:VEVENT", "UID:timed", "DTSTART:20111230T093000Z", "DTEND:20111230T103000Z", "END:VEVENT",
+      "BEGIN:VEVENT", "UID:all-day", "DTSTART;VALUE=DATE:20111229", "DTEND;VALUE=DATE:20120101", "END:VEVENT",
+      "END:VCALENDAR",
+    ].join("\n"), "dateline.ics", { displayZone: "Pacific/Apia" });
+    expect(parsed.skippedInvalid).toBe(0);
+    const { eventsByDate, truncatedEvents } = buildIcsDateIndex(parsed.events);
+    expect(truncatedEvents).toBe(0);
+    expect(Object.keys(eventsByDate).sort()).toEqual(["2011-12-29", "2011-12-30", "2011-12-31"]);
+    expect(eventsByDate["2011-12-29"]?.map(item => item.id)).toEqual(["all-day", "timed"]);
+    expect(eventsByDate["2011-12-30"]?.map(item => item.id)).toEqual(["all-day"]);
+    expect(eventsByDate["2011-12-31"]).toMatchObject([
+      { id: "all-day", endsOnDate: true },
+      { id: "timed", endsOnDate: true, continuesBefore: true, sortTimestamp: Date.UTC(2011, 11, 30, 10) },
+    ]);
+  });
+
   it("sorts continued timed events from the display-zone day boundary", () => {
     const parsed = parseIcsCalendar([
       "BEGIN:VCALENDAR",
