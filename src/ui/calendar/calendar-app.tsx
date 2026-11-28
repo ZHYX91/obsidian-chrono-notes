@@ -459,6 +459,14 @@ export function CalendarApp({
     dismissPreview();
   }, [dismissPreview, viewMode]);
 
+  const selectWeekDay = useCallback((date: LocalDate) => {
+    const next = getInteractiveDateInPeriod(date, "weekly", settings.weekStartDay);
+    if (next === null) return;
+    setSelected(next);
+    setSelectionKind("day");
+    setVisibleMonth({ year: next.year, month: next.month });
+  }, [settings.weekStartDay]);
+
   const showPeriod = useCallback(
     (amount: number) => {
       setOpenPeriodPicker(null);
@@ -469,10 +477,7 @@ export function CalendarApp({
           amount * 7,
           settings.weekStartDay,
         );
-        if (!isInteractiveCalendarDate(next)) return;
-        setSelected(next);
-        setSelectionKind("day");
-        setVisibleMonth({ year: next.year, month: next.month });
+        selectWeekDay(next);
         return;
       }
       const next = shiftPeriod(
@@ -485,7 +490,7 @@ export function CalendarApp({
       setVisibleMonth({ year: next.year, month: next.month });
       if (viewMode === "century") revealCenturyYear(next.year);
     },
-    [revealCenturyYear, selected, settings.weekStartDay, viewMode, visibleMonth],
+    [revealCenturyYear, selected, selectWeekDay, settings.weekStartDay, viewMode, visibleMonth],
   );
 
   const showToday = useCallback(() => {
@@ -508,11 +513,8 @@ export function CalendarApp({
       weekYear,
       settings.weekStartDay,
     );
-    if (!isInteractiveCalendarDate(next)) return;
-    setSelected(next);
-    setSelectionKind("day");
-    setVisibleMonth({ year: next.year, month: next.month });
-  }, [selected, settings.weekStartDay]);
+    selectWeekDay(next);
+  }, [selected, selectWeekDay, settings.weekStartDay]);
   const selectWeek = useCallback((weekNumber: number) => {
     const next = moveDateToCalendarWeek(
       selected,
@@ -520,11 +522,8 @@ export function CalendarApp({
       weekNumber,
       settings.weekStartDay,
     );
-    if (!isInteractiveCalendarDate(next)) return;
-    setSelected(next);
-    setSelectionKind("day");
-    setVisibleMonth({ year: next.year, month: next.month });
-  }, [headerWeek.weekYear, selected, settings.weekStartDay]);
+    selectWeekDay(next);
+  }, [headerWeek.weekYear, selected, selectWeekDay, settings.weekStartDay]);
   const selectMonthItem = useCallback(
     (kind: CalendarSelectionKind, date: LocalDate) => {
       const selectionDate = kind === "week"
@@ -987,14 +986,20 @@ function getInteractivePeriodicSelection(
   try {
     const anchor = getPeriodAnchor(date, noteType, weekStartDay);
     const selected = noteType === "weekly" ? shiftPeriod(anchor, "daily", 3, weekStartDay) : anchor;
-    if (isInteractiveCalendarDate(selected)) return selected;
-    const range = getPeriodRange(date, noteType, weekStartDay);
-    // A boundary week or the first decade can have a year-zero file anchor
-    // while containing supported UI dates. Preserve that file identity.
-    if (selected.year < 1 && range.end.year >= 1) return { year: 1, month: 1, day: 1 };
-    if (selected.year > 9999 && range.start.year <= 9999) return { year: 9999, month: 12, day: 31 };
-    return null;
+    return getInteractiveDateInPeriod(selected, noteType, weekStartDay);
   } catch {
     return null;
   }
+}
+
+function getInteractiveDateInPeriod(
+  date: LocalDate,
+  noteType: PeriodicNoteType,
+  weekStartDay: WeekStartDay,
+): LocalDate | null {
+  if (isInteractiveCalendarDate(date)) return date;
+  const range = getPeriodRange(date, noteType, weekStartDay);
+  if (date.year < 1 && range.end.year >= 1) return { year: 1, month: 1, day: 1 };
+  if (date.year > 9999 && range.start.year <= 9999) return { year: 9999, month: 12, day: 31 };
+  return null;
 }
